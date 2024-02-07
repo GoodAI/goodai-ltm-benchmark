@@ -1,0 +1,19 @@
+config:
+  debug: True
+  run_name: "QuickMemGPTTests"
+
+datasets:
+    args:
+      filler_tokens_low: 100
+      filler_tokens_high: 100
+      pre_question_filler: 2000
+      dataset_examples: 1
+
+    datasets:
+      - name: "kv"
+        args:
+          num_kv_pairs: 35
+
+      - name: "chapterbreak"
+        args:
+          page_tokens: 2000

@@ -1,0 +1,36 @@
+# Various temporary files
+.idea/*
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+logs/
+scratch/
+
+# Ignore data directory by default
+data/
+
+# Environment variables
+.env
+
+_historical/
+not_for_github/auto_scorer/Lib/
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*$py.class
+
+# Credentials
+creds/
+
+# Distribution / packaging
+.Python
+env/
+build/
+dist/
+
+#token
+token.json
+
+not_for_github/auto_scorer/logs/*
+not_for_github/auto_scorer/sheet_to_local/*
+# Output reports
+*.html

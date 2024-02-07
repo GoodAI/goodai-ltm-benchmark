@@ -1,0 +1,31 @@
+config:
+  debug: True
+  run_name: "QuickBenchmark"
+
+datasets:
+    args:
+      filler_tokens_low: 100
+      filler_tokens_high: 100
+      pre_question_filler: 2000
+      dataset_examples: 4
+
+    datasets:
+      - name: "colours"
+        args:
+          colour_changes: 3
+
+      - name: "shopping"
+        args:
+          item_changes: 3
+
+      - name: "locations_directions"
+        args:
+          known_locations: 3
+
+      - name: "sallyanne"
+        args:
+          data_location: "data/tomi_data/test.txt"
+
+      - name: "jokes"
+        args:
+          jokes_told: 3

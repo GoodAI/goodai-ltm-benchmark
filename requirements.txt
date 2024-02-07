@@ -1,0 +1,20 @@
+click
+anthropic
+pymemgpt==0.2.11
+pystache~=0.6.5
+openai==1.6.1
+faker~=20.1.0
+colorama~=0.4.6
+pytest
+time-machine==2.13.0
+tiktoken~=0.5.2
+goodai-ltm==0.3.0
+gdown==4.7.1  # For downloading files from google drive (some datasets use it)
+tqdm  # Showing progress bar during some downloads
+pyyaml~=6.0.1
+jinja2~=3.1.2
+Werkzeug==2.2.2  # It's crucial to specify this package's version to make flask work
+flask==2.2.3
+browser-cookie3
+langchain==0.1.1
+langchain-openai==0.0.2

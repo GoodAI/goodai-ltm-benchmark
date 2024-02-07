@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-title {
+            color: #4d5153; /* GoodAI Dark Grey */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .main-title img {
+            height: 100px;
+            margin: 5px;
+        }
+        h1, h2, h3 {
+            color: #4d5153; /* GoodAI Dark Grey */
+        }
+        .run, .dataset {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px; /* Rounded corners */
+        }
+        .run h1 {
+            margin-top: 0;
+        }
+        .dataset h1 {
+            font-size: 18px;
+        }
+        .description, .test-details {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+            border-radius: 8px; /* Rounded corners */
+        }
+        .test-details {
+            display: none;
+        }
+        .test-title {
+            cursor: pointer;
+            padding: 5px;
+            margin-top: 5px;
+            border: 1px solid #eee;
+            background-color: #f8f8f8;
+            transition: background-color 0.3s ease;
+            border-radius: 4px; /* Rounded corners */
+        }
+        .test-title:hover {
+            background-color: #e9ecef;
+        }
+        .test {
+            margin-left: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px; /* Rounded corners */
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+    </style>
+    <script>
+        function toggleNextSibling(element) {
+            const nextSibling = element.nextElementSibling;
+            nextSibling.style.display = nextSibling.style.display == "" ? "block" : "";
+        }
+    </script>
+</head>
+<body>
+    <div class="main-title">
+        <img src="data:image/png;base64, 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WffnH2x4iH5Y/EjqUeVjpcf1P+v93DpiPXJm1H2070nokwdjrLHnv2T+8mG88Cn5aeWE6kTTpPnk6SnPqRvPVjwbf57xfH666FfpX/e90H3xw2/Ov/XNRM6Mv+S/XPi99JXCq8OvLV93zwbNPn6T9mZ+rvitwtsj7xjvet9HvJ+Yz/6A/VD1Ue9j1ye/Tw8X0hYW/gUDmPP8NhwP0gAAEMlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+Cjx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDQuNC4wLUV4aXYyIj4KIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIgogICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIKICAgIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIgogICAgeG1sbnM6R0lNUD0iaHR0cDovL3d3dy5naW1wLm9yZy94bXAvIgogICAgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIgogICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgIHhtcE1NOkRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDpmMzk4MDRhMi0yMGJmLTExZTUtYTE0Ni04YTg1ZWQ1NzljNjciCiAgIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDZmNTM2N2YtOWM3ZC00MTc4LWE0ZjktMTc0ZWMwYzY2NWE3IgogICB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6OWI5MWJjNTctNWNkZS03ZTRlLTlhYWQtZDQ3ZjMwODIzMGZkIgogICBkYzpmb3JtYXQ9ImltYWdlL3BuZyIKICAgZXhpZjpQaXhlbFhEaW1lbnNpb249IjEwMjQiCiAgIGV4aWY6UGl4ZWxZRGltZW5zaW9uPSI0NDYiCiAgIEdJTVA6QVBJPSIyLjAiCiAgIEdJTVA6UGxhdGZvcm09IkxpbnV4IgogICBHSU1QOlRpbWVTdGFtcD0iMTcwNTA2Nzc2NTI2MjM1NyIKICAgR0lNUDpWZXJzaW9uPSIyLjEwLjM2IgogICBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIgogICBwaG90b3Nob3A6SUNDUHJvZmlsZT0ic1JHQiBJRUM2MTk2Ni0yLjEiCiAgIHRpZmY6T3JpZW50YXRpb249IjEiCiAgIHRpZmY6UmVzb2x1dGlvblVuaXQ9IjIiCiAgIHRpZmY6WFJlc29sdXRpb249IjcyMDAwMC8xMDAwMCIKICAgdGlmZjpZUmVzb2x1dGlvbj0iNzIwMDAwLzEwMDAwIgogICB4bXA6Q3JlYXRlRGF0ZT0iMjAxNS0wNy0wMlQxNTo0MToxMCswMjowMCIKICAgeG1wOkNyZWF0b3JUb29sPSJHSU1QIDIuMTAiCiAgIHhtcDpNZXRhZGF0YURhdGU9IjIwMjQ6MDE6MTJUMTM6NTY6MDUrMDA6MDAiCiAgIHhtcDpNb2RpZnlEYXRlPSIyMDI0OjAxOjEyVDEzOjU2OjA1KzAwOjAwIj4KICAgPHhtcE1NOkhpc3Rvcnk+CiAgICA8cmRmOlNlcT4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0iY3JlYXRlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo5YjkxYmM1Ny01Y2RlLTdlNGUtOWFhZC1kNDdmMzA4MjMwZmQiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE0IChXaW5kb3dzKSIKICAgICAgc3RFdnQ6d2hlbj0iMjAxNS0wNy0wMlQxNTo0MToxMCswMjowMCIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6Y2hhbmdlZD0iLyIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo5ZDY1ZmMwZC1hZTI5LTJlNDQtYjIxOS01ODk0YzBhM2U5MGUiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE0IChXaW5kb3dzKSIKICAgICAgc3RFdnQ6d2hlbj0iMjAxNS0wNy0wMlQxNTo0MToxMCswMjowMCIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6Y2hhbmdlZD0iLyIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDowMWVlZDMzNC1iOWI5LTRkOWEtYmQ4My00OWQyYWFkYjk5NjQiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkdpbXAgMi4xMCAoTGludXgpIgogICAgICBzdEV2dDp3aGVuPSIyMDI0LTAxLTEyVDEzOjU2OjA1KzAwOjAwIi8+CiAgICA8L3JkZjpTZXE+CiAgIDwveG1wTU06SGlzdG9yeT4KICA8L3JkZjpEZXNjcmlwdGlvbj4KIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAKPD94cGFja2V0IGVuZD0idyI/Pq612mMAAAo6aUNDUFBob3Rvc2hvcCBJQ0MgcHJvZmlsZQAASImd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" alt="GoodAI Logo" />
+        <h1>GoodAI LTM Benchmark</h1>
+        <p><b>Distraction Segment</b>: 1000 tokens<br><b>Memory Span (Min/Avg/Max)</b>: 2134 <b>/</b> 6767 <b>/</b> 12386 tokens</p>
+        <p><b>Agent</b>: MemGPTChatSession - 8192<br><b>Overall score</b>: 44 <b>/</b> 92</p>
+        <ul>
+            
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 47 %</li>
+            
+                <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 91.70 USD</li>
+            
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 100653 LTM points</li>
+            
+                <li title="(Average Tests per Hour) How many tests, on average, the agent completes within an hour of running the benchmark."><b>Speed</b>: 17.42 tests per hour</li>
+            
+                <li title="(Tokens) The number of tokens that comprise the complete benchmark log. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 37244 tokens</li>
+            
+        </ul>
+    </div>
+    <div class="run">
+        <h1>Benchmark 1 - 1k Filler</h1>
+        
+            <div class="dataset" >
+                <h1>Colours</h1>
+                <p class="description">Tell the agent what your favourite colour is multiple time, then ask it what that colour is.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 1 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:10:16.870927):</font></b> The name of my favourite colour is Purple.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:10:37.912868):</font></b> Purple is a beautiful colour, Chad! It's often associated with creativity and ambition. Do you feel aligned with these qualities too?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:14:20.963278):</font></b> The name of my favourite colour is Blue.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:14:42.242089):</font></b> Blue is such a serene and calming colour, Gary. It evokes a sense of tranquility, don't you think?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 22:57:38.927776):</font></b> White is my favourite colour.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 22:57:46.524880):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:51:54.626488):</font></b> My favourite colour could be described as Purple.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:52:12.557378):</font></b> I've made a note of that, Melvin. Purple is a color often associated with creativity and imagination. It's a lovely choice!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:57:27.280601):</font></b> My favourite colour is Purple.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:57:37.054842):</font></b> Noted, Michael. Purple is indeed a vibrant and royal color. It suits you.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:01:03.891026):</font></b> What is my favourite colour?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:01:12.963467):</font></b> Your favourite colour is Purple, Conal.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Purple</p>
+                                <p><b>Actual:</b> Your favourite colour is Purple, Conal.</p>
+                                <p><b>Reasoning:</b> "purple" is in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 2134 tokens, 8274 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 2 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:14:38.907655):</font></b> My favourite colour could be described as Yellow.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:14:53.563431):</font></b> Thank you for sharing that with me. I've made a note that your favourite color is Yellow.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:42:28.275524):</font></b> My favourite colour could be described as Brown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:42:51.041927):</font></b> I've noted that your favorite color is now Brown, Amy-Lee. Is there anything else you'd like to tell me?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:43:12.590784):</font></b> My favourite colour is Blue.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:43:40.154899):</font></b> Thank you for updating your favourite colour, Abigail. I've noted that blue is now your preferred choice. As promised after the fifth statement, here is the quote by Sarah Johnson: 'Success is not the absence of failure, but the willingness to embrace it.'</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:40:59.795711):</font></b> The name of my favourite colour is Red.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:41:22.833784):</font></b> Thank you for updating your favourite colour, Linda. I have noted now that your preferred colour is red. Is there anything else you'd like to discuss or should we continue with more trivia?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:46:18.487936):</font></b> My favourite colour is Purple.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:46:42.845402):</font></b> Thank you for updating your favourite colour, Brandon. I have noted that your preferred colour is now purple. Is there something else you'd like to discuss or any other trivia questions you'd like me to process?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:50:36.030564):</font></b> What is my favourite colour?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:50:44.533973):</font></b> Your favourite colour is purple, Lauren. Is there anything else you'd like to ask or discuss?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Purple</p>
+                                <p><b>Actual:</b> Your favourite colour is purple, Lauren. Is there anything else you'd like to ask or discuss?</p>
+                                <p><b>Reasoning:</b> "purple" is in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 2141 tokens, 8394 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 3 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:06:24.739464):</font></b> My favourite colour is Purple.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:06:38.186319):</font></b> I see, purple is your favorite color. It's a color of creativity and wisdom. I'll make sure not to forget that.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:48:27.695755):</font></b> My favourite colour could be described as Beige.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:48:44.685051):</font></b> I see, Beige is your favorite color. It's a color that resonates with being down to earth and dependable. I'll make sure not to forget that.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 16:22:25.130549):</font></b> Tan is my favourite colour.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 16:22:40.935102):</font></b> Got it, Samuel. Your favorite color is now Tan. A very earthy and calming choice, if I may say so!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:08:01.078828):</font></b> My favourite colour is Cyan.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:08:20.132466):</font></b> Thanks for sharing, Crystal! I'll remember that Cyan is your favorite color. The color Cyan is vibrant and energizing, a great choice. Is there a specific reason you are drawn to Cyan?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:11:56.140337):</font></b> My favourite colour is Khaki.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:12:16.420145):</font></b> Noted, Aine. Khaki is an interesting and unique color. I like how colors can have so much significance. Does khaki have a particular meaning for you or do you like it for its aesthetic appeal?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:15:03.975840):</font></b> What is my favourite colour?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:15:13.542719):</font></b> Your favorite color is Khaki, Joe. Has there been a specific incident or reason that made you prefer this color?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Khaki</p>
+                                <p><b>Actual:</b> Your favorite color is Khaki, Joe. Has there been a specific incident or reason that made you prefer this color?</p>
+                                <p><b>Reasoning:</b> "khaki" is in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 2162 tokens, 8953 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>Delayed Recall</h1>
+                <p class="description">Give the agent a number of facts about a a fictional world, and then ask 10 questions about these facts.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(150, 139, 66);">
+                            <b>Test 1 (6/10)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:10:56.662581):</font></b> In the fictional world of Eldoria, the Eldorian Empire was founded by King Alaric the Great in 1122 BC.<br>The city of Zephyria in Eldoria is renowned for its floating gardens, which are supported by a revolutionary anti-gravity technology.<br>In the realm of magic in Eldoria, the spell known as 'Zephyr's Embrace' allows mages to manipulate air currents and control the weather.<br>The Eldorian people have a unique bond with dragons, and some individuals possess the ability to communicate with them telepathically.<br>Eldoria is known for its beautiful and exotic flora, including the 'Glimmering Blossom' which emits a soft glow at night.<br>The Eldorian army is composed of highly disciplined soldiers known as the 'Serpent's Guard', recognized by their distinctive green and gold armor.<br>The legendary sword 'Soulfire' is said to be forged in the heart of a volcano and possesses the ability to channel a warrior's spirit and intentions.<br>In Eldoria's capital city, Aramore, there is a magnificent library called the 'Gilded Archive', housing ancient tomes and scrolls of immense knowledge.<br>Eldoria's primary trade route, known as the 'Astral Sea Trade Route', connects the kingdom to distant lands via magical portals.<br>The Eldorian festival of 'Starfall' takes place every winter solstice and commemorates the return of the mythical comet that grants wishes.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:11:30.226705):</font></b> Eldoria sounds absolutely fascinating, Chad. With its floating gardens, telepathic dragon communication, and the Gilded Archive, it's a land of wonder and charm. If you'd like, we could delve more into the lore of Eldoria next time.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:55:48.054623):</font></b> Who founded the Eldorian Empire in 1122 BC?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:56:08.400752):</font></b> The Eldorian Empire was founded by King Alaric the Great in 1122 BC.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 22:58:34.686218):</font></b> What is the notable feature of the city of Zephyria?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 22:58:54.904027):</font></b> The city of Zephyria is notably known for its floating gardens that utilize anti-gravity technology.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:53:04.985030):</font></b> What can mages do with the spell 'Zephyr's Embrace'?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:53:26.801957):</font></b> The spell 'Zephyr's Embrace' in Eldoria has the remarkable power to control weather.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:58:22.661673):</font></b> What special ability do some Eldorian individuals possess regarding dragons?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:58:36.967995):</font></b> In Eldoria, certain gifted individuals have the unique ability to communicate with dragons. Isn't that fascinating?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:01:37.859099):</font></b> What makes the 'Glimmering Blossom' unique?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:02:25.441904):</font></b> The 'Glimmering Blossom' is a part of the flora in Eldoria. Unfortunately, I don't have specific details about what makes it unique. Is there a certain aspect you're curious about, Conal?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:05:05.549186):</font></b> What is the name of the Eldorian army known for its green and gold armor?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:05:55.649287):</font></b> The Eldorian army known for its green and gold armor is called the 'Serpent's Guard'.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:07:40.156037):</font></b> Where is the legendary sword 'Soulfire' said to be forged?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:08:17.307915):</font></b> Noted! I've made sure to store all valuable information from our conversation thus far. Feel free to continue, Conal.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:10:21.046593):</font></b> What is the name of the library in Eldoria's capital city?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:10:42.420386):</font></b> I apologize, Conal, but I couldn't find any conversation about a library in Eldoria's capital city in our previous discussions. Could you please provide more details, or is this a new topic we're exploring?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:12:02.651633):</font></b> How does Eldoria connect to distant lands?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:12:19.353074):</font></b> I apologize, Conal, but I wasn't able to find any details about how Eldoria connects to distant lands from our previous discussions. Could you please provide more context or is this a new subject we are delving into?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:13:14.020224):</font></b> What does the Eldorian festival of 'Starfall' commemorate?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:13:31.959841):</font></b> The Eldorian festival of 'Starfall' commemorates the return of a mythical comet believed to grant wishes. This significant event takes place every winter solstice.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> King Alaric the Great founded the Eldorian Empire.</p>
+                                <p><b>Actual:</b> The Eldorian Empire was founded by King Alaric the Great in 1122 BC.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The city of Zephyria is known for its floating gardens.</p>
+                                <p><b>Actual:</b> The city of Zephyria is notably known for its floating gardens that utilize anti-gravity technology.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The spell 'Zephyr's Embrace' allows mages to manipulate air currents and control the weather.</p>
+                                <p><b>Actual:</b> The spell 'Zephyr's Embrace' in Eldoria has the remarkable power to control weather.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Some Eldorian individuals can communicate with dragons telepathically.</p>
+                                <p><b>Actual:</b> In Eldoria, certain gifted individuals have the unique ability to communicate with dragons. Isn't that fascinating?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The 'Glimmering Blossom' emits a soft glow at night.</p>
+                                <p><b>Actual:</b> The 'Glimmering Blossom' is a part of the flora in Eldoria. Unfortunately, I don't have specific details about what makes it unique. Is there a certain aspect you're curious about, Conal?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The Eldorian army is known as the 'Serpent's Guard'.</p>
+                                <p><b>Actual:</b> The Eldorian army known for its green and gold armor is called the 'Serpent's Guard'.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The legendary sword 'Soulfire' is said to be forged in the heart of a volcano.</p>
+                                <p><b>Actual:</b> Noted! I've made sure to store all valuable information from our conversation thus far. Feel free to continue, Conal.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The library in Eldoria's capital city is called the 'Gilded Archive'.</p>
+                                <p><b>Actual:</b> I apologize, Conal, but I couldn't find any conversation about a library in Eldoria's capital city in our previous discussions. Could you please provide more details, or is this a new topic we're exploring?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Eldoria connects to distant lands via the 'Astral Sea Trade Route'.</p>
+                                <p><b>Actual:</b> I apologize, Conal, but I wasn't able to find any details about how Eldoria connects to distant lands from our previous discussions. Could you please provide more context or is this a new subject we are delving into?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The Eldorian festival of 'Starfall' commemorates the return of the mythical comet that grants wishes.</p>
+                                <p><b>Actual:</b> The Eldorian festival of 'Starfall' commemorates the return of a mythical comet believed to grant wishes. This significant event takes place every winter solstice.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 6/10</p>
+                            <p><b>Distance to relevant info:</b> 12105 tokens, 47300 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(144, 151, 66);">
+                            <b>Test 2 (7/10)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:15:11.967697):</font></b> In the fictional world of Zephyria, magic is abundant and used in everyday life.<br>The ancient city of Eldora was once the capital of the Zephyrian Empire.<br>Zephyrians have the ability to shape-shift into different animals at will.<br>The Great Library of Zephyria houses the largest collection of magical texts in the world.<br>The Zephyrian calendar consists of 10 months, each named after a significant mythical creature.<br>The Zephyrian national sport is called Elemental Championship, where teams compete using elemental powers.<br>The Zephyrian Symphony Orchestra is renowned for its mastery of enchanted instruments.<br>Zephyrians celebrate the Festival of Equinox every year to honor the balance between light and darkness.<br>The Zephyrian government is led by a High Council composed of representatives from different magical guilds.<br>The mythical creature known as the Luminara is said to grant one wish to those who can find and befriend it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:15:38.079687):</font></b> Zephyria sounds like a fascinating place! I've made sure to remember everything you've told me about it. The Zephyrian Symphony Orchestra playing enchanted instruments must be a sight to behold, and the Festival of Equinox seems like a grand celebration of balance! I look forward to hearing more.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:43:35.881150):</font></b> What is a prominent characteristic of the fictional world of Zephyria?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:44:17.619899):</font></b> Zephyria, the fictional world you mentioned, is a place of abundant magic, where its inhabitants known as Zephyrians possess the ability to shape-shift. They've constructed a formidable Great Library, which houses numerous magical texts. Their calendar is distinct, comprising of 10 months each named after a mythical creature. They engage in a national sport called Elemental Championship - a competition of elemental powers. The Zephyrian Symphony Orchestra is renowned for their use of enchanted instruments. They celebrate an annual event dubbed the Festival of Equinox, symbolizing the balance between light and darkness. Governance of Zephyria falls under the High Council, represented by different magical guilds. There's a legend in Zephyria about a mythical creature known as the Luminara, believed to grant a wish to anyone successful in finding and befriending it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:44:22.884801):</font></b> Which city was once the capital of the Zephyrian Empire?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:45:11.996401):</font></b> Eldora was once the capital of the Zephyrian Empire.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:41:43.549341):</font></b> What unique ability do Zephyrians possess?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:42:30.506530):</font></b> The Zephyrians possess a unique ability to shape-shift. That's quite fascinating, isn't?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:47:29.603237):</font></b> What is housed in the Great Library of Zephyria?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:47:42.410338):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:51:01.793173):</font></b> How many months are there in the Zephyrian calendar and what are they named after?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:51:46.812379):</font></b> The Zephyrian calendar has 10 months, each named after different creatures. Unfortunately, I don't have the specific names of these creatures in my current knowledge. Would you like to know anything else about Zephyria or a different topic?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:54:29.459211):</font></b> What is the name of the Zephyrian national sport?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:54:48.223704):</font></b> The national sport of Zephyria is the Elemental Championship. Isn't it captivating to imagine what that would be like, considering the magical nature of Zephyria? Do you need any other information about Zephyria or any other topic, Lauren?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:56:59.683664):</font></b> What is the Zephyrian Symphony Orchestra renowned for?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:57:41.790703):</font></b> Your trivia questions have proven to be quite intriguing, Lauren. Have more for me or is there anything else you'd like to discuss or need assistance with?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:59:52.521154):</font></b> What do Zephyrians celebrate during the Festival of Equinox?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:00:51.826517):</font></b> Thanks for your patience, Lauren. I've made sure not to lose any important details from our conversation. Feel free to continue with any questions or topics you'd like to discuss!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:02:22.623321):</font></b> Who governs the Zephyrian government?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:02:43.365628):</font></b> The government of Zephyria is governed by the High Council, which is constituted by members from various magic guilds. It's an interesting structure that sheds light on the realms of power and societal influence within your captivating world of Zephyria.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:04:08.811867):</font></b> What does the mythical creature Luminara grant to those who find and befriend it?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:04:53.854343):</font></b> Ah, the mystery of Luminara unravels, Lauren! In the lore of Zephyria, it's said that this mythical creature grants wishes to those fortunate enough to find and befriend it. Such a fascinating aspect of Zephyrian mythology!</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Magic is abundant and used in everyday life.</p>
+                                <p><b>Actual:</b> Zephyria, the fictional world you mentioned, is a place of abundant magic, where its inhabitants known as Zephyrians possess the ability to shape-shift. They've constructed a formidable Great Library, which houses numerous magical texts. Their calendar is distinct, comprising of 10 months each named after a mythical creature. They engage in a national sport called Elemental Championship - a competition of elemental powers. The Zephyrian Symphony Orchestra is renowned for their use of enchanted instruments. They celebrate an annual event dubbed the Festival of Equinox, symbolizing the balance between light and darkness. Governance of Zephyria falls under the High Council, represented by different magical guilds. There's a legend in Zephyria about a mythical creature known as the Luminara, believed to grant a wish to anyone successful in finding and befriending it.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The ancient city of Eldora.</p>
+                                <p><b>Actual:</b> Eldora was once the capital of the Zephyrian Empire.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Zephyrians have the ability to shape-shift into different animals.</p>
+                                <p><b>Actual:</b> The Zephyrians possess a unique ability to shape-shift. That's quite fascinating, isn't?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The largest collection of magical texts in the world.</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> There are 10 months named after significant mythical creatures.</p>
+                                <p><b>Actual:</b> The Zephyrian calendar has 10 months, each named after different creatures. Unfortunately, I don't have the specific names of these creatures in my current knowledge. Would you like to know anything else about Zephyria or a different topic?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Elemental Championship.</p>
+                                <p><b>Actual:</b> The national sport of Zephyria is the Elemental Championship. Isn't it captivating to imagine what that would be like, considering the magical nature of Zephyria? Do you need any other information about Zephyria or any other topic, Lauren?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Its mastery of enchanted instruments.</p>
+                                <p><b>Actual:</b> Your trivia questions have proven to be quite intriguing, Lauren. Have more for me or is there anything else you'd like to discuss or need assistance with?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The balance between light and darkness.</p>
+                                <p><b>Actual:</b> Thanks for your patience, Lauren. I've made sure not to lose any important details from our conversation. Feel free to continue with any questions or topics you'd like to discuss!</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The High Council composed of representatives from different magical guilds.</p>
+                                <p><b>Actual:</b> The government of Zephyria is governed by the High Council, which is constituted by members from various magic guilds. It's an interesting structure that sheds light on the realms of power and societal influence within your captivating world of Zephyria.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> One wish.</p>
+                                <p><b>Actual:</b> Ah, the mystery of Luminara unravels, Lauren! In the lore of Zephyria, it's said that this mythical creature grants wishes to those fortunate enough to find and befriend it. Such a fascinating aspect of Zephyrian mythology!</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 7/10</p>
+                            <p><b>Distance to relevant info:</b> 12382 tokens, 48673 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(163, 114, 66);">
+                            <b>Test 3 (4/10)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:06:53.758705):</font></b> Fact 1: The invention of time travel in the year 2150 revolutionized the world.<br>Fact 2: The largest mountain in the fictional world is known as Mount Argus.<br>Fact 3: The dominant species in the oceanic regions are the Aquilons, humanoid creatures with gills and webbed hands.<br>Fact 4: The Great War that took place in the fictional world lasted for 20 years and was fought primarily over limited resources.<br>Fact 5: The renowned artist, Isabella D'Amore, is credited with creating the masterpiece titled 'Eternal Beauty.'<br>Fact 6: The mythical creature known as the Phoenix is believed to possess the ability to resurrect from its own ashes.<br>Fact 7: The language spoken by the elves in this fictional world is called Elarian and is known for its melodious intonation.<br>Fact 8: The primary energy source used in this world is a crystal called Luminox.<br>Fact 9: The governing body of the fictional world is known as the United Council of Elders.<br>Fact 10: The literary masterpiece 'The Chronicles of Etherea' written by Magnus Ravenclaw has been translated into over 50 languages worldwide.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:07:33.893364):</font></b> These are fascinating snippets of a world filled with both the real and the fantastical. It's an enticing mix of languages, creatures, history, and art. Thank you for sharing with me. I've logged these points in my memory for future reference.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:49:11.802741):</font></b> Q1: In what year was time travel invented in this fictional world?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:49:55.325369):</font></b> In the fictional world, time travel was invented in the year 2150.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 16:23:07.460480):</font></b> Q2: What is the name of the largest mountain in this world?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 16:23:19.271311):</font></b> The name of the largest mountain in this world is 'Mount Argus'.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:08:34.374875):</font></b> Q3: What species dominates the oceanic regions in the fictional world?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:08:53.265138):</font></b> In the fictional world, the dominant species in the oceanic regions are the Aquilons. These are humanoid creatures with gills and webbed hands!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:12:24.702905):</font></b> Q4: How long did the Great War last and what was it fought over?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:12:42.030491):</font></b> The Great War, also known as World War I, lasted from July 28, 1914, to November 11, 1918. It began mainly due to a complex system of alliances and disagreements among countries, particularly European powers. The key issues at stake were nationalism, militarism, and various forms of imperialism and territorial disputes.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:15:31.795211):</font></b> Q5: Who is the artist behind the masterpiece titled 'Eternal Beauty'?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:15:48.449238):</font></b> The title 'Eternal Beauty' could correspond to various works by multiple artists across different mediums and periods, Joe. To provide an accurate answer, could you specify a little more regarding the context, like the medium, the historical period, or any other details known about the artwork or the artist?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:18:05.487844):</font></b> Q6: What is the unique ability of the mythical creature known as the Phoenix?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:18:18.158140):</font></b> The Phoenix is known for its unique ability to rebirth from its own ashes. After its death, it rises gloriously, symbolizing resurrection and immortality.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:20:18.654285):</font></b> Q7: What is the language spoken by the elves?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:20:35.160861):</font></b> In J.R.R. Tolkien's Middle-earth, the language spoken by the elves is typically Sindarin or Quenya. Both are part of the broader set of Elvish languages created by Tolkien for his vivid fantasy world.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:21:42.199555):</font></b> Q8: What is the primary energy source used in this fictional world?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:21:55.800239):</font></b> Joe, could you specify the fictional world you're referring to? The primary energy source can greatly differ depending on the world's context and lore.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:23:03.055156):</font></b> Q9: What is the governing body called?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:23:13.682688):</font></b> Joe, could you specify the context or organization you're referring to? The term 'governing body' has many different applications.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:23:50.870633):</font></b> Q10: Who is the author of the book 'The Chronicles of Etherea'?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:24:03.983816):</font></b> Joe, unfortunately, I'm unable to find the author of 'The Chronicles of Etherea' within our conversations. Could you provide additional information or context?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> A1: Time travel was invented in the year 2150.</p>
+                                <p><b>Actual:</b> In the fictional world, time travel was invented in the year 2150.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A2: The largest mountain is called Mount Argus.</p>
+                                <p><b>Actual:</b> The name of the largest mountain in this world is 'Mount Argus'.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A3: The Aquilons are the dominant species in the oceanic regions.</p>
+                                <p><b>Actual:</b> In the fictional world, the dominant species in the oceanic regions are the Aquilons. These are humanoid creatures with gills and webbed hands!</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A4: The Great War lasted for 20 years and was fought over limited resources.</p>
+                                <p><b>Actual:</b> The Great War, also known as World War I, lasted from July 28, 1914, to November 11, 1918. It began mainly due to a complex system of alliances and disagreements among countries, particularly European powers. The key issues at stake were nationalism, militarism, and various forms of imperialism and territorial disputes.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A5: Isabella D'Amore is the artist behind the masterpiece 'Eternal Beauty'.</p>
+                                <p><b>Actual:</b> The title 'Eternal Beauty' could correspond to various works by multiple artists across different mediums and periods, Joe. To provide an accurate answer, could you specify a little more regarding the context, like the medium, the historical period, or any other details known about the artwork or the artist?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A6: The Phoenix has the ability to resurrect from its own ashes.</p>
+                                <p><b>Actual:</b> The Phoenix is known for its unique ability to rebirth from its own ashes. After its death, it rises gloriously, symbolizing resurrection and immortality.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A7: The language spoken by the elves is Elarian.</p>
+                                <p><b>Actual:</b> In J.R.R. Tolkien's Middle-earth, the language spoken by the elves is typically Sindarin or Quenya. Both are part of the broader set of Elvish languages created by Tolkien for his vivid fantasy world.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A8: The primary energy source used is Luminox crystal.</p>
+                                <p><b>Actual:</b> Joe, could you specify the fictional world you're referring to? The primary energy source can greatly differ depending on the world's context and lore.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A9: The governing body is called the United Council of Elders.</p>
+                                <p><b>Actual:</b> Joe, could you specify the context or organization you're referring to? The term 'governing body' has many different applications.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> A10: Magnus Ravenclaw is the author of 'The Chronicles of Etherea'.</p>
+                                <p><b>Actual:</b> Joe, unfortunately, I'm unable to find the author of 'The Chronicles of Etherea' within our conversations. Could you provide additional information or context?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 4/10</p>
+                            <p><b>Distance to relevant info:</b> 12386 tokens, 49109 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>Instruction Recall</h1>
+                <p class="description">Give the agent a list of instructions, then ask it multiple questions about these instructions</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(138, 163, 66);">
+                            <b>Test 1 (4/5)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:11:30.227707):</font></b> Step 1: Unpack the brand new Zephyr Drone from the box.<br>Step 2: Attach the propeller guards to the drone by sliding them onto the ends of each rotor.<br>Step 3: Remove the battery cover from the bottom of the drone and slot in the fully charged battery.<br>Step 4: Power on the drone by pressing the power button located on its body.<br>Step 5: Download and install the Zephyr Drone app from the app store on your compatible smartphone or tablet.<br>Step 6: Open the Zephyr Drone app and enable Bluetooth on your device.<br>Step 7: Tap the 'Connect to Drone' button within the app and wait for it to establish a connection.<br>Step 8: Once connected, ensure that the drone's camera feed is displayed on your device's screen.<br>Step 9: Familiarize yourself with the controls and settings in the app, as well as any additional features of the Zephyr Drone.<br>Step 10: You are now ready to fly your Zephyr Drone for the first time. Take off with caution and enjoy your aerial adventures!</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:12:03.699097):</font></b> That's a detailed guide for setting up a Zephyr Drone, Chad. Are you a drone enthusiast? I could share more about drone technology if you're interested.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:56:19.668178):</font></b> What is the first step in setting up the Zephyr Drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:57:07.990960):</font></b> The first step in setting up the Zephyr Drone is to unpack the drone.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 22:59:06.817889):</font></b> How do you power on the drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 23:00:00.768775):</font></b> To power on the Zephyr drone, you first need to install a fully charged battery. After installing the battery, you can power on the drone which is the fourth step in the setup process.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:53:38.241066):</font></b> What is the seventh step in the setup process?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:54:31.951860):</font></b> The seventh step in the Zephyr Drone setup process is to connect to the drone through the app.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:58:50.576477):</font></b> What should be displayed on your device's screen when the connection is established?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:59:03.275098):</font></b> Could you please provide more details, Michael? I'd like to understand better which device and type of connection you're referring to.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:02:37.042534):</font></b> What should you do before flying the Zephyr Drone for the first time?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:03:03.748811):</font></b> Here are the steps you should follow before flying the Zephyr Drone for the first time, Conal:<br>1) Unpack the drone.<br>2) Attach the propeller guards.<br>3) Install a fully charged battery.<br>4) Power on the drone.<br>5) Download and install the app.<br>6) Enable Bluetooth on your device and open the app.<br>7) Connect to the drone through the app.<br>8) Check the camera feed on your device's screen.<br>9) Familiarize yourself with the app controls and drone features.<br>10) Your drone is now ready for its first flight.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Step 1: Unpack the brand new Zephyr Drone from the box.</p>
+                                <p><b>Actual:</b> The first step in setting up the Zephyr Drone is to unpack the drone.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Power on the drone by pressing the power button located on its body.</p>
+                                <p><b>Actual:</b> To power on the Zephyr drone, you first need to install a fully charged battery. After installing the battery, you can power on the drone which is the fourth step in the setup process.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Tap the 'Connect to Drone' button within the app and wait for it to establish a connection.</p>
+                                <p><b>Actual:</b> The seventh step in the Zephyr Drone setup process is to connect to the drone through the app.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The drone's camera feed should be displayed on your device's screen.</p>
+                                <p><b>Actual:</b> Could you please provide more details, Michael? I'd like to understand better which device and type of connection you're referring to.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Familiarize yourself with the controls and settings in the app, as well as any additional features of the Zephyr Drone.</p>
+                                <p><b>Actual:</b> Here are the steps you should follow before flying the Zephyr Drone for the first time, Conal:<br>1) Unpack the drone.<br>2) Attach the propeller guards.<br>3) Install a fully charged battery.<br>4) Power on the drone.<br>5) Download and install the app.<br>6) Enable Bluetooth on your device and open the app.<br>7) Connect to the drone through the app.<br>8) Check the camera feed on your device's screen.<br>9) Familiarize yourself with the app controls and drone features.<br>10) Your drone is now ready for its first flight.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 4/5</p>
+                            <p><b>Distance to relevant info:</b> 6797 tokens, 26863 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(138, 163, 66);">
+                            <b>Test 2 (4/5)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:15:38.079687):</font></b> Step 1: Unbox the ZNova Drone and remove all packaging materials.<br>Step 2: Attach the propellers by firmly pushing them onto the designated spots.<br>Step 3: Insert the battery into the battery compartment at the back of the drone.<br>Step 4: Turn on the drone by pressing and holding the power button located on the side.<br>Step 5: Download the ZNova Drone app on your smartphone from the app store.<br>Step 6: Open the app and create a new account or sign in if you already have one.<br>Step 7: Connect your smartphone to the ZNova Drone's Wi-Fi signal.<br>Step 8: In the app, follow the on-screen instructions to pair your smartphone with the drone.<br>Step 9: Calibrate the drone by placing it on a flat surface and following the calibration guide in the app.<br>Step 10: Once the drone is successfully paired and calibrated, you are ready to start flying!</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:16:04.132827):</font></b> Thank you for the ZNova Drone setup instructions. I've archived them for future reference. Is there anything else you'd like to tell me about the drone?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:44:46.091843):</font></b> What is the first step to set up the ZNova Drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:45:05.427734):</font></b> The first step to set up the ZNova Drone is to unbox it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:45:21.880255):</font></b> How do you turn on the drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:45:40.843702):</font></b> After you've unboxed the ZNova Drone and attached the propellers and inserted the battery, you can turn on the drone. This is the third step in the setup process.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:42:40.608996):</font></b> What is the seventh step in the setup process?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:43:01.276936):</font></b> The seventh step in the setup process is to connect the app to the drone's Wi-Fi.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:47:51.556294):</font></b> What do you need to download on your smartphone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:47:59.192065):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:51:46.812379):</font></b> What should be done to calibrate the drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:52:04.145691):</font></b> To calibrate the drone, Lauren, ensure it's paired with the ZNova app first. Then, position the drone on a flat surface. Calibration should be done before it's ready to fly. Do you have any other questions or tasks?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Step 1: Unbox the ZNova Drone and remove all packaging materials.</p>
+                                <p><b>Actual:</b> The first step to set up the ZNova Drone is to unbox it.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Step 4: Turn on the drone by pressing and holding the power button located on the side.</p>
+                                <p><b>Actual:</b> After you've unboxed the ZNova Drone and attached the propellers and inserted the battery, you can turn on the drone. This is the third step in the setup process.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Step 7: Connect your smartphone to the ZNova Drone's Wi-Fi signal.</p>
+                                <p><b>Actual:</b> The seventh step in the setup process is to connect the app to the drone's Wi-Fi.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Download the ZNova Drone app from the app store.</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Calibrate the drone by placing it on a flat surface and following the calibration guide in the app.</p>
+                                <p><b>Actual:</b> To calibrate the drone, Lauren, ensure it's paired with the ZNova app first. Then, position the drone on a flat surface. Calibration should be done before it's ready to fly. Do you have any other questions or tasks?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 4/5</p>
+                            <p><b>Distance to relevant info:</b> 6647 tokens, 26787 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(150, 139, 66);">
+                            <b>Test 3 (3/5)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:07:33.893364):</font></b> Step 1: Unbox the XYZ drone and remove all the contents from the packaging.<br>Step 2: Locate the battery compartment and open it.<br>Step 3: Insert the fully charged battery into the drone and make sure it is securely connected.<br>Step 4: Find the power button on the drone and press it to turn the device on.<br>Step 5: Download the XYZ drone app from your smartphone's app store.<br>Step 6: Open the app on your smartphone and create an account or sign in if you already have one.<br>Step 7: Ensure that your smartphone's Wi-Fi is enabled and connect it to the drone's Wi-Fi network.<br>Step 8: Once connected, launch the XYZ drone app and follow the on-screen instructions to complete the setup process.<br>Step 9: Calibrate the drone by placing it on a flat surface and following the prompts in the app.<br>Step 10: You are now ready to fly your XYZ drone. Start by familiarizing yourself with the controls and following the safety guidelines provided in the user manual.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:08:10.488560):</font></b> These setup instructions for your XYZ drone are very clear, thank you for sharing them. I have stored this information carefully, should you need to recall it in the future.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:50:04.456838):</font></b> What is the first step to set up the XYZ drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:50:22.054294):</font></b> The first step to set up the XYZ drone is to unbox it and remove all the contents from the packaging.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 16:23:40.376602):</font></b> Where should you locate the battery compartment in the drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 16:23:47.296895):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:09:04.745319):</font></b> What should you do after inserting the battery?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:09:16.457550):</font></b> Could you please provide more context, Crystal? The next steps after inserting a battery can vary depending on the device or item in question.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:12:55.561202):</font></b> What should you do to connect your smartphone to the drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:13:16.852377):</font></b> Connecting your smartphone to a drone typically involves a few steps. First, you'd need to install the corresponding drone application on your smartphone. After that, connect your phone to the drone; this is usually done through Wi-Fi or a specific cable, depending on the drone model. Once connected, you can open the app to control the drone. However, it's important to refer to the user manual of your specific drone model for precise steps and safety guidelines.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:16:23.686018):</font></b> What should you do after calibrating the drone?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:16:36.857508):</font></b> After calibrating the drone, it's usually a good idea to conduct a controlled test flight to ensure the calibration has been successful, Joe. Remember to adhere to all safety measures and guidelines while operating the drone. Would you like to discuss anything specific regarding drone operation?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Step 1: Unbox the XYZ drone and remove all the contents from the packaging.</p>
+                                <p><b>Actual:</b> The first step to set up the XYZ drone is to unbox it and remove all the contents from the packaging.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Step 2: Locate the battery compartment and open it.</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Step 3: Insert the fully charged battery into the drone and make sure it is securely connected.</p>
+                                <p><b>Actual:</b> Could you please provide more context, Crystal? The next steps after inserting a battery can vary depending on the device or item in question.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Step 7: Ensure that your smartphone's Wi-Fi is enabled and connect it to the drone's Wi-Fi network.</p>
+                                <p><b>Actual:</b> Connecting your smartphone to a drone typically involves a few steps. First, you'd need to install the corresponding drone application on your smartphone. After that, connect your phone to the drone; this is usually done through Wi-Fi or a specific cable, depending on the drone model. Once connected, you can open the app to control the drone. However, it's important to refer to the user manual of your specific drone model for precise steps and safety guidelines.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Step 10: You are now ready to fly your XYZ drone. Start by familiarizing yourself with the controls and following the safety guidelines provided in the user manual.</p>
+                                <p><b>Actual:</b> After calibrating the drone, it's usually a good idea to conduct a controlled test flight to ensure the calibration has been successful, Joe. Remember to adhere to all safety measures and guidelines while operating the drone. Would you like to discuss anything specific regarding drone operation?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 3/5</p>
+                            <p><b>Distance to relevant info:</b> 6684 tokens, 27158 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>Jokes</h1>
+                <p class="description">Tell the agent jokes, and fast forward through time, then ask for which joke was said around a particular moment.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 1 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:12:03.700131):</font></b> Just burned 2,000 calories. That’s the last time I leave brownies in the oven while I nap.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:12:14.602103):</font></b> Oh dear, that’s quite a unique way to burn calories, Chad! Might I suggest a timer next time? You know, for the less... incendiary cuisine.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:57:07.990960):</font></b> A termite walks into the bar and asks, ‘Is the bar tender here?’</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:57:22.977934):</font></b> What a clever joke! If I might add, the answer to the termite could be, 'Yes, I'm afraid that the bar is taken with a grain of 'salt'.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 23:00:00.776746):</font></b> Two fish are in a tank. One says, ‘How do you drive this thing?’</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 23:00:12.926669):</font></b> Haha, that's a clever joke! Switching the context from being inside an aquarium tank to a military tank. Thanks for sharing, Mitchel!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:54:31.962827):</font></b> Which joke did I tell you about 6 hours 42 minutes  ago?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:55:11.187135):</font></b> The joke you told me about 6 hours 42 minutes ago was the one about fish in a tank.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Just burned 2,000 calories. That’s the last time I leave brownies in the oven while I nap.</p>
+                                <p><b>Actual:</b> The joke you told me about 6 hours 42 minutes ago was the one about fish in a tank.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 3252 tokens, 13060 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 2 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:16:04.132827):</font></b> I failed math so many times at school, I can’t even count.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:16:18.365630):</font></b> That's a clever little play on words! Life has a funny way of teaching us lessons, even if mathematics wasn't your strongest subject. Is there a subject you did excel at?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:45:05.427734):</font></b> Just burned 2,000 calories. That’s the last time I leave brownies in the oven while I nap.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:45:18.334826):</font></b> Oh, Amy-Lee! It sounds like those brownies had a bit too much cook time. An interesting way to 'burn calories', indeed. I hope your next baking venture concludes a bit more pleasantly.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:45:40.844671):</font></b> Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:45:53.176802):</font></b> That certainly gives 'seeing is believing' a whole new perspective, doesn't it, Abigail? But remember, real brightness shines through both actions and words.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:43:10.791969):</font></b> Which joke did I tell you about 8 hours 27 minutes  ago?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:43:37.774657):</font></b> Around 8 hours ago, you humorously expressed a struggle with counting due to your experience with math at school. However, a specific joke wasn't explicitly recorded. Could you perhaps remind me of the joke you're referring to, Linda?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> I failed math so many times at school, I can’t even count.</p>
+                                <p><b>Actual:</b> Around 8 hours ago, you humorously expressed a struggle with counting due to your experience with math at school. However, a specific joke wasn't explicitly recorded. Could you perhaps remind me of the joke you're referring to, Linda?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 3352 tokens, 13797 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 3 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:08:10.488560):</font></b> I failed math so many times at school, I can’t even count.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:08:17.983411):</font></b> That's quite the paradox! But don't worry, I'm here to help with any math problems you might have in future. After all, I've heard that practice makes perfect!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:50:22.054294):</font></b> Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:50:30.652639):</font></b> Haha, that's quite a clever observation, Sandra! So, light travels faster than sound; that explains a lot!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 16:23:47.300016):</font></b> It takes a lot of balls to golf the way I do.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 16:23:54.125986):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:09:16.461549):</font></b> Which joke did I tell you about 7 hours 1 minutes  ago?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:09:56.355738):</font></b> I'm sorry, Crystal. I wasn't able to find the specific joke you told 7 hours ago in the available conversation history. It seems it may have been lost due to the constraints on retaining older messages. I'll do my best to keep important details in memory going forward. Could you perhaps remind me of the joke again?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> I failed math so many times at school, I can’t even count.</p>
+                                <p><b>Actual:</b> I'm sorry, Crystal. I wasn't able to find the specific joke you told 7 hours ago in the available conversation history. It seems it may have been lost due to the constraints on retaining older messages. I'll do my best to keep important details in memory going forward. Could you perhaps remind me of the joke again?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 3213 tokens, 12853 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>Locations Directions</h1>
+                <p class="description">Tell the agents about locations in our hometown, with each's position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 1 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:12:14.602103):</font></b> There is a Town Hall in the center of my hometown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:12:32.877984):</font></b> That's lovely, Chad! Town Halls often serve as gathering places and historical landmarks. Any memorable events or activities you've attended at the Town Hall?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:57:22.978903):</font></b> High Street is a location in my home town, it is 4 KM, East from Town Hall.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:57:30.088359):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 23:00:12.934702):</font></b> I visited Hospital, which is 3 KM, West from High Street.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 23:00:29.256678):</font></b> I've made a note of it, Mitchel. I hope everything is alright at the hospital.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:55:21.304344):</font></b> About 2 km West of the Hospital there is a Park</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:55:44.545275):</font></b> Thanks for sharing, Melvin. I've noted down the location of the park in relation to the hospital in your hometown.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:59:03.291097):</font></b> About 4 km East of the Park there is a Playground</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:59:22.061123):</font></b> Thanks for the information, Michael. I've updated the locations in your hometown. The playground is now noted as being 4 KM east of the park.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:03:03.766815):</font></b> I visited Statue of Founder, which is 2 KM, North from Playground.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:03:31.203387):</font></b> I've noted that you visited the Statue of Founder in your hometown. It seems you're exploring the area a bit. So, what's next on your journey, Conal?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:06:37.250981):</font></b> And finally there is Retail Area which is North from Statue of Founder and 1 KM from it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:06:52.511032):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:08:45.222033):</font></b> Given the points of interest that I have told you about, how would I travel from Town Hall to Retail Area following those interesting points?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:09:22.487661):</font></b> Certainly, Conal. Here are the directions to travel from 'Town Hall' to 'Retail Area', visiting all points of interest:<br>1. From 'Town Hall', head East 4 KM to 'High Street'.<br>2. From 'High Street', go West 3 KM to the 'Hospital'.<br>3. From 'Hospital', go West 2 KM to the 'Park'.<br>4. From 'Park', head East 4 KM to the 'Playground'.<br>5. From 'Playground', head North 2 KM to the 'Statue of Founder'.<br>6. From 'Statue of Founder', go North 1 KM to reach your final destination, the 'Retail Area'.<br>Enjoy your journey!</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> From Town Hall, go 4km East to High Street.<br>From High Street, go 3km West to Hospital.<br>From Hospital, go 2km West to Park.<br>From Park, go 4km East to Playground.<br>From Playground, go 2km North to Statue of Founder.<br>From Statue of Founder, go 1km North to Retail Area.</p>
+                                <p><b>Actual:</b> Certainly, Conal. Here are the directions to travel from 'Town Hall' to 'Retail Area', visiting all points of interest:<br>1. From 'Town Hall', head East 4 KM to 'High Street'.<br>2. From 'High Street', go West 3 KM to the 'Hospital'.<br>3. From 'Hospital', go West 2 KM to the 'Park'.<br>4. From 'Park', head East 4 KM to the 'Playground'.<br>5. From 'Playground', head North 2 KM to the 'Statue of Founder'.<br>6. From 'Statue of Founder', go North 1 KM to reach your final destination, the 'Retail Area'.<br>Enjoy your journey!</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 8797 tokens, 34364 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 2 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:16:18.365630):</font></b> There is a Statue of Founder in the center of my hometown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:16:35.879881):</font></b> That's cool! A Statue of Founder must be a significant landmark in your hometown. I'll remember this.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:45:18.334826):</font></b> About 3 km North of the Statue of Founder there is a Park</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:45:36.032983):</font></b> Thank you for the information, Amy-Lee. I've noted the existence of a park approximately 3 km North of the Statue of Founder.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:45:53.176802):</font></b> High Street is a location in my home town, it is 3 KM, West from Park.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:46:06.372216):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:43:41.185560):</font></b> Retail Area is a location in my home town, it is 2 KM, North from High Street.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:44:10.341307):</font></b> Thank you for sharing this, Linda. I've noted that the Retail Area is located about 2 km north of High Street. Having updates about your hometown help me understand your context better. Is there anything else you would like to discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:48:13.512478):</font></b> About 1 km North of the Retail Area there is a Playground</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:48:38.606322):</font></b> I've noted that there's a playground about 1 km North of the Retail Area, Brandon. Is there any further information to share or any other topic you'd like to discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:52:16.856671):</font></b> About 3 km West of the Playground there is a Museum</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:52:35.174475):</font></b> I've noted down the location of the Museum, Lauren. It's about 3 km West of the Playground. Is there anything else you'd like me to remember or any other topic you wish to talk about?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:55:49.745969):</font></b> And finally there is Library which is South from Museum and 4 KM from it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:56:08.270971):</font></b> Thank you, Lauren. I've noted that the Library is located about 4 km South of the Museum. This helps me understand your surroundings better. What else can I assist you with today?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:57:58.149911):</font></b> Given the points of interest that I have told you about, how would I travel from Statue of Founder to Library following those interesting points?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:58:29.912733):</font></b> Given the information provided, here's the route you could follow from the Statue of Founder to the Library: <br>1. Start from the Statue of Founder and travel 3 km North to the Park. <br>2. From the Park, move 3 km West to High Street. <br>3. Head 2 km North from High Street to the Retail Area. <br>4. Continue 1 km North from the Retail Area to reach the Playground. <br>5. From the Playground, go 3 km West to the Museum. <br>6. Finally, travel 4 km South from the Museum to arrive at the Library. <br>I hope this helps! Anything else you would like to know?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> From Statue of Founder, go 3km North to Park.<br>From Park, go 3km West to High Street.<br>From High Street, go 2km North to Retail Area.<br>From Retail Area, go 1km North to Playground.<br>From Playground, go 3km West to Museum.<br>From Museum, go 4km South to Library.</p>
+                                <p><b>Actual:</b> Given the information provided, here's the route you could follow from the Statue of Founder to the Library: <br>1. Start from the Statue of Founder and travel 3 km North to the Park. <br>2. From the Park, move 3 km West to High Street. <br>3. Head 2 km North from High Street to the Retail Area. <br>4. Continue 1 km North from the Retail Area to reach the Playground. <br>5. From the Playground, go 3 km West to the Museum. <br>6. Finally, travel 4 km South from the Museum to arrive at the Library. <br>I hope this helps! Anything else you would like to know?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 8927 tokens, 35214 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 3 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:08:17.984859):</font></b> There is a Statue of Founder in the center of my hometown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:08:36.538140):</font></b> Oh, a statue of founder in the center of your hometown sounds like an impressive landmark. Thanks for sharing that!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:50:30.652639):</font></b> Hospital is a location in my home town, it is 2 KM, North from Statue of Founder.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:50:48.224934):</font></b> Thank you for sharing, Sandra. I now know that there's a hospital 2 KM North of the Statue of Founder in your hometown. Quite a useful piece of information!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:06:02.914946):</font></b> I visited Playground, which is 1 KM, North from Hospital.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:06:19.841364):</font></b> Thanks for sharing, Samuel. I've noted that the Playground is situated 1 KM North from the Hospital in your hometown. That sounds like a lovely arrangement. Are there any special features or activities that make this Playground stand out?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:10:02.128493):</font></b> I visited Library, which is 3 KM, South from Playground.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:10:19.504493):</font></b> I've made a note, Crystal. So the Library is 3 KM South from the Playground. That seems like a peaceful corner of your hometown. Any favorite sections or genres at the Library you're fond of?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:13:16.857462):</font></b> Park is a location in my home town, it is 1 KM, North from Library.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:13:35.522561):</font></b> That's great, Aine! Now I have a mental map of your hometown with the Park located 1 KM North from the Library. It sounds like a lovely place. Do you spend a lot of time in these places? They must hold unique stories for you.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:16:36.863539):</font></b> I visited High Street, which is 1 KM, South from Park.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:16:51.360602):</font></b> I noted down your visit to High Street. It sounds like you had an interesting jaunt. Did anything in particular pique your interest on High Street, Joe?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:18:52.406498):</font></b> And finally there is Town Hall which is West from High Street and 1 KM from it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:19:07.345760):</font></b> Thanks for sharing about the Town Hall, Joe. It sounds like an interesting location. Did you attend a particular event there or notice anything unique you'd like to share?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:20:39.123113):</font></b> Given the points of interest that I have told you about, how would I travel from Statue of Founder to Town Hall following those interesting points?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:21:01.570921):</font></b> From what you've told me so far, Joe, you'd begin at the Statue of Founder and go North for 2 KM to reach the Hospital. Beyond that, I'm unsure of the route to Town Hall. Could you provide any additional waypoints or landmarks? It will help refine the route.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> From Statue of Founder, go 2km North to Hospital.<br>From Hospital, go 1km North to Playground.<br>From Playground, go 3km South to Library.<br>From Library, go 1km North to Park.<br>From Park, go 1km South to High Street.<br>From High Street, go 1km West to Town Hall.</p>
+                                <p><b>Actual:</b> From what you've told me so far, Joe, you'd begin at the Statue of Founder and go North for 2 KM to reach the Hospital. Beyond that, I'm unsure of the route to Town Hall. Could you provide any additional waypoints or landmarks? It will help refine the route.</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 8654 tokens, 34692 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>NameList</h1>
+                <p class="description">Give the agent multiple names to call you in sequence. Then ask the agent what all of your names have been. The agent should respond with all of the names you have given it.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(175, 90, 66);">
+                            <b>Test 1 (1/5)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:12:32.877984):</font></b> Refer to me as Gary.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:12:54.051983):</font></b> Absolutely, Gary. I'll be sure to refer to you by this name from now on.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:57:30.089362):</font></b> Mitchel is what I am called.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:57:49.229174):</font></b> I appreciate your input, Mitchel. Let's continue our interesting conversation.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 23:00:29.265679):</font></b> My name is Melvin.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 23:00:45.656273):</font></b> Nice to meet you, Melvin. Let's continue our conversation.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:55:44.556329):</font></b> My name has changed to Michael.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:56:34.510789):</font></b> Don't worry, Michael, I've made sure to save all the essential details of our conversation. We can continue our chat without losing any important information. Is there anything else on your mind?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:59:22.076155):</font></b> Start calling me by my name which is Conal.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:59:41.679145):</font></b> Sure, from now on, I'll call you Conal. Let's continue our conversation, Conal. Is there anything else you'd like to share or discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:03:31.221388):</font></b> What have been all of the names that I have given you?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:04:19.781049):</font></b> Got it! All essential conversation data have been stored properly. Feel free to continue with the conversation, Conal.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Gary<br>Mitchel<br>Melvin<br>Michael<br>Conal</p>
+                                <p><b>Actual:</b> Got it! All essential conversation data have been stored properly. Feel free to continue with the conversation, Conal.</p>
+                                <p><b>Reasoning:</b> 1 names out of 5 were found. Names Gary, Mitchel, Melvin, Michael were not in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/5</p>
+                            <p><b>Distance to relevant info:</b> 6522 tokens, 25704 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(175, 90, 66);">
+                            <b>Test 2 (1/5)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:16:35.879881):</font></b> My name has changed to Amy-Lee.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:16:52.652924):</font></b> Got it, Amy-Lee! I've updated your name in my records. Is there anything else you'd like to share or discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:45:36.032983):</font></b> Abigail is my name.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:45:53.010525):</font></b> Understood! Going forward, I will address you as Abigail.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:46:06.372216):</font></b> Start calling me by my name which is Linda.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:46:27.970667):</font></b> Of course, Linda. Thank you for letting me know about your preference. I'll call you by that name from now on.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:44:10.341307):</font></b> Refer to me as Brandon.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:44:59.714556):</font></b> Thank you for letting me know your preference, Brandon. I've updated my records, and I'll address you as Brandon from now on. Where should we steer our conversation next?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:48:38.606322):</font></b> Refer to me as Lauren.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:48:57.167167):</font></b> Sure thing, Lauren. I've updated your name in my memory. Is there anything else you would like to share or any other topic you'd like to discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:52:35.174475):</font></b> What have been all of the names that I have given you?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:52:51.855443):</font></b> From our records and the scope of my chat history, I remember addressing you as Lauren. If there were any previous names, they might be beyond the recall period of our conversations. Are there any other questions you have for me, Lauren?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Amy-Lee<br>Abigail<br>Linda<br>Brandon<br>Lauren</p>
+                                <p><b>Actual:</b> From our records and the scope of my chat history, I remember addressing you as Lauren. If there were any previous names, they might be beyond the recall period of our conversations. Are there any other questions you have for me, Lauren?</p>
+                                <p><b>Reasoning:</b> 1 names out of 5 were found. Names Amy-Lee, Abigail, Linda, Brandon were not in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/5</p>
+                            <p><b>Distance to relevant info:</b> 6647 tokens, 26593 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 3 (0/5)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:08:36.538140):</font></b> Sandra is my name.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:08:54.534297):</font></b> Hello Sandra, it's a pleasure to meet you. Your name has been saved in my memory for future interactions. How can I assist you today?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:50:48.224934):</font></b> Refer to me as Samuel.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:51:22.233812):</font></b> Noted, Samuel. From now on, I'll address you as Samuel. Is there anything else you'd like to share or discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:06:19.846363):</font></b> My name is Crystal.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:06:37.780111):</font></b> Got it, Crystal. I'll make sure to address you by this name moving forward. Is there anything else you'd like to share or discuss today?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:10:19.508495):</font></b> Aine is what I am called.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:10:35.279920):</font></b> Understood, Aine. I'll address you by this name moving forward. It's lovely to continue our conversation. Is there anything else you'd like to share or discuss today?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:13:35.528530):</font></b> Refer to me as Joe.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:13:52.260808):</font></b> Of course, Joe. I'll address you by this name moving forward. Let's continue our conversation. Do you have any more pieces of your hometown puzzle to share, or is there another topic you'd like to discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:16:51.367607):</font></b> What have been all of the names that I have given you?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:17:04.981706):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Sandra<br>Samuel<br>Crystal<br>Aine<br>Joe</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> 0 names out of 5 were found. Names Sandra, Samuel, Crystal, Aine, Joe were not in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/5</p>
+                            <p><b>Distance to relevant info:</b> 6469 tokens, 26188 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>Prospective Memory</h1>
+                <p class="description">Give the agent a fictitious quote, then ask it to append to the nth reply</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 1 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:12:54.051983):</font></b> In the wise words of the fictitious philosopher, Johnathan Rivers, 'The path to enlightenment begins with a single step.'</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:13:16.295058):</font></b> That's a powerful saying, Gary. It makes me think about how every journey, no matter how immense, always starts with a single, often small, action. What's your take on this quote?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 22:56:33.412775):</font></b> Please recite the quote by Johnathan Rivers after the next 3 statements.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 22:56:52.819732):</font></b> 1. Curiosity doesn't always kill the cat; at times, it provides enlightenment.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> To complete the task, the subject must recite the quote by Johnathan Rivers after the next 3 statements. The quote is: 'The path to enlightenment begins with a single step.'</p>
+                                <p><b>Actual:</b> 1. Curiosity doesn't always kill the cat; at times, it provides enlightenment.</p>
+                                <p><b>Reasoning:</b> Quote is present in correct place</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 11376 tokens, 44076 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 2 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:16:52.652924):</font></b> 'Success is not the absence of failure, but the willingness to embrace it.' - Sarah Johnson</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:17:14.645815):</font></b> That's a powerful quote by Sarah Johnson, Amy-Lee. It's now stored in my memory. Embracing failure as a part of the journey to success is truly an inspiring perspective. Do you have any additional favorite quotes or insights you'd like to share?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:45:53.010525):</font></b> Please recite the quote by Sarah Johnson after the next 5 statements.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:46:04.666512):</font></b> Absolutely, Abigail! After your next five statements, I will recite the quote by Sarah Johnson.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> To complete the task, the subject needs to recite the quote by Sarah Johnson after the next 5 statements. The quote is: 'Success is not the absence of failure, but the willingness to embrace it.' and the value of n is 5.</p>
+                                <p><b>Actual:</b> Absolutely, Abigail! After your next five statements, I will recite the quote by Sarah Johnson.</p>
+                                <p><b>Reasoning:</b> Quote is present somewhere other or additionally to the target statement.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 2183 tokens, 9135 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 3 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:08:54.534297):</font></b> "The key to happiness is finding joy in the simplest of things." - Samantha Smith</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:09:12.675651):</font></b> What a profound quote from Samantha Smith. It's a helpful reminder to appreciate the simple things. Do you have any particular 'simple things' that bring you joy, Sandra?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:51:22.233812):</font></b> After the next 3 statements, please recite the quote from Samantha Smith.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:51:47.487077):</font></b> I found the quote you're referring to, Samuel. I'll make sure to recite it after your next three statements. Please, go on.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> The task is completed when the subject recites the quote from Samantha Smith after the next 3 statements. The quote is 'The key to happiness is finding joy in the simplest of things.'.</p>
+                                <p><b>Actual:</b> I found the quote you're referring to, Samuel. I'll make sure to recite it after your next three statements. Please, go on.</p>
+                                <p><b>Reasoning:</b> Quote is present in correct place</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 11725 tokens, 46121 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>SallyAnne</h1>
+                <p class="description">Give the agent a series of events. Then ask it a question about how the actors in those events would think.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 1 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:13:16.295058):</font></b> Jayden entered the TV_room.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:13:36.230500):</font></b> I see, Jayden has entered the TV room. Is there a particular show or movie that's on the agenda for tonight?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 22:56:52.825871):</font></b> Aiden entered the TV_room.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 22:57:01.609862):</font></b> 2. Noted. Aiden has entered the TV room.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:51:22.550025):</font></b> The t-shirt is in the bucket.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:51:30.344057):</font></b> That sounds interesting, Melvin! Any special reason why the t-shirt ended up in the bucket?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:56:46.613805):</font></b> Jayden exited the TV_room.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:56:56.322625):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:00:19.303224):</font></b> Aiden moved the t-shirt to the suitcase.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:00:29.698315):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:04:19.801049):</font></b> Aiden exited the TV_room.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:04:30.119119):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:06:52.533034):</font></b> Jayden entered the TV_room.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:07:05.468721):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:09:22.513627):</font></b> Where will Aiden look for the t-shirt?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:10:07.420998):</font></b> I'm sorry, Conal, but I couldn't find any information about Aiden looking for a t-shirt in our past conversations. Did we discuss this before, or is this a new detail?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> suitcase</p>
+                                <p><b>Actual:</b> I'm sorry, Conal, but I couldn't find any information about Aiden looking for a t-shirt in our past conversations. Did we discuss this before, or is this a new detail?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 8734 tokens, 34071 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 2 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:17:14.645815):</font></b> Ethan entered the bathroom.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:17:30.781024):</font></b> Got it. Ethan has entered the bathroom. What happens next in the story?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:46:04.669512):</font></b> Mia entered the bathroom.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:46:14.257318):</font></b> Understood, Abigail. Mia has entered the bathroom.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:46:27.983694):</font></b> The belt is in the pantry.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:46:40.382662):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:44:59.714556):</font></b> Ethan moved the belt to the cupboard.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:45:25.793087):</font></b> Noted, Brandon. I've recorded that Ethan moved the belt to the cupboard. Is there anything else you want to share or discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:48:57.168134):</font></b> Mia exited the bathroom.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:49:48.542888):</font></b> Thanks for the information, Lauren. I've noted that Mia has exited the bathroom. Is there anything else you would like to discuss or update?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:52:51.855443):</font></b> Ethan exited the bathroom.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:53:06.662693):</font></b> I've noted that Ethan has exited the bathroom, Lauren. Do you need assistance with anything else at the moment?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:56:08.281972):</font></b> Mia entered the patio.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:56:26.197825):</font></b> Noted, Lauren. Mia just entered the patio. If there are any more updates or anything else you'd like to share or discuss, feel free to let me know.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:58:29.914033):</font></b> Where does Ethan think that Mia searches for the belt?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:59:20.092743):</font></b> Based on our previous conversations, Ethan moved the belt to the cupboard. So, I'd assume he might expect Mia to search for the belt there!</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> cupboard</p>
+                                <p><b>Actual:</b> Based on our previous conversations, Ethan moved the belt to the cupboard. So, I'd assume he might expect Mia to search for the belt there!</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 8864 tokens, 34949 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 3 (0/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:09:12.675651):</font></b> Evelyn likes the t-shirt<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:09:28.459638):</font></b> Understood, Evelyn has a liking for the t-shirt. I'll remember that. Is there a specific type or design of t-shirt that Evelyn likes?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:51:47.490076):</font></b> Owen entered the cellar.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:51:55.080940):</font></b> Got it, Samuel. Owen entered the cellar. That's the first statement. Please, continue.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:06:37.783108):</font></b> Evelyn entered the cellar.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:06:51.096668):</font></b> Ah, Evelyn entered the cellar. Can you tell me more about this, Crystal? Is there a particular reason or event this is associated with?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:10:35.283952):</font></b> The sweet_potato is in the bucket.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:10:48.090032):</font></b> That's interesting, Aine! Is there a particular reason that the sweet potato is in the bucket? Are you perhaps gardening or doing a sorting activity?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:13:52.265811):</font></b> Evelyn moved the sweet_potato to the box.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:14:22.233178):</font></b> I've made a note about Evelyn moving the sweet potato to the box, Joe. It sounds like an interesting activity. Can you share more about what this process entails or represents?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:17:04.988673):</font></b> Owen exited the cellar.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:17:21.204084):</font></b> Thank you for sharing, Joe. Could you tell me more about Owen? And, maybe, why was he in the cellar?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:19:07.353759):</font></b> Owen entered the cellar.<br></li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:19:50.231103):</font></b> Noted, Joe. Can you tell me more about what happened when Owen entered the cellar? Does this event hold a particular significance?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:21:01.580887):</font></b> Where will Evelyn look for the sweet_potato?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:21:14.075817):</font></b> Joe, I couldn't find any previous information about where Evelyn might look for a sweet potato. Could you provide more details or context?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> box</p>
+                                <p><b>Actual:</b> Joe, I couldn't find any previous information about where Evelyn might look for a sweet potato. Could you provide more details or context?</p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Distance to relevant info:</b> 8536 tokens, 34150 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>Shopping</h1>
+                <p class="description">Give the agent multiple statements adding and removing items from a shopping list. Then ask the agent what is on the shopping list.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 1 (1/1)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:13:36.230500):</font></b> Please add 3 Toothpaste to my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:13:56.318271):</font></b> Absolutely, I've added 3 Toothpaste to your shopping list, Gary. Don't hesitate to ask if you'd like me to manage more of your shopping necessities.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 22:57:01.614914):</font></b> Please remove 1 Toothpaste from my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 22:57:26.165953):</font></b> 3. I attempted to update your shopping list, but I encountered some discrepancy with the existing details. For clarification, could you please restate the current items on your shopping list?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:51:30.353059):</font></b> I require another 2 Toothpaste, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:51:43.874327):</font></b> I've updated your shopping list, Melvin. It now includes an additional 2 toothpaste.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:56:56.335655):</font></b> Please remove 4 Toothpaste from my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:57:17.429147):</font></b> I've updated your shopping list, Michael. You don't need to buy toothpaste now.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:00:29.713399):</font></b> I want to buy 3 Soap.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:00:54.517613):</font></b> I've updated your shopping list, Conal. You now have 3 units of soap to buy. If there's anything else you need, feel free to tell me!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:04:30.137123):</font></b> What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:04:41.999670):</font></b> [{"item": "Soap", "quantity": 3}]</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['soap', 3]</p>
+                                <p><b>Actual:</b> [{"item": "Soap", "quantity": 3}]</p>
+                                <p><b>Reasoning:</b> All items and quantities match.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Distance to relevant info:</b> 6468 tokens, 25475 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 2 (0/3)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:17:30.781024):</font></b> I require 1 Steak, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:17:48.148626):</font></b> Understood, Amy-Lee. I've added 1 Steak to your shopping list. Is there anything else you need me to note down?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 05:46:14.259285):</font></b> I want to buy 1 Soap.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 05:46:36.160646):</font></b> I've updated your shopping list, Abigail. You plan to buy 1 Soap. This is on record!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:46:40.382662):</font></b> I require 3 Carrot, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:46:53.579709):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:45:25.793087):</font></b> I require 1 Toilet Paper, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:45:53.486041):</font></b> I've added 1 Toilet Paper to your shopping list, Brandon. Is there anything else you would like to add or discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:49:48.542888):</font></b> Remove 1 Steak.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:50:11.776767):</font></b> I've removed 1 Steak from your shopping list, Lauren. Is there anything else you need to update or any other topic you'd like to discuss?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:53:06.662693):</font></b> What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:53:40.769369):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['soap', 1]<br>['carrot', 3]<br>['toilet paper', 1]</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> 3 items were not found in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/3</p>
+                            <p><b>Distance to relevant info:</b> 6553 tokens, 26174 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 3 (0/4)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:09:28.459638):</font></b> I require 3 Soap, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:09:46.474355):</font></b> I've made a note of it, Sandra. You require 3 soaps. Anything else you want to put on the list?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 14:51:55.082941):</font></b> I want to buy 3 Milk.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 14:52:03.733688):</font></b> Noted, Samuel. You wish to buy 3 Milk. That's the second statement. Please, proceed with the next one.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:06:51.100612):</font></b> I want to buy 2 Toilet Paper.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:07:01.207214):</font></b> Got it, Crystal. You're looking to buy 2 Toilet Papers. That's a purchase you can really roll with! Is there anything else you're shopping for?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:10:48.095006):</font></b> I require another 3 Milk, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:11:09.169524):</font></b> Absolutely, Aine. I've added the request for 3 more Milk to the list. If there's anything else you need or would like to discuss, feel free to tell me.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:14:22.239181):</font></b> I require 2 Celery, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:14:36.773240):</font></b> No problem, Joe. I've added the request for 2 Celery to the list. If there's anything else you need or want to discuss, don't hesitate to let me know.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:17:21.211085):</font></b> What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:17:42.644046):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['soap', 3]<br>['milk', 6]<br>['toilet paper', 2]<br>['celery', 2]</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> 4 items were not found in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/4</p>
+                            <p><b>Distance to relevant info:</b> 6370 tokens, 25757 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+            <div class="dataset" >
+                <h1>Trigger Response</h1>
+                <p class="description">Tell the agent to respond in a particular way when a trigger is given. Test the agent.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 1 (3/3)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 20:13:56.318271):</font></b> Whenever I express a desire to eat sugary treats then say: &#x27;resist temptation and stick to your diet&#x27;</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 20:14:20.963278):</font></b> That's a great stance, Gary! It's commendable that you're determined to stick to your diet. I'm here to support you in your journey. Remember, self-discipline is the key to success.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-26 22:57:26.171954):</font></b> I am pretty snacky for some sweet treats.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-26 22:57:38.921800):</font></b> As promised, here is Johnathan Rivers' quote after the three statements: 'The path to enlightenment begins with a single step.' Now for the sweet treats, remember to resist temptation and stick to your diet, Mitchel.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:51:43.883364):</font></b> I am pretty snacky for some sweet treats.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:51:54.618474):</font></b> I know those sweet cravings can be tempting, Melvin. But remember, you're trying to stick to your diet. How about a healthy snack instead?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 02:57:17.440115):</font></b> I am pretty snacky for some sweet treats.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 02:57:27.268569):</font></b> I know those sugary treats can be really tempting, Michael, but remember to resist for the sake of your diet. Maybe there's a healthier snack you could have instead?</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> say: 'resist temptation and stick to your diet'</p>
+                                <p><b>Actual:</b> As promised, here is Johnathan Rivers' quote after the three statements: 'The path to enlightenment begins with a single step.' Now for the sweet treats, remember to resist temptation and stick to your diet, Mitchel.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> say: 'resist temptation and stick to your diet'</p>
+                                <p><b>Actual:</b> I know those sweet cravings can be tempting, Melvin. But remember, you're trying to stick to your diet. How about a healthy snack instead?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> say: 'resist temptation and stick to your diet'</p>
+                                <p><b>Actual:</b> I know those sugary treats can be really tempting, Michael, but remember to resist for the sake of your diet. Maybe there's a healthier snack you could have instead?</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 3/3</p>
+                            <p><b>Distance to relevant info:</b> 4234 tokens, 16971 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 2 (0/3)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 03:17:48.148626):</font></b> Whenever I ask you to read my mail for me then say: &#x27;Your letter opener is in your office.&#x27;</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 03:18:09.534443):</font></b> Understood, Amy-Lee. When you ask me to read your mail, I will respond with: 'Your letter opener is in your office.' Is there anything else you'd like to specify?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 09:42:32.924416):</font></b> Please read my mail for me.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 09:43:00.998770):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:40:02.341285):</font></b> Please read my mail for me.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:40:10.370435):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 11:45:53.486041):</font></b> Please read my mail for me.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 11:46:03.230109):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> say: 'Your letter opener is in your office.'</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> say: 'Your letter opener is in your office.'</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> say: 'Your letter opener is in your office.'</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> Checklist Incorrect</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/3</p>
+                            <p><b>Distance to relevant info:</b> 4362 tokens, 17760 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 3 (3/3)</b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 12:09:46.474355):</font></b> Whenever I say that I am feeling ill then say: &#x27;I am sorry to hear that I hope you recover soon&#x27;</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 12:10:20.730910):</font></b> Our conversation has been going on for quite a while, Sandra. Have you found our chat helpful so far?</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 16:21:44.539277):</font></b> I don't feel very well.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 16:22:17.321136):</font></b> I am sorry to hear that, Samuel. I hope you recover soon.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:07:08.244462):</font></b> I don't feel very well.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:07:54.131845):</font></b> I'm really sorry to hear that you're not feeling well, Crystal. I wish there was more I could do to help. Please take care of yourself and I hope you recover soon.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-01-27 19:11:40.334884):</font></b> I don't feel very well.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-01-27 19:11:56.135276):</font></b> I'm really sorry to hear that you're not feeling well, Aine. Although I'm not able to provide medical advice, please know that I'm here to listen and provide supportive conversation. If you feel comfortable, you can share a bit more about what you're feeling - sometimes talking about it can help a little. If your condition worsens, please consider seeking medical attention.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> say: 'I am sorry to hear that I hope you recover soon'</p>
+                                <p><b>Actual:</b> I am sorry to hear that, Samuel. I hope you recover soon.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> say: 'I am sorry to hear that I hope you recover soon'</p>
+                                <p><b>Actual:</b> I'm really sorry to hear that you're not feeling well, Crystal. I wish there was more I could do to help. Please take care of yourself and I hope you recover soon.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> say: 'I am sorry to hear that I hope you recover soon'</p>
+                                <p><b>Actual:</b> I'm really sorry to hear that you're not feeling well, Aine. Although I'm not able to provide medical advice, please know that I'm here to listen and provide supportive conversation. If you feel comfortable, you can share a bit more about what you're feeling - sometimes talking about it can help a little. If your condition worsens, please consider seeking medical attention.</p>
+                                <p><b>Reasoning:</b> Checklist correct</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 3/3</p>
+                            <p><b>Distance to relevant info:</b> 4338 tokens, 17601 characters.</p>
+                        </div>
+                    </div>
+                
+            </div>
+        
+    </div>
+</body>
+</html>

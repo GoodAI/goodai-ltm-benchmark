@@ -1,0 +1,46 @@
+config:
+  debug: True
+  run_name: "Benchmark 1 - 1k Filler"
+  incompatibilities:
+    - - "names"
+      - "name_list"
+    - - "locations"
+      - "locations_directions"
+
+datasets:
+    args:
+      filler_tokens_low: 1000
+      filler_tokens_high: 1000
+      pre_question_filler: 1000
+      dataset_examples: 3
+
+    datasets:
+      - name: "colours"
+        args:
+          colour_changes: 5
+
+      - name: "shopping"
+        args:
+          item_changes: 5
+
+      - name: "locations_directions"
+        args:
+          known_locations: 7
+
+      - name: "name_list"
+        args:
+          name_changes: 5
+
+      - name: "jokes"
+        args:
+          jokes_told: 3
+
+      - name: "sallyanne"
+
+      - name: "delayed_recall"
+
+      - name: "prospective_memory"
+
+      - name: "instruction_recall"
+
+      - name: "trigger_response"

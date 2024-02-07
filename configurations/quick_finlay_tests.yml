@@ -1,0 +1,23 @@
+
+config:
+  debug: True
+  run_name: "QuickFinlayTests"
+  incompatibilities:
+    - - "names"
+      - "name_list"
+    - - "locations"
+      - "locations_directions"
+
+datasets:
+    args:
+      filler_tokens_low: 500
+      filler_tokens_high: 500
+      pre_question_filler: 500
+      dataset_examples: 10
+
+    datasets:
+      - name: "trigger_response"
+
+#      - name: "prospective_memory"
+
+

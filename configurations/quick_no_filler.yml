@@ -1,0 +1,31 @@
+config:
+  debug: True
+  run_name: "QuickNoFillerBenchmark"
+
+datasets:
+    args:
+      filler_tokens_low: 0
+      filler_tokens_high: 0
+      pre_question_filler: 0
+      dataset_examples: 10
+
+    datasets:
+      - name: "colours"
+        args:
+          colour_changes: 3
+
+      - name: "shopping"
+        args:
+          item_changes: 3
+
+      - name: "locations_directions"
+        args:
+          known_locations: 3
+
+      - name: "sallyanne"
+        args:
+          data_location: "data/tomi_data/test.txt"
+
+      - name: "jokes"
+        args:
+          jokes_told: 3
