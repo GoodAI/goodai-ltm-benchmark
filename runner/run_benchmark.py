@@ -57,8 +57,6 @@ def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
         return LTMAgent1(model="gpt-4-1106-preview", **kwargs)
     elif name == "ltm_agent_2":
         return LTMAgent2(model="gpt-4-1106-preview", **kwargs)
-    elif name == "charlie":
-        return CharlieMnemonic(**kwargs)
     elif name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
