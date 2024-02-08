@@ -1,10 +1,15 @@
 # GoodAI LTM Benchmark
 
-![GoodAI Logo. A cybernetic owl, which is half robot, half organic, and next to it the company name: GoodAI](https://www.goodai.com/wp-content/themes/custom/img/logo.svg "GoodAI Research s.r.o.")
+![GoodAI Logo. A cybernetic owl, which is half robot, half organic, and next to it the company name: GoodAI](logo.png "GoodAI Research s.r.o.")
 
-This repository contains the code and data to supplement [our blogpost]().
+This repository contains the code and data to supplement [our blogpost](https://www.goodai.com/introducing-goodai-ltm-benchmark/).
 
-These Long-Term Memory (LTM) tests differ from other benchmarking suites in that they are conversation focused. The supply of information to the agents, and the subsequent tests are presented to the agents through their conversational interface i.e. through messages. This is in contrast to other testing schemes which supply the information that the agent is to be tested on directly as a precomputed knowledge base of some form. These tests aim to evaluate the different LTM abilities of an agent through long conversations containing many topics.
+As part of our research efforts in the area of continual learning, we are open-sourcing this benchmark for testing agents’ ability to perform tasks involving the advanced use of the memory over very long conversations. Among others, we evaluate the agent’s performance on tasks that require dynamic upkeep of memories or integration of information over long periods of time.
+
+We are releasing:
+ * The living GoodAI LTM Benchmark (this repository).
+ * Our [agents](model_interfaces/).
+ * Our experiment data and results
 
 ## Running the Benchmarks
 
