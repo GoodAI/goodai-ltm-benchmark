@@ -6,7 +6,7 @@ This repository contains the code and data to supplement [our blogpost](https://
 
 As part of our research efforts in the area of continual learning, we are open-sourcing this benchmark for testing agents’ ability to perform tasks involving the advanced use of the memory over very long conversations. Among others, we evaluate the agent’s performance on tasks that require dynamic upkeep of memories or integration of information over long periods of time.
 
-We are releasing:
+We are open-sourcing:
  * The living GoodAI LTM Benchmark (this repository).
  * Our [LTM agents](model_interfaces/).
  * Our experiment data and results
