@@ -8,8 +8,12 @@ As part of our research efforts in the area of continual learning, we are open-s
 
 We are releasing:
  * The living GoodAI LTM Benchmark (this repository).
- * Our [agents](model_interfaces/).
+ * Our [LTM agents](model_interfaces/).
  * Our experiment data and results
+
+This benchmark has demonstrated that our **LTM agents with 8k context are comparable to long context GPT-4-1106 with 128k**
+tokens when recalling and correctly using information in short form conversational contexts. In a longer benchmark, our agents
+outperform long context GPT by **13%** for **16% of the running costs.** See the [Benchmark section](#benchmark-1---022024) for the scores.
 
 ## Running the Benchmarks
 
