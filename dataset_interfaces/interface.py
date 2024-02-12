@@ -330,7 +330,9 @@ class DatasetInterface(ABC):
 
         assert len(is_question) >= 1
         is_prior_to_question = is_question[1:] + [False]
-        return [_filler_size(is_q, is_p2q) for is_q, is_p2q in zip(is_question, is_prior_to_question)]
+        filler = [_filler_size(is_q, is_p2q) for is_q, is_p2q in zip(is_question, is_prior_to_question)]
+        filler[-1] = 0
+        return filler
 
     def tokens_to_answer(self, context: List, example: TestExample, timestamps: List):
         encoding = tiktoken.get_encoding("cl100k_base")
