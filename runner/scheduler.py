@@ -314,7 +314,9 @@ class TestRunner:
         return result, skip
 
     def run_interleaved_group(self, test_group: list[TestExample]):
-        self.agent.reset()
+        if not self.config.continuous_conversation:
+            self.agent.reset()
+
         self.result_callbacks = []
         self.group_master_log = []
         results = dict()
@@ -350,6 +352,12 @@ class TestRunner:
                 result = results[example.unique_id]
                 self.progress_dialog.notify_result(result)
                 if not skip:
+                    reset_message = example.reset_message
+                    if self.config.continuous_conversation and reset_message != "":
+                        # The test has finished after running, send the reset message if it exists
+                        action = SendMessageAction(reset_message)
+                        self.log_action(example, action)
+                        self.send_message(action)
                     self.update_result(
                         example=example,
                         result=result,

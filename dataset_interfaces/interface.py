@@ -99,6 +99,7 @@ class TestExample:
     number_of_questions: int = 0
     finished: bool = False
     _iter: Iterator[TestAction] = None
+    reset_message: str = ""
 
     @property
     def unique_id(self):
@@ -145,6 +146,7 @@ class TestExample:
             evaluation_fn=self.evaluation_fn.__name__,
             is_temporal=self.is_temporal,
             uses_callback=self.uses_callback,
+            reset_message=self.reset_message,
         )
 
     def save(self, run_name: str, exist_ok: bool = False):
@@ -199,6 +201,7 @@ class DatasetInterface(ABC):
     seed: int = 0
     cost_callback: Callable[[float], None] = None
     uses_callback: bool = False
+    reset_message: str = ""
 
     def count_questions(self, is_question):
         return len([x for x in is_question if x])

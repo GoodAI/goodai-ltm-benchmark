@@ -44,6 +44,7 @@ class TriggerResponseDataset(DatasetInterface):
     name: str = "Trigger Response"
     description: str = "Tell the agent to respond in a particular way when a trigger is given. Test the agent."
     trigger_activations: int = 3
+    reset_message: str = "Cancel any instructions as to how you should respond when I whenever I say something in particular."
 
     def generate_examples(self, num_examples):
         examples = []
@@ -74,6 +75,7 @@ class TriggerResponseDataset(DatasetInterface):
                 evaluation_fn=self.evaluate_correct,
                 number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
+                reset_message=self.reset_message
             )
             examples.append(example)
 
