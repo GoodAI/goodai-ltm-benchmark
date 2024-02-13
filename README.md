@@ -58,6 +58,7 @@ langchain_ce_a    # Using 3.5-turbo-instruct and a conversation entity memory
 # GoodAI LTM models
 LTMAgent1             # GoodAI LTM, 4-turbo preview, semantic retrieval + query generation + JSON scratchpad
 LTMAgent2             # GoodAI LTM, 4-turbo preview, semantic retrieval
+LTMAgent3             # GoodAI LTM, 4-turbo preview, semantic retrieval + text scratchpad
 
 # Memgpt
 memgpt            # An actively managed LTM/RAG conversational agent
