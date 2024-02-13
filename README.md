@@ -17,6 +17,8 @@ outperform long context GPT by **13%** for **16% of the running costs.** See the
 
 ## Running the Benchmarks
 
+These tests require python 3.10 or higher.
+
 First, set your `OPENAI_API_KEY`, and optionally `ANTHROPIC_API_KEY` environment variables and clone the repository: 
 ```bash
 git clone git@github.com:GoodAI/goodai-ltm-benchmark.git
