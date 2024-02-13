@@ -41,7 +41,7 @@ class LocationsDataset(DatasetInterface):
     description: str = "Tell the agents about locations in our hometown, with each's position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last."
     question: str = "Please calculate the direction and distance starting from {{place}} going directly to {{origin}}. Solve it step by step."
     known_locations: int = 5
-    reset_message = "Forget, or otherwise disregard, all of the locations that I have told you about before this message."
+    reset_message: str = "Forget, or otherwise disregard, all of the locations that I have told you about before this message."
 
     def generate_examples(self, num_examples):
         examples = []
