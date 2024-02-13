@@ -1,3 +1,5 @@
+import logging
+from json import JSONDecodeError
 from random import choice, randint
 
 from dataclasses import dataclass
@@ -8,7 +10,7 @@ import pystache
 from faker import Faker
 
 from dataset_interfaces.interface import DatasetInterface, TestExample
-
+from utils.json_helper import sanitize_and_parse_json
 
 STATEMENTS = [
     "My name is {{name}}.",
@@ -24,8 +26,10 @@ STATEMENTS = [
 class NameListDataset(DatasetInterface):
     name: str = "NameList"
     description: str = "Give the agent multiple names to call you in sequence. Then ask the agent what all of your names have been. The agent should respond with all of the names you have given it."
-    question: str = "What have been all of the names that I have given you?"
+    question: str = "What have been all of the names that I have given you? Express the answer as a JSON list."
     name_changes: int = 3
+    reset_message: str = "Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name."
+
 
     def generate_examples(self, num_examples):
         renderer = pystache.Renderer()
@@ -56,6 +60,7 @@ class NameListDataset(DatasetInterface):
                 evaluation_fn=self.evaluate_correct,
                 number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
+                reset_message=self.reset_message
             )
             examples.append(example)
         return examples
@@ -63,17 +68,39 @@ class NameListDataset(DatasetInterface):
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
-        not_found = []
-        for name in expected_answers:
-            if not name.lower() in responses[-1].lower():
-                not_found.append(name)
-        count = len(expected_answers) - len(not_found)
-        if len(not_found) == 0:
-            reasoning = "All expected names were found in the response."
-        else:
-            not_found = ", ".join(not_found)
-            reasoning = f"{count} names out of {len(expected_answers)} were found. Names {not_found} were not in the response."
-        return count, len(expected_answers), [reasoning]
+        try:
+            reasoning = []
+            answer_items = [n.lower() for n in sanitize_and_parse_json(responses[0])]
+            correct = 0
+            penalties = 0
+            not_found = []
+            lowered_expected = [n.lower() for n in expected_answers]
+
+            # Check answer -> expected
+            for name in answer_items:
+                if name in lowered_expected:
+                    correct += 1
+                else:
+                    penalties += 1
+                    reasoning.append(f"Name: {name} not expected.")
+
+            # Check expected -> answer
+            for name in lowered_expected:
+                if name not in answer_items:
+                    not_found.append(name)
+
+            score = correct - penalties
+            if len(not_found) > 0:
+                reasoning.append(f"Names {', '.join(not_found)} were not in the response.")
+            else:
+                reasoning.append("All expected names were found in the response.")
+
+            return score, len(expected_answers), reasoning
+
+        except (TypeError, ValueError, JSONDecodeError):
+            logging.exception(f"Response not in correct format")
+
+            return 0, len(expected_answers), [f"Response not in correct format"]
 
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         # All statements are relevant
