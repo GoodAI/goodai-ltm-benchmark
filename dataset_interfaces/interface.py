@@ -7,6 +7,8 @@ from random import randint
 from typing import List, Callable, Tuple, Optional, Any, Iterator
 
 import tiktoken
+from goodai.helpers.json_helper import sanitize_and_parse_json
+
 from utils.context import flatten_context, search_context
 from utils.openai import ask_llm
 from utils.files import make_testdef_path
