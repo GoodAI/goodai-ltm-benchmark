@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test summary charts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #ececef;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-title {
+            color: #4d5153; /* GoodAI Dark Grey */
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .main-title img {
+            height: 100px;
+            margin: 5px;
+        }
+        h1, h2, h3, h4 {
+            color: #4d5153; /* GoodAI Dark Grey */
+        }
+        .chart-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: flex;
+            margin: 20px;
+            max-height: 500px;
+        }
+        canvas.spider-chart {
+            max-width: {{max_spider_chart_width}}%;
+        }
+        canvas.bar-chart {
+            max-width: {{max_bar_chart_width}}%;
+        }
+    </style>
+    <script>{{ chart_js }}</script>
+</head>
+<body>
+    <div class="main-title">
+        <img src="data:image/png;base64, {{ logo_b64 }}" alt="GoodAI Logo" />
+        <h1>GoodAI LTM Benchmark</h1>
+        <p>{{ run_name }} - Distraction Tokens: {{ info_gap }}</p>
+    </div>
+    <div class="chart-container">
+        <canvas id="spider-chart" class="spider-chart"></canvas>
+        {% for metric in data_by_metric %}
+            <canvas id="{{metric.name_lower}}-bar-chart" class="bar-chart"></canvas>
+        {% endfor %}
+    </div>
+    <div class="metric-descriptions">
+        {% for metric in data_by_metric %}
+            <p><b>{{metric.name}}: </b>{{ metric.name_alt }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        const spiderChartData = {
+            labels: {{ spider_labels }},
+            datasets: [
+                {% for agent in data_by_agent %}
+                    {
+                        label: '{{agent.name}}',
+                        backgroundColor: '{{agent.background_color}}',
+                        borderColor: '{{agent.border_color}}',
+                        pointBackgroundColor: '{{agent.point_background_color}}',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '{{agent.point_hover_border_color}}',
+                        data: {{agent.normalised_scores}},
+                    },
+                {% endfor %}
+            ]
+        };
+
+        const spiderChartOptions = {
+            scale: {
+                beginAtZero: true,
+                max: 1,
+                min: 0,
+                stepSize: 0.2,
+            }
+        };
+
+        const spiderCtx = document.getElementById('spider-chart').getContext('2d');
+        const spiderChart = new Chart(spiderCtx, {
+            type: 'radar',
+            data: spiderChartData,
+            options: spiderChartOptions
+        });
+
+        {% for metric in data_by_metric %}
+            const {{metric.name_lower}}BarChartData = {
+                labels: ['{{metric.name}}'],
+                datasets: [
+                    {% for agent in metric.scores_by_agent %}
+                        {
+                            label: '{{agent.name}}',
+                            backgroundColor: '{{agent.background_color}}',
+                            borderColor: '{{agent.border_color}}',
+                            borderWidth: 1,
+                            data: [{{agent.score}}]
+                        },
+                    {% endfor %}
+                ]
+            };
+
+            const {{metric.name_lower}}BarCtx = document.getElementById('{{metric.name_lower}}-bar-chart').getContext('2d');
+            const {{metric.name_lower}}BarChart = new Chart({{metric.name_lower}}BarCtx, {
+                type: 'bar',
+                data: {{metric.name_lower}}BarChartData,
+                options: {
+                    scales: {
+                        x: {
+                            stacked: false,
+                            barPercentage: 0.2,
+                            categoryPercentage: 0.5
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        {% endfor %}
+    </script>
+</body>
+</html>
