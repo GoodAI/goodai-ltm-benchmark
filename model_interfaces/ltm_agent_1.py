@@ -9,13 +9,14 @@ import uuid
 from dataclasses import dataclass
 from json import JSONDecodeError
 from typing import List, Callable, Optional
+
+from goodai.helpers.json_helper import sanitize_and_parse_json
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
 from model_interfaces.exp_agents.prompts.chronological_ltm import cltm_template_queries_info
 from model_interfaces.interface import ChatSession
-from utils.json_helper import sanitize_and_parse_json
 from utils.openai import ask_llm, get_max_prompt_size
 import tiktoken
 
