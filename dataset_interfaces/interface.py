@@ -8,7 +8,6 @@ from typing import List, Callable, Tuple, Optional, Any, Iterator
 
 import tiktoken
 from utils.context import flatten_context, search_context
-from utils.json_helper import sanitize_and_parse_json
 from utils.openai import ask_llm
 from utils.files import make_testdef_path
 
