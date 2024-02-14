@@ -40,11 +40,9 @@ DATASETS_BY_NAME = {ds.name: ds for ds in DATASETS.values()}
 
 class DatasetFactory:
     @staticmethod
-    def create_examples(dataset_config, universal_args, max_message_tokens: Optional[int] = None):
+    def create_examples(dataset_config, universal_args):
         name = dataset_config["name"]
         args = deepcopy(universal_args)
-        if max_message_tokens is not None and name == "chapterbreak":
-            args["page_tokens"] = max_message_tokens - 15  # Leave some margin
         ds_args = dataset_config.get("args", {})
         args.update(ds_args)
         num_examples = args["dataset_examples"]

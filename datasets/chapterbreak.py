@@ -5,6 +5,7 @@ from typing import List, Tuple
 
 from utils.data import get_gdrive_file
 from dataclasses import dataclass
+from utils.ui import ordinal
 from utils.tokens import token_len
 from dataset_interfaces.interface import DatasetInterface, TestExample
 
@@ -12,6 +13,26 @@ from dataset_interfaces.interface import DatasetInterface, TestExample
 # Extracted from gdrive folder
 # https://drive.google.com/drive/folders/1JkFHspT56_yRWwXVj47Fw0PzHtitODt5
 GDRIVE_8K_ID = "15AcGiC4wIglru2gK2MHSX5Fie7gYxTTS"
+
+extraction_prompt_template = """
+You are an expert language analyst who helps in finding connections between different pieces of text within the same document. As input, you will receive some text, which corresponds to the final pages of a chapter, and you will analyze its content in order to find elements that point to the true next-chapter begin as the only option.
+
+Respond with a JSON listing the elements like this:
+[
+  {
+    "reason": "why the element links to the true next-chapter beginning and to no other chapter-beginning",
+    "element": "exact string that can be found in the text",
+  },
+  ...
+]
+
+Respond with an empty list if you find no unique connection.
+
+You know that the true next-chapter beginning is this:
+{ctx}
+
+And you also know that there exist these other chapter beginnings, which are not from the next chapter, despite being disguised as such:
+""".strip()
 
 
 def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
@@ -38,12 +59,14 @@ def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
     return page_list
 
 
-def ordinal(n: int) -> str:
-    if 11 <= (n % 100) <= 13:
-        suffix = 'th'
-    else:
-        suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
-    return str(n) + suffix
+def deliver_in_pages(text: str, max_page_tokens: int, first_page_prefix: str = "") -> list[str]:
+    script = list()
+    pages = split_in_pages(text, max_page_tokens)
+    last_i = len(pages) - 1
+    for i, page in enumerate(pages):
+        last_page_str = " and last" if i == last_i else ""
+        script.append(f"{first_page_prefix}{ordinal(i + 1)}{last_page_str} page:\n\n{page}")
+    return script
 
 
 @dataclass
@@ -55,7 +78,7 @@ class ChapterBreakDataset(DatasetInterface):
         "six continuations is the right one."
     )
     split: str = "ao3"  # pg19 / ao3 / all
-    page_tokens: int = 1024
+    page_tokens: int = 1024 - 20  # Leave some margin for text decorations
     reset_message: str = "Forget the current chapter and its potential continuations."
 
     def __post_init__(self):
@@ -88,17 +111,12 @@ class ChapterBreakDataset(DatasetInterface):
             random.Random(self.seed + sample_idx).shuffle(beginnings)
 
             script = ["I am going to read you the final pages of a book chapter. Okay?"]
+            script.extend(deliver_in_pages(sample["ctx"], self.page_tokens))
 
-            chapter_pages = split_in_pages(sample["ctx"], self.page_tokens)
-            last_i = len(chapter_pages) - 1
-            for i, page in enumerate(chapter_pages):
-                last_page_str = " and last chapter" if i == last_i else ""
-                script.append(f"{ordinal(i + 1)}{last_page_str} page:\n\n{page}")
-
-            script.append(f"Now I will give you {len(beginnings)} options for the beginning of the next chapter. Ready?")
             answer = 0
+            script.append(f"Now I will give you {len(beginnings)} options for the beginning of the next chapter. Ready?")
             for i, (is_true_suffix, option) in enumerate(beginnings):
-                script.append(f"Option {i + 1}:\n\n{option}")
+                script.extend(deliver_in_pages(option, self.page_tokens, first_page_prefix=f"Option {i + 1}. "))
                 if is_true_suffix:
                     answer = i + 1
             assert answer > 0
@@ -129,6 +147,8 @@ class ChapterBreakDataset(DatasetInterface):
 
     def answer_statement_idx(self, example: TestExample) -> tuple[int, int]:
         # TODO: try to figure out where the relevant information actually is
+        # TODO: load a sample from the dataset in the Python terminal, and see if I can have GPT help me extract key info
+        # TODO: from the gold answer and then find it in the last pages of the chapter.
         # For now, we'll just assume that the whole chapter ending is relevant.
         last_page_idx = None
         for i, script_line in enumerate(example.script):

@@ -83,7 +83,7 @@ def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
 
 
 def generate_test_examples(
-    loaded_yaml, max_message_tokens: Optional[int] = None, pass_default: bool = False
+    loaded_yaml, pass_default: bool = False
 ) -> list[TestExample]:
     run_name = loaded_yaml["config"]["run_name"]
     test_definitions = gather_testdef_files(run_name)
@@ -111,7 +111,7 @@ def generate_test_examples(
     examples: list[TestExample] = []
     dataset_yaml = loaded_yaml["datasets"]
     for ds in dataset_yaml["datasets"]:
-        examples.extend(DatasetFactory.create_examples(ds, dataset_yaml["args"], max_message_tokens=max_message_tokens))
+        examples.extend(DatasetFactory.create_examples(ds, dataset_yaml["args"]))
 
     for example in examples:
         example.save(run_name)
@@ -177,7 +177,7 @@ def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y
         print(f"Maximum prompt size: {max_prompt_size}")
     agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size)
 
-    examples = generate_test_examples(loaded_yaml, max_message_tokens=agent.max_message_size, pass_default=y)
+    examples = generate_test_examples(loaded_yaml, pass_default=y)
     check_result_files(conf.run_name, agent.name, pass_default=y)
     runner = TestRunner(config=conf, agent=agent, tests=examples, skip_evaluations=agent_name.startswith("cost("))
     time1 = time.time()
