@@ -158,7 +158,7 @@ class ShoppingDataset(DatasetInterface):
         if num_correct < max_score:
             errors.append(f"{max_score - num_correct} items were not found in the response.")
 
-        num_correct -= penalties
+        num_correct = max(num_correct - penalties, 0)
         if num_correct == max_score:
             reasoning = "All items and quantities match."
         else:

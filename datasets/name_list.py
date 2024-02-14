@@ -68,39 +68,36 @@ class NameListDataset(DatasetInterface):
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
-        try:
-            reasoning = []
-            answer_items = [n.lower() for n in sanitize_and_parse_json(responses[0])]
-            correct = 0
-            penalties = 0
-            not_found = []
-            lowered_expected = [n.lower() for n in expected_answers]
 
+        reasoning = []
+        correct = 0
+        penalties = 0
+        score = 0
+        lowered_expected = [n.lower() for n in expected_answers]
+
+        try:
+            answer_items = [n.lower() for n in sanitize_and_parse_json(responses[0])]
             # Check answer -> expected
             for name in answer_items:
                 if name in lowered_expected:
                     correct += 1
+                    lowered_expected.remove(name)
                 else:
                     penalties += 1
                     reasoning.append(f"Name: {name} not expected.")
 
-            # Check expected -> answer
-            for name in lowered_expected:
-                if name not in answer_items:
-                    not_found.append(name)
-
-            score = correct - penalties
-            if len(not_found) > 0:
-                reasoning.append(f"Names {', '.join(not_found)} were not in the response.")
+            # Everything left in expected is not found
+            score = max(correct - penalties, 0)
+            if len(lowered_expected) > 0:
+                reasoning.append(f"Names: {', '.join(lowered_expected)} were not in the response.")
             else:
                 reasoning.append("All expected names were found in the response.")
 
-            return score, len(expected_answers), reasoning
-
         except (TypeError, ValueError, JSONDecodeError):
-            logging.exception(f"Response not in correct format")
+            logging.exception("Response not in correct format")
+            reasoning.append("Response not in correct format")
 
-            return 0, len(expected_answers), [f"Response not in correct format"]
+        return score, len(expected_answers), reasoning
 
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         # All statements are relevant
