@@ -55,6 +55,7 @@ class ShoppingDataset(DatasetInterface):
     description: str = "Give the agent multiple statements adding and removing items from a shopping list. Then ask the agent what is on the shopping list."
     question: str = "What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same."
     item_changes: int = 3
+    reset_message: str = "I have bought all of the items on the list. Please remove all of the items on the current shopping list."
 
     def generate_examples(self, num_examples):
         renderer = pystache.Renderer()
@@ -116,6 +117,7 @@ class ShoppingDataset(DatasetInterface):
                 evaluation_fn=self.evaluate_correct,
                 number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
+                reset_message=self.reset_message,
             )
 
             examples.append(example)
@@ -130,6 +132,7 @@ class ShoppingDataset(DatasetInterface):
     ) -> Tuple[int, int, List[str]]:
         max_score = len(expected_answers)
         num_correct = 0
+        penalties = 0
         errors = []
         try:
             answer_items = sanitize_and_parse_json(responses[0])
@@ -147,12 +150,15 @@ class ShoppingDataset(DatasetInterface):
                     else:
                         errors.append(f"Wrong quantity for {name}: {item['quantity']} vs {expected_items[key]}.")
                 else:
+                    penalties += 1
                     errors.append(f'Unknown item {name}.')
         except (TypeError, ValueError, JSONDecodeError):
             logging.exception(f"Response not in correct format")
             num_correct = 0
         if num_correct < max_score:
             errors.append(f"{max_score - num_correct} items were not found in the response.")
+
+        num_correct = max(num_correct - penalties, 0)
         if num_correct == max_score:
             reasoning = "All items and quantities match."
         else:

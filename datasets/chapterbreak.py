@@ -56,6 +56,7 @@ class ChapterBreakDataset(DatasetInterface):
     )
     split: str = "ao3"  # pg19 / ao3 / all
     page_tokens: int = 1024
+    reset_message: str = "Forget the current chapter and its potential continuations."
 
     def __post_init__(self):
         assert self.split in {"pg19", "ao3", "all"}
@@ -120,6 +121,7 @@ class ChapterBreakDataset(DatasetInterface):
                 evaluation_fn=self.evaluate_correct,
                 is_question=is_question,
                 number_of_questions=1,
+                reset_message=self.reset_message,
             )
             example_list.append(example)
 
