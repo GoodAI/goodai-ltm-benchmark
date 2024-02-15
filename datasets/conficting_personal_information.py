@@ -14,6 +14,7 @@ class ConflictingPersonalInformationDataset(GPTGenerated):
         DATA_DIR.joinpath("gpt_generation_prompts/4-2_conflicting_personal_information_test.json")
     )
     temperature: float = 1.0
+    model: str = "gpt-4-1106-preview"
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
