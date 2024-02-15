@@ -81,7 +81,7 @@ class TestRunner:
     reference_duration_timestamp: Optional[datetime] = None
     skip_evaluations: bool = False
     result_callbacks: List[Tuple[Callable, TestExample, TestResult]] = field(default_factory=list)
-    group_master_log: List[str] = field(default_factory=list)
+    master_log: List[str] = field(default_factory=list)
     progress_dialog: ProgressDialog = None
 
     @property
@@ -155,8 +155,8 @@ class TestRunner:
     def send_message(self, action: SendMessageAction):
         response, sent_ts, reply_ts = self.agent.message_to_agent(action.message)
         self.debug_message(action.message, response, sent_ts, reply_ts)
-        self.group_master_log.append(action.message)
-        self.group_master_log.append(response)
+        self.master_log.append(action.message)
+        self.master_log.append(response)
         response_time = (reply_ts - sent_ts).total_seconds()
         action.reply = response
         action.reply_ts = reply_ts
@@ -287,7 +287,7 @@ class TestRunner:
 
     def run_tests(self):
         self.result_callbacks = []
-        self.group_master_log = []
+        self.master_log = []
         datasets_run = set()
         results = dict()
         finished = 0
@@ -327,6 +327,7 @@ class TestRunner:
             if example.finished:
                 finished += 1
                 result = results[example.unique_id]
+                datasets_run.add(type(example.dataset_generator))
                 self.progress_dialog.notify_result(result)
                 if not skip:
                     self.update_result(
@@ -345,7 +346,7 @@ class TestRunner:
     def check_result_callbacks(self):
         deregistered_cb = []
         for callback, example, result in self.result_callbacks:
-            score, max_score, reasons, deregister = callback(self, example, self.group_master_log)
+            score, max_score, reasons, deregister = callback(self, example, self.master_log)
             result.score = score
             result.max_score = max_score
             result.reasoning = reasons
@@ -410,8 +411,8 @@ class TestRunner:
         result.task_log = task_log
         result.actual_responses = question_responses
         result.tokens = tokens
-        list_idx = self.group_master_log.index(example.script[0])
-        result.full_log = deepcopy(self.group_master_log[list_idx:])
+        list_idx = self.master_log.index(example.script[0])
+        result.full_log = deepcopy(self.master_log[list_idx:])
         result.characters = characters
         result.save(self.agent.name)
         self.save()
