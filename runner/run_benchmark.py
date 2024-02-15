@@ -7,6 +7,7 @@ from typing import Optional
 
 import click
 import yaml
+from goodai.ltm.agent import LTMAgentVariant
 
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
@@ -17,6 +18,7 @@ from model_interfaces.ltm_agent_2 import LTMAgent2
 from model_interfaces.interface import ChatSession
 from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
+from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
@@ -57,6 +59,16 @@ def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
         return LTMAgent1(model="gpt-4-1106-preview", **kwargs)
     elif name == "ltm_agent_2":
         return LTMAgent2(model="gpt-4-1106-preview", **kwargs)
+
+    elif name == "goodai_ltm_agent_1":
+        return LTMAgentWrapper(model="gpt-4-1106-preview",
+                               variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
+    elif name == "goodai_ltm_agent_2":
+        return LTMAgentWrapper(model="gpt-4-1106-preview",
+                               variant=LTMAgentVariant.SEMANTIC_ONLY, **kwargs)
+    elif name == "goodai_ltm_agent_3":
+        return LTMAgentWrapper(model="gpt-4-1106-preview",
+                               variant=LTMAgentVariant.TEXT_SCRATCHPAD, **kwargs)
     elif name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)

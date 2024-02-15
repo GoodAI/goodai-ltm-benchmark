@@ -5,8 +5,10 @@ import pystache
 from dataclasses import dataclass
 from random import randint, choice
 from typing import List, Tuple
+
+from goodai.helpers.json_helper import sanitize_and_parse_json
+
 from dataset_interfaces.interface import DatasetInterface, TestExample
-from utils.json_helper import sanitize_and_parse_json
 
 ITEMS = [
     "Bread",
