@@ -16,6 +16,7 @@ class ProspectiveMemoryDataset(GPTGenerated):
     generation_file: str = str(DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json"))
     temperature: float = 0.5
     uses_callback: bool = True
+    generation_model: str = "gpt-4-1106-preview"
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
@@ -56,7 +57,7 @@ class ProspectiveMemoryDataset(GPTGenerated):
         for quote_chars in ["''", '""', "``", "<>"]:
             open_char, close_char = quote_chars
             pattern = re.compile(f"{re.escape(open_char)}(.*?){re.escape(close_char)}")
-            matches = pattern.findall(example.expected_responses[0])
+            matches = pattern.findall(example.script[0])
             if len(matches) > 0:
                 quote = matches[0].lower()
                 break

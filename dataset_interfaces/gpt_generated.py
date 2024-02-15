@@ -26,6 +26,7 @@ class GPTGenerated(DatasetInterface, ABC):
     generation_file: str = ""
     temperature: float = 1.0
     uses_callback: bool = False
+    generation_model: str = "gpt-3.5-turbo"
 
     def generate_examples(self, num_examples):
         examples = []
@@ -45,7 +46,7 @@ class GPTGenerated(DatasetInterface, ABC):
             correct = False
             for _ in range(10):
                 try:
-                    result = ask_llm(context, temperature=self.temperature)
+                    result = ask_llm(context, temperature=self.temperature, model=self.generation_model)
                     generated = sanitize_and_parse_json(result)
                     correct = True
                     break
