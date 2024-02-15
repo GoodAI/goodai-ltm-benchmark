@@ -25,48 +25,14 @@ from utils.files import make_runstats_path
 from runner.progress import ProgressDialog
 
 
-def is_compatible(
-    example: TestExample,
-    test_group: dict[str, TestExample],
-    incompatibilities: list[list[type]],
-) -> bool:
-    dataset_class = type(example.dataset_generator)
-    incompatibles = []
-    for inc_list in incompatibilities:
-        if dataset_class in inc_list:
-            incompatibles = [t for t in inc_list if t is not dataset_class]
-            break
-    for test_example in test_group.values():
-        cls = type(test_example.dataset_generator)
-        for inc_t in incompatibles:
-            if issubclass(cls, inc_t):
-                return False
+def are_compatible(a: TestExample, b: TestExample, incompatibilities: list[set[type]]) -> bool:
+    cls_a, cls_b = type(a.dataset_generator), type(b.dataset_generator)
+    if cls_a is cls_b:
+        return False
+    for inc_set in incompatibilities:
+        if cls_a in inc_set and cls_b in inc_set:
+            return False
     return True
-
-
-def group_tests(
-    test_examples: list[TestExample],
-    incompatibilities: list[list[type]],
-) -> list[list[TestExample]]:
-    not_interleavable = []
-    groups = []
-    for example in test_examples:
-        if not example.can_be_interleaved:
-            not_interleavable.append([example])
-            continue
-        unique_id = example.dataset_name
-        assigned_to_group = False
-        for grp in groups:
-            if unique_id in grp:
-                continue
-            if not is_compatible(example, grp, incompatibilities):
-                continue
-            grp[unique_id] = example
-            assigned_to_group = True
-            break
-        if not assigned_to_group:
-            groups.append({unique_id: example})
-    return [list(grp.values()) for grp in groups] + not_interleavable
 
 
 def create_question(example: TestExample, action_logs: dict[str, list[TestAction]]) -> str:
@@ -117,7 +83,6 @@ class TestRunner:
     result_callbacks: List[Tuple[Callable, TestExample, TestResult]] = field(default_factory=list)
     group_master_log: List[str] = field(default_factory=list)
     progress_dialog: ProgressDialog = None
-    tokens_per_group: List[int] = field(default_factory=list)
 
     @property
     def saving_path(self):
@@ -127,7 +92,6 @@ class TestRunner:
         self.update_duration()
         self.saving_path.parent.mkdir(parents=True, exist_ok=True)
         stats = dict(
-            tokens_per_group=self.tokens_per_group,
             total_tokens=self.current_token_count,
             agent_costs_usd=self.agent.costs_usd,
             managing_costs_usd=self.test_managing_costs_usd,
@@ -238,7 +202,14 @@ class TestRunner:
             del self.wait_list[unique_id]
         return False
 
+    def is_compatible(self, example: TestExample, tests: dict[str, TestExample]) -> bool:
+        for waiting_id in self.wait_list.keys():
+            if not are_compatible(example, tests[waiting_id], self.config.incompatibilities):
+                return False
+        return True
+
     def pick_next_test_id(self, tests: dict[str, TestExample]) -> str:
+
         # Prioritize waiting tests. Shorter waits go first.
         if len(self.wait_list) > 0:
             waiting_ids = list(self.wait_list.keys())
@@ -247,8 +218,10 @@ class TestRunner:
                 if not self.is_waiting(unique_id, remove=True):
                     return unique_id
 
-        # If waiting tests are still waiting, pick any other test
-        for unique_id in tests.keys():
+        # Otherwise, pick any other compatible test
+        for unique_id in sorted(tests.keys()):
+            if not self.is_compatible(tests[unique_id], tests):
+                continue
             if not self.is_waiting(unique_id, remove=True):
                 return unique_id
 
@@ -282,16 +255,15 @@ class TestRunner:
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
 
     def iter_tests(self, test_group: list[TestExample]) -> Iterator[TestExample]:
-        test_ids = [t.unique_id for t in test_group]
-        tests = {n: t for n, t in zip(test_ids, test_group)}
-        assert len(tests) == len(test_group), f"There are tests with identical IDs: {test_ids}"
+        tests = {t.unique_id: t for t in test_group}
+        assert len(tests) == len(test_group), f"There are tests with identical IDs: {[t.unique_id for t in test_group]}"
         while len(tests) > 0:
             run_id = self.pick_next_test_id(tests)
-            yield tests[run_id]
-            if tests[run_id].finished:
+            example = tests[run_id]
+            yield example
+            if example.finished:
                 del tests[run_id]
-                if run_id in self.wait_list.keys():
-                    del self.wait_list[run_id]
+                self.wait_list.pop(run_id, None)
 
     def log_action(self, example: TestExample, action: TestAction):
         self.action_logs.setdefault(example.unique_id, []).append(action)
@@ -313,27 +285,35 @@ class TestRunner:
             result.load(self.agent.name)
         return result, skip
 
-    def run_interleaved_group(self, test_group: list[TestExample]):
-        if not self.config.continuous_conversation:
-            self.agent.reset()
-
+    def run_tests(self):
         self.result_callbacks = []
         self.group_master_log = []
+        datasets_run = set()
         results = dict()
-        colour_print("Green", f"Group has {len(test_group)} tests.")
         finished = 0
-        for example in self.iter_tests(test_group):
+        for example in self.iter_tests(self.tests):
+            self.progress_dialog.notify_running(example)
+
             skip = False
             if example.unique_id not in results:
                 result, skip = self.initialise_result(example)
                 results[example.unique_id] = result
                 example.finished = skip
 
+                # Ask the agent to ignore any previous related information.
+                if not skip and example.reset_message != "" and type(example.dataset_generator) in datasets_run:
+                    action = SendMessageAction(example.reset_message)
+                    self.log_action(example, action)
+                    self.send_message(action)
+
             while not example.finished:
                 action = example.step()
                 if action is None:
                     break
                 self.log_action(example, action)  # Attributes are modified afterwards.
+                if isinstance(action, WaitAction):
+                    self.set_to_wait(example.unique_id, action)
+                    break
                 if isinstance(action, (SendMessageAction, SendAndRegisterAction)):
                     # TODO: the test should autonomously create the question
                     if example.is_temporal and action.is_question:
@@ -341,9 +321,6 @@ class TestRunner:
                     self.send_message(action)
                     if isinstance(action, SendAndRegisterAction):
                         self.register_callback(example, results[example.unique_id])
-                elif isinstance(action, WaitAction):
-                    self.set_to_wait(example.unique_id, action)
-                    break
 
             self.check_result_callbacks()
 
@@ -352,12 +329,6 @@ class TestRunner:
                 result = results[example.unique_id]
                 self.progress_dialog.notify_result(result)
                 if not skip:
-                    reset_message = example.reset_message
-                    if self.config.continuous_conversation and reset_message != "":
-                        # The test has finished after running, send the reset message if it exists
-                        action = SendMessageAction(reset_message)
-                        self.log_action(example, action)
-                        self.send_message(action)
                     self.update_result(
                         example=example,
                         result=result,
@@ -365,7 +336,7 @@ class TestRunner:
                     )
                 self.results.append(result)
                 print(result)
-                colour_print("green", f"{finished} of {len(test_group)} tests finished.")
+                colour_print("green", f"{finished} of {len(self.tests)} tests finished.")
 
     def register_callback(self, example: TestExample, result: TestResult):
         cb = example.dataset_generator.continual_evaluation_callback
@@ -400,14 +371,9 @@ class TestRunner:
         self.reference_duration_timestamp = datetime.now()
         self.set_cost_callback()
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
-        test_groups = group_tests(self.tests, self.config.incompatibilities)
-        self.progress_dialog = ProgressDialog(test_groups)
-        for idx, group in enumerate(test_groups):
-            start_tokens = self.current_token_count
-            colour_print("green", f"Running group {idx+1} of {len(test_groups)}.")
-            self.run_interleaved_group(group)
-            end_tokens = self.current_token_count
-            self.tokens_per_group.append(end_tokens - start_tokens)
+        self.tests.sort(key=lambda t: t.unique_id)
+        self.progress_dialog = ProgressDialog(len(self.tests))
+        self.run_tests()
         self.progress_dialog.close()
         self.save()
         self.reset_time()

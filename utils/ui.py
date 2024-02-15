@@ -12,11 +12,11 @@ def ask_yesno(info: str = "", question: str = "Do you wish to continue?", defaul
                 return action == "y"
 
 
-def colour_print(colour: str, *args, end="\n", **kwargs):
+def colour_print(colour: str, *args, end="\n", sep=" ", **kwargs):
     colour = colour.upper()
     if colour.startswith("LIGHT"):
         colour += "_EX"
-    print(getattr(Fore, colour) + "".join(args), end=end + Style.RESET_ALL, **kwargs)
+    print(getattr(Fore, colour) + sep.join(str(a) for a in args), end=end + Style.RESET_ALL, **kwargs)
 
 
 def multiline_input(message: str) -> str:
