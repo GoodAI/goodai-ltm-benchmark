@@ -288,7 +288,6 @@ class TestRunner:
     def run_tests(self):
         self.result_callbacks = []
         self.master_log = []
-        datasets_run = set()
         results = dict()
         finished = 0
         for example in self.iter_tests(self.tests):
@@ -299,12 +298,6 @@ class TestRunner:
                 result, skip = self.initialise_result(example)
                 results[example.unique_id] = result
                 example.finished = skip
-
-                # Ask the agent to ignore any previous related information.
-                if not skip and example.reset_message != "" and type(example.dataset_generator) in datasets_run:
-                    action = SendMessageAction(example.reset_message)
-                    self.log_action(example, action)
-                    self.send_message(action)
 
             while not example.finished:
                 action = example.step()
@@ -325,9 +318,14 @@ class TestRunner:
             self.check_result_callbacks()
 
             if example.finished:
+
+                if not skip and example.reset_message != "":
+                    action = SendMessageAction(example.reset_message)
+                    self.log_action(example, action)
+                    self.send_message(action)
+
                 finished += 1
                 result = results[example.unique_id]
-                datasets_run.add(type(example.dataset_generator))
                 self.progress_dialog.notify_result(result)
                 if not skip:
                     self.update_result(
