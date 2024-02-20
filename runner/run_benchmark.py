@@ -24,7 +24,7 @@ from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from runner.config import RunConfig
-from runner.scheduler import TestRunner
+from runner.scheduler import TestRunner, FillerType
 from utils.ui import ask_yesno, colour_print
 from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path
 from utils.constants import MAIN_DIR
@@ -150,12 +150,15 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 )
 @click.option("-a", "--agent-name", required=True, type=str)
 @click.option("-m", "--max-prompt-size", required=False, type=int, default=None)
+@click.option("-sf", "--compact-fillers", is_flag=True, default=False, help="Whether filler user messages should be small")
 @click.option("-y", required=False, is_flag=True, default=False, help="Automatically assent to questions")
-def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False):
-    _main(configuration, agent_name, max_prompt_size, y)
+def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool,
+         compact_fillers: bool):
+    _main(configuration, agent_name, max_prompt_size, y, compact_fillers)
 
 
-def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False):
+def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False,
+          compact_fillers: bool = False):
     config_path = Path(configuration)
     if not config_path.is_absolute():
         config_path = MAIN_DIR.joinpath(configuration)
@@ -176,7 +179,12 @@ def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y
 
     examples = generate_test_examples(loaded_yaml, max_message_tokens=agent.max_message_size, pass_default=y)
     check_result_files(conf.run_name, agent.name, pass_default=y)
-    runner = TestRunner(config=conf, agent=agent, tests=examples, skip_evaluations=agent_name.startswith("cost("))
+    filler_type = FillerType.TRIVIA_SINGLE if compact_fillers else FillerType.TRIVIA_MULTIPLE
+    runner = TestRunner(config=conf,
+                        agent=agent,
+                        tests=examples,
+                        skip_evaluations=agent_name.startswith("cost("),
+                        filler_type=filler_type)
     time1 = time.time()
     runner.run()
 

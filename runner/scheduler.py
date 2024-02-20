@@ -1,3 +1,4 @@
+import enum
 import json
 import webbrowser
 from copy import deepcopy
@@ -18,7 +19,7 @@ from model_interfaces.interface import ChatSession
 from reporting.generate import generate_report
 from reporting.results import TestResult
 from runner.config import RunConfig
-from utils.filling_task import filler_no_response_tokens_trivia
+from utils.filling_task import filler_no_response_tokens_trivia, filler_single_trivia_question
 from utils.tokens import token_len
 from utils.ui import colour_print
 from utils.files import make_runstats_path
@@ -65,6 +66,20 @@ def extract_log_kwargs(action_log: list[TestAction]):
     return kwargs
 
 
+class FillerType(enum.Enum):
+    TRIVIA_MULTIPLE = 0
+    TRIVIA_SINGLE = 1
+
+    def get_filler(self, num_tokens: int, max_message_size: int):
+        if self == FillerType.TRIVIA_SINGLE:
+            return filler_single_trivia_question()
+            pass
+        elif self == FillerType.TRIVIA_MULTIPLE:
+            return filler_no_response_tokens_trivia(num_tokens, max_message_size)
+        else:
+            raise ValueError(f"Unrecognized: {self}")
+
+
 @dataclass
 class TestRunner:
     config: RunConfig
@@ -83,6 +98,7 @@ class TestRunner:
     result_callbacks: List[Tuple[Callable, TestExample, TestResult]] = field(default_factory=list)
     master_log: List[str] = field(default_factory=list)
     progress_dialog: ProgressDialog = None
+    filler_type: FillerType = FillerType.TRIVIA_MULTIPLE
 
     @property
     def saving_path(self):
@@ -246,7 +262,7 @@ class TestRunner:
             num_tokens = self.wait_list[token_waiting_id]["tokens"]
             remaining_tokens = num_tokens - self.current_token_count
             while remaining_tokens > 0:
-                msg = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size)
+                msg = self.filler_type.get_filler(remaining_tokens, self.agent.max_message_size)
                 tokens_spent = self.send_message(SendMessageAction(msg, is_filling=True))
                 remaining_tokens -= tokens_spent
             if not self.is_waiting(token_waiting_id, remove=True):

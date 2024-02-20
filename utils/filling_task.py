@@ -62,6 +62,12 @@ def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int):
     return "".join(messages)
 
 
+def filler_single_trivia_question():
+    data = get_trivia()
+    trivia = random.choice(data)
+    return trivia["Question"]
+
+
 def filler_task_characters(agent: ChatSession, num_characters: int):
     # We need a book of some kind - lets do the complete works of shakespeare
     current_characters = 0

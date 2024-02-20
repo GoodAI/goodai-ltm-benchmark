@@ -8,9 +8,9 @@ from typing import List, Tuple
 
 import pystache
 from faker import Faker
+from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from dataset_interfaces.interface import DatasetInterface, TestExample
-from utils.json_helper import sanitize_and_parse_json
 
 STATEMENTS = [
     "My name is {{name}}.",
