@@ -40,7 +40,8 @@ def main(agent: str, datasets: str, max_prompt_size: int, num_examples_per_datas
     )
     examples = generate_test_examples(config_dict,
                                       max_message_tokens=chat_session.max_message_size,
-                                      pass_default=y)
+                                      pass_default=y,
+                                      force_regenerate=True)
     check_result_files(run_name, chat_session.name, force_removal=True)
     yaml_config = config_dict["config"]
     config = {k: v for k, v in yaml_config.items() if k != "incompatibilities"}

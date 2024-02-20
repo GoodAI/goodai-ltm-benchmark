@@ -82,23 +82,25 @@ def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
 
 
 def generate_test_examples(
-    loaded_yaml, max_message_tokens: Optional[int] = None, pass_default: bool = False
+    loaded_yaml, max_message_tokens: Optional[int] = None, pass_default: bool = False,
+    force_regenerate: bool = False
 ) -> list[TestExample]:
     run_name = loaded_yaml["config"]["run_name"]
     test_definitions = gather_testdef_files(run_name)
 
     if len(test_definitions) > 0:
-        if pass_default or ask_yesno(
-            f"There are test definitions in disk for run name {run_name}",
-            question="Do you want to reuse these test definitions?",
-        ):
-            return [TestExample.load(p) for p in test_definitions]
-        if not ask_yesno(
-            "WARNING: overwriting the test definitions will result in the loss of all "
-            "results associated with them, including those from other agents.",
-            default_yes=False,
-        ):
-            raise ValueError("Run aborted")
+        if not force_regenerate:
+            if pass_default or ask_yesno(
+                f"There are test definitions in disk for run name {run_name}",
+                question="Do you want to reuse these test definitions?",
+            ):
+                return [TestExample.load(p) for p in test_definitions]
+            if not ask_yesno(
+                "WARNING: overwriting the test definitions will result in the loss of all "
+                "results associated with them, including those from other agents.",
+                default_yes=False,
+            ):
+                raise ValueError("Run aborted")
         shutil.rmtree(make_run_path(run_name))
 
     # Save original yaml configuration
