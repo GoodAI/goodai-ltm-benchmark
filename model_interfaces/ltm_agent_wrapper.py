@@ -2,7 +2,6 @@ import codecs
 import json
 import os
 import threading
-
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
 from model_interfaces.interface import ChatSession
 

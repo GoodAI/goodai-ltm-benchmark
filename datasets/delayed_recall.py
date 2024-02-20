@@ -12,6 +12,7 @@ class DelayedRecallDataset(GPTGenerated):
         "Give the agent a number of facts about a a fictional world, and then ask 10 questions about these facts."
     )
     generation_file: str = str(DATA_DIR.joinpath("gpt_generation_prompts/1-1_delayed_recall.json"))
+    reset_message: str = "Forget all of the facts given to you about the fictional world before this message."
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]

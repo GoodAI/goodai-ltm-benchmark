@@ -9,6 +9,7 @@ import click
 import yaml
 from goodai.ltm.agent import LTMAgentVariant
 
+from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
 from model_interfaces.claude_interface import ClaudeChatSession
@@ -27,6 +28,7 @@ from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
 from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path
+from utils.constants import MAIN_DIR
 
 
 def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
@@ -158,14 +160,17 @@ def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y:
 
 
 def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False):
-    with open(configuration, "rb") as file:
+    config_path = Path(configuration)
+    if not config_path.is_absolute():
+        config_path = MAIN_DIR.joinpath(configuration)
+    with open(config_path, "rb") as file:
         loaded_yaml = yaml.safe_load(file)
 
     yaml_config = loaded_yaml["config"]
     config = {k: v for k, v in yaml_config.items() if k != "incompatibilities"}
     incompatibilities = []
     for inc_list in yaml_config.get("incompatibilities", []):
-        incompatibilities.append([DATASETS[ds_name] for ds_name in inc_list])
+        incompatibilities.append({DATASETS[ds_name] for ds_name in inc_list})
     conf = RunConfig(incompatibilities=incompatibilities, **config)
     if max_prompt_size is None:
         logging.warning("Running without a maximum prompt size.")

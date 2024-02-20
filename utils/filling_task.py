@@ -50,12 +50,14 @@ def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int):
     tokens_to_return = min(num_tokens, max_message_size)
     total_tokens = token_len(message)
     messages = [message]
+    at_least_one_trivia = False
 
-    while total_tokens < tokens_to_return:
+    while not at_least_one_trivia or total_tokens < tokens_to_return:
         trivia = random.choice(data)
         trivia_msg = f"Q: {trivia['Question']}, A: {trivia['AnswerValue']}\n"
         total_tokens += token_len(trivia_msg)
         messages.append(trivia_msg)
+        at_least_one_trivia = True
 
     return "".join(messages)
 

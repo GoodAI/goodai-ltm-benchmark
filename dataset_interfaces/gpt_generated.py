@@ -79,6 +79,7 @@ class GPTGenerated(DatasetInterface, ABC):
                 number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
                 uses_callback=self.uses_callback,
+                reset_message=self.reset_message,
             )
 
             examples.append(example)

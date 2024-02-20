@@ -11,6 +11,7 @@ class InstructionRecallDataset(GPTGenerated):
     name: str = "Instruction Recall"
     description: str = "Give the agent a list of instructions, then ask it multiple questions about these instructions"
     generation_file: str = str(DATA_DIR.joinpath("gpt_generation_prompts/5-2_instruction_recall.json"))
+    eset_message: str = "Forget all of the instructions for operating the technology that I have given you up until this message."
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
