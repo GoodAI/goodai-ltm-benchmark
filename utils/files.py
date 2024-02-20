@@ -18,6 +18,10 @@ def make_runstats_path(run_name: str, agent_name: str) -> Path:
     return make_run_path(run_name, agent_name).joinpath("runstats.json")
 
 
+def make_master_log_path(run_name: str, agent_name: str) -> Path:
+    return make_run_path(run_name, agent_name).joinpath("master_log.json")
+
+
 def make_testdef_path(run_name: str, dataset_name: str, example_id: str) -> Path:
     return TESTS_DIR.joinpath(f"{run_name}/definitions/{dataset_name}/{example_id}.def.json")
 

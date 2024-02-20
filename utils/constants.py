@@ -1,3 +1,4 @@
+import enum
 from pathlib import Path
 
 MAIN_DIR = Path(__file__).parent.parent
@@ -7,6 +8,17 @@ REPORT_TEMPLATES_DIR = MAIN_DIR.joinpath("reporting/templates")
 REPORT_OUTPUT_DIR = DATA_DIR.joinpath("reports")
 GOODAI_GREEN = (126, 188, 66)
 GOODAI_RED = (188, 66, 66)
+
+
+class EventType(enum.Enum):
+    SEND_MESSAGE = 0
+    BEGIN = 1
+    END = 2
+    SEND_FILL = 3
+    RESPONSE_MESSAGE = 4
+    RESPONSE_FILL = 5
+    WAIT = 6
+
 
 METRIC_ALT = dict(
     accuracy=(

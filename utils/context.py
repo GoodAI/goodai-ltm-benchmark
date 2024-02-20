@@ -29,8 +29,8 @@ def search_context(context, content=None, timestamp=None):
 
         return idx
 
-    for c in context:
-        c["timestamp"] = str(c["timestamp"])
+    # for c in context:
+    #     c["timestamp"] = str(c["timestamp"])
     raise ValueError(
         "Context search failed!\n"
         f"content = {repr(content)}\n"

@@ -13,21 +13,23 @@ datasets:
       filler_tokens_low: 1000
       filler_tokens_high: 1000
       pre_question_filler: 1000
-      dataset_examples: 1
+      dataset_examples: 3
 
     datasets:
       - name: "names"
         args:
           name_changes: 2
 #          dataset_examples: 3
-#
-#      - name: "colours"
-#        args:
-#          colour_changes: 2
-#
-#      - name: "shopping"
-#        args:
-#          item_changes: 5
+
+      - name: "colours"
+        args:
+          colour_changes: 2
+
+      - name: "shopping"
+        args:
+          item_changes: 5
+
+      - name: "prospective_memory"
 #
 #      - name: "locations"
 #        args:
@@ -45,9 +47,9 @@ datasets:
 #        args:
 #          name_changes: 3
 #
-#      - name: "jokes"
-#        args:
-#          jokes_told: 3
+      - name: "jokes"
+        args:
+          jokes_told: 3
 #
 #      - name: "kv"
 #        args:
@@ -57,6 +59,6 @@ datasets:
 #        args:
 #          page_tokens: 1024
 
-      - name: "trigger_response"
-        args:
-          trigger_activations: 3
+#      - name: "trigger_response"
+#        args:
+#          trigger_activations: 3

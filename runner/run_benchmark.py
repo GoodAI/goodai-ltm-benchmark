@@ -26,7 +26,8 @@ from model_interfaces.human import HumanChatSession
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
-from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path
+from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, make_runstats_path, \
+    make_master_log_path
 from utils.constants import MAIN_DIR
 
 
@@ -136,7 +137,7 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
                 ):
                     colour_print("red", "Run aborted.")
                     return
-                for file in result_files:
+                for file in result_files + [make_runstats_path(run_name, agent_name), make_master_log_path(run_name, agent_name)]:
                     os.remove(file)
 
 
