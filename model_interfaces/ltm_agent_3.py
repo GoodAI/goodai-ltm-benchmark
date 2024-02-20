@@ -8,7 +8,6 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass
-from json import JSONDecodeError
 from typing import List, Callable, Optional
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
