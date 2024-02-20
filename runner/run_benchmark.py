@@ -13,6 +13,7 @@ from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
 from model_interfaces.claude_interface import ClaudeChatSession
+from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.ltm_agent_1 import LTMAgent1
 from model_interfaces.ltm_agent_2 import LTMAgent2
 from model_interfaces.interface import ChatSession
@@ -72,6 +73,8 @@ def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
     elif name == "goodai_ltm_agent_3":
         return LTMAgentWrapper(model="gpt-4-1106-preview",
                                variant=LTMAgentVariant.TEXT_SCRATCHPAD, **kwargs)
+    elif name == "length_bias":
+        return LengthBiasAgent(model="gpt-4-1106-preview", **kwargs)
     elif name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
