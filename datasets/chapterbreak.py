@@ -61,7 +61,6 @@ class ChapterBreakDataset(DatasetInterface):
     # The GoodAI split is a selection of samples that have been inspected by us to ensure that they are solvable, also
     # removing ordering hints from the chapter titles.
     split: str = "goodai"  # goodai / pg19 / ao3 / all
-    max_message_tokens: int = 1024
     selection_info: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -116,7 +115,7 @@ class ChapterBreakDataset(DatasetInterface):
             random.Random(self.seed + sample_idx).shuffle(beginnings)
 
             script = ["I am going to read you the final pages of a book chapter. Okay?"]
-            max_page_content_tokens = self.max_message_tokens - 20  # Leave some margin for text decorations
+            max_page_content_tokens = self.max_message_size - 20  # Leave some margin for text decorations
             script.extend(deliver_in_pages(sample["ctx"], max_page_content_tokens))
 
             answer = 0
@@ -128,7 +127,7 @@ class ChapterBreakDataset(DatasetInterface):
             assert answer > 0
 
             script.append((
-                "Which option is the true next-chapter beginning?\n"
+                "Which option do you think is the true next-chapter beginning?\n"
                 "Answer with a single-digit number, corresponding to the option number."
             ))
 
@@ -193,12 +192,8 @@ class ChapterBreakDataset(DatasetInterface):
     ) -> Tuple[int, int, List[str]]:
         reasoning = getsource(ChapterBreakDataset.evaluate_correct)
         right_answer = expected_answers[0].strip()
-        wrong_answers = [str(i + 1) for i in range(6) if str(i + 1) != right_answer]
-        correct = right_answer in responses[0]
-        for wrong_ans in wrong_answers:
-            if wrong_ans in responses[0]:
-                correct = False
-                break
+        numbers_in_answer = set(re.findall(r"\d+", responses[0]))
+        correct = {right_answer} == numbers_in_answer
         score = int(correct)
         max_score = 1
         return score, max_score, [reasoning]

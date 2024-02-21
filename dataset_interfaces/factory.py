@@ -1,4 +1,4 @@
-from typing import Optional
+from dataset_interfaces.interface import TestExample
 from datasets.conficting_personal_information import ConflictingPersonalInformationDataset
 from datasets.delayed_recall import DelayedRecallDataset
 from datasets.how_to_think import HowToThinkDataset
@@ -40,14 +40,14 @@ DATASETS_BY_NAME = {ds.name: ds for ds in DATASETS.values()}
 
 class DatasetFactory:
     @staticmethod
-    def create_examples(dataset_config, universal_args):
+    def create_examples(dataset_config: dict, universal_args: dict, max_message_size: int) -> list[TestExample]:
         name = dataset_config["name"]
         args = deepcopy(universal_args)
         ds_args = dataset_config.get("args", {})
         args.update(ds_args)
         num_examples = args["dataset_examples"]
         del args["dataset_examples"]
-        ds = DATASETS[name](**args)
+        ds = DATASETS[name](max_message_size=max_message_size, **args)
         examples = ds.generate_examples(num_examples)
         for i, example in enumerate(examples):
             if example.example_id == "":

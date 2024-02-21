@@ -52,11 +52,11 @@ def get_run_names() -> list[str]:
 
 def parse_result_path(path: Path | str) -> dict[str, str]:
     run_name, _, agent_name, dataset_name, result_name = Path(path).as_posix().split("/")[-5:]
-    example_id, repetition = result_name.removesuffix(".json").split("_")
+    name_parts = result_name.removesuffix(".json").split("_")
     return dict(
         run_name=run_name,
         agent_name=agent_name,
         dataset_name=dataset_name,
-        example_id=example_id,
-        repetition=int(repetition)
+        example_id="_".join(name_parts[:-1]),
+        repetition=int(name_parts[-1])
     )

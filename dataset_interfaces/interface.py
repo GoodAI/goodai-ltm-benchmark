@@ -203,6 +203,7 @@ class DatasetInterface(ABC):
     cost_callback: Callable[[float], None] = None
     uses_callback: bool = False
     reset_message: str = ""
+    max_message_size: int = 1024
 
     def count_questions(self, is_question):
         return len([x for x in is_question if x])
