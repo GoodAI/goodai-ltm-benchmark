@@ -1,4 +1,3 @@
-import codecs
 import datetime
 import json
 import logging
@@ -6,7 +5,6 @@ import os
 import threading
 import time
 import uuid
-from dataclasses import dataclass
 from json import JSONDecodeError
 from typing import List, Callable, Optional
 
@@ -15,13 +13,11 @@ from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
+from model_interfaces.base_ltm_agent import BaseLTMAgent, Message
 from model_interfaces.exp_agents.prompts.chronological_ltm import cltm_template_queries_info
-from model_interfaces.interface import ChatSession
-from utils.openai import ask_llm, get_max_prompt_size
-import tiktoken
+from utils.openai import get_max_prompt_size
 
 _logger = logging.getLogger("exp_agent")
-_log_prompts = os.environ.get("LTM_BENCH_PROMPT_LOGGING", "False").lower() in ["true", "yes", "1"]
 _default_system_message = """
 You are a helpful AI assistant with a long-term memory. Prior interactions with the user are tagged with a timestamp. Current time: {datetime}.
 """
@@ -35,7 +31,7 @@ def _default_time(session_index: int, line_index: int) -> float:
     return time.time()
 
 
-class LTMAgent1(ChatSession):
+class LTMAgent1(BaseLTMAgent):
     """
     Uses a memory with semantic retrieval, chronological ordering of retrieved memory excerpts,
     query generation, and a user information object in JSON format.
@@ -53,7 +49,7 @@ class LTMAgent1(ChatSession):
         llm_temperature: float = 0.01,
         mem_temperature: float = 0.01,
     ):
-        super().__init__()
+        super().__init__(model=model)
         if system_message is None:
             system_message = _default_system_message
         self.mem_temperature = mem_temperature
@@ -66,7 +62,6 @@ class LTMAgent1(ChatSession):
         self.system_message_template = system_message
         self.message_history: List[Message] = []
         self.user_info: dict = {}
-        self.model = model
         self.session_id = uuid.uuid4()
         _logger.info(f"{LTMAgent1.__name__} session ID: {self.session_id}")
         self.log_lock = threading.RLock()
@@ -84,23 +79,6 @@ class LTMAgent1(ChatSession):
     @property
     def name(self):
         return f"{super().name} - {self.model} - {self.max_prompt_size}"
-
-    @staticmethod
-    def num_tokens_from_string(string: str, model="gpt-4"):
-        """Returns the number of tokens in a text string."""
-        try:
-            encoding = tiktoken.encoding_for_model(model)
-        except KeyError:
-            encoding = tiktoken.get_encoding("cl100k_base")
-        return len(encoding.encode(string))
-
-    @classmethod
-    def context_token_counts(cls, messages: List[dict]):
-        """Calculates the total number of tokens in a list of messages."""
-        total_tokens = 0
-        for message in messages:
-            total_tokens += cls.num_tokens_from_string(message["content"])
-        return total_tokens
 
     def build_llm_context(self, user_content: str) -> list[dict]:
         target_history_tokens = self.max_prompt_size * (1.0 - self.ctx_fraction_for_mem)
@@ -224,40 +202,6 @@ class LTMAgent1(ChatSession):
             user_info,
         )
 
-    @staticmethod
-    def get_elapsed_time_descriptor(event_timestamp: float, current_timestamp: float):
-        elapsed = current_timestamp - event_timestamp
-        if elapsed < 1:
-            return "just now"
-        elif elapsed < 60:
-            return f"{round(elapsed)} second(s) ago"
-        elif elapsed < 60 * 60:
-            return f"{round(elapsed / 60)} minute(s) ago"
-        elif elapsed < 60 * 60 * 24:
-            return f"{elapsed / (60 * 60):.1f} hour(s) ago"
-        else:
-            return f"{elapsed / (60 * 60 * 24):.1f} day(s) ago"
-
-    def get_mem_excerpts(self, memories: List[RetrievedMemory], token_limit: int) -> str:
-        token_count = 0
-        excerpts: list[tuple[float, str]] = []
-        ts = self.current_time
-        for m in memories:
-            ts_descriptor = self.get_elapsed_time_descriptor(m.timestamp, current_timestamp=ts)
-            excerpt = f"## Excerpt from {ts_descriptor}\n{m.passage.strip()}\n\n"
-            new_token_count = self.num_tokens_from_string(excerpt) + token_count
-            if new_token_count > token_limit:
-                break
-            token_count = new_token_count
-            excerpts.append(
-                (
-                    m.timestamp,
-                    excerpt,
-                )
-            )
-        excerpts.sort(key=lambda _t: _t[0])
-        return "\n".join([e for _, e in excerpts])
-
     @property
     def current_time(self) -> float:
         return self.time_fn(self.session_index, len(self.message_history))
@@ -277,29 +221,6 @@ class LTMAgent1(ChatSession):
         self.add_to_memory(assistant_message)
         return response
 
-    def completion(self, context: List[dict[str, str]], temperature: float, label: str) -> str:
-        def cost_callback(cost_usd: float):
-            self.costs_usd += cost_usd
-
-        response = ask_llm(
-            context, self.model, temperature=temperature, context_length=None,
-            cost_callback=cost_callback
-        )
-        if _log_prompts:
-            with self.log_lock:
-                self.log_count += 1
-                log_dir = f"./logs/{self.session_id}"
-                os.makedirs(log_dir, exist_ok=True)
-                prompt_file = f"{label}-prompt-{self.log_count}.json"
-                prompt_json = json.dumps(context, indent=2)
-                prompt_path = os.path.join(log_dir, prompt_file)
-                with codecs.open(prompt_path, "w", "utf-8") as fd:
-                    fd.write(prompt_json)
-                completion_path = os.path.join(log_dir, f"{label}-completion-{self.log_count}.txt")
-                with codecs.open(completion_path, "w", "utf-8") as fd:
-                    fd.write(response)
-        return response
-
     def reset_history(self):
         self.message_history = []
         self.session_index += 1
@@ -309,20 +230,3 @@ class LTMAgent1(ChatSession):
         self.session_index = 0
         self.user_info = {}
         self.text_mem.clear()
-
-    def reset(self):
-        self.reset_all()
-
-
-@dataclass
-class Message:
-    role: str
-    content: str
-    timestamp: float
-
-    def as_llm_dict(self) -> dict[str, str]:
-        return {"role": self.role, "content": self.content}
-
-    @property
-    def is_user(self) -> bool:
-        return self.role == "user"
