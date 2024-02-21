@@ -39,13 +39,18 @@ def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
     return page_list
 
 
-def deliver_in_pages(text: str, max_page_tokens: int, first_page_prefix: str = "") -> list[str]:
-    script = list()
+def deliver_in_pages(text: str, max_page_tokens: int, prefix: str = "") -> list[str]:
     pages = split_in_pages(text, max_page_tokens)
+    if len(pages) == 1:
+        return [f"{prefix}:\n\n{pages[0]}"]
+    script = list()
     last_i = len(pages) - 1
     for i, page in enumerate(pages):
         last_page_str = " and last" if i == last_i else ""
-        script.append(f"{first_page_prefix}{ordinal(i + 1)}{last_page_str} page:\n\n{page}")
+        page_label = f"{ordinal(i + 1)}{last_page_str} page"
+        if prefix != "":
+            page_label = f"{prefix} ({page_label})"
+        script.append(f"{page_label}:\n\n{page}")
     return script
 
 
@@ -56,7 +61,7 @@ class ChapterBreakDataset(DatasetInterface):
         "The agent is given a text that corresponds to the content of many book chapters, in addition to 6 possible "
         "beginnings for the next chapter. It is then asked to say which of the six continuations is the right one."
     )
-    reset_message: str = "Forget the current chapter and its potential continuations."
+    reset_message: str = "Forget the chapters that I have read you and the potential continuations that I gave to you."
     # The GoodAI split is a selection of samples that have been inspected by us to ensure that they are solvable, also
     # removing ordering hints from the chapter titles.
     split: str = "goodai"  # goodai / pg19 / ao3 / all
@@ -113,14 +118,14 @@ class ChapterBreakDataset(DatasetInterface):
             beginnings = [(True, sample["pos"])] + [(False, s) for s in sample["negs"]]
             random.Random(self.seed + sample_idx).shuffle(beginnings)
 
-            script = ["I am going to read you the final pages of a book chapter. Okay?"]
+            script = ["I am going to read you some chapters of a book. A few pages. Okay?"]
             max_page_content_tokens = self.max_message_size - 20  # Leave some margin for text decorations
             script.extend(deliver_in_pages(sample["ctx"], max_page_content_tokens))
 
             answer = 0
             script.append(f"Now I will give you {len(beginnings)} options for the beginning of the next chapter. Ready?")
             for i, (is_true_suffix, option) in enumerate(beginnings):
-                script.extend(deliver_in_pages(option, max_page_content_tokens, first_page_prefix=f"Option {i + 1}. "))
+                script.extend(deliver_in_pages(option, max_page_content_tokens, prefix=f"Option {i + 1}"))
                 if is_true_suffix:
                     answer = i + 1
             assert answer > 0

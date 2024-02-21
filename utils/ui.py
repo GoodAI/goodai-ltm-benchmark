@@ -22,11 +22,15 @@ def colour_print(colour: str, *args, end="\n", sep=" ", **kwargs):
 def multiline_input(message: str) -> str:
     lines = list()
     print(message, end="")
+    prefix = ""
     while True:
-        in_str = input("")
+        in_str = input(prefix)
         if in_str == "":
+            if prefix == "":
+                print()
             return "\n".join(lines).strip()
         lines.append(in_str)
+        prefix = "> "
 
 
 def ordinal(n: int) -> str:
