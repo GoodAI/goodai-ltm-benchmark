@@ -13,23 +13,6 @@ from utils.context import flatten_context, search_context
 from utils.openai import ask_llm
 from utils.files import make_testdef_path
 
-# _match_system_prompt = """
-# You are to judge whether the provided answers are correct, given question(s) and
-# expected information.
-#
-# Take a deep breath and consider these questions:
-# - Does the information in the actual answer accurately represent the expected information?
-# - Do any stated quantities match?
-# - For any extra information in the actual answer: Does it directly contradict a statement in the expected information? If it doesn't, then the extra information should not be penalized.
-#
-# All other extra information and context in the actual answer is permitted.
-# Disregard spelling errors. Respond in JSON with the following format:
-# {
-#     "reasoning": List[string], // Your careful reasoning after taking a deep breath
-#     "correct": List[int] // Is a provided answer correct? 1 for yes, 0 for no.
-# }
-# """
-
 _match_system_prompt = """
 You are to evaluate some provided answers, given question(s) and
 expected answers, plus a checklist that you must follow. For each question, you will go through the following checklist and provide a yes or no answer.
@@ -226,7 +209,6 @@ class DatasetInterface(ABC):
     ) -> Tuple[int, int, List[str]]:
         return self.evaluate_correct_gpt_impl(questions, provided_answer, expected_answer, self.cost_callback)
 
-
     @staticmethod
     def evaluate_correct_gpt_impl(
             questions: List[str],
@@ -235,9 +217,6 @@ class DatasetInterface(ABC):
             cost_callback: Callable[[float], Any] = None,
     ) -> Tuple[int, int, List[str]]:
         max_score = len(expected_answer)
-        questions_str = json.dumps(questions)
-        expected_str = json.dumps(expected_answer)
-        provided_str = json.dumps(provided_answer)
 
         q_list = []
         for idx, (q, e, p) in enumerate(zip(questions, expected_answer, provided_answer)):
@@ -272,7 +251,7 @@ class DatasetInterface(ABC):
                 else:
                     reasoning.append("Checklist Incorrect")
 
-        except Exception as e:
+        except Exception:
             reasoning.append("JSON parse error")
 
         return score, max_score, reasoning
