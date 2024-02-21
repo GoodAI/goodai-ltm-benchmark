@@ -1,10 +1,7 @@
 import datetime
 import json
 import logging
-import os
-import threading
 import time
-import uuid
 from json import JSONDecodeError
 from typing import List, Callable, Optional
 
@@ -18,6 +15,7 @@ from model_interfaces.exp_agents.prompts.chronological_ltm import cltm_template_
 from utils.openai import get_max_prompt_size
 
 _logger = logging.getLogger("exp_agent")
+_default_emb_model = "flag:BAAI/bge-base-en-v1.5"
 _default_system_message = """
 You are a helpful AI assistant with a long-term memory. Prior interactions with the user are tagged with a timestamp. Current time: {datetime}.
 """
@@ -43,7 +41,7 @@ class LTMAgent1(BaseLTMAgent):
         system_message: str = None,
         ctx_fraction_for_mem: float = 0.5,
         model: str = None,
-        emb_model: str = "st:sentence-transformers/all-mpnet-base-v2",
+        emb_model: str = _default_emb_model,
         chunk_size: int = 32,
         overlap_threshold: float = 0.75,
         llm_temperature: float = 0.01,

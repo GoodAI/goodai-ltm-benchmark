@@ -23,6 +23,7 @@ class BaseLTMAgent(ChatSession, abc.ABC):
     """
 
     def __init__(self, model: str = None):
+        super().__init__()
         self.model = model
         self.log_count = 0
         self.log_lock = threading.RLock()
@@ -109,8 +110,8 @@ class BaseLTMAgent(ChatSession, abc.ABC):
     def reset(self):
         self.reset_all()
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def current_time(self) -> float:
         pass
 
