@@ -1,3 +1,5 @@
+import json
+
 from model_interfaces.interface import ChatSession
 from utils.openai import (
     ask_llm,
@@ -52,3 +54,11 @@ class GPTChatSession(ChatSession):
 
     def reset(self):
         self.context = [make_system_message(self.system_prompt)]
+
+    def save(self):
+        with open(self.save_file, "w") as fd:
+            json.dump(self.context, fd)
+
+    def load(self):
+        with open(self.save_file, "r") as fd:
+            self.context = json.load(fd)

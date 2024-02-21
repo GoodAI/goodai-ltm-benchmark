@@ -76,3 +76,5 @@ class LangchainMemType(enum.Enum):
             return ENTITY_MEMORY_CONVERSATION_TEMPLATE
         else:
             return PromptTemplate(input_variables=["history", "input"], template=_default_prompt_template)
+
+

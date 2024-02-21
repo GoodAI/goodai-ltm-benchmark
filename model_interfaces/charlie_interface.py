@@ -135,3 +135,10 @@ class CharlieMnemonic(ChatSession):
         )
 
         self.context = []
+
+
+    def load(self):
+        pass
+
+    def save(self):
+        pass

@@ -336,7 +336,7 @@ class TestRunner:
             self.check_result_callbacks()
 
             if example.finished:
-
+                self.agent.save()
                 finished += 1
                 result = self.in_progress_results[example.unique_id]
                 self.progress_dialog.notify_result(result)

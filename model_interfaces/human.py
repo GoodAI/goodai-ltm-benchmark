@@ -28,3 +28,9 @@ class HumanChatSession(ChatSession):
         colour_print("red", datetime.now().isoformat())
         colour_print("cyan", f"Test: {user_message}")
         return multiline_input("Human: ")
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass

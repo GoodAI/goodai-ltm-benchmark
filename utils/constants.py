@@ -4,6 +4,7 @@ from pathlib import Path
 MAIN_DIR = Path(__file__).parent.parent
 DATA_DIR = MAIN_DIR.joinpath("data")
 TESTS_DIR = DATA_DIR.joinpath("tests")
+PERSISTENCE_DIR = DATA_DIR.joinpath("persistence")
 REPORT_TEMPLATES_DIR = MAIN_DIR.joinpath("reporting/templates")
 REPORT_OUTPUT_DIR = DATA_DIR.joinpath("reports")
 GOODAI_GREEN = (126, 188, 66)

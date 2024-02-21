@@ -51,3 +51,8 @@ class CostEstimationChatSession(ChatSession):
     def reset(self):
         self.context = [make_system_message(self.system_prompt)]
         self.context_tokens = context_token_len(self.context)
+
+    def save(self):
+        pass
+    def load(self):
+        pass

@@ -73,3 +73,9 @@ class TimestampGPTChatSession(ChatSession):
 
     def reset(self):
         self.history = []
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass

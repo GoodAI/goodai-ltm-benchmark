@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass, field
 
 import anthropic
@@ -52,3 +53,11 @@ class ClaudeChatSession(ChatSession):
 
     def reset(self):
         self.context = []
+
+    def save(self):
+        with open(self.save_file, "w") as fd:
+            json.dump(self.context, fd)
+
+    def load(self):
+        with open(self.save_file, "r") as fd:
+            self.context = json.load(fd)

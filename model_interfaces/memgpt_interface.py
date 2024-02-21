@@ -30,7 +30,7 @@ from contextlib import contextmanager
 MEMGPT_LOGS_FILE = "model_interfaces/memgpt-logs.jsonl"
 
 
-def configure(context_length):
+def configure(context_length, agent_name):
     model = "gpt-4"
     endpoint_type = "openai"
     proxy_endpoint = "http://localhost:5000/v1"
@@ -68,14 +68,14 @@ def configure(context_length):
         embedding_endpoint_type=endpoint_type,
         embedding_endpoint=proxy_endpoint,
         embedding_dim=embedding_dim,
-        name="MemGPTAgent",  # It will use it for saving
+        name=agent_name,  # It will use it for saving
     )
     agent_config.save()
     return agent_config
 
 
-def create_memgpt_agent(context_length):
-    agent_config = configure(context_length)
+def create_memgpt_agent(context_length, agent_name):
+    agent_config = configure(context_length, agent_name)
     # create agent
     memgpt_agent = presets.use_preset(
         agent_config.preset,
@@ -149,7 +149,7 @@ class MemGPTChatSession(ChatSession):
 
     def reset(self):
         # Create new memgpt agent
-        self.memgpt_agent: Agent = create_memgpt_agent(self._max_prompt_size)
+        self.memgpt_agent: Agent = create_memgpt_agent(self._max_prompt_size, self.save_name)
         self.memgpt_agent.__class__.step = step
         self.memgpt_agent._messages.extend(
             [
@@ -223,6 +223,12 @@ class MemGPTChatSession(ChatSession):
                         message_strings.append(arg_dict["message"])
 
         return message_strings
+
+    def save(self):
+        self.memgpt_agent.save()
+
+    def load(self):
+        self.memgpt_agent = Agent.load_agent(self.memgpt_agent.interface, self.memgpt_agent.config)
 
 
 # This is a copy of memgpt.step which deals with custom context sizes.

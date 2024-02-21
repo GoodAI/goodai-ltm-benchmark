@@ -14,6 +14,8 @@ from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
 from model_interfaces.interface import ChatSession
+from utils.constants import PERSISTENCE_DIR
+from utils.json_utils import CustomEncoder
 from utils.openai import ask_llm, make_system_message, make_user_message
 import tiktoken
 
@@ -235,6 +237,29 @@ class LTMAgent2(ChatSession):
 
     def reset(self):
         self.reset_all()
+
+    def save(self):
+        infos = [self.message_history, self.text_mem.state_as_text()]
+        files = ["_message_hist.json", "_mem.json"]
+
+        for obj, file_ext in zip(infos, files):
+            fname = PERSISTENCE_DIR.joinpath(self.save_name + file_ext)
+            with open(fname, "w") as fd:
+                json.dump(obj, fd, cls=CustomEncoder)
+
+    def load(self):
+        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_message_hist.json")
+        with open(fname, "w") as fd:
+            ctx = json.load(fd)
+
+        message_hist = []
+        for m in ctx:
+            message_hist.append(Message(**m))
+        self.message_history = message_hist
+
+        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_mem.json")
+        with open(fname, "w") as fd:
+            self.text_mem.set_state(json.load(fd))
 
 
 @dataclass

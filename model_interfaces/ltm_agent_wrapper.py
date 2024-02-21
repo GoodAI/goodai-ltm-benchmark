@@ -25,3 +25,10 @@ class LTMAgentWrapper(ChatSession):
 
     def reset(self):
         self.agent.reset()
+
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass
