@@ -1,9 +1,7 @@
 import datetime
 import logging
 import re
-import threading
 import time
-import uuid
 from typing import List, Callable, Optional
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
@@ -60,10 +58,6 @@ class LTMAgent3(BaseLTMAgent):
         self.system_message_template = system_message
         self.message_history: List[Message] = []
         self.wm_scratchpad = ""
-        self.session_id = uuid.uuid4()
-        _logger.info(f"{super().name} session ID: {self.session_id}")
-        self.log_lock = threading.RLock()
-        self.log_count = 0
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size

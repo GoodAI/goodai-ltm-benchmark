@@ -42,10 +42,6 @@ class LTMAgent2(BaseLTMAgent):
         self.session_index = 0
         self.system_message_template = system_message
         self.message_history: List[Message] = []
-        self.session_id = uuid.uuid4()
-        _logger.info(f'{super().name} session ID: {self.session_id}')
-        self.log_lock = threading.RLock()
-        self.log_count = 0
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size
