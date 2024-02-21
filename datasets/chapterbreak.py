@@ -1,7 +1,6 @@
 import re
 import json
 import random
-from inspect import getsource
 from typing import List, Tuple
 
 from utils.data import get_gdrive_file, get_data_path
@@ -190,10 +189,11 @@ class ChapterBreakDataset(DatasetInterface):
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
-        reasoning = getsource(ChapterBreakDataset.evaluate_correct)
         right_answer = expected_answers[0].strip()
         numbers_in_answer = set(re.findall(r"\d+", responses[0]))
         correct = {right_answer} == numbers_in_answer
         score = int(correct)
         max_score = 1
+        not_str = "" if correct else "not "
+        reasoning = f"The correct answer ({right_answer}) was {not_str}found in the response."
         return score, max_score, [reasoning]
