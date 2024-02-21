@@ -8,8 +8,10 @@ from model_interfaces.interface import ChatSession
 from utils.constants import DATA_DIR
 from utils.tokens import token_len
 
+SHORT_TRIVIA_MAX_LEN = 50
 
 TRIVIA_CACHE = None
+SHORT_TRIVIA_CACHE = None
 
 
 def get_trivia():
@@ -18,6 +20,14 @@ def get_trivia():
         with (open(DATA_DIR.joinpath("trivia/trivia.json"), "r", encoding="utf8") as file):
             TRIVIA_CACHE = json.load(file)["Data"]
     return TRIVIA_CACHE
+
+
+def get_short_trivia():
+    global SHORT_TRIVIA_CACHE
+    if SHORT_TRIVIA_CACHE is None:
+        trivia = get_trivia()
+        SHORT_TRIVIA_CACHE = [t for t in trivia if len(t["Question"]) <= SHORT_TRIVIA_MAX_LEN]
+    return SHORT_TRIVIA_CACHE
 
 
 def filler_no_response_tokens_shakespeare(num_tokens: int, encoding_name="cl100k_base"):
@@ -63,7 +73,7 @@ def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int):
 
 
 def filler_single_trivia_question():
-    data = get_trivia()
+    data = get_short_trivia()
     trivia = random.choice(data)
     return trivia["Question"]
 

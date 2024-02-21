@@ -1,24 +1,19 @@
+# LTM agents should run with max_prompt_size=1000 and short fillers (-m 1000 -sf)
 config:
   debug: True
   run_name: "LengthBiasCheck"
-  incompatibilities:
-    - - "names"
-      - "name_list"
-    - - "locations"
-      - "locations_directions"
-
 
 datasets:
     args:
       filler_tokens_low: 200
       filler_tokens_high: 200
-      pre_question_filler: 1000
+      pre_question_filler: 3000
       dataset_examples: 5
 
     datasets:
-      - name: "shopping"
+      - name: "conflicting_personal_info"
         args:
-          item_changes: 4
+          temperature: 1.0
 
       - name: "locations_directions"
         args:
