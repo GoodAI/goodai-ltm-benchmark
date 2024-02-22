@@ -67,7 +67,7 @@ class TestRunner:
     reference_duration_timestamp: Optional[datetime] = None
     skip_evaluations: bool = False
     result_callbacks: List[Tuple[Callable, TestExample]] = field(default_factory=list)
-    master_log: MasterLog = field(default_factory=lambda: MasterLog())
+    master_log: MasterLog = None
     progress_dialog: ProgressDialog = None
 
     @property
@@ -78,9 +78,8 @@ class TestRunner:
     def master_log_path(self):
         return make_master_log_path(self.config.run_name, self.agent.name)
 
-    def save(self):
+    def save_runstats(self):
         self.update_duration()
-        self.runstats_path.parent.mkdir(parents=True, exist_ok=True)
         stats = dict(
             total_tokens=self.current_token_count,
             agent_costs_usd=self.agent.costs_usd,
@@ -91,9 +90,6 @@ class TestRunner:
 
         with open(self.runstats_path, "w") as fd:
             json.dump(stats, fd)
-
-        with open(self.master_log_path, "w") as fd:
-            json.dump(self.master_log.to_json(), fd, indent=2)
 
     def load(self):
         if not self.runstats_path.exists():
@@ -109,10 +105,7 @@ class TestRunner:
         self.avg_tokens_per_second = d["tokens_per_second"]
         self.benchmark_duration_seconds = d["duration"]
 
-        with open(self.master_log_path) as fd:
-            d = json.load(fd)
-
-        self.master_log.from_json(d)
+        self.master_log.load()
 
     def travel_to_dt(self, target_date: datetime):
         self.reset_time()
@@ -254,15 +247,18 @@ class TestRunner:
 
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
 
-    def iter_tests(self, test_group: list[TestExample]) -> Iterator[TestExample]:
-        # Setup: get the list of tests that are in progress
+    def setup_iterator(self, test_group):
+        # Sets up the test dict and fast forwards any tests that are currently in progress
         test_actions_taken = self.master_log.get_tests_in_progress()
-        # TODO: More detailed assemblage of wait list
         self.wait_list = {k: {"tokens": 0} for k in test_actions_taken.keys()}
         tests = {t.unique_id: t for t in test_group}
 
+        # Check if the last event in the log is after the current time, then travel to that time if it is.
+        if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
+            self.travel_to_dt(self.master_log.log[-1].timestamp)
+
         # Fast forward examples to the last action that was run
-        for run_id in self.wait_list.keys():
+        for run_id in test_actions_taken.keys():
             example = tests[run_id]
             actions_to_ff = test_actions_taken[run_id]
             for _ in range(actions_to_ff):
@@ -270,12 +266,15 @@ class TestRunner:
                 if isinstance(action, SendAndRegisterAction):
                     self.register_callback(example)
 
-                if isinstance(action, WaitAction) and action.time.seconds > 0:
-                    self.forward_time(seconds=action.time.seconds + 1)
-
             # If the last action is a wait action, set the test to wait
-            if isinstance(action, WaitAction):
+            if isinstance(action, WaitAction) and action.tokens > 0:
                 self.set_to_wait(run_id, action)
+
+        return tests
+
+    def iter_tests(self, test_group: list[TestExample]) -> Iterator[TestExample]:
+        # Set up the tests that are to be iterated through, fast forwarding where appropriate
+        tests = self.setup_iterator(test_group)
 
         assert len(tests) == len(test_group), f"There are tests with identical IDs: {[t.unique_id for t in test_group]}"
         while len(tests) > 0:
@@ -333,6 +332,7 @@ class TestRunner:
                     if isinstance(action, SendAndRegisterAction):
                         self.register_callback(example)
 
+                self.save_runstats()
             self.check_result_callbacks()
 
             if example.finished:
@@ -387,6 +387,8 @@ class TestRunner:
             example.dataset_generator.cost_callback = cost_callback
 
     def run(self):
+        self.master_log = MasterLog(self.master_log_path)
+        self.runstats_path.parent.mkdir(parents=True, exist_ok=True)
         self.load()
         self.reference_duration_timestamp = datetime.now()
         self.set_cost_callback()
@@ -395,7 +397,7 @@ class TestRunner:
         self.progress_dialog = ProgressDialog(len(self.tests))
         self.run_tests()
         self.progress_dialog.close()
-        self.save()
+        self.save_runstats()
         self.reset_time()
         report_path = generate_report(self.finished_results)
         webbrowser.open_new_tab(report_path.as_uri())
@@ -433,7 +435,7 @@ class TestRunner:
         result.full_log = self.master_log.human_readable_full_log(example.unique_id, example.script[0])
         result.characters = characters
         result.save(self.agent.name)
-        self.save()
+        self.save_runstats()
 
     def debug_message(
         self,

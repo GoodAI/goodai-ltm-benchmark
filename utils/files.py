@@ -19,7 +19,7 @@ def make_runstats_path(run_name: str, agent_name: str) -> Path:
 
 
 def make_master_log_path(run_name: str, agent_name: str) -> Path:
-    return make_run_path(run_name, agent_name).joinpath("master_log.json")
+    return make_run_path(run_name, agent_name).joinpath("master_log.jsonl")
 
 
 def make_testdef_path(run_name: str, dataset_name: str, example_id: str) -> Path:
@@ -36,6 +36,10 @@ def gather_testdef_files(run_name: str = "*", dataset_name: str = "*", example_i
 
 def gather_result_files(run_name: str = "*", agent_name: str = "*", dataset_name: str = "*") -> list[str]:
     return glob(str(make_result_path(run_name, agent_name, dataset_name, "*", "*")))
+
+
+def gather_persistence_files(run_name: str = "*", agent_name: str = "*") -> list[str]:
+    return glob(str(make_runstats_path(run_name, agent_name))) + glob(str(make_master_log_path(run_name, agent_name)))
 
 
 def gather_runstats_files(run_name: str = "*", agent_name: str = "*") -> list[str]:
