@@ -18,6 +18,7 @@ from model_interfaces.ltm_agent_2 import LTMAgent2
 from model_interfaces.interface import ChatSession
 from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
+from model_interfaces.ltm_agent_3 import LTMAgent3
 from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
@@ -60,7 +61,8 @@ def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
         return LTMAgent1(model="gpt-4-1106-preview", **kwargs)
     elif name == "ltm_agent_2":
         return LTMAgent2(model="gpt-4-1106-preview", **kwargs)
-
+    elif name == "ltm_agent_3":
+        return LTMAgent3(model="gpt-4-1106-preview", **kwargs)
     elif name == "goodai_ltm_agent_1":
         return LTMAgentWrapper(model="gpt-4-1106-preview",
                                variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
