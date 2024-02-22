@@ -267,7 +267,7 @@ class TestRunner:
                     self.register_callback(example)
 
             # If the last action is a wait action, set the test to wait
-            if isinstance(action, WaitAction) and action.tokens > 0:
+            if isinstance(action, WaitAction):
                 self.set_to_wait(run_id, action)
 
         return tests

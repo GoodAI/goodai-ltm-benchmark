@@ -20,6 +20,14 @@ class EventType(enum.Enum):
     WAIT = 6
 
 
+EVENT_SENDER = {
+    EventType.SEND_MESSAGE: "Test",
+    EventType.SEND_FILL: "System",
+    EventType.RESPONSE_MESSAGE: "Agent",
+    EventType.RESPONSE_FILL: "Agent",
+}
+
+
 METRIC_ALT = dict(
     accuracy=(
         "(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the "

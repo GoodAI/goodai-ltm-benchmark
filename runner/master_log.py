@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 
-from utils.constants import EventType
+from utils.constants import EventType, EVENT_SENDER
 
 
 @dataclass
@@ -45,11 +45,13 @@ class MasterLog:
 
     def add_send_message(self, message: str, timestamp: datetime, test_id: str = "", is_question: bool = False):
         event_type = EventType.SEND_MESSAGE if test_id != "" else EventType.SEND_FILL
+        assert not (is_question and event_type == EventType.SEND_FILL), "Filler is tagged as a question."
         event = LogEvent(event_type, timestamp, test_id, {"message": message, "is_question": is_question})
         self.add_event(event)
 
     def add_response_message(self, message: str, timestamp: datetime, test_id: str = "", is_question: bool = False):
         event_type = EventType.RESPONSE_MESSAGE if test_id != "" else EventType.RESPONSE_FILL
+        assert not (is_question and event_type == EventType.RESPONSE_FILL), "Response to filler is tagged as a question."
         event = LogEvent(event_type, timestamp, test_id, {"message": message, "is_question": is_question})
         self.add_event(event)
 
@@ -79,11 +81,8 @@ class MasterLog:
         index = self.find_message(test_id, message)
 
         for event in self.log[index:]:
-            if event.type in [EventType.SEND_MESSAGE, EventType.RESPONSE_MESSAGE]:
-                sender = "Test" if event.type == EventType.SEND_MESSAGE else "Agent"
-                messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
-            elif event.type in [ EventType.SEND_FILL, EventType.RESPONSE_FILL]:
-                sender = "System" if event.type == EventType.SEND_FILL else "Agent"
+            if event.type in [EventType.SEND_MESSAGE, EventType.RESPONSE_MESSAGE, EventType.SEND_FILL, EventType.RESPONSE_FILL]:
+                sender = EVENT_SENDER[event.type]
                 messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
             elif event.type == EventType.WAIT:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for {event.data['tokens']} tokens until {event.data['time']}")

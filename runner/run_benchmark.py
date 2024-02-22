@@ -130,7 +130,7 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
     if len(all_files) > 0:
         if not pass_default:
             if not ask_yesno(
-                f"{len(all_files)} result files have been found for run name {run_name} " f"and agent {agent_name}.",
+                f"There are {len(all_files)} existing file that have been found for run name '{run_name}' " f"and agent '{agent_name}'.",
                 question="Do you want to resume the run?",
             ):
                 if not ask_yesno(
