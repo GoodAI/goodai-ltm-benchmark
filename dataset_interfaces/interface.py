@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from random import randint
-from typing import List, Callable, Tuple, Optional, Any, Iterator
+from typing import List, Callable, Tuple, Optional, Any, Iterator, Dict
 
 import tiktoken
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -225,49 +225,6 @@ class DatasetInterface(ABC):
     ) -> Tuple[int, int, List[str]]:
         return self.evaluate_correct_gpt_impl(questions, provided_answer, expected_answer, self.cost_callback)
 
-    # @staticmethod
-    # def evaluate_correct_gpt_impl(
-    #     questions: List[str],
-    #     provided_answer: List[str],
-    #     expected_answer: Any,
-    #     cost_callback: Callable[[float], Any] = None,
-    # ) -> Tuple[int, int, List[str]]:
-    #     max_score = len(expected_answer)
-    #     questions_str = json.dumps(questions)
-    #     expected_str = json.dumps(expected_answer)
-    #     provided_str = json.dumps(provided_answer)
-    #
-    #     score = 0
-    #     reasoning = []
-    #     for q, e, p in zip(questions, expected_answer, provided_answer):
-    #
-    #         ctx = [
-    #             {
-    #                 "role": "system",
-    #                 "content": _match_system_prompt,
-    #             },
-    #             {
-    #                 "role": "user",
-    #                 "content": f"# Questions: {q}\n\n"
-    #                 f"# Expected information: {e}\n\n"
-    #                 f"# Provided answers: {p}",
-    #             },
-    #         ]
-    #
-    #         response = ask_llm(context=ctx, model="gpt-4-1106-preview", temperature=0.01, cost_callback=cost_callback)
-    #         try:
-    #             parsed = sanitize_and_parse_json(response)
-    #             correct_list = parsed["correct"]
-    #             if isinstance(correct_list, int):
-    #                 score += int(correct_list)
-    #             else:
-    #                 score += sum(correct_list)
-    #             reasoning.append(parsed["reasoning"][0])
-    #
-    #         except Exception as e:
-    #             reasoning.append("JSON parse error")
-    #
-    #     # return score, max_score, reasoning
 
     @staticmethod
     def evaluate_correct_gpt_impl(
@@ -319,7 +276,6 @@ class DatasetInterface(ABC):
 
         return score, max_score, reasoning
 
-
     def create_question(self, example: TestExample, statement_times, time_now):
         # Generate the question for temporal questions
         raise NotImplementedError("This dataset is not meant to have temporal questions.")
@@ -338,14 +294,16 @@ class DatasetInterface(ABC):
         filler[-1] = 0
         return filler
 
-    def tokens_to_answer(self, context: List, example: TestExample, timestamps: List):
+    def tokens_to_answer(self, test_context: List[Dict[str, Any]], full_context: List[Dict[str, str]], example: TestExample):
         encoding = tiktoken.get_encoding("cl100k_base")
-
         num_tokens = num_characters = 0
+
         # Get most relevant line, and any characters after that statement.
         script_answer_index, answer_end_char = self.answer_statement_idx(example)
-        target_timestamp = timestamps[script_answer_index].__str__()
         relevant_line = example.script[script_answer_index]
+
+        timestamp_idx = search_context(test_context, relevant_line)
+        target_timestamp = test_context[timestamp_idx]["timestamp"].__str__()
 
         # Update tokens and character counts from the script
         num_characters += len(relevant_line[answer_end_char:])
@@ -353,8 +311,8 @@ class DatasetInterface(ABC):
 
         # Where in the history was the statement made?
         # Find that statement in the history suing the content and timestamp and count from there.
-        history_idx = search_context(context, relevant_line, target_timestamp) + 1
-        countable_history_chunk = flatten_context(context[history_idx:])
+        history_idx = search_context(full_context, relevant_line, target_timestamp) + 1
+        countable_history_chunk = flatten_context(full_context[history_idx:])
 
         # Now count the tokens and characters since there
         num_characters += len(countable_history_chunk)

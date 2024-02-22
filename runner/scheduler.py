@@ -1,9 +1,9 @@
 import json
 import webbrowser
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Iterator, List, Tuple, Callable
+from typing import Optional, Iterator, List, Tuple, Callable, Dict
 
 import time_machine
 
@@ -18,10 +18,12 @@ from model_interfaces.interface import ChatSession
 from reporting.generate import generate_report
 from reporting.results import TestResult
 from runner.config import RunConfig
+from runner.master_log import MasterLog
+from utils.constants import EventType
 from utils.filling_task import filler_no_response_tokens_trivia
 from utils.tokens import token_len
 from utils.ui import colour_print
-from utils.files import make_runstats_path
+from utils.files import make_runstats_path, make_master_log_path
 from runner.progress import ProgressDialog
 
 
@@ -35,12 +37,12 @@ def are_compatible(a: TestExample, b: TestExample, incompatibilities: list[set[t
     return True
 
 
-def create_question(example: TestExample, action_logs: dict[str, list[TestAction]]) -> str:
+def create_question(example: TestExample, master_log: MasterLog) -> str:
     statement_times = []
-    for action in action_logs[example.unique_id]:
-        if not isinstance(action, SendMessageAction):
-            continue
-        statement_times.append(action.sent_ts)
+    test_events = master_log.get_test_events(example.unique_id)
+    for event in test_events:
+        if event.type == EventType.SEND_MESSAGE:
+            statement_times.append(event.timestamp)
     return example.dataset_generator.create_question(
         example,
         statement_times,
@@ -48,49 +50,36 @@ def create_question(example: TestExample, action_logs: dict[str, list[TestAction
     )
 
 
-def extract_log_kwargs(action_log: list[TestAction]):
-    kwargs = dict()
-    for k in ["questions", "question_responses", "messages_timestamps", "task_log"]:
-        kwargs[k] = []
-    for action in action_log:
-        if not isinstance(action, SendMessageAction):
-            continue
-        kwargs["task_log"].append(f"Test ({action.sent_ts}): " + action.message)
-        kwargs["task_log"].append(f"Agent ({action.reply_ts}): " + action.reply)
-        if not action.is_filling:
-            kwargs["messages_timestamps"].append(action.sent_ts)
-        if action.is_question:
-            kwargs["questions"].append(action.message)
-            kwargs["question_responses"].append(action.reply)
-    return kwargs
-
 
 @dataclass
 class TestRunner:
     config: RunConfig
     agent: ChatSession
     tests: list[TestExample]
-    results: list[TestResult] = field(default_factory=list)
+    finished_results: list[TestResult] = field(default_factory=list)
+    in_progress_results: dict[str, TestResult] = field(default_factory=dict)
     traveller: Optional[time_machine.travel] = None
     wait_list: dict[str, dict[str, int | datetime]] = field(default_factory=dict)
     current_token_count: int = 0
     avg_tokens_per_second: Optional[float] = None
-    action_logs: dict[str, list[TestAction]] = field(default_factory=dict)
     test_managing_costs_usd: float = 0
     benchmark_duration_seconds: float = 0
     reference_duration_timestamp: Optional[datetime] = None
     skip_evaluations: bool = False
-    result_callbacks: List[Tuple[Callable, TestExample, TestResult]] = field(default_factory=list)
-    master_log: List[str] = field(default_factory=list)
+    result_callbacks: List[Tuple[Callable, TestExample]] = field(default_factory=list)
+    master_log: MasterLog = None
     progress_dialog: ProgressDialog = None
 
     @property
-    def saving_path(self):
+    def runstats_path(self):
         return make_runstats_path(self.config.run_name, self.agent.name)
 
-    def save(self):
+    @property
+    def master_log_path(self):
+        return make_master_log_path(self.config.run_name, self.agent.name)
+
+    def save_runstats(self):
         self.update_duration()
-        self.saving_path.parent.mkdir(parents=True, exist_ok=True)
         stats = dict(
             total_tokens=self.current_token_count,
             agent_costs_usd=self.agent.costs_usd,
@@ -98,22 +87,25 @@ class TestRunner:
             tokens_per_second=self.avg_tokens_per_second,
             duration=self.benchmark_duration_seconds,
         )
-        with open(self.saving_path, "w") as fd:
+
+        with open(self.runstats_path, "w") as fd:
             json.dump(stats, fd)
 
     def load(self):
-        if not self.saving_path.exists():
+        if not self.runstats_path.exists():
             return
         assert (
             self.avg_tokens_per_second is None and self.reference_duration_timestamp is None
         ), "Attempted to load test scheduler in a non-initial state."
-        with open(self.saving_path) as fd:
+        with open(self.runstats_path) as fd:
             d = json.load(fd)
         self.current_token_count = d["total_tokens"]
         self.agent.costs_usd = d["agent_costs_usd"]
         self.test_managing_costs_usd = d["managing_costs_usd"]
         self.avg_tokens_per_second = d["tokens_per_second"]
         self.benchmark_duration_seconds = d["duration"]
+
+        self.master_log.load()
 
     def travel_to_dt(self, target_date: datetime):
         self.reset_time()
@@ -150,13 +142,14 @@ class TestRunner:
             wait_dict["tokens"] = self.current_token_count + action.tokens
         if action.time.total_seconds() > 0:
             wait_dict["time"] = datetime.now() + action.time
+        self.master_log.add_wait_event(unique_id, datetime.now(), **wait_dict)
         self.wait_list[unique_id] = wait_dict
 
-    def send_message(self, action: SendMessageAction):
+    def send_message(self, test_id: str, action: SendMessageAction):
         response, sent_ts, reply_ts = self.agent.message_to_agent(action.message)
         self.debug_message(action.message, response, sent_ts, reply_ts)
-        self.master_log.append(action.message)
-        self.master_log.append(response)
+        self.master_log.add_send_message(test_id=test_id, message=action.message, timestamp=sent_ts, is_question=action.is_question)
+        self.master_log.add_response_message(test_id=test_id, message=response, timestamp=reply_ts,  is_question=action.is_question)
         response_time = (reply_ts - sent_ts).total_seconds()
         action.reply = response
         action.reply_ts = reply_ts
@@ -247,15 +240,42 @@ class TestRunner:
             remaining_tokens = num_tokens - self.current_token_count
             while remaining_tokens > 0:
                 msg = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size)
-                tokens_spent = self.send_message(SendMessageAction(msg, is_filling=True))
+                tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True))
                 remaining_tokens -= tokens_spent
             if not self.is_waiting(token_waiting_id, remove=True):
                 return token_waiting_id
 
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
 
-    def iter_tests(self, test_group: list[TestExample]) -> Iterator[TestExample]:
+    def setup_iterator(self, test_group):
+        # Sets up the test dict and fast forwards any tests that are currently in progress
+        test_actions_taken = self.master_log.get_tests_in_progress()
+        self.wait_list = {k: {"tokens": 0} for k in test_actions_taken.keys()}
         tests = {t.unique_id: t for t in test_group}
+
+        # Check if the last event in the log is after the current time, then travel to that time if it is.
+        if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
+            self.travel_to_dt(self.master_log.log[-1].timestamp)
+
+        # Fast forward examples to the last action that was run
+        for run_id in test_actions_taken.keys():
+            example = tests[run_id]
+            actions_to_ff = test_actions_taken[run_id]
+            for _ in range(actions_to_ff):
+                action = example.step()
+                if isinstance(action, SendAndRegisterAction):
+                    self.register_callback(example)
+
+            # If the last action is a wait action, set the test to wait
+            if isinstance(action, WaitAction):
+                self.set_to_wait(run_id, action)
+
+        return tests
+
+    def iter_tests(self, test_group: list[TestExample]) -> Iterator[TestExample]:
+        # Set up the tests that are to be iterated through, fast forwarding where appropriate
+        tests = self.setup_iterator(test_group)
+
         assert len(tests) == len(test_group), f"There are tests with identical IDs: {[t.unique_id for t in test_group]}"
         while len(tests) > 0:
             run_id = self.pick_next_test_id(tests)
@@ -264,9 +284,6 @@ class TestRunner:
             if example.finished:
                 del tests[run_id]
                 self.wait_list.pop(run_id, None)
-
-    def log_action(self, example: TestExample, action: TestAction):
-        self.action_logs.setdefault(example.unique_id, []).append(action)
 
     def initialise_result(self, example: TestExample) -> tuple[TestResult, bool]:
         result = TestResult(
@@ -287,73 +304,77 @@ class TestRunner:
 
     def run_tests(self):
         self.result_callbacks = []
-        self.master_log = []
-        results = dict()
+        self.in_progress_results = dict()
         finished = 0
         for example in self.iter_tests(self.tests):
             self.progress_dialog.notify_running(example)
 
             skip = False
-            if example.unique_id not in results:
+            if example.unique_id not in self.in_progress_results:
                 result, skip = self.initialise_result(example)
-                results[example.unique_id] = result
+                self.in_progress_results[example.unique_id] = result
                 example.finished = skip
+                if not skip:
+                    self.master_log.begin_test(example.unique_id, datetime.now())
 
             while not example.finished:
                 action = example.step()
                 if action is None:
                     break
-                self.log_action(example, action)  # Attributes are modified afterwards.
                 if isinstance(action, WaitAction):
                     self.set_to_wait(example.unique_id, action)
                     break
                 if isinstance(action, (SendMessageAction, SendAndRegisterAction)):
                     # TODO: the test should autonomously create the question
                     if example.is_temporal and action.is_question:
-                        action.message = create_question(example, self.action_logs)
-                    self.send_message(action)
+                        action.message = create_question(example, self.master_log)
+                    self.send_message(example.unique_id, action)
                     if isinstance(action, SendAndRegisterAction):
-                        self.register_callback(example, results[example.unique_id])
+                        self.register_callback(example)
 
+                self.save_runstats()
             self.check_result_callbacks()
 
             if example.finished:
 
-                if not skip and example.reset_message != "":
-                    action = SendMessageAction(example.reset_message)
-                    self.log_action(example, action)
-                    self.send_message(action)
-
                 finished += 1
-                result = results[example.unique_id]
+                result = self.in_progress_results[example.unique_id]
                 self.progress_dialog.notify_result(result)
+
                 if not skip:
+                    if example.reset_message != "":
+                        action = SendMessageAction(example.reset_message)
+                        self.send_message(example.unique_id, action)
+
                     self.update_result(
                         example=example,
                         result=result,
-                        **extract_log_kwargs(self.action_logs[example.unique_id]),
+                        master_log=self.master_log,
                     )
-                self.results.append(result)
+                    self.master_log.end_test(example.unique_id, datetime.now())
+
+                self.finished_results.append(result)
                 print(result)
                 colour_print("green", f"{finished} of {len(self.tests)} tests finished.")
 
-    def register_callback(self, example: TestExample, result: TestResult):
+    def register_callback(self, example: TestExample):
         cb = example.dataset_generator.continual_evaluation_callback
-        self.result_callbacks.append((cb, example, result))
+        self.result_callbacks.append((cb, example))
 
     def check_result_callbacks(self):
         deregistered_cb = []
-        for callback, example, result in self.result_callbacks:
-            score, max_score, reasons, deregister = callback(self, example, self.master_log)
+        for callback, example in self.result_callbacks:
+            score, max_score, reasons, deregister = callback(self, example, self.master_log.messages())
+            result = self.in_progress_results[example.unique_id]
             result.score = score
             result.max_score = max_score
             result.reasoning = reasons
 
-            self.update_result(example, result, **extract_log_kwargs(self.action_logs[example.unique_id]))
+            self.update_result(example, result, self.master_log)
 
             if deregister:
                 assert example.finished, "Callback has been deregistered, but example is not set as finished!"
-                deregistered_cb.append((callback, example, result))
+                deregistered_cb.append((callback, example))
 
         for tup in deregistered_cb:
             self.result_callbacks.remove(tup)
@@ -366,6 +387,8 @@ class TestRunner:
             example.dataset_generator.cost_callback = cost_callback
 
     def run(self):
+        self.master_log = MasterLog(self.master_log_path)
+        self.runstats_path.parent.mkdir(parents=True, exist_ok=True)
         self.load()
         self.reference_duration_timestamp = datetime.now()
         self.set_cost_callback()
@@ -374,24 +397,24 @@ class TestRunner:
         self.progress_dialog = ProgressDialog(len(self.tests))
         self.run_tests()
         self.progress_dialog.close()
-        self.save()
+        self.save_runstats()
         self.reset_time()
-        report_path = generate_report(self.results)
+        report_path = generate_report(self.finished_results)
         webbrowser.open_new_tab(report_path.as_uri())
 
     def update_result(
         self,
         example: TestExample,
         result: TestResult,
-        questions: list[str],
-        question_responses: list[str],
-        messages_timestamps: list[datetime],
-        task_log: list[str],
+        master_log: MasterLog,
     ):
+        task_log = master_log.messages(example.unique_id)
+        questions, question_responses = master_log.get_questions_and_responses(example.unique_id)
+
         characters, tokens = example.dataset_generator.tokens_to_answer(
-            self.agent.history,
-            example,
-            messages_timestamps,
+            master_log.as_context(example.unique_id),
+            master_log.as_context(),
+            example
         )
 
         if not self.skip_evaluations:
@@ -409,11 +432,10 @@ class TestRunner:
         result.task_log = task_log
         result.actual_responses = question_responses
         result.tokens = tokens
-        list_idx = self.master_log.index(example.script[0])
-        result.full_log = deepcopy(self.master_log[list_idx:])
+        result.full_log = self.master_log.human_readable_full_log(example.unique_id, example.script[0])
         result.characters = characters
         result.save(self.agent.name)
-        self.save()
+        self.save_runstats()
 
     def debug_message(
         self,

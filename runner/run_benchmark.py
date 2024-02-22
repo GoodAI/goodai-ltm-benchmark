@@ -26,7 +26,8 @@ from model_interfaces.human import HumanChatSession
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
-from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path
+from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, make_runstats_path, \
+    make_master_log_path, gather_persistence_files
 from utils.constants import MAIN_DIR
 
 
@@ -120,14 +121,16 @@ def generate_test_examples(
 
 def check_result_files(run_name: str, agent_name: str, force_removal: bool = False, pass_default: bool = False):
     result_files = gather_result_files(run_name, agent_name)
+    persistence_files = gather_persistence_files(run_name, agent_name)
+    all_files = result_files + persistence_files
     if force_removal:
-        for file in result_files:
+        for file in all_files:
             os.remove(file)
-        result_files = []
-    if len(result_files) > 0:
+        all_files = []
+    if len(all_files) > 0:
         if not pass_default:
             if not ask_yesno(
-                f"{len(result_files)} result files have been found for run name {run_name} " f"and agent {agent_name}.",
+                f"There are {len(all_files)} existing file that have been found for run name '{run_name}' " f"and agent '{agent_name}'.",
                 question="Do you want to resume the run?",
             ):
                 if not ask_yesno(
@@ -136,7 +139,7 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
                 ):
                     colour_print("red", "Run aborted.")
                     return
-                for file in result_files:
+                for file in all_files:
                     os.remove(file)
 
 
