@@ -21,16 +21,19 @@ from memgpt.presets import presets
 
 from model_interfaces.interface import ChatSession
 from memgpt.persistence_manager import LocalStateManager
+
+from utils.constants import ResetPolicy
 from utils.openai import token_cost
 import subprocess
 from dataclasses import dataclass
 from contextlib import contextmanager
 
+from utils.ui import colour_print
 
 MEMGPT_LOGS_FILE = "model_interfaces/memgpt-logs.jsonl"
 
 
-def configure(context_length):
+def configure(context_length, agent_name):
     model = "gpt-4"
     endpoint_type = "openai"
     proxy_endpoint = "http://localhost:5000/v1"
@@ -68,14 +71,14 @@ def configure(context_length):
         embedding_endpoint_type=endpoint_type,
         embedding_endpoint=proxy_endpoint,
         embedding_dim=embedding_dim,
-        name="MemGPTAgent",  # It will use it for saving
+        name=agent_name,  # It will use it for saving
     )
     agent_config.save()
     return agent_config
 
 
-def create_memgpt_agent(context_length):
-    agent_config = configure(context_length)
+def create_memgpt_agent(context_length, agent_name):
+    agent_config = configure(context_length, agent_name)
     # create agent
     memgpt_agent = presets.use_preset(
         agent_config.preset,
@@ -121,7 +124,7 @@ def read_cost_info() -> float:
         for line in fd.readlines():
             d = json.loads(line)
             prompt_tokens = d["usage"]["prompt_tokens"]
-            completion_tokens = d["usage"]["completion_tokens"]
+            completion_tokens = d["usage"].get("completion_tokens", 0)
             prompt_cost, completion_cost = token_cost(d["model"])
             cost_usd += prompt_tokens * prompt_cost
             cost_usd += completion_tokens * completion_cost
@@ -136,7 +139,9 @@ class MemGPTChatSession(ChatSession):
     max_message_size: int = 300
 
     def __post_init__(self):
+        super().__post_init__()
         self.reset()
+        colour_print("CYAN", "MemGPT will save in your home directory under '.memgpt'")
 
     @property
     def max_prompt_size(self):
@@ -149,7 +154,7 @@ class MemGPTChatSession(ChatSession):
 
     def reset(self):
         # Create new memgpt agent
-        self.memgpt_agent: Agent = create_memgpt_agent(self._max_prompt_size)
+        self.memgpt_agent: Agent = create_memgpt_agent(self._max_prompt_size, self.save_name)
         self.memgpt_agent.__class__.step = step
         self.memgpt_agent._messages.extend(
             [
@@ -223,6 +228,12 @@ class MemGPTChatSession(ChatSession):
                         message_strings.append(arg_dict["message"])
 
         return message_strings
+
+    def save(self):
+        self.memgpt_agent.save()
+
+    def load(self):
+        self.memgpt_agent = Agent.load_agent(self.memgpt_agent.interface, self.memgpt_agent.config)
 
 
 # This is a copy of memgpt.step which deals with custom context sizes.

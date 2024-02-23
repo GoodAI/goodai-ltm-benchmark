@@ -3,12 +3,14 @@
 (First see the [runner](../runner/README.md) documentation to understand how the tests are run and the part that the models play)
 
 
-A model should implement the `ChatSession` interface found at         `model_interfaces/interface.py` The two important methods that you are required to implement are:
+A model should implement the `ChatSession` interface found at `model_interfaces/interface.py` The important methods that you are required to implement are:
 
 * `reply(message)` which will return a `str` response to the input `message` and update the `costs_usd` attribute of the class. 
 * `reset()` which will clear the memory and context completely.
+* `load()` which loads the model.
+* `save()` which saves data from the model.
 
-The `reset()` function is important to clear out the current conversation, so that tests in different groups do not interfere with one another and contaminate the results of the benchmark.
+If the agent is not able to be persistent for some reason, you should set `reset_policy = ResetPolicy.HARD`, which will reset any in-progress tests upon any restart of the tests. A soft reset will resume tests that are in progress, so if your model is not persistent, then it will be potentially penalised for forgetting important information.
 
 It is expected that all calls to `reply(message)` incur in some cost, and therefore an exception will be raised if `costs_usd` does not increase from call to call. However, if your agent is cost-free or if you determine that the costs are negligible, you can set `is_local=True` and the costs will not be checked.
 

@@ -3,9 +3,9 @@ from abc import ABC
 from dataclasses import dataclass
 
 import pystache
+from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, CallBackTestExample
-from utils.json_helper import sanitize_and_parse_json
 from utils.openai import ask_llm
 
 PROMPT = """Generate data and questions based on the structure and instructions below.
@@ -79,6 +79,7 @@ class GPTGenerated(DatasetInterface, ABC):
                 number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
                 uses_callback=self.uses_callback,
+                reset_message=self.reset_message,
             )
 
             examples.append(example)

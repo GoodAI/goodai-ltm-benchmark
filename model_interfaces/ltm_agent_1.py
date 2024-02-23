@@ -9,13 +9,16 @@ import uuid
 from dataclasses import dataclass
 from json import JSONDecodeError
 from typing import List, Callable, Optional
+
+from goodai.helpers.json_helper import sanitize_and_parse_json
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
 from model_interfaces.exp_agents.prompts.chronological_ltm import cltm_template_queries_info
 from model_interfaces.interface import ChatSession
-from utils.json_helper import sanitize_and_parse_json
+from utils.constants import PERSISTENCE_DIR, ResetPolicy
+from utils.json_utils import CustomEncoder
 from utils.openai import ask_llm, get_max_prompt_size
 import tiktoken
 
@@ -51,6 +54,7 @@ class LTMAgent1(ChatSession):
         overlap_threshold: float = 0.75,
         llm_temperature: float = 0.01,
         mem_temperature: float = 0.01,
+        run_name: str = ""
     ):
         super().__init__()
         if system_message is None:
@@ -70,6 +74,7 @@ class LTMAgent1(ChatSession):
         _logger.info(f"{LTMAgent1.__name__} session ID: {self.session_id}")
         self.log_lock = threading.RLock()
         self.log_count = 0
+        self.run_name = run_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size
@@ -312,6 +317,32 @@ class LTMAgent1(ChatSession):
     def reset(self):
         self.reset_all()
 
+    def save(self):
+        infos = [self.message_history, self.user_info, self.text_mem.state_as_text()]
+        files = ["message_hist.json", "user_info.json", "mem.json"]
+
+        for obj, file in zip(infos, files):
+            fname = self.save_path.joinpath(file)
+            with open(fname, "w") as fd:
+                json.dump(obj, fd, cls=CustomEncoder)
+
+    def load(self):
+        fname = self.save_path.joinpath("message_hist.json")
+        with open(fname, "r") as fd:
+            ctx = json.load(fd)
+
+        message_hist = []
+        for m in ctx:
+            message_hist.append(Message(**m))
+        self.message_history = message_hist
+
+        fname = self.save_path.joinpath("user_info.json")
+        with open(fname, "r") as fd:
+            self.user_info = json.load(fd)
+
+        fname = self.save_path.joinpath("mem.json")
+        with open(fname, "r") as fd:
+            self.text_mem.set_state(json.load(fd))
 
 @dataclass
 class Message:
