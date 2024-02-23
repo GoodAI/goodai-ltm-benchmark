@@ -31,9 +31,9 @@ from utils.files import gather_testdef_files, gather_result_files, make_run_path
 from utils.constants import MAIN_DIR
 
 
-def get_chat_session(name: str, max_prompt_size: Optional[int], dataset_name: str) -> ChatSession:
+def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -> ChatSession:
     kwargs = {"max_prompt_size": max_prompt_size} if max_prompt_size is not None else {}
-    kwargs["dataset_name"] = dataset_name
+    kwargs["run_name"] = run_name
 
     if name in ["gpt", "gpt-4"]:
         return GPTChatSession(model="gpt-4", **kwargs)
@@ -181,7 +181,7 @@ def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y
     else:
         print(f"Maximum prompt size: {max_prompt_size}")
 
-    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size, dataset_name=config['run_name'])
+    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size, run_name=config['run_name'])
 
     examples = generate_test_examples(loaded_yaml, agent.max_message_size, pass_default=y)
     resume = check_result_files(conf.run_name, agent.name, pass_default=y)

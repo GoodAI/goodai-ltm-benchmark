@@ -1,8 +1,10 @@
 import json
 import time
+from datetime import datetime
 
 from model_interfaces.interface import ChatSession
 from utils.constants import PERSISTENCE_DIR, ResetPolicy
+from utils.json_utils import CustomEncoder
 from utils.openai import (
     ask_llm,
     LLMContext,
@@ -78,11 +80,14 @@ class TimestampGPTChatSession(ChatSession):
         self.history = []
 
     def save(self):
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_history.json")
+        fname = self.save_path.joinpath("history.json")
         with open(fname, "w") as fd:
-            json.dump(self.history, fd)
+            json.dump(self.history, fd, cls=CustomEncoder)
 
     def load(self):
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_history.json")
+        fname = self.save_path.joinpath("history.json")
         with open(fname, "r") as fd:
             self.history = json.load(fd)
+
+        for h in self.history:
+            h["timestamp"] = datetime.fromtimestamp(h["timestamp"])

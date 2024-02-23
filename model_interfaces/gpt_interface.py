@@ -58,9 +58,11 @@ class GPTChatSession(ChatSession):
         self.context = [make_system_message(self.system_prompt)]
 
     def save(self):
-        with open(self.save_path, "w") as fd:
+        fname = self.save_path.joinpath("context.json")
+        with open(fname, "w") as fd:
             json.dump(self.context, fd)
 
     def load(self):
-        with open(self.save_path, "r") as fd:
+        fname = self.save_path.joinpath("context.json")
+        with open(fname, "r") as fd:
             self.context = json.load(fd)

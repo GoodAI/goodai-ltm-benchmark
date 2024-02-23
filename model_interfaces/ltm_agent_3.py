@@ -57,6 +57,7 @@ class LTMAgent3(ChatSession):
         overlap_threshold: float = 0.75,
         llm_temperature: float = 0.01,
         mem_temperature: float = 0.01,
+        run_name: str = ""
     ):
         super().__init__()
         if system_message is None:
@@ -76,6 +77,7 @@ class LTMAgent3(ChatSession):
         _logger.info(f"{super().name} session ID: {self.session_id}")
         self.log_lock = threading.RLock()
         self.log_count = 0
+        self.run_name = run_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size
@@ -315,15 +317,15 @@ class LTMAgent3(ChatSession):
 
     def save(self):
         infos = [self.message_history, self.wm_scratchpad, self.text_mem.state_as_text()]
-        files = ["_message_hist.json", "_scratchpad.json", "_mem.json"]
+        files = ["message_hist.json", "scratchpad.json", "mem.json"]
 
-        for obj, file_ext in zip(infos, files):
-            fname = PERSISTENCE_DIR.joinpath(self.save_name + file_ext)
+        for obj, file in zip(infos, files):
+            fname = self.save_path.joinpath(file)
             with open(fname, "w") as fd:
                 json.dump(obj, fd, cls=CustomEncoder)
 
     def load(self):
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_message_hist.json")
+        fname = self.save_path.joinpath("message_hist.json")
         with open(fname, "r") as fd:
             ctx = json.load(fd)
 
@@ -332,11 +334,11 @@ class LTMAgent3(ChatSession):
             message_hist.append(Message(**m))
         self.message_history = message_hist
 
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_scratchpad.json")
+        fname = self.save_path.joinpath("scratchpad.json")
         with open(fname, "r") as fd:
             self.wm_scratchpad = json.load(fd)
 
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_mem.json")
+        fname = self.save_path.joinpath("mem.json")
         with open(fname, "r") as fd:
             self.text_mem.set_state(json.load(fd))
 

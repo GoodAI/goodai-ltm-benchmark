@@ -12,7 +12,7 @@ class ChatSession(ABC):
     costs_usd: float = 0
     is_local: bool = False
     max_message_size: int = 1000
-    dataset_name: str = ""
+    run_name: str = ""
     reset_policy: ResetPolicy = ResetPolicy.HARD
 
     def message_to_agent(self, user_message: str) -> Tuple[str, datetime, datetime]:
@@ -33,11 +33,11 @@ class ChatSession(ABC):
 
     @property
     def save_path(self):
-        return PERSISTENCE_DIR.joinpath(f"{self.dataset_name} - {self.name}")
+        return PERSISTENCE_DIR.joinpath(self.save_name)
 
     @property
     def save_name(self):
-        return f"{self.dataset_name} - {self.name}"
+        return f"{self.run_name} - {self.name}"
 
     @abstractmethod
     def reply(self, user_message: str) -> str:

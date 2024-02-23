@@ -396,7 +396,7 @@ class TestRunner:
     def run(self):
         self.master_log = MasterLog(self.master_log_path)
         self.runstats_path.parent.mkdir(parents=True, exist_ok=True)
-        PERSISTENCE_DIR.mkdir(parents=True, exist_ok=True)
+        self.agent.save_path.mkdir(parents=True, exist_ok=True)
         self.load()
         self.reference_duration_timestamp = datetime.now()
         self.set_cost_callback()

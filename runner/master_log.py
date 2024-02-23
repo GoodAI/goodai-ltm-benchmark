@@ -23,6 +23,9 @@ class LogEvent:
             if isinstance(v, datetime):
                 v = v.timestamp()
 
+            if isinstance(v, ResetPolicy):
+                v = v.value
+
             ret[k] = v
         return ret
 
@@ -33,6 +36,9 @@ class LogEvent:
 
         if json_event["data"].get("time", None) and json_event["data"]["time"] > 0:
             json_event["data"]["time"] = datetime.fromtimestamp(json_event["data"]["time"])
+
+        if json_event["data"].get("policy", None):
+            json_event["data"]["policy"] = ResetPolicy(json_event["data"]["policy"])
 
         return cls(**json_event)
 

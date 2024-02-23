@@ -54,7 +54,7 @@ class LTMAgent1(ChatSession):
         overlap_threshold: float = 0.75,
         llm_temperature: float = 0.01,
         mem_temperature: float = 0.01,
-        dataset_name: str = ""
+        run_name: str = ""
     ):
         super().__init__()
         if system_message is None:
@@ -74,7 +74,7 @@ class LTMAgent1(ChatSession):
         _logger.info(f"{LTMAgent1.__name__} session ID: {self.session_id}")
         self.log_lock = threading.RLock()
         self.log_count = 0
-        self.dataset_name = dataset_name
+        self.run_name = run_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size
@@ -320,15 +320,15 @@ class LTMAgent1(ChatSession):
 
     def save(self):
         infos = [self.message_history, self.user_info, self.text_mem.state_as_text()]
-        files = ["_message_hist.json", "_user_info.json", "_mem.json"]
+        files = ["message_hist.json", "user_info.json", "mem.json"]
 
-        for obj, file_ext in zip(infos, files):
-            fname = PERSISTENCE_DIR.joinpath(self.save_name + file_ext)
+        for obj, file in zip(infos, files):
+            fname = self.save_path.joinpath(file)
             with open(fname, "w") as fd:
                 json.dump(obj, fd, cls=CustomEncoder)
 
     def load(self):
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_message_hist.json")
+        fname = self.save_path.joinpath("message_hist.json")
         with open(fname, "r") as fd:
             ctx = json.load(fd)
 
@@ -337,11 +337,11 @@ class LTMAgent1(ChatSession):
             message_hist.append(Message(**m))
         self.message_history = message_hist
 
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_user_info.json")
+        fname = self.save_path.joinpath("user_info.json")
         with open(fname, "r") as fd:
             self.user_info = json.load(fd)
 
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_mem.json")
+        fname = self.save_path.joinpath("mem.json")
         with open(fname, "r") as fd:
             self.text_mem.set_state(json.load(fd))
 

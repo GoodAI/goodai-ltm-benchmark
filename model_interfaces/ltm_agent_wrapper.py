@@ -6,7 +6,7 @@ from utils.constants import PERSISTENCE_DIR, ResetPolicy
 
 class LTMAgentWrapper(ChatSession):
     def __init__(self, model: str, max_prompt_size: int,
-                 variant: LTMAgentVariant, dataset_name: str = ""):
+                 variant: LTMAgentVariant, run_name: str = ""):
         super().__init__()
         self.model = model
         self.max_prompt_size = max_prompt_size
@@ -14,7 +14,7 @@ class LTMAgentWrapper(ChatSession):
         self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=max_prompt_size)
         self.costs_usd = 0
         self.reset_policy: ResetPolicy = ResetPolicy.SOFT
-        self.dataset_name = dataset_name
+        self.run_name = run_name
 
     @property
     def name(self):
@@ -30,12 +30,12 @@ class LTMAgentWrapper(ChatSession):
         self.agent.reset()
 
     def save(self):
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_full_agent.json")
+        fname = self.save_path.joinpath("full_agent.json")
         with open(fname, "w") as fd:
             fd.write(self.agent.state_as_text())
 
     def load(self):
-        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_full_agent.json")
+        fname = self.save_path.joinpath("full_agent.json")
         with open(fname, "r") as fd:
             state_text = fd.read()
         self.agent.from_state_text(state_text)
