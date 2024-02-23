@@ -27,6 +27,7 @@ class CostEstimationChatSession(ChatSession):
         return f"{super().name} - {self.max_prompt_size} - {self.cost_in_token:.2e} - {self.cost_out_token:.2e}"
 
     def __post_init__(self):
+        super().__post_init__()
         self.system_prompt = "You are a helpful assistant."
         assert self.max_prompt_size > token_len(self.system_prompt)
 

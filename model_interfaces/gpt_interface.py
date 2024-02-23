@@ -21,8 +21,8 @@ class GPTChatSession(ChatSession):
     verbose: bool = False
     context: LLMContext = field(default_factory=LLMContext)
 
-
     def __post_init__(self):
+        super().__post_init__()
         if len(self.context) == 0:
             self.context.append(make_system_message(self.system_prompt))
         if self.max_prompt_size is None:

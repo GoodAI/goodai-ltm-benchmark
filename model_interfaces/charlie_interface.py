@@ -35,6 +35,7 @@ class CharlieMnemonic(ChatSession):
         return f"{super().name} - {self.max_prompt_size}"
 
     def __post_init__(self):
+        super().__post_init__()
         browsers = [
             browser_cookie3.chrome,
             browser_cookie3.firefox,

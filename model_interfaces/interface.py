@@ -27,6 +27,9 @@ class ChatSession(ABC):
         self.history.append({"role": "assistant", "content": response, "timestamp": reply_ts})
         return response, sent_ts, reply_ts
 
+    def __post_init__(self):
+        assert self.run_name != "", "Run name is not set!"
+
     @property
     def name(self):
         return self.__class__.__name__

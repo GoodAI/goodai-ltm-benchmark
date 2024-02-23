@@ -12,8 +12,8 @@ class HumanChatSession(ChatSession):
     is_local: bool = True
     max_message_size: int = sys.maxsize
 
-
     def __post_init__(self):
+        super().__post_init__()
         print(
             "This is a human interface for the GoodAI LTM Benchmark. You are expected to provide responses to the "
             "different tests' messages, as if you were an AI agent. Multi-line responses are allowed, and an empty line "

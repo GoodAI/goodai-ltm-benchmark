@@ -20,6 +20,7 @@ class ClaudeChatSession(ChatSession):
     response_len: int = 1024
 
     def __post_init__(self):
+        super().__post_init__()
         if self.max_prompt_size is None:
             self.max_prompt_size = get_max_prompt_size(self.model)
         else:

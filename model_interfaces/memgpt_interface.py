@@ -139,7 +139,9 @@ class MemGPTChatSession(ChatSession):
     max_message_size: int = 300
 
     def __post_init__(self):
+        super().__post_init__()
         self.reset()
+        colour_print("CYAN", "MemGPT will save in your home directory under '.memgpt'")
 
     @property
     def max_prompt_size(self):
@@ -228,7 +230,6 @@ class MemGPTChatSession(ChatSession):
         return message_strings
 
     def save(self):
-        colour_print("CYAN", "MemGPT will save in your home directory under '.memgpt'")
         self.memgpt_agent.save()
 
     def load(self):
