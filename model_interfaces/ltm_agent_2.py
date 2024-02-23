@@ -1,14 +1,14 @@
 import datetime
+import json
 import logging
-import threading
 import time
-import uuid
 from typing import List, Callable, Optional
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
 from model_interfaces.base_ltm_agent import BaseLTMAgent, Message
+from utils.json_utils import CustomEncoder
 from utils.openai import make_system_message, make_user_message
 
 _logger = logging.getLogger("exp_agent")
@@ -30,7 +30,7 @@ class LTMAgent2(BaseLTMAgent):
                  system_message: str = None, ctx_fraction_for_mem: float = 0.5,
                  model: str = None, emb_model: str = _default_emb_model,
                  chunk_size: int = 32, overlap_threshold: float = 0.75,
-                 llm_temperature: float = 0.01):
+                 llm_temperature: float = 0.01, run_name: str = ""):
         super().__init__(model=model)
         if system_message is None:
             system_message = _default_system_message
@@ -42,6 +42,7 @@ class LTMAgent2(BaseLTMAgent):
         self.session_index = 0
         self.system_message_template = system_message
         self.message_history: List[Message] = []
+        self.run_name = run_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size
@@ -143,3 +144,26 @@ class LTMAgent2(BaseLTMAgent):
         self.reset_history()
         self.session_index = 0
         self.text_mem.clear()
+
+    def save(self):
+        infos = [self.message_history, self.text_mem.state_as_text()]
+        files = ["message_hist.json", "mem.json"]
+
+        for obj, file in zip(infos, files):
+            fname = self.save_path.joinpath(file)
+            with open(fname, "w") as fd:
+                json.dump(obj, fd, cls=CustomEncoder)
+
+    def load(self):
+        fname = self.save_path.joinpath("message_hist.json")
+        with open(fname, "r") as fd:
+            ctx = json.load(fd)
+
+        message_hist = []
+        for m in ctx:
+            message_hist.append(Message(**m))
+        self.message_history = message_hist
+
+        fname = self.save_path.joinpath("mem.json")
+        with open(fname, "r") as fd:
+            self.text_mem.set_state(json.load(fd))

@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import re
 import time
@@ -9,6 +10,7 @@ from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
 from model_interfaces.base_ltm_agent import BaseLTMAgent, Message
 from model_interfaces.exp_agents.prompts.scratchpad_ltm import s_ltm_template_queries_info
+from utils.json_utils import CustomEncoder
 from utils.openai import get_max_prompt_size
 
 _logger = logging.getLogger("exp_agent")
@@ -44,6 +46,7 @@ class LTMAgent3(BaseLTMAgent):
         overlap_threshold: float = 0.75,
         llm_temperature: float = 0.01,
         mem_temperature: float = 0.01,
+        run_name: str = ""
     ):
         super().__init__(model=model)
         if system_message is None:
@@ -58,6 +61,7 @@ class LTMAgent3(BaseLTMAgent):
         self.system_message_template = system_message
         self.message_history: List[Message] = []
         self.wm_scratchpad = ""
+        self.run_name = run_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size
@@ -217,3 +221,29 @@ class LTMAgent3(BaseLTMAgent):
         self.session_index = 0
         self.wm_scratchpad = ""
         self.text_mem.clear()
+    def save(self):
+        infos = [self.message_history, self.wm_scratchpad, self.text_mem.state_as_text()]
+        files = ["message_hist.json", "scratchpad.json", "mem.json"]
+
+        for obj, file in zip(infos, files):
+            fname = self.save_path.joinpath(file)
+            with open(fname, "w") as fd:
+                json.dump(obj, fd, cls=CustomEncoder)
+
+    def load(self):
+        fname = self.save_path.joinpath("message_hist.json")
+        with open(fname, "r") as fd:
+            ctx = json.load(fd)
+
+        message_hist = []
+        for m in ctx:
+            message_hist.append(Message(**m))
+        self.message_history = message_hist
+
+        fname = self.save_path.joinpath("scratchpad.json")
+        with open(fname, "r") as fd:
+            self.wm_scratchpad = json.load(fd)
+
+        fname = self.save_path.joinpath("mem.json")
+        with open(fname, "r") as fd:
+            self.text_mem.set_state(json.load(fd))
