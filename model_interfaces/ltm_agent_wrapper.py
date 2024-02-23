@@ -7,13 +7,12 @@ from utils.constants import PERSISTENCE_DIR, ResetPolicy
 class LTMAgentWrapper(ChatSession):
     def __init__(self, model: str, max_prompt_size: int,
                  variant: LTMAgentVariant, run_name: str = ""):
-        super().__init__()
+        super().__init__(run_name=run_name)
         self.model = model
         self.max_prompt_size = max_prompt_size
         self.variant = variant
         self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=max_prompt_size)
         self.costs_usd = 0
-        self.run_name = run_name
 
     @property
     def name(self):

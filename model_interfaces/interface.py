@@ -8,11 +8,11 @@ from utils.constants import PERSISTENCE_DIR, ResetPolicy
 
 @dataclass
 class ChatSession(ABC):
+    run_name: str = ""
     history: list[dict[str, str | datetime]] = field(default_factory=list)
     costs_usd: float = 0
     is_local: bool = False
     max_message_size: int = 1000
-    run_name: str = ""
     reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def message_to_agent(self, user_message: str) -> Tuple[str, datetime, datetime]:
@@ -29,6 +29,7 @@ class ChatSession(ABC):
 
     def __post_init__(self):
         assert self.run_name != "", "Run name is not set!"
+        assert isinstance(self.history, list), "History attribute not set!"
 
     @property
     def name(self):
