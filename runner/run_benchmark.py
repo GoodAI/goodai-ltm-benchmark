@@ -47,9 +47,9 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return TimestampGPTChatSession(model="gpt-4-1106-preview", **kwargs)
     elif name == "memgpt":
         if max_prompt_size is not None:
-            return MemGPTChatSession(_max_prompt_size=max_prompt_size)
+            return MemGPTChatSession(_max_prompt_size=max_prompt_size, run_name=run_name)
         else:
-            return MemGPTChatSession()
+            return MemGPTChatSession(run_name=run_name)
     elif name == "langchain_sb_a":
         return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.SUMMARY_BUFFER, **kwargs)
     elif name == "langchain_kg_a":

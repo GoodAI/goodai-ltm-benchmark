@@ -64,6 +64,8 @@ def token_cost(model: str) -> tuple[float, float]:
         return 0.000_001, 0.000_002
     if model == "claude-2.1":
         return 8e-06, 2.4e-05
+    if model == "text-embedding-ada-002":
+        return 0.000_000_002, 0.000_000_002
     raise ValueError(f"There's no cost registered for model {model}.")
 
 

@@ -28,6 +28,7 @@ import subprocess
 from dataclasses import dataclass
 from contextlib import contextmanager
 
+from utils.ui import colour_print
 
 MEMGPT_LOGS_FILE = "model_interfaces/memgpt-logs.jsonl"
 
@@ -123,7 +124,7 @@ def read_cost_info() -> float:
         for line in fd.readlines():
             d = json.loads(line)
             prompt_tokens = d["usage"]["prompt_tokens"]
-            completion_tokens = d["usage"]["completion_tokens"]
+            completion_tokens = d["usage"].get("completion_tokens", 0)
             prompt_cost, completion_cost = token_cost(d["model"])
             cost_usd += prompt_tokens * prompt_cost
             cost_usd += completion_tokens * completion_cost
@@ -228,6 +229,7 @@ class MemGPTChatSession(ChatSession):
         return message_strings
 
     def save(self):
+        colour_print("CYAN", "MemGPT will save in your home directory under '.memgpt'")
         self.memgpt_agent.save()
 
     def load(self):
