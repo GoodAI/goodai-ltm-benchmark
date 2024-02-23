@@ -3,7 +3,7 @@
 (First see the [runner](../runner/README.md) documentation to understand how the tests are run and the part that the models play)
 
 
-A model should implement the `ChatSession` interface found at `model_interfaces/interface.py` The two important methods that you are required to implement are:
+A model should implement the `ChatSession` interface found at `model_interfaces/interface.py` The important methods that you are required to implement are:
 
 * `reply(message)` which will return a `str` response to the input `message` and update the `costs_usd` attribute of the class. 
 * `reset()` which will clear the memory and context completely.
