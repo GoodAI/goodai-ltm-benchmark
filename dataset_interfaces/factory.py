@@ -47,7 +47,10 @@ class DatasetFactory:
         args.update(ds_args)
         num_examples = args["dataset_examples"]
         del args["dataset_examples"]
-        ds = DATASETS[name](max_message_size=max_message_size, **args)
+        ds_factory = DATASETS.get(name)
+        if not ds_factory:
+            raise ValueError(f"No such dataset: {name}")
+        ds = ds_factory(max_message_size=max_message_size, **args)
         examples = ds.generate_examples(num_examples)
         for i, example in enumerate(examples):
             if example.example_id == "":

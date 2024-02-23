@@ -31,7 +31,7 @@ class LTMAgent2(BaseLTMAgent):
                  model: str = None, emb_model: str = _default_emb_model,
                  chunk_size: int = 32, overlap_threshold: float = 0.75,
                  llm_temperature: float = 0.01, run_name: str = ""):
-        super().__init__(model=model)
+        super().__init__(run_name=run_name, model=model)
         if system_message is None:
             system_message = _default_system_message
         self.llm_temperature = llm_temperature
@@ -42,7 +42,6 @@ class LTMAgent2(BaseLTMAgent):
         self.session_index = 0
         self.system_message_template = system_message
         self.message_history: List[Message] = []
-        self.run_name = run_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size

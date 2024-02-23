@@ -49,7 +49,7 @@ class LTMAgent1(BaseLTMAgent):
         mem_temperature: float = 0.01,
         run_name: str = ""
     ):
-        super().__init__(model=model)
+        super().__init__(run_name=run_name, model=model)
         if system_message is None:
             system_message = _default_system_message
         self.mem_temperature = mem_temperature
@@ -62,7 +62,6 @@ class LTMAgent1(BaseLTMAgent):
         self.system_message_template = system_message
         self.message_history: List[Message] = []
         self.user_info: dict = {}
-        self.run_name = run_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size

@@ -22,8 +22,8 @@ class BaseLTMAgent(ChatSession, abc.ABC):
     Abstract base of LTM agents
     """
 
-    def __init__(self, model: str = None):
-        super().__init__()
+    def __init__(self, run_name: str = "", model: str = None):
+        super().__init__(run_name=run_name)
         self.model = model
         self.log_count = 0
         self.log_lock = threading.RLock()
