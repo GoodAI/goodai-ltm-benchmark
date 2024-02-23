@@ -1,8 +1,10 @@
+import json
 from dataclasses import dataclass, field
 
 import anthropic
 
 from model_interfaces.interface import ChatSession
+from utils.constants import ResetPolicy
 from utils.openai import LLMContext, get_max_prompt_size, make_system_message, make_user_message, ensure_context_len, \
     make_assistant_message, token_cost
 
@@ -18,6 +20,7 @@ class ClaudeChatSession(ChatSession):
     response_len: int = 1024
 
     def __post_init__(self):
+        super().__post_init__()
         if self.max_prompt_size is None:
             self.max_prompt_size = get_max_prompt_size(self.model)
         else:
@@ -52,3 +55,13 @@ class ClaudeChatSession(ChatSession):
 
     def reset(self):
         self.context = []
+
+    def save(self):
+        fname = self.save_path.joinpath("context.json")
+        with open(fname, "w") as fd:
+            json.dump(self.context, fd)
+
+    def load(self):
+        fname = self.save_path.joinpath("context.json")
+        with open(fname, "r") as fd:
+            self.context = json.load(fd)

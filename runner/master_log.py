@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 
-from utils.constants import EventType, EVENT_SENDER
+from utils.constants import EventType, EVENT_SENDER, ResetPolicy
 
 
 @dataclass
@@ -12,7 +12,7 @@ class LogEvent:
     type: EventType
     timestamp: datetime
     test_id: Optional[str] = None
-    data: Optional[Dict[str, str]] = field(default_factory=dict)
+    data: Optional[Dict[str, Any]] = field(default_factory=dict)
 
     def to_json(self):
         return {"type": self.type.value, "timestamp": self.timestamp.timestamp(), "test_id": self.test_id, "data": self.json_data()}
@@ -22,6 +22,9 @@ class LogEvent:
         for k, v in self.data.items():
             if isinstance(v, datetime):
                 v = v.timestamp()
+
+            if isinstance(v, ResetPolicy):
+                v = v.value
 
             ret[k] = v
         return ret
@@ -33,6 +36,9 @@ class LogEvent:
 
         if json_event["data"].get("time", None) and json_event["data"]["time"] > 0:
             json_event["data"]["time"] = datetime.fromtimestamp(json_event["data"]["time"])
+
+        if json_event["data"].get("policy", None):
+            json_event["data"]["policy"] = ResetPolicy(json_event["data"]["policy"])
 
         return cls(**json_event)
 
@@ -67,6 +73,10 @@ class MasterLog:
         event = LogEvent(EventType.END, timestamp=timestamp, test_id=test_id)
         self.add_event(event)
 
+    def add_reset_event(self, policy: ResetPolicy, timestamp: datetime):
+        event = LogEvent(EventType.SUITE_RESET, timestamp=timestamp, test_id="", data={"policy": policy})
+        self.add_event(event)
+
     def add_event(self, event: LogEvent):
         self.log.append(event)
         self.save_event(event)
@@ -90,6 +100,8 @@ class MasterLog:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' BEGINS")
             elif event.type == EventType.END:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' ENDS")
+            elif event.type == EventType.SUITE_RESET:
+                messages.append(f"SYSTEM ({event.timestamp}):  Suite was RESET with policy {event.data['policy']}")
             else:
                 raise ValueError("Unknown event found")
 

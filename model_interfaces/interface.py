@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Tuple, Callable
 from dataclasses import dataclass, field
 
+from utils.constants import PERSISTENCE_DIR, ResetPolicy
+
 
 @dataclass
 class ChatSession(ABC):
@@ -10,6 +12,8 @@ class ChatSession(ABC):
     costs_usd: float = 0
     is_local: bool = False
     max_message_size: int = 1000
+    run_name: str = ""
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def message_to_agent(self, user_message: str) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
@@ -23,9 +27,20 @@ class ChatSession(ABC):
         self.history.append({"role": "assistant", "content": response, "timestamp": reply_ts})
         return response, sent_ts, reply_ts
 
+    def __post_init__(self):
+        assert self.run_name != "", "Run name is not set!"
+
     @property
     def name(self):
         return self.__class__.__name__
+
+    @property
+    def save_path(self):
+        return PERSISTENCE_DIR.joinpath(self.save_name)
+
+    @property
+    def save_name(self):
+        return f"{self.run_name} - {self.name}"
 
     @abstractmethod
     def reply(self, user_message: str) -> str:
@@ -45,6 +60,14 @@ class ChatSession(ABC):
         # TODO This is meant for clearing the current conversation's history.
         # If 'history' needs to be consistent with cost, reset_history() should be abstract.
         self.history = []
+
+    @abstractmethod
+    def save(self):
+        pass
+
+    @abstractmethod
+    def load(self):
+        pass
 
 
 class ChatSessionFactory(ABC):

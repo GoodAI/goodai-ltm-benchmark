@@ -31,8 +31,9 @@ from utils.files import gather_testdef_files, gather_result_files, make_run_path
 from utils.constants import MAIN_DIR
 
 
-def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
+def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -> ChatSession:
     kwargs = {"max_prompt_size": max_prompt_size} if max_prompt_size is not None else {}
+    kwargs["run_name"] = run_name
 
     if name in ["gpt", "gpt-4"]:
         return GPTChatSession(model="gpt-4", **kwargs)
@@ -46,9 +47,9 @@ def get_chat_session(name: str, max_prompt_size: Optional[int]) -> ChatSession:
         return TimestampGPTChatSession(model="gpt-4-1106-preview", **kwargs)
     elif name == "memgpt":
         if max_prompt_size is not None:
-            return MemGPTChatSession(_max_prompt_size=max_prompt_size)
+            return MemGPTChatSession(_max_prompt_size=max_prompt_size, run_name=run_name)
         else:
-            return MemGPTChatSession()
+            return MemGPTChatSession(run_name=run_name)
     elif name == "langchain_sb_a":
         return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.SUMMARY_BUFFER, **kwargs)
     elif name == "langchain_kg_a":
@@ -123,6 +124,7 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
     result_files = gather_result_files(run_name, agent_name)
     persistence_files = gather_persistence_files(run_name, agent_name)
     all_files = result_files + persistence_files
+    resume = False
     if force_removal:
         for file in all_files:
             os.remove(file)
@@ -138,10 +140,13 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
                     default_yes=False,
                 ):
                     colour_print("red", "Run aborted.")
-                    return
+                    exit()
                 for file in all_files:
                     os.remove(file)
-
+                resume = False
+            else:
+                resume = True
+    return resume
 
 @click.command("run-benchmark")
 @click.option(
@@ -175,10 +180,14 @@ def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y
         logging.warning("Running without a maximum prompt size.")
     else:
         print(f"Maximum prompt size: {max_prompt_size}")
-    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size)
+
+    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size, run_name=config['run_name'])
 
     examples = generate_test_examples(loaded_yaml, agent.max_message_size, pass_default=y)
-    check_result_files(conf.run_name, agent.name, pass_default=y)
+    resume = check_result_files(conf.run_name, agent.name, pass_default=y)
+    if resume:
+        agent.load()
+
     runner = TestRunner(config=conf, agent=agent, tests=examples, skip_evaluations=agent_name.startswith("cost("))
     time1 = time.time()
     runner.run()
