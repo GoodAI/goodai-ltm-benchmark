@@ -16,7 +16,7 @@ from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
 from model_interfaces.exp_agents.prompts.scratchpad_ltm import s_ltm_template_queries_info
 from model_interfaces.interface import ChatSession
-from utils.constants import PERSISTENCE_DIR
+from utils.constants import PERSISTENCE_DIR, ResetPolicy
 from utils.json_utils import CustomEncoder
 from utils.openai import ask_llm, get_max_prompt_size
 import tiktoken
@@ -85,6 +85,7 @@ class LTMAgent3(ChatSession):
         )
         mem_config.reranking_k_factor = 10
         self.text_mem = AutoTextMemory.create(emb_model=emb_model, config=mem_config)
+        self.reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self):

@@ -1,6 +1,7 @@
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
 
 from model_interfaces.interface import ChatSession
+from utils.constants import PERSISTENCE_DIR, ResetPolicy
 
 
 class LTMAgentWrapper(ChatSession):
@@ -12,6 +13,7 @@ class LTMAgentWrapper(ChatSession):
         self.variant = variant
         self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=max_prompt_size)
         self.costs_usd = 0
+        self.reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self):
@@ -26,9 +28,15 @@ class LTMAgentWrapper(ChatSession):
     def reset(self):
         self.agent.reset()
 
-
     def save(self):
-        pass
+        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_full_agent.json")
+        with open(fname, "w") as fd:
+            fd.write(self.agent.state_as_text())
 
     def load(self):
-        pass
+        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_full_agent.json")
+        with open(fname, "w") as fd:
+            state_text = fd.read()
+        self.agent.from_state_text(state_text)
+
+

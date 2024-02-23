@@ -1,6 +1,7 @@
 import json
 
 from model_interfaces.interface import ChatSession
+from utils.constants import ResetPolicy
 from utils.openai import (
     ask_llm,
     LLMContext,
@@ -19,6 +20,7 @@ class GPTChatSession(ChatSession):
     model: str = "gpt-4"
     verbose: bool = False
     context: LLMContext = field(default_factory=LLMContext)
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def __post_init__(self):
         if len(self.context) == 0:
@@ -56,9 +58,9 @@ class GPTChatSession(ChatSession):
         self.context = [make_system_message(self.system_prompt)]
 
     def save(self):
-        with open(self.save_file, "w") as fd:
+        with open(self.save_path, "w") as fd:
             json.dump(self.context, fd)
 
     def load(self):
-        with open(self.save_file, "r") as fd:
+        with open(self.save_path, "r") as fd:
             self.context = json.load(fd)

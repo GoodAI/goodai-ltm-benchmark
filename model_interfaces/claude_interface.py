@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import anthropic
 
 from model_interfaces.interface import ChatSession
+from utils.constants import ResetPolicy
 from utils.openai import LLMContext, get_max_prompt_size, make_system_message, make_user_message, ensure_context_len, \
     make_assistant_message, token_cost
 
@@ -17,6 +18,7 @@ class ClaudeChatSession(ChatSession):
     verbose: bool = False
     context: LLMContext = field(default_factory=LLMContext)
     response_len: int = 1024
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def __post_init__(self):
         if self.max_prompt_size is None:

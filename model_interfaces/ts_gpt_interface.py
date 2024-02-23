@@ -1,6 +1,8 @@
+import json
 import time
 
 from model_interfaces.interface import ChatSession
+from utils.constants import PERSISTENCE_DIR, ResetPolicy
 from utils.openai import (
     ask_llm,
     LLMContext,
@@ -17,6 +19,7 @@ class TimestampGPTChatSession(ChatSession):
     max_prompt_size: int = 8192
     model: str = "gpt-4"
     verbose: bool = False
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self):
@@ -75,7 +78,11 @@ class TimestampGPTChatSession(ChatSession):
         self.history = []
 
     def save(self):
-        pass
+        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_history.json")
+        with open(fname, "w") as fd:
+            json.dump(self.history, fd)
 
     def load(self):
-        pass
+        fname = PERSISTENCE_DIR.joinpath(self.save_name + "_history.json")
+        with open(fname, "r") as fd:
+            self.history = json.load(fd)

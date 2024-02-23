@@ -6,6 +6,7 @@ from langchain.memory.prompt import ENTITY_MEMORY_CONVERSATION_TEMPLATE
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import OpenAI
 from model_interfaces.interface import ChatSession
+from utils.constants import ResetPolicy
 from utils.openai import get_max_prompt_size, token_cost
 
 
@@ -42,6 +43,7 @@ class LangchainAgent(ChatSession):
             prompt=mem_type.template,
             memory=self.memory,
         )
+        self.reset_policy: ResetPolicy = ResetPolicy.HARD
 
     @property
     def name(self):

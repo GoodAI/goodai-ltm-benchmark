@@ -21,6 +21,8 @@ from memgpt.presets import presets
 
 from model_interfaces.interface import ChatSession
 from memgpt.persistence_manager import LocalStateManager
+
+from utils.constants import ResetPolicy
 from utils.openai import token_cost
 import subprocess
 from dataclasses import dataclass
@@ -134,6 +136,7 @@ class MemGPTChatSession(ChatSession):
     _max_prompt_size: int = 8192
     _proxy_path: str = "model_interfaces/memgpt_proxy.py"
     max_message_size: int = 300
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def __post_init__(self):
         self.reset()

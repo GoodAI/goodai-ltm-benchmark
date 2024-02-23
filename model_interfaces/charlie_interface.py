@@ -6,6 +6,8 @@ import browser_cookie3
 from model_interfaces.interface import ChatSession
 import requests
 
+from utils.constants import ResetPolicy
+
 
 def try_extract_session_cookie(cj):
     user_name = ""
@@ -27,6 +29,7 @@ class CharlieMnemonic(ChatSession):
     token: str = ""
     user_name: str = ""
     initial_costs_usd: float = 0.0
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self):

@@ -1,5 +1,7 @@
 from model_interfaces.interface import ChatSession
 from dataclasses import dataclass, field
+
+from utils.constants import ResetPolicy
 from utils.tokens import token_len
 from utils.openai import (
     LLMContext,
@@ -19,6 +21,7 @@ class CostEstimationChatSession(ChatSession):
     context: LLMContext = field(default_factory=LLMContext)
     context_tokens: int = 0
     expected_response_tokens: int = 512
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self) -> str:
@@ -54,5 +57,6 @@ class CostEstimationChatSession(ChatSession):
 
     def save(self):
         pass
+    
     def load(self):
         pass

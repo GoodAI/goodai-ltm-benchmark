@@ -1,6 +1,8 @@
 import sys
 from datetime import datetime
 from dataclasses import dataclass
+
+from utils.constants import ResetPolicy
 from utils.ui import colour_print, multiline_input
 from model_interfaces.interface import ChatSession
 
@@ -9,6 +11,7 @@ from model_interfaces.interface import ChatSession
 class HumanChatSession(ChatSession):
     is_local: bool = True
     max_message_size: int = sys.maxsize
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def __post_init__(self):
         print(

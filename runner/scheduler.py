@@ -19,7 +19,7 @@ from reporting.generate import generate_report
 from reporting.results import TestResult
 from runner.config import RunConfig
 from runner.master_log import MasterLog
-from utils.constants import EventType
+from utils.constants import EventType, ResetPolicy
 from utils.filling_task import filler_no_response_tokens_trivia
 from utils.tokens import token_len
 from utils.ui import colour_print
@@ -247,7 +247,7 @@ class TestRunner:
 
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
 
-    def setup_iterator(self, test_group):
+    def setup_iterator(self, test_group, reset_policy):
         # Sets up the test dict and fast forwards any tests that are currently in progress
         test_actions_taken = self.master_log.get_tests_in_progress()
         self.wait_list = {k: {"tokens": 0} for k in test_actions_taken.keys()}
@@ -258,23 +258,29 @@ class TestRunner:
             self.travel_to_dt(self.master_log.log[-1].timestamp)
 
         # Fast forward examples to the last action that was run
-        for run_id in test_actions_taken.keys():
-            example = tests[run_id]
-            actions_to_ff = test_actions_taken[run_id]
-            for _ in range(actions_to_ff):
-                action = example.step()
-                if isinstance(action, SendAndRegisterAction):
-                    self.register_callback(example)
+        # If the reset priority for the model is soft, then fast forward the tests, otherwise all tests in progress are discarded
+        if reset_policy == ResetPolicy.SOFT:
+            for run_id in test_actions_taken.keys():
+                example = tests[run_id]
+                actions_to_ff = test_actions_taken[run_id]
+                for _ in range(actions_to_ff):
+                    action = example.step()
+                    if isinstance(action, SendAndRegisterAction):
+                        self.register_callback(example)
+    
+                # If the last action is a wait action, set the test to wait
+                if isinstance(action, WaitAction):
+                    self.set_to_wait(run_id, action)
 
-            # If the last action is a wait action, set the test to wait
-            if isinstance(action, WaitAction):
-                self.set_to_wait(run_id, action)
+        # Add a reset event to the log if it has indeed been reset
+        if len(self.master_log.log) > 0:
+            self.master_log.add_reset_event(self.agent.reset_policy, datetime.now())
 
         return tests
 
     def iter_tests(self, test_group: list[TestExample]) -> Iterator[TestExample]:
         # Set up the tests that are to be iterated through, fast forwarding where appropriate
-        tests = self.setup_iterator(test_group)
+        tests = self.setup_iterator(test_group, self.agent.reset_policy)
 
         assert len(tests) == len(test_group), f"There are tests with identical IDs: {[t.unique_id for t in test_group]}"
         while len(tests) > 0:

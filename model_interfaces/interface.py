@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Tuple, Callable
 from dataclasses import dataclass, field
 
-from utils.constants import PERSISTENCE_DIR
+from utils.constants import PERSISTENCE_DIR, ResetPolicy
 
 
 @dataclass
@@ -13,6 +13,7 @@ class ChatSession(ABC):
     is_local: bool = False
     max_message_size: int = 1000
     dataset_name: str = ""
+    reset_policy: ResetPolicy = ResetPolicy.HARD
 
     def message_to_agent(self, user_message: str) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
