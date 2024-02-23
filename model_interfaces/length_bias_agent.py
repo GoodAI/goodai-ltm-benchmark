@@ -9,7 +9,9 @@ import uuid
 from dataclasses import dataclass
 from typing import List, Callable, Optional
 
+from model_interfaces.base_ltm_agent import BaseLTMAgent, Message
 from model_interfaces.interface import ChatSession
+from utils.json_utils import CustomEncoder
 from utils.openai import ask_llm, make_system_message, make_user_message
 import tiktoken
 
@@ -24,17 +26,16 @@ def _default_time(session_index: int, line_index: int) -> float:
     return time.time()
 
 
-class LengthBiasAgent(ChatSession):
+class LengthBiasAgent(BaseLTMAgent):
     """
     Control agent that biases retrieval based on the length of messages.
     """
     def __init__(self, max_prompt_size: int, time_fn: Callable[[int, int], float] = _default_time,
                  model: str = None, system_message: str = None, ctx_fraction_for_mem: float = 0.5,
-                 llm_temperature: float = 0.01):
-        super().__init__()
+                 llm_temperature: float = 0.01, run_name: str = ""):
+        super().__init__(run_name=run_name, model=model)
         if system_message is None:
             system_message = _default_system_message
-        self.model = model
         self.llm_temperature = llm_temperature
         self.ctx_fraction_for_mem = ctx_fraction_for_mem
         self.max_prompt_size = max_prompt_size
@@ -42,31 +43,10 @@ class LengthBiasAgent(ChatSession):
         self.session_index = 0
         self.system_message_template = system_message
         self.message_history: List[Message] = []
-        self.session_id = uuid.uuid4()
-        _logger.info(f'{super().name} session ID: {self.session_id}')
-        self.log_lock = threading.RLock()
-        self.log_count = 0
 
     @property
     def name(self):
         return f"{super().name} - {self.model} - {self.max_prompt_size}"
-
-    @staticmethod
-    def num_tokens_from_string(string: str, model="gpt-4"):
-        """Returns the number of tokens in a text string."""
-        try:
-            encoding = tiktoken.encoding_for_model(model)
-        except KeyError:
-            encoding = tiktoken.get_encoding("cl100k_base")
-        return len(encoding.encode(string))
-
-    @classmethod
-    def context_token_counts(cls, messages: List[dict]):
-        """Calculates the total number of tokens in a list of messages."""
-        total_tokens = 0
-        for message in messages:
-            total_tokens += cls.num_tokens_from_string(message["content"])
-        return total_tokens
 
     def build_llm_context(self, user_content: str) -> list[dict]:
         target_history_tokens = self.max_prompt_size * (1.0 - self.ctx_fraction_for_mem)
@@ -99,7 +79,7 @@ class LengthBiasAgent(ChatSession):
 
     def get_mem_message(self, removed_messages: list['Message'],
                         remain_tokens: int) -> Optional[dict[str, str]]:
-        excerpts_text = self.get_mem_excerpts(removed_messages, remain_tokens)
+        excerpts_text = self.get_mocked_mem_excerpts(removed_messages, remain_tokens)
         excerpts_content = (f"The following are excerpts from the early part of the conversation "
                             f"or prior conversations, in chronological order:\n\n{excerpts_text}")
         return make_system_message(excerpts_content)
@@ -118,7 +98,7 @@ class LengthBiasAgent(ChatSession):
         else:
             return f"{elapsed / (60 * 60 * 24):.1f} day(s) ago"
 
-    def get_mem_excerpts(self, removed_messages: list['Message'], token_limit: int) -> str:
+    def get_mocked_mem_excerpts(self, removed_messages: list['Message'], token_limit: int) -> str:
         removed_messages = sorted(removed_messages, key=lambda _m: len(_m.content))
         token_count = 0
         excerpts: list[tuple[float, str]] = []
@@ -153,29 +133,6 @@ class LengthBiasAgent(ChatSession):
         self.message_history.append(assistant_message)
         return response
 
-    def completion(self, context: List[dict[str, str]], temperature: float, label: str) -> str:
-        def cost_callback(cost_usd: float):
-            self.costs_usd += cost_usd
-
-        response = ask_llm(context, self.model, temperature=temperature, context_length=None,
-                           cost_callback=cost_callback)
-        if _log_prompts:
-            with self.log_lock:
-                self.log_count += 1
-                log_dir = f"./logs/{self.session_id}"
-                os.makedirs(log_dir, exist_ok=True)
-                prompt_file = f"{label}-prompt-{self.log_count}.json"
-                prompt_json = json.dumps(context, indent=2)
-                prompt_path = os.path.join(log_dir, prompt_file)
-                with codecs.open(prompt_path, "w", "utf-8") as fd:
-                    fd.write(prompt_json)
-                completion_path = os.path.join(
-                    log_dir, f"{label}-completion-{self.log_count}.txt"
-                )
-                with codecs.open(completion_path, "w", "utf-8") as fd:
-                    fd.write(response)
-        return response
-
     def reset_history(self):
         self.message_history = []
         self.session_index += 1
@@ -184,19 +141,20 @@ class LengthBiasAgent(ChatSession):
         self.reset_history()
         self.session_index = 0
 
-    def reset(self):
-        self.reset_all()
+    def save(self):
+        infos = [self.message_history]
+        files = ["message_hist.json"]
 
+        for obj, file in zip(infos, files):
+            fname = self.save_path.joinpath(file)
+            with open(fname, "w") as fd:
+                json.dump(obj, fd, cls=CustomEncoder)
 
-@dataclass
-class Message:
-    role: str
-    content: str
-    timestamp: float
-
-    def as_llm_dict(self) -> dict[str, str]:
-        return {"role": self.role, "content": self.content}
-
-    @property
-    def is_user(self) -> bool:
-        return self.role == "user"
+    def load(self):
+        fname = self.save_path.joinpath("message_hist.json")
+        with open(fname, "r") as fd:
+            ctx = json.load(fd)
+        message_hist = []
+        for m in ctx:
+            message_hist.append(Message(**m))
+        self.message_history = message_hist
