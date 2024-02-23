@@ -84,7 +84,6 @@ class LTMAgent1(ChatSession):
         )
         mem_config.reranking_k_factor = 10
         self.text_mem = AutoTextMemory.create(emb_model=emb_model, config=mem_config)
-        self.reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self):

@@ -21,7 +21,6 @@ class TimestampGPTChatSession(ChatSession):
     max_prompt_size: int = 8192
     model: str = "gpt-4"
     verbose: bool = False
-    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self):

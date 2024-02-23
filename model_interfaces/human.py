@@ -11,7 +11,7 @@ from model_interfaces.interface import ChatSession
 class HumanChatSession(ChatSession):
     is_local: bool = True
     max_message_size: int = sys.maxsize
-    reset_policy: ResetPolicy = ResetPolicy.SOFT
+
 
     def __post_init__(self):
         print(

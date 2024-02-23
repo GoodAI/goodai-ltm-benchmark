@@ -44,6 +44,7 @@ class LangchainAgent(ChatSession):
             memory=self.memory,
         )
         self.reset_policy: ResetPolicy = ResetPolicy.HARD
+        colour_print("CYAN", "WARN: The Langchain agent does not save its memory as of yet. Loading and saving will be NOOPs.")
 
     @property
     def name(self):
@@ -57,10 +58,10 @@ class LangchainAgent(ChatSession):
         self.memory.clear()
 
     def save(self):
-        colour_print("CYAN", "WARN: The Langchain agent does not save its memory as of yet")
+        pass
 
     def load(self):
-        colour_print("CYAN", "WARN: The Langchain agent does not save its memory as of yet. And so will not be loaded.")
+        pass
 
 
 class LangchainMemType(enum.Enum):

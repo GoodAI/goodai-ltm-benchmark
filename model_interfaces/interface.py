@@ -13,7 +13,7 @@ class ChatSession(ABC):
     is_local: bool = False
     max_message_size: int = 1000
     run_name: str = ""
-    reset_policy: ResetPolicy = ResetPolicy.HARD
+    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def message_to_agent(self, user_message: str) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()

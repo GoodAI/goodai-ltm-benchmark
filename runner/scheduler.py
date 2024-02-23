@@ -257,8 +257,8 @@ class TestRunner:
         if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
             self.travel_to_dt(self.master_log.log[-1].timestamp)
 
-        # Fast forward examples to the last action that was run
-        # If the reset priority for the model is soft, then fast forward the tests, otherwise all tests in progress are discarded
+        # Fast forward examples to the last action that was run if the reset policy is soft.
+        # If the reset policy is HARD, then steps from partially completed tests will be discarded and the test will run again
         if reset_policy == ResetPolicy.SOFT:
             for run_id in test_actions_taken.keys():
                 example = tests[run_id]

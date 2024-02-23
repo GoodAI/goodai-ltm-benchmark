@@ -20,7 +20,7 @@ class GPTChatSession(ChatSession):
     model: str = "gpt-4"
     verbose: bool = False
     context: LLMContext = field(default_factory=LLMContext)
-    reset_policy: ResetPolicy = ResetPolicy.SOFT
+
 
     def __post_init__(self):
         if len(self.context) == 0:

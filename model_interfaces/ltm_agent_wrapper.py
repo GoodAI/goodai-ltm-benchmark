@@ -13,7 +13,6 @@ class LTMAgentWrapper(ChatSession):
         self.variant = variant
         self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=max_prompt_size)
         self.costs_usd = 0
-        self.reset_policy: ResetPolicy = ResetPolicy.SOFT
         self.run_name = run_name
 
     @property

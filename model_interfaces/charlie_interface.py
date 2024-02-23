@@ -29,7 +29,6 @@ class CharlieMnemonic(ChatSession):
     token: str = ""
     user_name: str = ""
     initial_costs_usd: float = 0.0
-    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self):

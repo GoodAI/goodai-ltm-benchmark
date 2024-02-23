@@ -21,7 +21,6 @@ class CostEstimationChatSession(ChatSession):
     context: LLMContext = field(default_factory=LLMContext)
     context_tokens: int = 0
     expected_response_tokens: int = 512
-    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     @property
     def name(self) -> str:

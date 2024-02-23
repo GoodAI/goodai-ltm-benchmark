@@ -18,7 +18,6 @@ class ClaudeChatSession(ChatSession):
     verbose: bool = False
     context: LLMContext = field(default_factory=LLMContext)
     response_len: int = 1024
-    reset_policy: ResetPolicy = ResetPolicy.SOFT
 
     def __post_init__(self):
         if self.max_prompt_size is None:
