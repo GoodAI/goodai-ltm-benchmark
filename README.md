@@ -35,7 +35,7 @@ python run_benchmark.py -c ./configurations/blogpost_tests/benchmark-1k.yml \
 
 This will generate a set of test specifications if there is not one already, and start to produce result files, one for each test. The result files will be located at `./tests/Benchmark 1 - 1k Filler/results/GPTChatSession - gpt-4-1106-preview - 4096/`.
 
-At the end of testing, an HTML report will be generated in the main directory which will give a detailed breakdown of the tests run, responses, and evaluations. It will be given a name of the form `<time stamp> - Detailed Report - <run_name> - <agent_name>.html`.
+At the end of testing, an HTML report will be generated in `data/reports` which will give a detailed breakdown of the tests run, responses, and evaluations. It will be given a name of the form `<time stamp> - Detailed Report - <run_name> - <agent_name>.html`.
 
 ## Agents
 

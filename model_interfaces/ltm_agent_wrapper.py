@@ -4,14 +4,15 @@ import os
 import threading
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
 from model_interfaces.interface import ChatSession
+from utils.constants import PERSISTENCE_DIR, ResetPolicy
 
 _log_prompts = os.environ.get("LTM_BENCH_PROMPT_LOGGING", "False").lower() in ["true", "yes", "1"]
 
 
 class LTMAgentWrapper(ChatSession):
     def __init__(self, model: str, max_prompt_size: int,
-                 variant: LTMAgentVariant):
-        super().__init__()
+                 variant: LTMAgentVariant, run_name: str = ""):
+        super().__init__(run_name=run_name)
         self.model = model
         self.max_prompt_size = max_prompt_size
         self.variant = variant
@@ -48,3 +49,16 @@ class LTMAgentWrapper(ChatSession):
 
     def reset(self):
         self.agent.reset()
+
+    def save(self):
+        fname = self.save_path.joinpath("full_agent.json")
+        with open(fname, "w") as fd:
+            fd.write(self.agent.state_as_text())
+
+    def load(self):
+        fname = self.save_path.joinpath("full_agent.json")
+        with open(fname, "r") as fd:
+            state_text = fd.read()
+        self.agent.from_state_text(state_text)
+
+

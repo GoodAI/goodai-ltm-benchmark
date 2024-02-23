@@ -6,8 +6,9 @@ from langchain.memory.prompt import ENTITY_MEMORY_CONVERSATION_TEMPLATE
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import OpenAI
 from model_interfaces.interface import ChatSession
+from utils.constants import ResetPolicy
 from utils.openai import get_max_prompt_size, token_cost
-
+from utils.ui import colour_print
 
 _default_prompt_template = """The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 
@@ -42,6 +43,8 @@ class LangchainAgent(ChatSession):
             prompt=mem_type.template,
             memory=self.memory,
         )
+        self.reset_policy: ResetPolicy = ResetPolicy.HARD
+        colour_print("CYAN", "WARN: The Langchain agent does not save its memory as of yet. Loading and saving will be NOOPs.")
 
     @property
     def name(self):
@@ -53,6 +56,12 @@ class LangchainAgent(ChatSession):
 
     def reset(self):
         self.memory.clear()
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass
 
 
 class LangchainMemType(enum.Enum):
@@ -76,3 +85,5 @@ class LangchainMemType(enum.Enum):
             return ENTITY_MEMORY_CONVERSATION_TEMPLATE
         else:
             return PromptTemplate(input_variables=["history", "input"], template=_default_prompt_template)
+
+

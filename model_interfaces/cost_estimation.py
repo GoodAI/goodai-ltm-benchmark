@@ -1,5 +1,7 @@
 from model_interfaces.interface import ChatSession
 from dataclasses import dataclass, field
+
+from utils.constants import ResetPolicy
 from utils.tokens import token_len
 from utils.openai import (
     LLMContext,
@@ -25,6 +27,7 @@ class CostEstimationChatSession(ChatSession):
         return f"{super().name} - {self.max_prompt_size} - {self.cost_in_token:.2e} - {self.cost_out_token:.2e}"
 
     def __post_init__(self):
+        super().__post_init__()
         self.system_prompt = "You are a helpful assistant."
         assert self.max_prompt_size > token_len(self.system_prompt)
 
@@ -51,3 +54,9 @@ class CostEstimationChatSession(ChatSession):
     def reset(self):
         self.context = [make_system_message(self.system_prompt)]
         self.context_tokens = context_token_len(self.context)
+
+    def save(self):
+        pass
+    
+    def load(self):
+        pass

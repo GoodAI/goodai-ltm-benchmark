@@ -36,6 +36,8 @@ def get_max_prompt_size(model: str):
     assert model in allowed_models()
     if model == "gpt-4-1106-preview":
         return 128_000
+    if model == "gpt-3.5-turbo-0125":
+        return 16_384
     if "32k" in model:
         return 32_768
     if "16k" in model:
@@ -50,6 +52,8 @@ def get_max_prompt_size(model: str):
 def token_cost(model: str) -> tuple[float, float]:
     if model == "gpt-3.5-turbo-instruct":
         return 0.000_001_5, 0.000_002
+    if model == "gpt-3.5-turbo-0125":
+        return 0.000_000_5, 0.000_001_5
     if model == "gpt-4-1106-preview":
         return 0.000_01, 0.000_03
     if model.startswith("gpt-4-32k"):
@@ -60,6 +64,8 @@ def token_cost(model: str) -> tuple[float, float]:
         return 0.000_001, 0.000_002
     if model == "claude-2.1":
         return 8e-06, 2.4e-05
+    if model == "text-embedding-ada-002":
+        return 0.000_000_002, 0.000_000_002
     raise ValueError(f"There's no cost registered for model {model}.")
 
 
@@ -103,6 +109,7 @@ def ask_llm(
     context_length: int = None,
     cost_callback: Callable[[float], None] = None,
     timeout: float = 300,
+    max_tokens: Optional[int] = None,
 ) -> str:
     set_api_key()
     model = get_model(model)
@@ -112,6 +119,7 @@ def ask_llm(
         messages=context,
         temperature=temperature,
         timeout=timeout,
+        max_tokens=max_tokens,
     )
     if cost_callback is not None:
         cost_callback(response_cost(response))
