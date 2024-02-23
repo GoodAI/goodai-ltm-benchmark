@@ -329,7 +329,7 @@ class LTMAgent1(ChatSession):
 
     def load(self):
         fname = PERSISTENCE_DIR.joinpath(self.save_name + "_message_hist.json")
-        with open(fname, "w") as fd:
+        with open(fname, "r") as fd:
             ctx = json.load(fd)
 
         message_hist = []
@@ -338,11 +338,11 @@ class LTMAgent1(ChatSession):
         self.message_history = message_hist
 
         fname = PERSISTENCE_DIR.joinpath(self.save_name + "_user_info.json")
-        with open(fname, "w") as fd:
+        with open(fname, "r") as fd:
             self.user_info = json.load(fd)
 
         fname = PERSISTENCE_DIR.joinpath(self.save_name + "_mem.json")
-        with open(fname, "w") as fd:
+        with open(fname, "r") as fd:
             self.text_mem.set_state(json.load(fd))
 
 @dataclass

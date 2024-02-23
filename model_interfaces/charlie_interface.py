@@ -139,9 +139,10 @@ class CharlieMnemonic(ChatSession):
 
         self.context = []
 
-
     def load(self):
+        # Charlie mnemonic is web based and so doesn't need to be manually told to resume a conversation
         pass
 
     def save(self):
+        # Charlie mnemonic is web based and so doesn't need to be manually told to persist
         pass

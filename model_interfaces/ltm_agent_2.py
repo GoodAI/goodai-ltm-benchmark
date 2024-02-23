@@ -42,7 +42,7 @@ class LTMAgent2(ChatSession):
                  system_message: str = None, ctx_fraction_for_mem: float = 0.5,
                  model: str = None, emb_model: str = _default_emb_model,
                  chunk_size: int = 32, overlap_threshold: float = 0.75,
-                 llm_temperature: float = 0.01):
+                 llm_temperature: float = 0.01, dataset_name: str = ""):
         super().__init__()
         if system_message is None:
             system_message = _default_system_message
@@ -59,6 +59,7 @@ class LTMAgent2(ChatSession):
         _logger.info(f'{super().name} session ID: {self.session_id}')
         self.log_lock = threading.RLock()
         self.log_count = 0
+        self.dataset_name = dataset_name
         mem_config = TextMemoryConfig()
         mem_config.queue_capacity = 50000
         mem_config.chunk_capacity = chunk_size
@@ -250,7 +251,7 @@ class LTMAgent2(ChatSession):
 
     def load(self):
         fname = PERSISTENCE_DIR.joinpath(self.save_name + "_message_hist.json")
-        with open(fname, "w") as fd:
+        with open(fname, "r") as fd:
             ctx = json.load(fd)
 
         message_hist = []
@@ -259,7 +260,7 @@ class LTMAgent2(ChatSession):
         self.message_history = message_hist
 
         fname = PERSISTENCE_DIR.joinpath(self.save_name + "_mem.json")
-        with open(fname, "w") as fd:
+        with open(fname, "r") as fd:
             self.text_mem.set_state(json.load(fd))
 
 

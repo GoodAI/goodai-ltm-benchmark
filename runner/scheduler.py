@@ -19,7 +19,7 @@ from reporting.generate import generate_report
 from reporting.results import TestResult
 from runner.config import RunConfig
 from runner.master_log import MasterLog
-from utils.constants import EventType, ResetPolicy
+from utils.constants import EventType, ResetPolicy, PERSISTENCE_DIR
 from utils.filling_task import filler_no_response_tokens_trivia
 from utils.tokens import token_len
 from utils.ui import colour_print
@@ -339,10 +339,10 @@ class TestRunner:
                         self.register_callback(example)
 
                 self.save_runstats()
+                self.agent.save()
             self.check_result_callbacks()
 
             if example.finished:
-                self.agent.save()
                 finished += 1
                 result = self.in_progress_results[example.unique_id]
                 self.progress_dialog.notify_result(result)
@@ -358,6 +358,7 @@ class TestRunner:
                         master_log=self.master_log,
                     )
                     self.master_log.end_test(example.unique_id, datetime.now())
+                    self.agent.save()
 
                 self.finished_results.append(result)
                 print(result)
@@ -395,6 +396,7 @@ class TestRunner:
     def run(self):
         self.master_log = MasterLog(self.master_log_path)
         self.runstats_path.parent.mkdir(parents=True, exist_ok=True)
+        PERSISTENCE_DIR.mkdir(parents=True, exist_ok=True)
         self.load()
         self.reference_duration_timestamp = datetime.now()
         self.set_cost_callback()

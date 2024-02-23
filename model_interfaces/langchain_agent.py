@@ -56,6 +56,12 @@ class LangchainAgent(ChatSession):
     def reset(self):
         self.memory.clear()
 
+    def save(self):
+        pass
+
+    def load(self):
+        pass
+
 
 class LangchainMemType(enum.Enum):
     SUMMARY_BUFFER = 0

@@ -57,9 +57,9 @@ class ClaudeChatSession(ChatSession):
         self.context = []
 
     def save(self):
-        with open(self.save_file, "w") as fd:
+        with open(self.save_path, "w") as fd:
             json.dump(self.context, fd)
 
     def load(self):
-        with open(self.save_file, "r") as fd:
+        with open(self.save_path, "r") as fd:
             self.context = json.load(fd)
