@@ -157,6 +157,24 @@ class MasterLog:
 
         return messages
 
+    def get_reply(self, test_id: str, message_idx: int, message: Optional[str] = None) -> str:
+        msg_i = -1
+        for event in self.log:
+            if event.test_id != test_id:
+                continue
+            if event.type == EventType.SEND_MESSAGE:
+                msg_i += 1
+            if msg_i < message_idx:
+                continue
+            match event.type:
+                case EventType.SEND_MESSAGE:
+                    if message is not None and event.data["message"] != message:
+                        raise LookupError(f"Unexpected message: {event.data['message']}\nExpected: {message}")
+                case EventType.RESPONSE_MESSAGE:
+                    return event.data["message"]
+        msg_str = f" Message: {message}." if message is not None else ""
+        raise LookupError(f"Could not find a reply. Test id: {test_id}. Message idx: {message_idx}.{msg_str}")
+
     def get_test_events(self, test_id: str) -> list[LogEvent]:
         events = []
         for event in self.log:

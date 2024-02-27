@@ -260,17 +260,20 @@ class TestRunner:
         # Fast forward examples to the last action that was run if the reset policy is soft.
         # If the reset policy is HARD, then steps from partially completed tests will be discarded and the test will run again
         if reset_policy == ResetPolicy.SOFT:
-            for run_id in test_actions_taken.keys():
-                example = tests[run_id]
-                actions_to_ff = test_actions_taken[run_id]
+            for test_id, actions_to_ff in test_actions_taken.items():
+                example = tests[test_id]
+                message_idx = -1
                 for _ in range(actions_to_ff):
                     action = example.step()
+                    if isinstance(action, SendMessageAction):
+                        message_idx += 1
+                        action.reply = self.master_log.get_reply(test_id, message_idx, message=action.message)
                     if isinstance(action, SendAndRegisterAction):
                         self.register_callback(example)
     
                 # If the last action is a wait action, set the test to wait
                 if isinstance(action, WaitAction):
-                    self.set_to_wait(run_id, action)
+                    self.set_to_wait(test_id, action)
 
         # Add a reset event to the log if it has indeed been reset
         if len(self.master_log.log) > 0:

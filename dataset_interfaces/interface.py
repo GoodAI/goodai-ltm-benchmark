@@ -75,7 +75,7 @@ class TestExample:
     can_be_interleaved: bool = True
     uses_callback: bool = False
     evaluation_fn: Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]] = None
-    time_jumps: list[timedelta | None] = None
+    time_jumps: list[timedelta] = None
     token_spacings: list[int] = None
     is_temporal: bool = False
     example_id: str = ""
@@ -110,13 +110,13 @@ class TestExample:
                 yield WaitAction(tokens=tokens, time=t_jump)
         if self.is_temporal and len(self.is_question) == len(self.script) + 1:
             yield SendMessageAction("", is_question=self.is_question[-1])
-        self.finished = True
 
     def step(self) -> TestAction | None:
         assert not self.finished
         try:
             return next(self._iter)
         except StopIteration:
+            self.finished = True
             return None
 
     def to_dict(self) -> dict:
@@ -152,15 +152,13 @@ class TestExample:
             d = json.load(fd)
         d["example_id"] = file_path.name.removesuffix(".def.json")
         d["dataset_name"] = file_path.parent.name
-        d["dataset_generator"] = None
-        d["dataset_generator"] = DATASETS_BY_NAME.get(d["dataset_name"], lambda: None)()
-        assert d["dataset_generator"] is not None, f"Couldn't find a generator for dataset {d['dataset_name']}."
+        assert d["dataset_name"] in DATASETS_BY_NAME, f"Couldn't find a generator for dataset {d['dataset_name']}."
+        d["dataset_generator"] = DATASETS_BY_NAME[d["dataset_name"]]()
         d["description"] = d["dataset_generator"].description
-        d["evaluation_fn"] = getattr(d["dataset_generator"], d["evaluation_fn"])
+        d["evaluation_fn"] = getattr(d["dataset_generator"], d["evaluation_fn"], None)
         d["time_jumps"] = [timedelta(seconds=s) for s in d["time_jumps"]]
         d["number_of_questions"] = len([q for q in d["is_question"] if q])
-        example_class = CallBackTestExample if d.get("uses_callback", False) else TestExample
-        return example_class(**d)
+        return d["dataset_generator"].create_example(**d)
 
 
 @dataclass
@@ -259,6 +257,9 @@ class DatasetInterface(ABC):
     def create_question(self, example: TestExample, statement_times, time_now):
         # Generate the question for temporal questions
         raise NotImplementedError("This dataset is not meant to have temporal questions.")
+
+    def create_example(self, **kwargs) -> TestExample:
+        return (CallBackTestExample if kwargs.get("uses_callback", False) else TestExample)(**kwargs)
 
     @abstractmethod
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
