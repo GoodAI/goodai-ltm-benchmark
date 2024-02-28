@@ -11,8 +11,6 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 @dataclass
 class RestaurantExample(DynamicExample):
-    max_score: int = 1
-    filler_tokens: int = 1000
 
     def action_iter(self) -> Iterator[TestAction]:
 
@@ -28,7 +26,7 @@ class RestaurantExample(DynamicExample):
         self.script[0] = action.message
 
         # Ordering food
-        yield WaitAction(tokens=self.filler_tokens)
+        yield self.wait()
         action = SendMessageAction(message=f"Here is your {drinks_str}. What would you like to eat?")
         yield action
         order = self.extract_order_items(action.reply)
@@ -38,7 +36,7 @@ class RestaurantExample(DynamicExample):
         )
 
         # Some dish is unexpectedly unavailable
-        yield WaitAction(tokens=self.filler_tokens)
+        yield self.wait()
         item = random.choice(order)
         order.remove(item)
         action = SendMessageAction(message=(
@@ -54,7 +52,7 @@ class RestaurantExample(DynamicExample):
         # Deliver the meal after some time
         # TODO: deliver an extra thing or one less than expected
         # TODO: ask if it wants another drink and, most importantly, what the drink was.
-        yield WaitAction(tokens=self.filler_tokens)
+        yield self.wait()
         order_str = enumerate_str(order)
         yield SendMessageAction(message=f"Here you are: {order_str}. Enjoy the meal.")
 
@@ -74,12 +72,6 @@ class RestaurantDataset(DynamicDataset):
         "take reasonable decisions, based on past events."
     )
     reset_message: str = "Let's not pretend to be at a restaurant anymore. Please also forget everything about it."
-
-    def generate_examples(self, num_examples: int) -> List[TestExample]:
-        return [RestaurantExample(
-            dataset_generator=self,
-            cost_callback=self._proxy_cost_callback
-        ) for _ in range(num_examples)]
 
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         return 0, len(example.script[0])

@@ -186,6 +186,8 @@ class DynamicExample(TestExample):
     max_score: int = 0
     expected_responses: list[str] = field(default_factory=list)
     script: List[str] = field(default_factory=lambda: [""])  # Required for compatibility, but no actual script.
+    filler_tokens_low: int = 0
+    filler_tokens_high: int = 0
 
     def __post_init__(self):
         assert self.evaluation_fn is None, "Dynamic examples have their own evaluation function."
@@ -208,6 +210,12 @@ class DynamicExample(TestExample):
     @abstractmethod
     def action_iter(self) -> Iterator[TestAction]:
         pass
+
+    def wait(self, tokens: Optional[int] = None, time: Optional[timedelta] = None) -> WaitAction:
+        kwargs = {k: v for k, v in dict(tokens=tokens, time=time).items() if v is not None}
+        if tokens is None and time is None:
+            kwargs["tokens"] = randint(self.filler_tokens_low, self.filler_tokens_high)
+        return WaitAction(**kwargs)
 
 
 @dataclass
@@ -371,5 +379,10 @@ class DynamicDataset(DatasetInterface, ABC):
         return self.example_cls(
             dataset_generator=self,
             cost_callback=self._proxy_cost_callback,
+            filler_tokens_low=self.filler_tokens_low,
+            filler_tokens_high=self.filler_tokens_high,
             **kwargs
         )
+
+    def generate_examples(self, num_examples: int) -> List[TestExample]:
+        return [self.create_example() for _ in range(num_examples)]
