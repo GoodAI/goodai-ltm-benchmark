@@ -10,7 +10,7 @@ import tiktoken
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from utils.context import flatten_context, search_context
-from utils.openai import ask_llm
+from utils.openai import ask_llm, LLMContext
 from utils.files import make_testdef_path
 
 _match_system_prompt = """
@@ -67,8 +67,8 @@ class WaitAction(TestAction):
 
 @dataclass
 class TestExample:
-    dataset_name: str = ""
-    description: str = ""
+    dataset_name: str = None
+    description: str = None
     dataset_generator: "DatasetInterface" = None
     script: List[str] = field(default_factory=list)
     expected_responses: Any = None
@@ -83,7 +83,7 @@ class TestExample:
     number_of_questions: int = 0
     finished: bool = False
     _iter: Iterator[TestAction] = None
-    reset_message: str = ""
+    reset_message: str = None
 
     @property
     def unique_id(self):
@@ -93,6 +93,16 @@ class TestExample:
         return make_testdef_path(run_name, self.dataset_name, self.example_id)
 
     def __post_init__(self):
+        assert self.dataset_generator is not None
+        assert self.dataset_name is None
+        assert self.description is None
+        assert self.reset_message is None
+        self.dataset_name = self.dataset_generator.name
+        self.description = self.dataset_generator.description
+        self.reset_message = self.dataset_generator.reset_message
+        if self.evaluation_fn is None:
+            self.evaluation_fn = self.dataset_generator.evaluate_correct
+        self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
         if self.token_spacings is None:
             self.token_spacings = [0] * len(self.script)
@@ -127,10 +137,8 @@ class TestExample:
             token_spacings=self.token_spacings,
             expected_responses=self.expected_responses,
             can_be_interleaved=self.can_be_interleaved,
-            evaluation_fn=self.evaluation_fn.__name__,
             is_temporal=self.is_temporal,
             uses_callback=self.uses_callback,
-            reset_message=self.reset_message,
         )
 
     def save(self, run_name: str, exist_ok: bool = False):
@@ -150,15 +158,14 @@ class TestExample:
         assert file_path.name.endswith(".def.json")
         with open(file_path) as fd:
             d = json.load(fd)
+        d["time_jumps"] = [timedelta(seconds=s) for s in d["time_jumps"]]
         d["example_id"] = file_path.name.removesuffix(".def.json")
         d["dataset_name"] = file_path.parent.name
         assert d["dataset_name"] in DATASETS_BY_NAME, f"Couldn't find a generator for dataset {d['dataset_name']}."
-        d["dataset_generator"] = DATASETS_BY_NAME[d["dataset_name"]]()
-        d["description"] = d["dataset_generator"].description
-        d["evaluation_fn"] = getattr(d["dataset_generator"], d["evaluation_fn"], None)
-        d["time_jumps"] = [timedelta(seconds=s) for s in d["time_jumps"]]
-        d["number_of_questions"] = len([q for q in d["is_question"] if q])
-        return d["dataset_generator"].create_example(**d)
+        dataset_generator = DATASETS_BY_NAME[d["dataset_name"]]()
+        generator_attrs = {"dataset_name", "description", "reset_message"}
+        d = {k: d[k] for k in d.keys() if k not in generator_attrs}
+        return dataset_generator.create_example(**d)
 
 
 @dataclass
@@ -170,6 +177,37 @@ class CallBackTestExample(TestExample):
         except StopIteration:
             self.finished = False
             return WaitAction(tokens=1)
+
+
+@dataclass
+class DynamicExample(TestExample):
+    cost_callback: Callable[[float], None] = None
+    score: int = 0
+    max_score: int = 0
+    expected_responses: list[str] = field(default_factory=list)
+    script: List[str] = field(default_factory=lambda: [""])  # Required for compatibility, but no actual script.
+
+    def __post_init__(self):
+        assert self.evaluation_fn is None, "Dynamic examples have their own evaluation function."
+        self.evaluation_fn = lambda *args: self.evaluate()
+        super().__post_init__()
+        assert self.cost_callback is not None, "Dynamic examples require a cost callback."
+        assert self.max_score > 0
+
+    def evaluate(self) -> tuple[int, int, list[str]]:
+        return self.score, self.max_score, []
+
+    def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256) -> str:
+        return ask_llm(
+            context=context,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            cost_callback=self.cost_callback,
+        )
+
+    @abstractmethod
+    def action_iter(self) -> Iterator[TestAction]:
+        pass
 
 
 @dataclass
@@ -259,7 +297,10 @@ class DatasetInterface(ABC):
         raise NotImplementedError("This dataset is not meant to have temporal questions.")
 
     def create_example(self, **kwargs) -> TestExample:
-        return (CallBackTestExample if kwargs.get("uses_callback", False) else TestExample)(**kwargs)
+        return (CallBackTestExample if kwargs.get("uses_callback", False) else TestExample)(
+            dataset_generator=self,
+            **kwargs
+        )
 
     @abstractmethod
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
@@ -305,3 +346,30 @@ class DatasetInterface(ABC):
         self, scheduler, example: TestExample, task_log: List[str]
     ) -> Tuple[int, int, List[str], bool]:
         raise NotImplementedError("This dataset does not have a callback implemented. Use evaluate_correct instead.")
+
+
+@dataclass
+class DynamicDataset(DatasetInterface, ABC):
+    example_cls: type[DynamicExample] = None
+
+    def __post_init__(self):
+        assert self.example_cls is not None and issubclass(self.example_cls, DynamicExample)
+
+    def _proxy_cost_callback(self, cost_usd: float) -> None:
+        # `self.cost_callback` is not added until all examples are created and the run starts.
+        # This proxy method ensures future access to the updated callback function.
+        return self.cost_callback(cost_usd)
+
+    def evaluate_correct(self, *args):
+        raise NotImplementedError("This method should not be called. Each test example has its own evaluation function.")
+
+    @abstractmethod
+    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
+        pass
+
+    def create_example(self, **kwargs) -> DynamicExample:
+        return self.example_cls(
+            dataset_generator=self,
+            cost_callback=self._proxy_cost_callback,
+            **kwargs
+        )

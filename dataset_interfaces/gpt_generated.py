@@ -25,7 +25,6 @@ Structure your response as such:
 class GPTGenerated(DatasetInterface, ABC):
     generation_file: str = ""
     temperature: float = 1.0
-    uses_callback: bool = False
     generation_model: str = "gpt-3.5-turbo"
 
     def generate_examples(self, num_examples):
@@ -65,21 +64,15 @@ class GPTGenerated(DatasetInterface, ABC):
                 script.append(q)
                 expected_responses.append(a)
 
-            example_class = CallBackTestExample if self.uses_callback else TestExample
+            example_class: type[TestExample] = CallBackTestExample if self.uses_callback else TestExample
 
             example = example_class(
-                dataset_name=self.name,
-                description=self.description,
                 dataset_generator=self,
                 script=script,
                 expected_responses=expected_responses,
-                evaluation_fn=self.evaluate_correct,
                 token_spacings=self.create_filler(is_question),
-                can_be_interleaved=True,
-                number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
                 uses_callback=self.uses_callback,
-                reset_message=self.reset_message,
             )
 
             examples.append(example)

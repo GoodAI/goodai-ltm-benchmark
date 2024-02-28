@@ -1,31 +1,18 @@
 import random
-from typing import List, Tuple, Iterator, Callable
+from typing import List, Tuple, Iterator
 
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from dataset_interfaces.interface import DatasetInterface, TestExample, TestAction, SendMessageAction, WaitAction
+from datetime import datetime
+from dataclasses import dataclass
+from dataset_interfaces.interface import DynamicDataset, TestExample, DynamicExample, TestAction, SendMessageAction, WaitAction
 
-from utils.openai import ask_llm, LLMContext, make_user_message
+from utils.openai import make_user_message
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 
 @dataclass
-class RestaurantExample(TestExample):
-    cost_callback: Callable[[float], None] = None
-    reset_message: str = "Let's not pretend to be at a restaurant anymore. Please also forget everything about it."
-    score: int = 0
+class RestaurantExample(DynamicExample):
     max_score: int = 1
     filler_tokens: int = 1000
-    expected_responses: list[str] = field(default_factory=list)
-    script: List[str] = field(default_factory=lambda: [""])  # Required for compatibility, but no actual script.
-
-    def __post_init__(self):
-        super().__post_init__()
-        assert self.cost_callback is not None, "Dynamic examples require a cost callback."
-        assert self.evaluation_fn is None, "Dynamic examples have their own evaluation function."
-        self.evaluation_fn = lambda *args: self.evaluate()
-        self.dataset_name = RestaurantDataset.name
-        self.description = RestaurantDataset.description
 
     def action_iter(self) -> Iterator[TestAction]:
 
@@ -71,17 +58,6 @@ class RestaurantExample(TestExample):
         order_str = enumerate_str(order)
         yield SendMessageAction(message=f"Here you are: {order_str}. Enjoy the meal.")
 
-    def evaluate(self) -> tuple[int, int, list[str]]:
-        return self.score, self.max_score, []
-
-    def ask_llm(self, context: LLMContext) -> str:
-        return ask_llm(
-            context=context,
-            temperature=0,
-            max_tokens=256,
-            cost_callback=self.cost_callback,
-        )
-
     def extract_order_items(self, message: str) -> list[str]:
         context = [make_user_message(extract_items_prompt.format(response=message))]
         items_json = self.ask_llm(context)
@@ -89,19 +65,15 @@ class RestaurantExample(TestExample):
 
 
 @dataclass
-class RestaurantDataset(DatasetInterface):
+class RestaurantDataset(DynamicDataset):
+    example_cls: type[DynamicExample] = RestaurantExample
     name: str = "Restaurant"
     description: str = (
         "The agent is required to perform several tasks related to eating out at a restaurant. The experience includes "
         "ordering drinks, main course, side, etc. plus a series of unexpected events that will require the agent to "
         "take reasonable decisions, based on past events."
     )
-    reset_message: str = ""
-
-    def _proxy_cost_callback(self, cost_usd: float) -> None:
-        # `self.cost_callback` is not added until all examples are created and the run starts.
-        # This proxy method ensures future access to the updated callback function.
-        return self.cost_callback(cost_usd)
+    reset_message: str = "Let's not pretend to be at a restaurant anymore. Please also forget everything about it."
 
     def generate_examples(self, num_examples: int) -> List[TestExample]:
         return [RestaurantExample(
@@ -109,14 +81,8 @@ class RestaurantDataset(DatasetInterface):
             cost_callback=self._proxy_cost_callback
         ) for _ in range(num_examples)]
 
-    def evaluate_correct(self, *args):
-        raise NotImplementedError("This method should not be called. Each test example has its own evaluation function.")
-
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         return 0, len(example.script[0])
-
-    def create_example(self, **kwargs) -> TestExample:
-        return RestaurantExample(cost_callback=self._proxy_cost_callback, **kwargs)
 
 
 def day_moment_salutation() -> str:

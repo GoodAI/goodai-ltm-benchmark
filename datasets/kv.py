@@ -55,13 +55,9 @@ class KVPairsDataset(DatasetInterface):
             ]
             is_question = [False, True]
             test_example = TestExample(
-                dataset_name=self.name,
-                description=self.description,
                 dataset_generator=self,
                 script=script,
                 expected_responses=[value],
-                evaluation_fn=self.evaluate_correct,
-                number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
             )
             examples.append(test_example)
