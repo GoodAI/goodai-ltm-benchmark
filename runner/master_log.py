@@ -112,8 +112,7 @@ class MasterLog:
         for idx, event in enumerate(self.log):
             if event.test_id == test_id and event.type == EventType.SEND_MESSAGE and event.data["message"] == message:
                 return idx
-
-        raise ValueError(f"Message {message} for test: {test_id} not found in log {self.human_readable_full_log()}")
+        raise ValueError(f"Message {repr(message)} for test {repr(test_id)} not found in log.")
 
     def load(self):
         self.log = []

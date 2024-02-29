@@ -9,6 +9,7 @@ from typing import List, Callable, Tuple, Optional, Any, Iterator, Dict
 import tiktoken
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
+from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
 from utils.openai import ask_llm, LLMContext
 from utils.files import make_testdef_path
@@ -185,9 +186,11 @@ class DynamicExample(TestExample):
     score: int = 0
     max_score: int = 0
     expected_responses: list[str] = field(default_factory=list)
-    script: List[str] = field(default_factory=lambda: [""])  # Required for compatibility, but no actual script.
+    reasoning: list[str] = field(default_factory=list)
+    script: List[str] = field(default_factory=lambda: [])  # Updated dynamically by `say`
     filler_tokens_low: int = 0
     filler_tokens_high: int = 0
+    action: SendMessageAction = None  # Keeps the last SendMessageAction
 
     def __post_init__(self):
         assert self.evaluation_fn is None, "Dynamic examples have their own evaluation function."
@@ -197,7 +200,7 @@ class DynamicExample(TestExample):
         assert self.max_score > 0
 
     def evaluate(self) -> tuple[int, int, list[str]]:
-        return self.score, self.max_score, []
+        return self.score, self.max_score, self.reasoning
 
     def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256) -> str:
         return ask_llm(
@@ -217,6 +220,12 @@ class DynamicExample(TestExample):
             kwargs["tokens"] = randint(self.filler_tokens_low, self.filler_tokens_high)
         return WaitAction(**kwargs)
 
+    def say(self, message: str, question: bool = False) -> SendMessageAction:
+        # `question = True` will register the answer as `result.actual_response`
+        self.action = SendMessageAction(message=message, is_question=question)
+        self.script.append(message)
+        return self.action
+
 
 @dataclass
 class DatasetInterface(ABC):
@@ -231,6 +240,17 @@ class DatasetInterface(ABC):
     uses_callback: bool = False
     reset_message: str = ""
     max_message_size: int = 1024
+
+    @property
+    def data_path(self) -> Path:
+        return DATA_DIR.joinpath(self.name)
+
+    def load_file(self, name: str) -> str:
+        with open(self.data_path.joinpath(name)) as fd:
+            return fd.read()
+
+    def load_json(self, name: str, **kwargs) -> Any:
+        return json.loads(self.load_file(name), **kwargs)
 
     def count_questions(self, is_question):
         return len([x for x in is_question if x])
