@@ -142,12 +142,6 @@ class TestRunner:
         wait_dict["tokens"] = self.current_token_count + action.tokens if action.tokens > 0 else 0
         wait_dict["time"] = datetime.now() + action.time if action.time.seconds > 0 else datetime.now()
         wait_dict["percentage_finished"] = action.percentage_finished
-        # if action.tokens > 0:
-        #     wait_dict["tokens"] = self.current_token_count + action.tokens
-        # if action.time.total_seconds() > 0:
-        #     wait_dict["time"] = datetime.now() + action.time
-        # if action.percentage_finished > 0.0:
-        #     wait_dict["percentage_finished"] = action.percentage_finished
         self.master_log.add_wait_event(unique_id, datetime.now(), **wait_dict)
         self.wait_list[unique_id] = wait_dict
 
@@ -179,13 +173,6 @@ class TestRunner:
             if not is_waiting or test_waiting_on != waiting_on:
                 continue
             waiting_tests[unique_id] = wait_dict
-            #
-            # waiting_ref = dict(
-            #     time=datetime.now(),
-            #     tokens=self.current_token_count,
-            #     percentage_finished=self.percentage_finished
-            # )[waiting_on]
-            # if wait_dict[waiting_on] > waiting_ref:
         if len(waiting_tests) == 0:
             return
         waiting_ids = list(waiting_tests.keys())

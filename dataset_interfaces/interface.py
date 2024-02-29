@@ -132,8 +132,8 @@ class TestExample:
                 yield SendAndRegisterAction(msg, is_question=is_q)
             else:
                 yield SendMessageAction(msg, is_question=is_q)
-            if wait['tokens'] > 0 or wait['time'].seconds > 0 or wait['percentage_finished'] > 0:
-                yield WaitAction(tokens=wait['tokens'], time=wait['time'], percentage_finished=wait['percentage_finished'])
+            if any(wait.values()):
+                yield WaitAction(**wait)
         if self.is_temporal and len(self.is_question) == len(self.script) + 1:
             yield SendMessageAction("", is_question=self.is_question[-1])
 
