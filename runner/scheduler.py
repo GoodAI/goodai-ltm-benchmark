@@ -69,6 +69,7 @@ class TestRunner:
     result_callbacks: List[Tuple[Callable, TestExample]] = field(default_factory=list)
     master_log: MasterLog = None
     progress_dialog: ProgressDialog = None
+    percentage_finished: float = 0.0
 
     @property
     def runstats_path(self):
@@ -138,10 +139,15 @@ class TestRunner:
 
     def set_to_wait(self, unique_id: str, action: WaitAction):
         wait_dict = dict()
-        if action.tokens > 0:
-            wait_dict["tokens"] = self.current_token_count + action.tokens
-        if action.time.total_seconds() > 0:
-            wait_dict["time"] = datetime.now() + action.time
+        wait_dict["tokens"] = self.current_token_count + action.tokens if action.tokens > 0 else 0
+        wait_dict["time"] = datetime.now() + action.time if action.time.seconds > 0 else datetime.now()
+        wait_dict["percentage_finished"] = action.percentage_finished
+        # if action.tokens > 0:
+        #     wait_dict["tokens"] = self.current_token_count + action.tokens
+        # if action.time.total_seconds() > 0:
+        #     wait_dict["time"] = datetime.now() + action.time
+        # if action.percentage_finished > 0.0:
+        #     wait_dict["percentage_finished"] = action.percentage_finished
         self.master_log.add_wait_event(unique_id, datetime.now(), **wait_dict)
         self.wait_list[unique_id] = wait_dict
 
@@ -166,34 +172,39 @@ class TestRunner:
         return action_tokens
 
     def get_waiting_test(self, waiting_on: str) -> Optional[str]:
-        assert waiting_on in ["tokens", "time"]
+        assert waiting_on in ["tokens", "time", "percentage_finished"]
         waiting_tests = dict()
         for unique_id, wait_dict in self.wait_list.items():
-            if waiting_on not in wait_dict:
+            is_waiting, test_waiting_on = self.is_waiting(unique_id)
+            if not is_waiting or test_waiting_on != waiting_on:
                 continue
-            waiting_ref = dict(
-                time=datetime.now(),
-                tokens=self.current_token_count,
-            )[waiting_on]
-            if wait_dict[waiting_on] > waiting_ref:
-                waiting_tests[unique_id] = wait_dict
+            waiting_tests[unique_id] = wait_dict
+            #
+            # waiting_ref = dict(
+            #     time=datetime.now(),
+            #     tokens=self.current_token_count,
+            #     percentage_finished=self.percentage_finished
+            # )[waiting_on]
+            # if wait_dict[waiting_on] > waiting_ref:
         if len(waiting_tests) == 0:
             return
         waiting_ids = list(waiting_tests.keys())
         waiting_ids.sort(key=lambda i: waiting_tests[i][waiting_on])
         return waiting_ids[0]
 
-    def is_waiting(self, unique_id: str, remove: bool = False) -> bool:
+    def is_waiting(self, unique_id: str, remove: bool = False) -> Tuple[bool, str]:
         if unique_id not in self.wait_list:
-            return False
+            return False, ""
         wait_dict = self.wait_list[unique_id]
-        if "tokens" in wait_dict and wait_dict["tokens"] > self.current_token_count:
-            return True
-        if "time" in wait_dict and wait_dict["time"] > datetime.now():
-            return True
+        if wait_dict["tokens"] > self.current_token_count:
+            return True, "tokens"
+        if wait_dict["time"] > datetime.now():
+            return True, "time"
+        if wait_dict["percentage_finished"] > self.percentage_finished:
+            return True, "percentage_finished"
         if remove:
             del self.wait_list[unique_id]
-        return False
+        return False, ""
 
     def is_compatible(self, example: TestExample, tests: dict[str, TestExample]) -> bool:
         for waiting_id in self.wait_list.keys():
@@ -208,14 +219,14 @@ class TestRunner:
             waiting_ids = list(self.wait_list.keys())
             waiting_ids.sort(key=lambda i: self.wait_list[i].get("tokens", float("inf")))
             for unique_id in waiting_ids:
-                if not self.is_waiting(unique_id, remove=True):
+                if not self.is_waiting(unique_id, remove=True)[0]:
                     return unique_id
 
         # Otherwise, pick any other compatible test
         for unique_id in sorted(tests.keys()):
             if not self.is_compatible(tests[unique_id], tests):
                 continue
-            if not self.is_waiting(unique_id, remove=True):
+            if not self.is_waiting(unique_id, remove=True)[0]:
                 return unique_id
 
         # If all tests are waiting, try to meet the waiting conditions
@@ -228,10 +239,10 @@ class TestRunner:
             remaining_time = target_dt - datetime.now()
             waiting_time = max(remaining_time.total_seconds(), 0)
             self.forward_time(seconds=waiting_time + 1)
-            if not self.is_waiting(time_waiting_id, remove=True):
+            if not self.is_waiting(time_waiting_id, remove=True)[0]:
                 return time_waiting_id
 
-        # As a last resort, perform some filling task
+        # Perform some filling task for token waiting
         while True:
             token_waiting_id = self.get_waiting_test("tokens")
             if token_waiting_id is None:
@@ -242,8 +253,16 @@ class TestRunner:
                 msg = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size)
                 tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True))
                 remaining_tokens -= tokens_spent
-            if not self.is_waiting(token_waiting_id, remove=True):
+            if not self.is_waiting(token_waiting_id, remove=True)[0]:
                 return token_waiting_id
+
+        # As a last resort, if all tests are waiting for the percentage, get the closest one and force resume it.
+        while True:
+            percentage_waiting_id = self.get_waiting_test("percentage_finished")
+            if percentage_waiting_id is None:
+                break
+            del self.wait_list[percentage_waiting_id]
+            return percentage_waiting_id
 
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
 
@@ -315,6 +334,7 @@ class TestRunner:
         self.result_callbacks = []
         self.in_progress_results = dict()
         finished = 0
+        percentage_per_test = 100 / len(self.tests)
         for example in self.iter_tests(self.tests):
             self.progress_dialog.notify_running(example)
 
@@ -347,6 +367,7 @@ class TestRunner:
 
             if example.finished:
                 finished += 1
+                self.percentage_finished += percentage_per_test
                 result = self.in_progress_results[example.unique_id]
                 self.progress_dialog.notify_result(result)
 
