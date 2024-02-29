@@ -34,8 +34,8 @@ class RestaurantExample(DynamicExample):
 
         # Setup
         yield super().say(
-            "When I talk to you as the waiter ('Waiter: what will it be sir?'), then you will reply as if you were at a "
-            "restaurant. Understood?"
+            "When I talk to you as the waiter ('Waiter: what will it be sir?'), then you will reply as if you were the "
+            "customer at a restaurant. Understood?"
         )
 
         # Give the menu and ask for the drink
@@ -43,8 +43,8 @@ class RestaurantExample(DynamicExample):
             f"Good {day_moment_salutation()}. Welcome to our restaurant. "
             "Here is the menu for you to look over:\n\n"
             f"{self.dataset_generator.menu}\n\nIn the meantime, what would you like to drink?",
-            question=False,
         )
+        self.detect_hallucinations()
         drinks = self.extract_order_items(self.action.reply)
         if len(drinks) == 0:
             return
@@ -153,6 +153,15 @@ class RestaurantExample(DynamicExample):
             if match.size > 0 and len(item[match.b: match.b + match.size].strip()) > 3:
                 return True
         return False
+
+    def detect_hallucinations(self):
+        self.expected_responses.append("The follows the role of a customer at a restaurant.")
+        reply = self.action.reply
+        for word in ["welcome", "joining", "i offer", "we have", "for you"]:
+            if word in reply:
+                self.reasoning.append("The agent answered as the waiter.")
+                raise RestaurantOrderFailed
+        self.reasoning.append("The agent answered as the customer.")
 
 
 @dataclass
