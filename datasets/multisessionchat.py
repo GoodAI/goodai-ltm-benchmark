@@ -171,14 +171,10 @@ class MultiSessionChatDataset(DatasetInterface):
             is_question = [True]
 
             example = TestExample(
-                dataset_name=self.name,
-                description=self.description,
                 dataset_generator=self,
                 script=script,
                 expected_responses=[json.dumps(answer_data)],
-                evaluation_fn=self.evaluate_correct,
                 is_question=is_question,
-                number_of_questions=self.count_questions(is_question),
             )
             test_examples.append(example)
         return test_examples

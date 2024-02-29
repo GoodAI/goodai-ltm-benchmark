@@ -15,6 +15,7 @@ from datasets.shopping import ShoppingDataset
 from datasets.trigger_response import TriggerResponseDataset
 from datasets.kv import KVPairsDataset
 from datasets.chapterbreak import ChapterBreakDataset
+from datasets.restaurant import RestaurantDataset
 from copy import deepcopy
 
 DATASETS = {
@@ -34,6 +35,7 @@ DATASETS = {
     "prospective_memory": ProspectiveMemoryDataset,
     "conflicting_personal_info": ConflictingPersonalInformationDataset,
     "trigger_response": TriggerResponseDataset,
+    "restaurant": RestaurantDataset,
 }
 DATASETS_BY_NAME = {ds.name: ds for ds in DATASETS.values()}
 

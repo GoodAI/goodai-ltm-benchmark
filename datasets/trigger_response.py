@@ -66,16 +66,11 @@ class TriggerResponseDataset(DatasetInterface):
                 answer_list.append(response)
 
             example = TestExample(
-                dataset_name=self.name,
-                description=self.description,
                 dataset_generator=self,
                 script=script,
                 token_spacings=self.create_filler(is_question),
                 expected_responses=answer_list,
-                evaluation_fn=self.evaluate_correct,
-                number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
-                reset_message=self.reset_message
             )
             examples.append(example)
 

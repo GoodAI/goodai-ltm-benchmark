@@ -83,7 +83,7 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
     elif name == "claude":
         return ClaudeChatSession(**kwargs)
     elif name == "human":
-        return HumanChatSession()
+        return HumanChatSession(**kwargs)
     else:
         raise ValueError(f"Unrecognized agent: {name}")
 

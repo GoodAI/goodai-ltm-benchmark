@@ -139,16 +139,11 @@ class ChapterBreakDataset(DatasetInterface):
             is_question[-1] = True
 
             example = TestExample(
-                dataset_name=self.name,
-                description=self.description,
                 example_id=sample["id"],
                 dataset_generator=self,
                 script=script,
                 expected_responses=[str(answer)],
-                evaluation_fn=self.evaluate_correct,
                 is_question=is_question,
-                number_of_questions=1,
-                reset_message=self.reset_message,
             )
             example_list.append(example)
 
