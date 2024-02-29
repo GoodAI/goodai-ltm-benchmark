@@ -73,7 +73,6 @@ class TestExample:
     expected_responses: Any = None
     can_be_interleaved: bool = True
     uses_callback: bool = False
-    evaluation_fn: Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]] = None
     time_jumps: list[timedelta] = None
     token_spacings: list[int] = None
     is_temporal: bool = False
@@ -96,6 +95,10 @@ class TestExample:
         return self.dataset_generator.reset_message
 
     @property
+    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
+        return self.dataset_generator.evaluate_correct
+
+    @property
     def unique_id(self):
         return f"{self.dataset_name} - {self.example_id}"
 
@@ -104,8 +107,6 @@ class TestExample:
 
     def __post_init__(self):
         assert self.dataset_generator is not None
-        if self.evaluation_fn is None:
-            self.evaluation_fn = self.dataset_generator.evaluate_correct
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
         if self.token_spacings is None:
@@ -195,14 +196,16 @@ class DynamicExample(TestExample):
     filler_tokens_high: int = 0
     action: SendMessageAction = None  # Keeps the last SendMessageAction
 
+    @property
+    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
+        return self.evaluate
+
     def __post_init__(self):
-        assert self.evaluation_fn is None, "Dynamic examples have their own evaluation function."
-        self.evaluation_fn = lambda *args: self.evaluate()
         super().__post_init__()
         assert self.cost_callback is not None, "Dynamic examples require a cost callback."
         assert self.max_score > 0
 
-    def evaluate(self) -> tuple[int, int, list[str]]:
+    def evaluate(self, *args, **kwargs) -> tuple[int, int, list[str]]:
         return self.score, self.max_score, self.reasoning
 
     def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256) -> str:
