@@ -68,8 +68,6 @@ class WaitAction(TestAction):
 
 @dataclass
 class TestExample:
-    dataset_name: str = None
-    description: str = None
     dataset_generator: "DatasetInterface" = None
     script: List[str] = field(default_factory=list)
     expected_responses: Any = None
@@ -84,7 +82,18 @@ class TestExample:
     number_of_questions: int = 0
     finished: bool = False
     _iter: Iterator[TestAction] = None
-    reset_message: str = None
+
+    @property
+    def dataset_name(self) -> str:
+        return self.dataset_generator.name
+
+    @property
+    def description(self) -> str:
+        return self.dataset_generator.description
+
+    @property
+    def reset_message(self) -> str:
+        return self.dataset_generator.reset_message
 
     @property
     def unique_id(self):
@@ -95,12 +104,6 @@ class TestExample:
 
     def __post_init__(self):
         assert self.dataset_generator is not None
-        assert self.dataset_name is None
-        assert self.description is None
-        assert self.reset_message is None
-        self.dataset_name = self.dataset_generator.name
-        self.description = self.dataset_generator.description
-        self.reset_message = self.dataset_generator.reset_message
         if self.evaluation_fn is None:
             self.evaluation_fn = self.dataset_generator.evaluate_correct
         self.number_of_questions = len([q for q in self.is_question if q])
