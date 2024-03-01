@@ -1,5 +1,6 @@
 import os.path
 import random
+from json import JSONDecodeError
 from dataclasses import dataclass
 from typing import List, Tuple
 from dataset_interfaces.interface import DatasetInterface, TestExample
@@ -75,21 +76,21 @@ class SallyAnneDataset(DatasetInterface):
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
+
         score = 0
         max_score = 1
-        response = responses[0]
-        answer_dict = None
-        reasoning = "Something went wrong during evaluation"
+
         try:
-            answer_dict = sanitize_and_parse_json(response)
-        except ValueError as exc:
-            reasoning = f"The agent did not provide a valid JSON answer: {repr(exc)}"
-        if answer_dict is not None:
-            if isinstance(answer_dict, dict) and answer_dict.get("answer", "") == expected_answers[0]:
-                score = 1
-                reasoning = f"The agent answered with {repr(answer_dict['answer'])}, which is the right answer"
-            else:
-                reasoning = f"The answer is wrong: {answer_dict}"
+            answer_dict = sanitize_and_parse_json(responses[0])
+        except (ValueError, JSONDecodeError) as exc:
+            reasoning = f"Invalid answer. {exc}"
+            return score, max_score, [reasoning]
+
+        if isinstance(answer_dict, dict) and answer_dict.get("answer", "") == expected_answers[0]:
+            score = 1
+            reasoning = f"The agent answered with {repr(answer_dict['answer'])}, which is the right answer."
+        else:
+            reasoning = f"Invalid answer: {answer_dict}"
         return score, max_score, [reasoning]
 
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:

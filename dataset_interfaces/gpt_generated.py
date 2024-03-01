@@ -1,12 +1,15 @@
 import json
 from abc import ABC
+from pathlib import Path
 from dataclasses import dataclass
+from typing import List, Any, Tuple
 
 import pystache
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, CallBackTestExample
 from utils.openai import ask_llm
+from utils.json_utils import load_json
 
 PROMPT = """Generate data and questions based on the structure and instructions below.
 - For content: {{content}} 
@@ -23,14 +26,17 @@ Structure your response as such:
 
 @dataclass
 class GPTGenerated(DatasetInterface, ABC):
-    generation_file: str = ""
+    generation_file: str | Path = None
     temperature: float = 1.0
     generation_model: str = "gpt-3.5-turbo"
 
-    def generate_examples(self, num_examples):
+    def __post_init__(self):
+        if self.generation_file is None:
+            raise ValueError("GPTGenerated datasets require a file path to read from.")
+
+    def generate_examples(self, num_examples) -> List[TestExample]:
         examples = []
-        with open(self.generation_file, "r") as f:
-            prompt_data = json.loads("".join(f.readlines()))
+        prompt_data = load_json(self.generation_file)
 
         for _ in range(num_examples):
             script = []
@@ -77,3 +83,12 @@ class GPTGenerated(DatasetInterface, ABC):
             examples.append(example)
 
         return examples
+
+    def evaluate_correct(
+        self, questions: List[str], responses: List[str], expected_answers: List[Any]
+    ) -> Tuple[int, int, List[str]]:
+        return self.evaluate_correct_gpt(questions, responses, expected_answers)
+
+    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
+        # In GPT-generated tasks, the relevant info is given in the first script line.
+        return 0, 0
