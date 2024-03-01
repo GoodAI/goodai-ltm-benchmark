@@ -64,6 +64,21 @@ class SendAndRegisterAction(SendMessageAction):
 class WaitAction(TestAction):
     tokens: int = 0
     time: timedelta = field(default_factory=timedelta)
+    percentage_finished: float = 0.0
+
+
+class WaitCreator:
+    @classmethod
+    def create_wait(cls, tokens: int = 0, time: timedelta = timedelta(seconds=0), percentage_finished: float = 0.0):
+        return {"tokens": tokens, "time": time, "percentage_finished": percentage_finished}
+
+    @classmethod
+    def unserialise(cls, w_dict):
+        return {"tokens": w_dict['tokens'], "time": timedelta(w_dict['time']), "percentage_finished": w_dict['percentage_finished']}
+
+    @classmethod
+    def serialise(cls, w_dict):
+        return {"tokens": w_dict['tokens'], "time": w_dict['time'].seconds, "percentage_finished": w_dict['percentage_finished']}
 
 
 @dataclass
@@ -73,14 +88,13 @@ class TestExample:
     expected_responses: Any = None
     can_be_interleaved: bool = True
     uses_callback: bool = False
-    time_jumps: list[timedelta] = None
-    token_spacings: list[int] = None
     is_temporal: bool = False
     example_id: str = ""
     is_question: List[bool] = field(default_factory=list)
     number_of_questions: int = 0
     finished: bool = False
     _iter: Iterator[TestAction] = None
+    waits: List[dict] = field(default_factory=list)
 
     @property
     def dataset_name(self) -> str:
@@ -109,20 +123,17 @@ class TestExample:
         assert self.dataset_generator is not None
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
-        if self.token_spacings is None:
-            self.token_spacings = [0] * len(self.script)
-        if self.time_jumps is None:
-            self.time_jumps = [timedelta() for _ in self.script]
+        self.waits = self.dataset_generator.default_waits(self.is_question, self.waits)
 
     def action_iter(self) -> Iterator[TestAction]:
-        scripts = [self.script, self.token_spacings, self.time_jumps, self.is_question]
-        for msg, tokens, t_jump, is_q in zip(*scripts):
+        scripts = [self.script, self.waits, self.is_question]
+        for msg, wait, is_q in zip(*scripts):
             if self.uses_callback and is_q:
                 yield SendAndRegisterAction(msg, is_question=is_q)
             else:
                 yield SendMessageAction(msg, is_question=is_q)
-            if tokens > 0 or t_jump.total_seconds() > 0:
-                yield WaitAction(tokens=tokens, time=t_jump)
+            if any(wait.values()):
+                yield WaitAction(**wait)
         if self.is_temporal and len(self.is_question) == len(self.script) + 1:
             yield SendMessageAction("", is_question=self.is_question[-1])
 
@@ -138,8 +149,7 @@ class TestExample:
         return dict(
             script=self.script,
             is_question=self.is_question,
-            time_jumps=[td.total_seconds() for td in self.time_jumps],
-            token_spacings=self.token_spacings,
+            waits=[WaitCreator.serialise(x) for x in self.waits],
             expected_responses=self.expected_responses,
             can_be_interleaved=self.can_be_interleaved,
             is_temporal=self.is_temporal,
@@ -163,7 +173,7 @@ class TestExample:
         assert file_path.name.endswith(".def.json")
         with open(file_path) as fd:
             d = json.load(fd)
-        d["time_jumps"] = [timedelta(seconds=s) for s in d["time_jumps"]]
+        d["waits"] = [WaitCreator.unserialise(x) for x in d["waits"]]
         d["example_id"] = file_path.name.removesuffix(".def.json")
         d["dataset_name"] = file_path.parent.name
         assert d["dataset_name"] in DATASETS_BY_NAME, f"Couldn't find a generator for dataset {d['dataset_name']}."
@@ -340,15 +350,27 @@ class DatasetInterface(ABC):
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         pass
 
-    def create_filler(self, is_question: list[bool]) -> list[int]:
-        def _filler_size(is_q: bool, is_p2q: bool):
+    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]] = []):
+        def _filler_size(is_p2q: bool):
             return self.pre_question_filler if is_p2q else (randint(self.filler_tokens_low, self.filler_tokens_high))
 
-        assert len(is_question) >= 1
+        assert len(is_question) >= 1, "There are no questions for this test"
+        assert len(current_waits) == 0 or len(current_waits) == len(is_question), "Current waits should be empty or the same length as the script"
+
+        # Create the empty waits if there are any.
+        if len(current_waits) == 0:
+            for _ in range(len(is_question)):
+                current_waits.append({})
+
         is_prior_to_question = is_question[1:] + [False]
-        filler = [_filler_size(is_q, is_p2q) for is_q, is_p2q in zip(is_question, is_prior_to_question)]
-        filler[-1] = 0
-        return filler
+        for idx, (f, p2q) in enumerate(zip(current_waits[:-1], is_prior_to_question)):
+            if f != {}:
+                continue
+
+            current_waits[idx] = WaitCreator.create_wait(tokens=_filler_size(p2q))
+
+        current_waits[-1] = WaitCreator.create_wait()
+        return current_waits
 
     def tokens_to_answer(self, test_context: List[Dict[str, Any]], full_context: List[Dict[str, str]], example: TestExample):
         encoding = tiktoken.get_encoding("cl100k_base")

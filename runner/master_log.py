@@ -61,8 +61,10 @@ class MasterLog:
         event = LogEvent(event_type, timestamp, test_id, {"message": message, "is_question": is_question})
         self.add_event(event)
 
-    def add_wait_event(self, test_id: str, timestamp: datetime, tokens=0, time=0):
-        event = LogEvent(EventType.WAIT, timestamp=timestamp, test_id=test_id, data={"tokens": tokens, "time": time})
+    def add_wait_event(self, test_id: str, timestamp: datetime, tokens: int = 0, time: datetime = None, percentage_finished: float = 0.0):
+        if not time:
+            time = datetime.now()
+        event = LogEvent(EventType.WAIT, timestamp=timestamp, test_id=test_id, data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished})
         self.add_event(event)
 
     def begin_test(self, test_id, timestamp):
@@ -95,7 +97,16 @@ class MasterLog:
                 sender = EVENT_SENDER[event.type]
                 messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
             elif event.type == EventType.WAIT:
-                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for {event.data['tokens']} tokens until {event.data['time']}")
+
+                log_parts = [f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for "]
+                if event.data['tokens'] > 0:
+                    log_parts.append(f"{event.data['tokens']} TOTAL TOKENS, ")
+                if event.data['time'] > datetime.now():
+                    log_parts.append(f"DATE {event.data['time']}, ")
+                if event.data['percentage_finished'] > 0.0:
+                    log_parts.append(f"{event.data['percentage_finished']}% of tests to be finished.")
+
+                messages.append("".join(log_parts))
             elif event.type == EventType.BEGIN:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' BEGINS")
             elif event.type == EventType.END:

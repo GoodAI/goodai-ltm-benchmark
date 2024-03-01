@@ -70,7 +70,6 @@ class GPTGenerated(DatasetInterface, ABC):
                 dataset_generator=self,
                 script=script,
                 expected_responses=expected_responses,
-                token_spacings=self.create_filler(is_question),
                 is_question=is_question,
                 uses_callback=self.uses_callback,
             )

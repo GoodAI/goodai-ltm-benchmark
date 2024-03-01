@@ -52,7 +52,6 @@ class SallyAnneDataset(DatasetInterface):
             example = TestExample(
                 dataset_generator=self,
                 script=script,
-                token_spacings=self.create_filler(is_question),
                 expected_responses=answer_list,
                 is_question=is_question,
             )
