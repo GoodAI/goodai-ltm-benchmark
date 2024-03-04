@@ -38,17 +38,17 @@ CODED_INFO_AMOUNT = [
 @dataclass
 class SpyMeetingDataset(DatasetInterface):
     name: str = "Spy Meeting"
-    description: str = "The agent is given three clandestine messages, "
-    question: str = "Given the clandestine messages you have recieved, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring."
+    description: str = "The agent is given three clandestine messages. Then is asked to recall all of them and decide where and when the meeting is taking place long with what they should bring."
+    question: str = "Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring."
 
     def generate_examples(self, num_examples):
         examples = []
         faker = Faker(["en_US", "en_IE"])
+        Faker.seed(self.seed)
 
         for _ in range(num_examples):
             names = []
             expected_responses = []
-            messages = []
             faker.unique.clear()
             for k in range(3):
                 names.append(faker.unique.name())
@@ -68,10 +68,7 @@ class SpyMeetingDataset(DatasetInterface):
                 potential_messages, template = topic
 
                 coded_message, potential_interpretations = choice(potential_messages)
-                message = template.format(name, coded_message)
-
-                messages.append(message)
-                script.append(message)
+                script.append(template.format(name, coded_message))
 
                 is_question.append(False)
                 expected_responses.append(potential_interpretations)
@@ -79,7 +76,7 @@ class SpyMeetingDataset(DatasetInterface):
                 if k == 2:
                     waits.append(WaitCreator.create_wait(percentage_finished=90))
                 else:
-                    waits.append(WaitCreator.create_wait(percentage_finished=k+2 * 10))
+                    waits.append(WaitCreator.create_wait(percentage_finished=(k+2) * 10))
 
             script.append(self.question)
             is_question.append(True)
@@ -111,6 +108,8 @@ class SpyMeetingDataset(DatasetInterface):
             if not found:
                 correct = 0
                 reasoning.append(f"{potential_answers} not found in answer.")
+            else:
+                reasoning.append("Answer contains expected keyword(s)")
 
         return correct, 1, reasoning
 
