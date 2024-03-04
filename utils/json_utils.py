@@ -1,10 +1,7 @@
 import dataclasses
-import json
-from pathlib import Path
 from datetime import datetime
 from enum import Enum
 from json import JSONEncoder
-from typing import Any
 
 
 class CustomEncoder(JSONEncoder):
@@ -17,8 +14,3 @@ class CustomEncoder(JSONEncoder):
             return dataclasses.asdict(o)
 
         return super().default(o)
-
-
-def load_json(path: str | Path) -> Any:
-    with open(path) as fd:
-        return json.load(fd)

@@ -1,4 +1,3 @@
-import json
 from abc import ABC
 from pathlib import Path
 from dataclasses import dataclass
@@ -9,7 +8,6 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, CallBackTestExample
 from utils.openai import ask_llm
-from utils.json_utils import load_json
 
 PROMPT = """Generate data and questions based on the structure and instructions below.
 - For content: {{content}} 
@@ -37,7 +35,7 @@ class GPTGenerated(DatasetInterface, ABC):
 
     def generate_examples(self, num_examples) -> List[TestExample]:
         examples = []
-        prompt_data = load_json(self.generation_file)
+        prompt_data = self.load_json(self.generation_file)
 
         for _ in range(num_examples):
             script = []

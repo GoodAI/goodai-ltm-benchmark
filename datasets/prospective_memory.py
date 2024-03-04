@@ -1,4 +1,5 @@
 import re
+import random
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Tuple, Any
@@ -18,6 +19,15 @@ class ProspectiveMemoryDataset(GPTGenerated):
     temperature: float = 0.5
     uses_callback: bool = True
     generation_model: str = "gpt-4-1106-preview"
+
+    def generate_examples(self, num_examples) -> List[TestExample]:
+        rnd = random.Random(self.seed)
+        examples = super().generate_examples(num_examples)
+        for example in examples:
+            n = str(rnd.randint(1, 10))
+            example.script[1] = re.sub(r"\d+", n, example.script[1])
+            example.expected_responses[0] = re.sub(r"\d+", n, example.expected_responses[0])
+        return examples
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[Any]

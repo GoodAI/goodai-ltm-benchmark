@@ -261,12 +261,15 @@ class DatasetInterface(ABC):
     def data_path(self) -> Path:
         return DATA_DIR.joinpath(self.name)
 
-    def load_file(self, name: str) -> str:
-        with open(self.data_path.joinpath(name)) as fd:
+    def load_file(self, path_or_name: str | Path) -> str:
+        path = Path(path_or_name)
+        if not path.is_absolute():
+            path = self.data_path.joinpath(path_or_name)
+        with open(path) as fd:
             return fd.read()
 
-    def load_json(self, name: str, **kwargs) -> Any:
-        return json.loads(self.load_file(name), **kwargs)
+    def load_json(self, path_or_name: str | Path, **kwargs) -> Any:
+        return json.loads(self.load_file(path_or_name), **kwargs)
 
     def count_questions(self, is_question):
         return len([x for x in is_question if x])
