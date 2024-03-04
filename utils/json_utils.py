@@ -5,7 +5,6 @@ from datetime import datetime
 from enum import Enum
 from json import JSONEncoder
 from typing import Any
-from goodai.helpers.json_helper import sanitize_and_parse_json
 
 
 class CustomEncoder(JSONEncoder):

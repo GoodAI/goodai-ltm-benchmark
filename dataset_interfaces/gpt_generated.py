@@ -29,6 +29,7 @@ class GPTGenerated(DatasetInterface, ABC):
     generation_file: str | Path = None
     temperature: float = 1.0
     generation_model: str = "gpt-3.5-turbo"
+    max_attempts: int = 10
 
     def __post_init__(self):
         if self.generation_file is None:
@@ -49,7 +50,7 @@ class GPTGenerated(DatasetInterface, ABC):
                 {"role": "user", "content": generation_prompt},
             ]
             correct = False
-            for _ in range(10):
+            for _ in range(self.max_attempts):
                 try:
                     result = ask_llm(context, temperature=self.temperature, model=self.generation_model)
                     generated = sanitize_and_parse_json(result)
@@ -59,7 +60,7 @@ class GPTGenerated(DatasetInterface, ABC):
                     pass
             if not correct:
                 raise ValueError(
-                    "GPT powered generation failed after 10 attempts! You can choose to rerun the generation."
+                    f"GPT powered generation failed after {self.max_attempts} attempts! You can choose to rerun the generation."
                 )
 
             script.append("\n".join(generated["content"]))

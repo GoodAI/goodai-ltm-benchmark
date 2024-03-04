@@ -34,7 +34,7 @@ Respond in JSON with the following format:
   },
   ...
 ]
-"""
+""".strip()
 
 
 class TestAction:
@@ -319,19 +319,22 @@ class DatasetInterface(ABC):
         try:
             parsed = sanitize_and_parse_json(response)
 
-            for eval in parsed:
-                yes_no_list = eval["checklist"]
-                correct = yes_no_list[0].lower() == "yes" # reference
-                if yes_no_list[1].lower() == "yes" and yes_no_list[2].lower() == "no":
+            for evaluation in parsed:
+                yes_no_list = [yn.lower() == "yes" for yn in evaluation["checklist"]]
+
+                correct = yes_no_list[0]  # reference
+                if yes_no_list[1] and not yes_no_list[2]:
                     correct = False
+                score += int(correct)
 
-                score = score + 1 if correct else score
-                if correct:
-                    reasoning.append("Checklist correct")
-                else:
-                    reasoning.append("Checklist Incorrect")
-
-        except Exception:
+                mk_ref_str = "makes" if yes_no_list[0] else "does not make"
+                is_num_str = "is" if yes_no_list[1] else "is not"
+                reason = f"The answer {mk_ref_str} reference to the expected answer, which {is_num_str} numerical."
+                if yes_no_list[1]:
+                    match_str = "match" if yes_no_list[2] else "do not match"
+                    reason = reason[:-1] + f", and the numbers {match_str}."
+                reasoning.append(reason)
+        except:
             reasoning.append("JSON parse error")
 
         return score, max_score, reasoning
