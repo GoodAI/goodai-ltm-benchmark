@@ -12,6 +12,7 @@ from datasets.name import NamesDataset
 from datasets.name_list import NameListDataset
 from datasets.sally_ann import SallyAnneDataset
 from datasets.shopping import ShoppingDataset
+from datasets.spy_meeting import SpyMeetingDataset
 from datasets.trigger_response import TriggerResponseDataset
 from datasets.kv import KVPairsDataset
 from datasets.chapterbreak import ChapterBreakDataset
@@ -36,6 +37,7 @@ DATASETS = {
     "conflicting_personal_info": ConflictingPersonalInformationDataset,
     "trigger_response": TriggerResponseDataset,
     "restaurant": RestaurantDataset,
+    "spy_meeting": SpyMeetingDataset,
 }
 DATASETS_BY_NAME = {ds.name: ds for ds in DATASETS.values()}
 
