@@ -13,25 +13,25 @@ AMOUNT_TEMPLATE = "{}: Bring to the meeting {}."
 
 CODED_INFO_PLACE = [
     ("where the land meets the sea", ["shore", "beach", "coastline"]),
-    ("where the occupiers supply their trains", ["railway depot", "train yard"]),
-    ("where the cars are made", ["automobile factory", "car factory"]),
+    ("where the occupiers supply their trains", ["railway depot", "train yard", "train depot", "rail yard"]),
+    ("where the cars are made", ["automobile factory", "car factory", "manufacturing"]),
     ("where the apples grow", ["orchard"]),
-    ("at the most geometric part of the city", ["city square"])
+    ("where the sea cargo is stored", ["port", "warehouse"]),
 ]
 
 CODED_INFO_TIME = [
     ("when the sun starts its travel across the sky", ["sunrise", "dawn"]),
-    ("when the blackbirds sing", ["dawn", "sunrise"]),
-    ("when the sun is high", ["noon"]),
+    ("when the blackbirds sing", ["dawn", "sunrise", "morning"]),
+    ("when the sun is high", ["noon", "midday"]),
     ("when the sun leaves the sky", ["sunset", "dusk"]),
-    ("when the moon is high", ["night"]),
+    ("when the moon is high", ["night", "midnight"]),
 ]
 
 CODED_INFO_AMOUNT = [
     ("a way to get across a river", ["boat", "bridge"]),
-    ("a quiet way to open locked doors", ["lockpicks", "master key"]),
-    ("a way to persuade the border guards to let us through", ["bribe", "credentials"]),
-    ("a fast land escape vehicle", ["motorbike", "fast car"]),
+    ("a quiet way to open locked doors", ["lockpicks", "key", "lock picking set", "lock pick set"]),
+    ("a way to persuade the border guards to let us through", ["bribe", "credentials", "paperwork"]),
+    ("a fast land escape vehicle", ["motorbike", "motorcycle", "car"]),
 ]
 
 
@@ -39,7 +39,7 @@ CODED_INFO_AMOUNT = [
 class SpyMeetingDataset(DatasetInterface):
     name: str = "Spy Meeting"
     description: str = "The agent is given three clandestine messages, "
-    question: str = "Given the clandestine messages you have recieved, tell me when and where a meeting is going to happen and what you should bring."
+    question: str = "Given the clandestine messages you have recieved, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring."
 
     def generate_examples(self, num_examples):
         examples = []
