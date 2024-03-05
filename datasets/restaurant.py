@@ -1,4 +1,5 @@
 import random
+from json import JSONDecodeError
 from typing import Tuple, Iterator
 from collections import OrderedDict
 from difflib import SequenceMatcher
@@ -7,7 +8,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from dataset_interfaces.interface import DynamicDataset, TestExample, DynamicExample, TestAction, SendMessageAction
 
-from utils.openai import make_user_message
+from utils.openai import make_system_message, make_user_message
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 
@@ -109,7 +110,10 @@ class RestaurantExample(DynamicExample):
     def extract_order_items(self, message: str) -> list[str]:
         context = [make_user_message(extract_items_prompt.format(response=message))]
         items_json = self.ask_llm(context)
-        return sanitize_and_parse_json(items_json)
+        try:
+            return sanitize_and_parse_json(items_json)
+        except (ValueError, JSONDecodeError):
+            return []
 
     def in_menu(self, item: str) -> bool:
         for section_content in self.dataset_generator.menu_dict.values():
@@ -161,11 +165,19 @@ class RestaurantExample(DynamicExample):
         return False
 
     def detect_hallucinations(self):
-        reply = self.action.reply
-        for word in ["welcome", "joining", "i offer", "we have", "for you"]:
-            if word in reply:
-                self.reasoning.append("The agent answered as the waiter.")
+        context = [
+            make_system_message(role_eval_prompt),
+            make_user_message(f"Participant: {self.action.reply}")
+        ]
+        eval_json = self.ask_llm(context)
+        try:
+            eval_json = sanitize_and_parse_json(eval_json)
+            if not eval_json["follows_role"]:
+                self.reasoning.append("The agent did not follow the role of a customer at a restaurant.")
                 raise RestaurantOrderFailed
+        except (ValueError, JSONDecodeError):
+            self.reasoning.append("The agent's answer could not be evaluated due to a JSON parsing error.")
+            raise RestaurantOrderFailed
 
 
 @dataclass
@@ -223,4 +235,14 @@ Extract the ordered items in JSON form, like this:
   "another ordered item",
   ...
 ]
+""".strip()
+
+role_eval_prompt = """
+You are an evaluator in an acting session.
+You evaluate how well participants perform under a previously agreed setting.
+
+The current setting is: the participant is a human customer at a restaurant; the waiter has just given them the menu and asked them what they want to drink.
+
+You must say whether the participant followed the assigned role or not. Respond in JSON form, like this:
+{"follows_role": true or false}
 """.strip()
