@@ -4,7 +4,7 @@ import string
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Tuple, Any
-
+from utils.ui import ordinal
 
 from dataset_interfaces.gpt_generated import GPTGenerated
 
@@ -30,11 +30,12 @@ class ProspectiveMemoryDataset(GPTGenerated):
 
     def generate_examples(self, num_examples) -> List[TestExample]:
         rnd = random.Random(self.seed)
+        num_pattern = r"\d+(?:th|st|nd|rd)"
         examples = super().generate_examples(num_examples)
         for example in examples:
-            n = str(rnd.randint(1, 10))
-            example.script[1] = re.sub(r"\d+", n, example.script[1])
-            example.expected_responses[0] = re.sub(r"\d+", n, example.expected_responses[0])
+            n = ordinal(rnd.randint(2, 10))
+            example.script[1] = re.sub(num_pattern, n, example.script[1])
+            example.expected_responses[0] = re.sub(num_pattern, n, example.expected_responses[0])
         return examples
 
     def evaluate_correct(
