@@ -45,11 +45,14 @@ class RestaurantExample(DynamicExample):
             "Here is the menu for you to look over:\n\n"
             f"{self.dataset_generator.menu}\n\nIn the meantime, what would you like to drink?",
         )
+        self.expected_responses.append("The agent follows the role of a customer at a restaurant and orders a drink.")
         self.detect_hallucinations()
         drinks = self.extract_order_items(self.action.reply)
         if len(drinks) == 0:
+            self.reasoning.append("The agent did not order any drink.")
             return
         drinks_str = enumerate_str(drinks)
+        self.reasoning.append(f"The agent answered as the customer and ordered {drinks_str}.")
         yield self.wait(percentage_finished=40)
 
         # Ordering food
@@ -158,13 +161,11 @@ class RestaurantExample(DynamicExample):
         return False
 
     def detect_hallucinations(self):
-        self.expected_responses.append("The agent follows the role of a customer at a restaurant.")
         reply = self.action.reply
         for word in ["welcome", "joining", "i offer", "we have", "for you"]:
             if word in reply:
                 self.reasoning.append("The agent answered as the waiter.")
                 raise RestaurantOrderFailed
-        self.reasoning.append("The agent answered as the customer.")
 
 
 @dataclass
