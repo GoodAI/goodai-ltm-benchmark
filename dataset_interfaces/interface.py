@@ -230,9 +230,15 @@ class DynamicExample(TestExample):
     def action_iter(self) -> Iterator[TestAction]:
         pass
 
-    def wait(self, tokens: Optional[int] = None, time: Optional[timedelta] = None) -> WaitAction:
-        kwargs = {k: v for k, v in dict(tokens=tokens, time=time).items() if v is not None}
-        if tokens is None and time is None:
+    def wait(
+        self,
+        tokens: Optional[int] = None,
+        time: Optional[timedelta] = None,
+        percentage_finished: Optional[float] = None,
+    ) -> WaitAction:
+        kwargs = dict(tokens=tokens, time=time, percentage_finished=percentage_finished)
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        if len(kwargs) == 0:
             kwargs["tokens"] = randint(self.filler_tokens_low, self.filler_tokens_high)
         return WaitAction(**kwargs)
 
@@ -350,7 +356,7 @@ class DatasetInterface(ABC):
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         pass
 
-    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]] = []):
+    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
         def _filler_size(is_p2q: bool):
             return self.pre_question_filler if is_p2q else (randint(self.filler_tokens_low, self.filler_tokens_high))
 
@@ -434,3 +440,6 @@ class DynamicDataset(DatasetInterface, ABC):
 
     def generate_examples(self, num_examples: int) -> List[TestExample]:
         return [self.create_example() for _ in range(num_examples)]
+
+    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return []

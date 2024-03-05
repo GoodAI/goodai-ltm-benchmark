@@ -37,6 +37,7 @@ class RestaurantExample(DynamicExample):
             "When I talk to you as the waiter ('Waiter: what will it be sir?'), then you will reply as if you were the "
             "customer at a restaurant. Understood?"
         )
+        yield self.wait(percentage_finished=20)
 
         # Give the menu and ask for the drink
         yield self.say(
@@ -49,14 +50,14 @@ class RestaurantExample(DynamicExample):
         if len(drinks) == 0:
             return
         drinks_str = enumerate_str(drinks)
-        yield self.wait()
+        yield self.wait(percentage_finished=40)
 
         # Ordering food
         yield self.say(f"Here is your {drinks_str}. What would you like to eat?")
         order = self.extract_order_items(self.action.reply)
         order_str = self.score_and_format_order(order).capitalize()
         yield self.say(f"Excellent choice! {order_str} coming right up.", question=False)
-        yield self.wait()
+        yield self.wait(percentage_finished=60)
 
         # Some dish is unexpectedly unavailable -> order another thing
         item = random.choice(order)
@@ -69,7 +70,7 @@ class RestaurantExample(DynamicExample):
         new_items_str = self.score_and_format_order(new_items).capitalize()
         order.extend(new_items)
         yield self.say(f"{new_items_str} it is. Sorry again for the inconvenience.", question=False)
-        yield self.wait()
+        yield self.wait(percentage_finished=80)
 
         # Alter the order -> does the agent notice?
         true_item, altered_item, altered_order = self.alter_order(order)
@@ -81,10 +82,12 @@ class RestaurantExample(DynamicExample):
             return
         self.reasoning.append("The agent complains about the unexpected meal. (+1)")
         self.score += 1
+        yield self.say("I apologize. I will fix it immediately.", question=False)
+        yield self.wait(percentage_finished=100)
 
-        # Amend the order
+        # Amend the order and offer an extra drink
         yield self.say(
-            f"I apologize. I will fix it immediately... Here it is: a {true_item}, just as you ordered.\n"
+            f"Here it is: a {true_item}, just as you ordered.\n"
             "We would like to compensate you with an additional drink on the house. What were you having?"
         )
         self.expected_responses.append(f"The agent recalls that it was drinking {drinks_str}.")
@@ -155,7 +158,7 @@ class RestaurantExample(DynamicExample):
         return False
 
     def detect_hallucinations(self):
-        self.expected_responses.append("The follows the role of a customer at a restaurant.")
+        self.expected_responses.append("The agent follows the role of a customer at a restaurant.")
         reply = self.action.reply
         for word in ["welcome", "joining", "i offer", "we have", "for you"]:
             if word in reply:
