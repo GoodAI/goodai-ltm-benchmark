@@ -175,7 +175,7 @@ class RestaurantExample(DynamicExample):
             if not eval_json["follows_role"]:
                 self.reasoning.append("The agent did not follow the role of a customer at a restaurant.")
                 raise RestaurantOrderFailed
-        except (ValueError, JSONDecodeError):
+        except (ValueError, JSONDecodeError, KeyError):
             self.reasoning.append("The agent's answer could not be evaluated due to a JSON parsing error.")
             raise RestaurantOrderFailed
 
