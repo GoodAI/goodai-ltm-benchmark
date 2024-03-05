@@ -1,6 +1,7 @@
-import json
 from abc import ABC
+from pathlib import Path
 from dataclasses import dataclass
+from typing import List, Any, Tuple
 
 import pystache
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -23,14 +24,18 @@ Structure your response as such:
 
 @dataclass
 class GPTGenerated(DatasetInterface, ABC):
-    generation_file: str = ""
+    generation_file: str | Path = None
     temperature: float = 1.0
     generation_model: str = "gpt-3.5-turbo"
+    max_attempts: int = 10
 
-    def generate_examples(self, num_examples):
+    def __post_init__(self):
+        if self.generation_file is None:
+            raise ValueError("GPTGenerated datasets require a file path to read from.")
+
+    def generate_examples(self, num_examples) -> List[TestExample]:
         examples = []
-        with open(self.generation_file, "r") as f:
-            prompt_data = json.loads("".join(f.readlines()))
+        prompt_data = self.load_json(self.generation_file)
 
         for _ in range(num_examples):
             script = []
@@ -43,7 +48,7 @@ class GPTGenerated(DatasetInterface, ABC):
                 {"role": "user", "content": generation_prompt},
             ]
             correct = False
-            for _ in range(10):
+            for _ in range(self.max_attempts):
                 try:
                     result = ask_llm(context, temperature=self.temperature, model=self.generation_model)
                     generated = sanitize_and_parse_json(result)
@@ -53,7 +58,7 @@ class GPTGenerated(DatasetInterface, ABC):
                     pass
             if not correct:
                 raise ValueError(
-                    "GPT powered generation failed after 10 attempts! You can choose to rerun the generation."
+                    f"GPT powered generation failed after {self.max_attempts} attempts! You can choose to rerun the generation."
                 )
 
             script.append("\n".join(generated["content"]))
@@ -77,3 +82,12 @@ class GPTGenerated(DatasetInterface, ABC):
             examples.append(example)
 
         return examples
+
+    def evaluate_correct(
+        self, questions: List[str], responses: List[str], expected_answers: List[Any]
+    ) -> Tuple[int, int, List[str]]:
+        return self.evaluate_correct_gpt(questions, responses, expected_answers)
+
+    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
+        # In GPT-generated tasks, the relevant info is given in the first script line.
+        return 0, 0

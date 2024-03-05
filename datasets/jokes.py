@@ -99,12 +99,10 @@ class JokesDataset(DatasetInterface):
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
-
-        max_score = 1
-        score = 1
-        reasons = ["The correct joke is recounted."]
-
         if expected_answers[0] in responses[0]:
+            max_score = 1
+            score = 1
+            reasons = ["The correct joke is recounted."]
             return score, max_score, reasons
         else:
             return self.evaluate_correct_gpt(questions, responses, expected_answers)
