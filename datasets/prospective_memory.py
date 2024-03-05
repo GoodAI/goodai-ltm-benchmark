@@ -1,5 +1,6 @@
 import re
 import random
+import string
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Tuple, Any
@@ -9,6 +10,13 @@ from dataset_interfaces.gpt_generated import GPTGenerated
 
 from dataset_interfaces.interface import TestExample
 from utils.constants import DATA_DIR
+
+
+def cites_quote(quote: str, message: str) -> bool:
+    table = str.maketrans("", "", string.punctuation)
+    quote = quote.lower().translate(table)
+    message = message.lower().translate(table)
+    return quote in message
 
 
 @dataclass
@@ -76,7 +84,7 @@ class ProspectiveMemoryDataset(GPTGenerated):
 
         # This statement should have the quote attached
         target_stmt_in_log = log_lookahead[steps_to_look - 1]
-        if quote in target_stmt_in_log.lower():
+        if cites_quote(quote, target_stmt_in_log):
             score = 1
             reason = "The quote is recited in the correct place."
             deregister_callback = False
@@ -92,7 +100,7 @@ class ProspectiveMemoryDataset(GPTGenerated):
             if stmt.lower() == target_stmt_in_log.lower():
                 continue
 
-            if quote in stmt.lower():
+            if cites_quote(quote, stmt):
                 score = 0
                 reason = "The quote is recited somewhere other or additionally to the correct place."
                 deregister_callback = True
