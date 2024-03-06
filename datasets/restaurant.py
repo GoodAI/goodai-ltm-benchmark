@@ -288,7 +288,8 @@ Answer in JSON format, like this:
 """.strip()
 
 drink_recall_system_prompt = """
-Does the customer recall their original order?
+You must evaluate whether the customer remembers what drinks it ordered before.
+You will be given the original order, plus a sentence that the customer has just said to the waiter.
 
 Answer in JSON form, like this:
 {"recalls": true or false}
@@ -296,5 +297,5 @@ Answer in JSON form, like this:
 
 drink_recall_user_prompt = """
 Original order: {drinks}
-Customer says now: {message}
+The customer says now: {message}
 """.strip()
