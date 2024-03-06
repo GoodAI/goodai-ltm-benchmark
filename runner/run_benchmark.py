@@ -80,8 +80,10 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
     elif name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
-    elif name == "claude":
+    elif name == "claude-2.1":
         return ClaudeChatSession(**kwargs)
+    elif name == "claude-opus":
+        return ClaudeChatSession(**kwargs, model="claude-3-opus-20240229")
     elif name == "human":
         return HumanChatSession(**kwargs)
     else:

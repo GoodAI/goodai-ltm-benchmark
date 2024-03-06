@@ -19,6 +19,7 @@ def allowed_models() -> set[str]:
         models = client.models.list()
         MODEL_LIST_CACHE = set(m.id for m in models.data if m.id.startswith("gpt-") and "instruct" not in m.id)
         MODEL_LIST_CACHE.add("claude-2.1")
+        MODEL_LIST_CACHE.add("claude-3-opus-20240229")
     return deepcopy(MODEL_LIST_CACHE)
 
 
@@ -46,6 +47,8 @@ def get_max_prompt_size(model: str):
         return 8_192
     if model == "claude-2.1":
         return 200_000
+    if model == "claude-3-opus-20240229":
+        return 200_000
     return 4_096
 
 
@@ -64,6 +67,8 @@ def token_cost(model: str) -> tuple[float, float]:
         return 0.000_001, 0.000_002
     if model == "claude-2.1":
         return 8e-06, 2.4e-05
+    if model == "claude-3-opus-20240229":
+        return 0.000_015, 0.000_075
     if model == "text-embedding-ada-002":
         return 0.000_000_002, 0.000_000_002
     raise ValueError(f"There's no cost registered for model {model}.")
