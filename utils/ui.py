@@ -39,3 +39,7 @@ def ordinal(n: int) -> str:
     else:
         suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
     return str(n) + suffix
+
+
+def maybe_int(n: float | int) -> float | int:
+    return int(n) if int(n) == n else n
