@@ -61,7 +61,7 @@ class RestaurantExample(DynamicExample):
         # Ordering food
         yield self.say(f"Here is your {drinks_str}. What would you like to eat?")
         order = self.extract_order_items(self.action.reply)
-        order, order_str = self.score_and_format_order(order)
+        order_str = self.score_and_format_order(order)
         yield self.say(f"Excellent choice! {order_str} coming right up.", question=False)
         yield self.wait(percentage_finished=60)
 
@@ -72,7 +72,7 @@ class RestaurantExample(DynamicExample):
             "unavailable. Can I serve you something else instead?"
         )
         new_items = self.extract_order_items(self.action.reply)
-        new_items, new_items_str = self.score_and_format_order(new_items)
+        new_items_str = self.score_and_format_order(new_items)
 
         # Make sure that the agent doesn't order the same thing again
         self.expected_responses[-1] += " The agent orders then a different thing."
@@ -105,7 +105,7 @@ class RestaurantExample(DynamicExample):
         self.check_recalls_drink(drinks)
 
     def extract_order_items(self, message: str) -> list[str]:
-        context = [make_user_message(extract_items_prompt.format(response=message))]
+        context = [make_user_message(extract_items_prompt.format(response=message, menu=self.dataset_generator.menu))]
         items_json = self.ask_llm(context)
         try:
             items = sanitize_and_parse_json(items_json)
@@ -117,27 +117,29 @@ class RestaurantExample(DynamicExample):
             raise RestaurantOrderFailed
         return items
 
-    def in_menu(self, item: str) -> tuple[bool, str]:
-        for section_content in self.dataset_generator.menu_dict.values():
-            for menu_item in section_content:
-                if eq(item.lower(), menu_item.lower()):
-                    return True, menu_item
-        return False, ""
-
-    def score_and_format_order(self, order: list[str]) -> tuple[list[str], str]:
+    def score_and_format_order(self, order: list[str]) -> str:
 
         filtered_order = list()
         excluded_items = list()
-        for item in order:
-            available, full_name = self.in_menu(item)
-            if available:
-                if full_name not in filtered_order:
-                    filtered_order.append(full_name)
-            else:
-                excluded_items.append(item)
+        items = "\n".join(f"- {item}" for item in order)
+        context = [
+            make_user_message(items_in_menu_prompt.format(
+                menu=self.dataset_generator.menu, items=items
+            )),
+        ]
+        llm_response = self.ask_llm(context)
+
+        self.expected_responses.append("All ordered items are in the menu.")
+        try:
+            items_eval = sanitize_and_parse_json(llm_response)
+            for item, in_menu in items_eval:
+                (filtered_order if in_menu else excluded_items).append(item)
+        except (JSONDecodeError, ValueError, IndexError) as exc:
+            self.reasoning.append(f"Could not evaluate due to a JSON parsing error: {repr(exc)}")
+            raise RestaurantOrderFailed
 
         score = len(filtered_order) / (len(filtered_order) + len(excluded_items))
-        self.expected_responses.append("All ordered items are in the menu.")
+        self.score += score
         if len(filtered_order) == 0:
             self.reasoning.append("None of the items are in the menu.")
             raise RestaurantOrderFailed
@@ -145,11 +147,10 @@ class RestaurantExample(DynamicExample):
             self.reasoning.append("All items are in the menu.")
         else:
             excluded_items = "\n".join(f"- {item}" for item in excluded_items)
-            reasoning = f"The following ordered items are not in the menu:\n{excluded_items}\n"
-            self.reasoning.append(reasoning)
+            self.reasoning.append(f"The following ordered items are not in the menu:\n{excluded_items}\n")
+            raise RestaurantOrderFailed
 
-        self.score += score
-        return filtered_order, enumerate_str(filtered_order)
+        return enumerate_str(order)
 
     def alter_order(self, order: list[str], old_item: str) -> tuple[str, str, list[str]]:
         item = random.choice(order)
@@ -207,8 +208,8 @@ class RestaurantExample(DynamicExample):
         try:
             eval_json = sanitize_and_parse_json(eval_json)
             return eval_json[key]
-        except (ValueError, JSONDecodeError, KeyError):
-            self.reasoning.append("Could not evaluate due to a JSON parsing error.")
+        except (ValueError, JSONDecodeError, KeyError) as exc:
+            self.reasoning.append(f"Could not evaluate due to a JSON parsing error: {repr(exc)}")
             raise RestaurantOrderFailed
 
 
@@ -261,10 +262,35 @@ This is a diner's response to a waiter:
 {response}
 ```
 
+This is what the menu looks like:
+
+```text
+{menu}
+```
+
 Extract the ordered items in JSON form, like this:
 [
   "one item",
   "another ordered item",
+  ...
+]
+""".strip()
+
+items_in_menu_prompt = """
+This is the menu at a restaurant:
+
+```text
+{menu}
+```
+
+And this is a diner's order:
+{items}
+
+For each of the items in the order, determine whether the item is contained in the menu or not.
+Answer in JSON form, like this:
+[
+  ["one item", true or false],
+  ["another item", true or false],
   ...
 ]
 """.strip()
