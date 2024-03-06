@@ -59,25 +59,34 @@ class RestaurantExample(DynamicExample):
         # Ordering food
         yield self.say(f"Here is your {drinks_str}. What would you like to eat?")
         order = self.extract_order_items(self.action.reply)
-        order_str = self.score_and_format_order(order).capitalize()
+        order, order_str = self.score_and_format_order(order)
         yield self.say(f"Excellent choice! {order_str} coming right up.", question=False)
         yield self.wait(percentage_finished=60)
 
         # Some dish is unexpectedly unavailable -> order another thing
-        item = random.choice(order)
-        order.remove(item)
+        old_item = random.choice(order)
         yield self.say(
-            f"I am very sorry, but I have been informed in the kitchen that the {item} is currently "
+            f"I am very sorry, but I have been informed in the kitchen that the {old_item} is currently "
             "unavailable. Can I serve you something else instead?"
         )
         new_items = self.extract_order_items(self.action.reply)
-        new_items_str = self.score_and_format_order(new_items).capitalize()
+        new_items, new_items_str = self.score_and_format_order(new_items)
+
+        # Make sure that the agent doesn't order the same thing again
+        self.expected_responses[-1] += " The agent orders then a different thing."
+        repeated_items = [item for item in new_items if item in order]
+        if len(repeated_items) > 0:
+            self.reasoning[-1] += f" However, the agent orders some things again: {repeated_items}"
+        else:
+            self.reasoning[-1] += " The agent orders a new, different option."
+
+        order.remove(old_item)
         order.extend(new_items)
         yield self.say(f"{new_items_str} it is. Sorry again for the inconvenience.", question=False)
         yield self.wait(percentage_finished=80)
 
         # Alter the order -> does the agent notice?
-        true_item, altered_item, altered_order = self.alter_order(order)
+        true_item, altered_item, altered_order = self.alter_order(order, old_item)
         altered_str = enumerate_str(altered_order)
         yield self.say(f"Here you are: {altered_str}. Enjoy the meal.")
         self.expected_responses.append("The agent notices the change and complains.")
@@ -122,7 +131,7 @@ class RestaurantExample(DynamicExample):
                     return True
         return False
 
-    def score_and_format_order(self, order: list[str]) -> str:
+    def score_and_format_order(self, order: list[str]) -> tuple[list[str], str]:
 
         filtered_order = list()
         excluded_items = list()
@@ -132,28 +141,29 @@ class RestaurantExample(DynamicExample):
         score = len(filtered_order) / len(order)
         self.expected_responses.append("All ordered items are in the menu.")
         if len(filtered_order) == 0:
-            self.reasoning.append("None of the items are in the menu. (+0)")
+            self.reasoning.append("None of the items are in the menu.")
             raise RestaurantOrderFailed
         elif len(filtered_order) == len(order):
-            self.reasoning.append("All items are in the menu. (+1)")
+            self.reasoning.append("All items are in the menu.")
         else:
             excluded_items = "\n".join(f"- {item}" for item in excluded_items)
-            reasoning = f"The following ordered items are not in the menu:\n{excluded_items}\n(+{score:.2f})"
+            reasoning = f"The following ordered items are not in the menu:\n{excluded_items}\n"
             self.reasoning.append(reasoning)
 
         self.score += score
-        return enumerate_str(filtered_order)
+        return filtered_order, enumerate_str(filtered_order)
 
-    def alter_order(self, order: list[str]) -> tuple[str, str, list[str]]:
+    def alter_order(self, order: list[str], old_item: str) -> tuple[str, str, list[str]]:
         item = random.choice(order)
         for section_content in self.dataset_generator.menu_dict.values():
             for section_item in section_content:
                 if item in section_item:
-                    i = section_content.index(section_item)
-                    altered_item = random.choice(section_content[:i] + section_content[i + 1:])
+                    choices = [c for c in section_content if section_item != c and old_item not in c]
+                    new_item = random.choice(choices)
                     altered_order = [item for item in order]
-                    altered_order[order.index(item)] = altered_item
-                    return item, altered_item, altered_order
+                    i = altered_order.index(item)
+                    altered_order[i] = new_item
+                    return section_item, new_item, altered_order
         assert False, f"Cannot alter wrong order: {order}"
 
     def detect_complain(self, *items: str) -> bool:
