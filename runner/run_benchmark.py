@@ -41,12 +41,13 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return GPTChatSession(model="gpt-4", **kwargs)
     elif name == "gpt-3.5-turbo":
         return GPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name == "gpt-4-1106":
-        return GPTChatSession(model="gpt-4-1106-preview", **kwargs)
+    elif name in ["gpt-4-1106", "gpt-4-0125"]:
+        return GPTChatSession(model=f"{name}-preview", **kwargs)
     elif name == "ts-gpt-3.5-turbo":
         return TimestampGPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name == "ts-gpt-4-1106":
-        return TimestampGPTChatSession(model="gpt-4-1106-preview", **kwargs)
+    elif name in ["ts-gpt-4-1106", "ts-gpt-4-0125"]:
+        model = name.removesuffix("ts-") + "-preview"
+        return TimestampGPTChatSession(model=model, **kwargs)
     elif name == "memgpt":
         if max_prompt_size is not None:
             return MemGPTChatSession(_max_prompt_size=max_prompt_size, run_name=run_name)
@@ -61,22 +62,22 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
             model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.CONVERSATION_ENTITY, **kwargs
         )
     elif name == "ltm_agent_1":
-        return LTMAgent1(model="gpt-4-1106-preview", **kwargs)
+        return LTMAgent1(model="gpt-4-0125-preview", **kwargs)
     elif name == "ltm_agent_2":
-        return LTMAgent2(model="gpt-4-1106-preview", **kwargs)
+        return LTMAgent2(model="gpt-4-0125-preview", **kwargs)
     elif name == "ltm_agent_3":
-        return LTMAgent3(model="gpt-4-1106-preview", **kwargs)
+        return LTMAgent3(model="gpt-4-0125-preview", **kwargs)
     elif name == "goodai_ltm_agent_1":
-        return LTMAgentWrapper(model="gpt-4-1106-preview",
+        return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
     elif name == "goodai_ltm_agent_2":
-        return LTMAgentWrapper(model="gpt-4-1106-preview",
+        return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.SEMANTIC_ONLY, **kwargs)
     elif name == "goodai_ltm_agent_3":
-        return LTMAgentWrapper(model="gpt-4-1106-preview",
+        return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.TEXT_SCRATCHPAD, **kwargs)
     elif name == "length_bias":
-        return LengthBiasAgent(model="gpt-4-1106-preview", **kwargs)
+        return LengthBiasAgent(model="gpt-4-0125-preview", **kwargs)
     elif name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)

@@ -35,7 +35,7 @@ def get_max_prompt_size(model: str):
         colour_print("red", "WARNING: gpt-3.5-turbo-instruct is a completion model.")
         return 4_096
     assert model in allowed_models()
-    if model == "gpt-4-1106-preview":
+    if model in ["gpt-4-1106-preview", "gpt-4-0125-preview"]:
         return 128_000
     if model == "gpt-3.5-turbo-0125":
         return 16_384
@@ -57,9 +57,11 @@ def get_max_prompt_size(model: str):
 def token_cost(model: str) -> tuple[float, float]:
     if model == "gpt-3.5-turbo-instruct":
         return 0.000_001_5, 0.000_002
+    if model == "gpt-3.5-turbo":
+        return 0.000_000_5, 0.000_001_5
     if model == "gpt-3.5-turbo-0125":
         return 0.000_000_5, 0.000_001_5
-    if model == "gpt-4-1106-preview":
+    if model in ["gpt-4-1106-preview", "gpt-4-0125-preview"]:
         return 0.000_01, 0.000_03
     if model.startswith("gpt-4-32k"):
         return 0.000_06, 0.000_12
