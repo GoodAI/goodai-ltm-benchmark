@@ -162,7 +162,7 @@ class TestExample:
             assert not file_path.exists(), f"Attempt to overwrite test {file_path}"
         file_path.parent.mkdir(parents=True, exist_ok=True)
         with open(file_path, "w") as fd:
-            json.dump(self.to_dict(), fd)
+            json.dump(self.to_dict(), fd, indent=2)
 
     @classmethod
     def load(cls, file_path: Path | str) -> "TestExample":

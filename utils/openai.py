@@ -49,6 +49,8 @@ def get_max_prompt_size(model: str):
         return 200_000
     if model == "claude-3-opus-20240229":
         return 200_000
+    if model == "gpt-3.5-turbo":
+        return 16_384
     return 4_096
 
 
