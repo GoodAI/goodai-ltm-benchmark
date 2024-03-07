@@ -7,7 +7,7 @@ from utils.data import get_gdrive_file, get_data_path
 from dataclasses import dataclass, field
 from utils.ui import ordinal
 from utils.tokens import token_len
-from dataset_interfaces.interface import DatasetInterface, TestExample
+from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 
 
 # Extracted from gdrive folder
@@ -150,6 +150,7 @@ class ChapterBreakDataset(DatasetInterface):
                 script=script,
                 expected_responses=[str(answer)],
                 is_question=is_question,
+                waits=[WaitCreator.create_wait() for _ in is_question],
             )
             example_list.append(example)
 
