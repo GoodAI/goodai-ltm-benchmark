@@ -45,9 +45,9 @@ The agents currently implemented in this repository are the ones shown below. Fo
 # OpenAI models
 gpt/gpt-4           # GPT4
 gpt-3.5-turbo       # GPT3.5
-gpt-4-1106          # GPT4-turbo preview
+gpt-4-0125          # GPT4-turbo preview
 ts-gpt-3.5-turbo    # GPT3.5 with timestamped messages
-ts-gpt-4-1106       # GPT4-turbo preview with timestamped messages
+ts-gpt-4-0125       # GPT4-turbo preview with timestamped messages
 
 # Anthopic Models
 claude              #  Claude-2.1 200k context model

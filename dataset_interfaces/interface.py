@@ -322,7 +322,7 @@ class DatasetInterface(ABC):
             },
         ]
 
-        response = ask_llm(context=ctx, model="gpt-4-1106-preview", temperature=0.01, cost_callback=cost_callback)
+        response = ask_llm(context=ctx, model="gpt-4-0125-preview", temperature=0.01, cost_callback=cost_callback)
         score = 0
         reasoning = []
         try:

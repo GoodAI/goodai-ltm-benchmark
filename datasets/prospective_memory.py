@@ -26,7 +26,7 @@ class ProspectiveMemoryDataset(GPTGenerated):
     generation_file: Path = DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json")
     temperature: float = 0.5
     uses_callback: bool = True
-    generation_model: str = "gpt-4-1106-preview"
+    generation_model: str = "gpt-4-0125-preview"
 
     def generate_examples(self, num_examples) -> List[TestExample]:
         rnd = random.Random(self.seed)
