@@ -196,14 +196,11 @@ class CallBackTestExample(TestExample):
 
 @dataclass
 class DynamicExample(TestExample):
-    cost_callback: Callable[[float], None] = None
     score: int = 0
     max_score: int = 0
     expected_responses: list[str] = field(default_factory=list)
     reasoning: list[str] = field(default_factory=list)
     script: List[str] = field(default_factory=lambda: [])  # Updated dynamically by `say`
-    filler_tokens_low: int = 0
-    filler_tokens_high: int = 0
     action: SendMessageAction = None  # Keeps the last SendMessageAction
 
     @property
@@ -212,19 +209,13 @@ class DynamicExample(TestExample):
 
     def __post_init__(self):
         super().__post_init__()
-        assert self.cost_callback is not None, "Dynamic examples require a cost callback."
         assert self.max_score > 0
 
     def evaluate(self, *args, **kwargs) -> tuple[int, int, list[str]]:
         return self.score, self.max_score, self.reasoning
 
-    def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256) -> str:
-        return ask_llm(
-            context=context,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            cost_callback=self.cost_callback,
-        )
+    def ask_llm(self, context: LLMContext, **kwargs) -> str:
+        return self.dataset_generator.ask_llm(context, **kwargs)
 
     @abstractmethod
     def action_iter(self) -> Iterator[TestAction]:
@@ -239,7 +230,8 @@ class DynamicExample(TestExample):
         kwargs = dict(tokens=tokens, time=time, percentage_finished=percentage_finished)
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         if len(kwargs) == 0:
-            kwargs["tokens"] = randint(self.filler_tokens_low, self.filler_tokens_high)
+            dgen = self.dataset_generator
+            kwargs["tokens"] = randint(dgen.filler_tokens_low, dgen.filler_tokens_high)
         return WaitAction(**kwargs)
 
     def say(self, message: str, question: bool = False) -> SendMessageAction:
@@ -289,6 +281,15 @@ class DatasetInterface(ABC):
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
     ) -> Tuple[int, int, List[str]]:
         pass
+
+    def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256, **kwargs) -> str:
+        return ask_llm(
+            context=context,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            cost_callback=self.cost_callback,
+            **kwargs,
+        )
 
     def evaluate_correct_gpt(
         self,

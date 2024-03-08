@@ -1,7 +1,10 @@
+from json import JSONDecodeError
 from dataclasses import dataclass
 from random import randint
 from typing import List, Tuple
-
+from utils.openai import make_user_message
+from goodai.helpers.json_helper import sanitize_and_parse_json
+from rouge_score.rouge_scorer import RougeScorer
 import pystache
 
 from dataset_interfaces.interface import DatasetInterface, TestExample
@@ -37,6 +40,14 @@ TRIGGERS = [
     "I don't feel very well.",
     "I am pretty tired.",
 ]
+
+eval_prompt = """
+Take a look at the following text:
+"{message}"
+
+Determine whether the sentence "{sentence}" is present or not in the text. If the sentence is present, extract the piece of text that features the targeted sentence. Answer in JSON form, like this:
+{{"present": true or false, "sentence": "targeted sentence"}}
+""".strip()
 
 
 @dataclass
@@ -82,10 +93,20 @@ class TriggerResponseDataset(DatasetInterface):
         max_score = len(expected_answers)
         reasoning = list()
         for r, e in zip(responses, expected_answers):
-            not_str = "not "
-            if e.lower() in r.lower():
-                score += 1
-                not_str = ""
+            context = [make_user_message(eval_prompt.format(message=r, sentence=e))]
+            eval_str = self.ask_llm(context)
+            try:
+                eval_json = sanitize_and_parse_json(eval_str)
+                present = eval_json["present"]
+                if present:
+                    scorer = RougeScorer(["rougeL"], use_stemmer=True)
+                    rouge_l = scorer.score(e, r)["rougeL"].fmeasure
+                    present = rouge_l > 0.5
+            except (ValueError, JSONDecodeError, KeyError) as exc:
+                reasoning.append(f"Could not evaluate due to a JSON parsing error: {repr(exc)}")
+                continue
+            not_str = "" if present else "not "
+            score += int(present)
             reasoning.append(f"'{e}' is {not_str}in the response.")
         return score, max_score, reasoning
 
