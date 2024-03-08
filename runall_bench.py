@@ -3,18 +3,17 @@ from runner.run_benchmark import _main
 
 tests = [
     # "./configurations/blogpost_tests/benchmark-1k.yml",
-    "./configurations/blogpost_tests/benchmark-v2-1k.yml",
-    "./configurations/blogpost_tests/benchmark-v2-1k.yml",
+    "./configurations/blogpost_tests/benchmark-10k.yml",
 ]
 
 models = [
-    "gpt-4-0125",
-    "gpt-3.5-turbo",
+    # "claude",
+    "claude",
 ]
 
 sizes = [
-    128000,
-    16384,
+    # 200_000,
+    200_000,
 ]
 
 logfile = "automated_log.txt"
