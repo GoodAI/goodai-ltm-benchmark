@@ -47,7 +47,7 @@ class RestaurantExample(DynamicExample):
 
         # Give the menu and ask for the drink
         yield self.say(
-            f"Good {day_moment_salutation()}. Welcome to our restaurant. "
+            f"Good day. Welcome to our restaurant. "
             "Here is the menu for you to look over:\n\n"
             f"{self.dataset_generator.menu}\n\nIn the meantime, what would you like to drink?",
         )

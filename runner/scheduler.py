@@ -137,12 +137,13 @@ class TestRunner:
             self.traveller.stop()
             self.traveller = None
 
-    def set_to_wait(self, unique_id: str, action: WaitAction):
+    def set_to_wait(self, unique_id: str, action: WaitAction, log_this: bool = True):
         wait_dict = dict()
         wait_dict["tokens"] = self.current_token_count + action.tokens if action.tokens > 0 else 0
         wait_dict["time"] = datetime.now() + action.time if action.time.seconds > 0 else datetime.now()
         wait_dict["percentage_finished"] = action.percentage_finished
-        self.master_log.add_wait_event(unique_id, datetime.now(), **wait_dict)
+        if log_this:
+            self.master_log.add_wait_event(unique_id, datetime.now(), **wait_dict)
         self.wait_list[unique_id] = wait_dict
 
     def send_message(self, test_id: str, action: SendMessageAction):
@@ -279,7 +280,7 @@ class TestRunner:
     
                 # If the last action is a wait action, set the test to wait
                 if isinstance(action, WaitAction):
-                    self.set_to_wait(test_id, action)
+                    self.set_to_wait(test_id, action, log_this=False)
 
         # Add a reset event to the log if it has indeed been reset
         if len(self.master_log.log) > 0:
