@@ -437,13 +437,7 @@ class DynamicDataset(DatasetInterface, ABC):
         pass
 
     def create_example(self, **kwargs) -> DynamicExample:
-        return self.example_cls(
-            dataset_generator=self,
-            cost_callback=self._proxy_cost_callback,
-            filler_tokens_low=self.filler_tokens_low,
-            filler_tokens_high=self.filler_tokens_high,
-            **kwargs
-        )
+        return self.example_cls(dataset_generator=self, **kwargs)
 
     def generate_examples(self, num_examples: int) -> List[TestExample]:
         return [self.create_example() for _ in range(num_examples)]
