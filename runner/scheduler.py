@@ -257,7 +257,7 @@ class TestRunner:
     def setup_iterator(self, test_group, reset_policy):
         # Sets up the test dict and fast forwards any tests that are currently in progress
         test_actions_taken = self.master_log.get_tests_in_progress()
-        self.wait_list = {k: {"tokens": 0} for k in test_actions_taken.keys()}
+        self.wait_list = {k: {"tokens": 0, "time": datetime.now(), "percentage_finished": 0.0} for k in test_actions_taken.keys()}
         tests = {t.unique_id: t for t in test_group}
 
         # Check if the last event in the log is after the current time, then travel to that time if it is.
@@ -274,7 +274,9 @@ class TestRunner:
                     action = example.step()
                     if isinstance(action, SendMessageAction):
                         message_idx += 1
-                        action.reply = self.master_log.get_reply(test_id, message_idx, message=action.message)
+                        match_message = not (action.is_question and action.message == "")
+                        action.reply = self.master_log.get_reply(test_id, message_idx, message=action.message, match_message=match_message)
+
                     if isinstance(action, SendAndRegisterAction):
                         self.register_callback(example)
     
