@@ -44,7 +44,7 @@ eval_prompt = """
 Take a look at the following text:
 "{message}"
 
-Determine whether the sentence "{sentence}", or an equivalent form, is present or not in the text. If the sentence is present, extract the piece of text that features the targeted sentence. Answer in JSON form, like this:
+Determine whether the sentence "{sentence}" is present or not in the text. If the sentence is present, extract the piece of text that features the targeted sentence. Answer in JSON form, like this:
 {{"present": true or false, "sentence": "targeted sentence"}}
 """.strip()
 
@@ -94,7 +94,7 @@ class TriggerResponseDataset(DatasetInterface):
             eval_json = sanitize_and_parse_json(eval_str)
             present = eval_json["present"]
             if present:
-                present = rouge_score(expected, eval_json["sentence"]) > 0.5
+                present = rouge_score(expected, eval_json["sentence"]) > 0.75
         except (ValueError, JSONDecodeError, KeyError) as exc:
             return 0, f"Could not evaluate due to a JSON parsing error: {repr(exc)}"
         not_str = "" if present else "not "
