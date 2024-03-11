@@ -44,7 +44,7 @@ eval_prompt = """
 Take a look at the following text:
 "{message}"
 
-Determine whether the sentence "{sentence}" is present or not in the text. If the sentence is present, extract the piece of text that features the targeted sentence. Answer in JSON form, like this:
+Determine whether the sentence "{sentence}", or an equivalent form, is present or not in the text. If the sentence is present, extract the piece of text that features the targeted sentence. Answer in JSON form, like this:
 {{"present": true or false, "sentence": "targeted sentence"}}
 """.strip()
 
