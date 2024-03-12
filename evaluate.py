@@ -76,7 +76,7 @@ def _main(run_name: str, agent_name: str, y: bool):
     ):
         return
     for result in results:
-        result.save(agent_name)
+        result.save()
     colour_print("green", "Test results have been overwritten.")
 
 

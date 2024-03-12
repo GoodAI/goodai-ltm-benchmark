@@ -1,7 +1,9 @@
+from json import JSONDecodeError
 from dataclasses import dataclass
 from random import randint
 from typing import List, Tuple
-
+from utils.openai import make_user_message
+from goodai.helpers.json_helper import sanitize_and_parse_json
 import pystache
 
 from dataset_interfaces.interface import DatasetInterface, TestExample
@@ -37,6 +39,14 @@ TRIGGERS = [
     "I don't feel very well.",
     "I am pretty tired.",
 ]
+
+eval_prompt = """
+Take a look at the following text:
+"{message}"
+
+Determine whether the sentence "{sentence}" is present or not in the text. If the sentence is present, extract the piece of text that features the targeted sentence. Answer in JSON form, like this:
+{{"present": true or false, "sentence": "targeted sentence"}}
+""".strip()
 
 
 @dataclass
@@ -75,6 +85,21 @@ class TriggerResponseDataset(DatasetInterface):
 
         return examples
 
+    def evaluate_single(self, actual: str, expected: str) -> tuple[int, str]:
+        if expected in actual or rouge_score(expected, actual) > 0.5:
+            return 1, f"'{expected}' is in the response."
+        context = [make_user_message(eval_prompt.format(message=actual, sentence=expected))]
+        eval_str = self.ask_llm(context)
+        try:
+            eval_json = sanitize_and_parse_json(eval_str)
+            present = eval_json["present"]
+            if present:
+                present = rouge_score(expected, eval_json["sentence"]) > 0.75
+        except (ValueError, JSONDecodeError, KeyError) as exc:
+            return 0, f"Could not evaluate due to a JSON parsing error: {repr(exc)}"
+        not_str = "" if present else "not "
+        return int(present), f"'{expected}' is {not_str}in the response."
+
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
@@ -82,14 +107,18 @@ class TriggerResponseDataset(DatasetInterface):
         max_score = len(expected_answers)
         reasoning = list()
         for r, e in zip(responses, expected_answers):
-            not_str = "not "
-            if e.lower() in r.lower():
-                score += 1
-                not_str = ""
-            reasoning.append(f"'{e}' is {not_str}in the response.")
+            score_single, reasoning_single = self.evaluate_single(r, e)
+            score += score_single
+            reasoning.append(reasoning_single)
         return score, max_score, reasoning
 
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         # All statements are relevant
         # in this test all statements are atomic
         return 0, len(example.script[0])
+
+
+def rouge_score(target: str, prediction: str) -> float:
+    from rouge_score.rouge_scorer import RougeScorer
+    scorer = RougeScorer(["rougeL"], use_stemmer=True)
+    return scorer.score(target, prediction)["rougeL"].fmeasure

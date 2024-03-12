@@ -315,9 +315,9 @@ class TestRunner:
             score=1,
             reasoning=["Evaluation Skipped"],
         )
-        skip = result.path(self.agent.name).exists()
+        skip = result.path.exists()
         if skip:
-            result.load(self.agent.name)
+            result.load()
         return result, skip
 
     def run_tests(self):
@@ -456,7 +456,7 @@ class TestRunner:
         result.tokens = tokens
         result.full_log = self.master_log.human_readable_full_log(example.unique_id, example.script[0])
         result.characters = characters
-        result.save(self.agent.name)
+        result.save()
         self.save_runstats()
 
     def debug_message(
