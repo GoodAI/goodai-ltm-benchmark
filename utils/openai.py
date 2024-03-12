@@ -95,18 +95,26 @@ def ensure_context_len(
     model: Optional[str] = None,
     max_len: Optional[int] = None,
     response_len: int = 0,
+    system_message: bool = True,
 ) -> tuple[LLMContext, int]:
     max_len = max_len or get_max_prompt_size(model)
     messages = list()
-    context_tokens = context_token_len(context[:1])
-    for message in reversed(context[1:]):
+
+    if system_message:
+        sys_idx = 1
+    else:
+        sys_idx = 0
+
+    context_tokens = context_token_len(context[:sys_idx])
+
+    for message in reversed(context[sys_idx:]):
         message_tokens = context_token_len([message])
         if context_tokens + message_tokens + response_len > max_len:
             break
         messages.append(message)
         context_tokens += message_tokens
     messages.reverse()
-    context = context[:1] + messages
+    context = context[:sys_idx] + messages
     # assert len(context) > 1, f"There are messages missing in the context:\n\n{context}"
     return context, context_tokens
 

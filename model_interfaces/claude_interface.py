@@ -36,8 +36,7 @@ class ClaudeChatSession(ChatSession):
             print(f"USER: {user_message}")
 
         # TODO: Tokeniser for Claude 3 is outdated
-        self.context, context_tokens = ensure_context_len(self.context, self.model, response_len=self.response_len)
-        self.check_alternating_messages()
+        self.context, context_tokens = ensure_context_len(self.context, self.model, response_len=self.response_len, system_message=False)
 
         response = anthropic.Anthropic().beta.messages.create(
             model=self.model,
@@ -54,16 +53,6 @@ class ClaudeChatSession(ChatSession):
         self.costs_usd += price_in * response.model_extra["usage"]["input_tokens"] + price_out * response.model_extra["usage"]["output_tokens"]
 
         return response_text
-
-    def check_alternating_messages(self):
-
-        # If roles are the same, then remove the first one.
-        if len(self.context) > 1 and self.context[0]["role"] == self.context[1]["role"]:
-            self.context.remove(self.context[0])
-
-        prev_message = self.context[0]
-        for idx, message in enumerate(self.context[1:]):
-            assert prev_message["role"] != message["role"], f"Found two same roles '{prev_message['role']}' in consecutive messages at positions {idx} and {idx+1}"
             
     def reset(self):
         self.context = []
