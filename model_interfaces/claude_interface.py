@@ -17,7 +17,7 @@ class ClaudeChatSession(ChatSession):
     model: str = "claude-2.1"
     verbose: bool = False
     context: LLMContext = field(default_factory=LLMContext)
-    response_len: int = 1024
+    response_len: int = 4096
 
     def __post_init__(self):
         super().__post_init__()
@@ -35,7 +35,8 @@ class ClaudeChatSession(ChatSession):
         if self.verbose:
             print(f"USER: {user_message}")
 
-        self.context, context_tokens = ensure_context_len(self.context, self.model, response_len=self.response_len)
+        # TODO: Tokeniser for Claude 3 is outdated
+        self.context, context_tokens = ensure_context_len(self.context, self.model, response_len=self.response_len, system_message=False)
 
         response = anthropic.Anthropic().beta.messages.create(
             model=self.model,
@@ -52,7 +53,7 @@ class ClaudeChatSession(ChatSession):
         self.costs_usd += price_in * response.model_extra["usage"]["input_tokens"] + price_out * response.model_extra["usage"]["output_tokens"]
 
         return response_text
-
+            
     def reset(self):
         self.context = []
 
