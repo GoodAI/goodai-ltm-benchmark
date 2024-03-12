@@ -1,19 +1,15 @@
-# GoodAI LTM Benchmark
+# GoodAI LTM Benchmark (v2)
 
-![GoodAI Logo. A cybernetic owl, which is half robot, half organic, and next to it the company name: GoodAI](logo.png "GoodAI Research s.r.o.")
+![GoodAI Logo. A cybernetic owl, which is half robot, half organic, and next to it the company name: GoodAI](reporting/templates/GoodAI_logo.png "GoodAI Research s.r.o.")
 
-This repository contains the code and data to supplement [our blogpost](https://www.goodai.com/introducing-goodai-ltm-benchmark/).
+This repository contains the code and data to replicate our experiments regarding the Long-Term Memory (LTM) abilities of conversational agents. This is the 2<sup>nd</sup> version of our LTM Benchmark. Check out [our blogpost](https://www.goodai.com/introducing-goodai-ltm-benchmark/) for more information about the benchmark and the related research goals.
 
 As part of our research efforts in the area of continual learning, we are open-sourcing this benchmark for testing agents’ ability to perform tasks involving the advanced use of the memory over very long conversations. Among others, we evaluate the agent’s performance on tasks that require dynamic upkeep of memories or integration of information over long periods of time.
 
 We are open-sourcing:
  * The living GoodAI LTM Benchmark (this repository).
  * Our [LTM agents](model_interfaces/).
- * Our experiment data and results
-
-This benchmark has demonstrated that our **LTM agents with 8k context are comparable to long context GPT-4-1106 with 128k**
-tokens when recalling and correctly using information in short form conversational contexts. In a longer benchmark, our agents
-outperform long context GPT by **13%** for **16% of the running costs.** See the [Benchmark section](#benchmark-1---022024) for the scores.
+ * Our experiment [data](data/tests/Benchmark%202%20-%2010k%20Filler/definitions) and [results](data/tests/Benchmark%202%20-%2010k%20Filler/results).
 
 ## Running the Benchmarks
 
@@ -49,8 +45,10 @@ gpt-4-0125          # GPT4-turbo preview
 ts-gpt-3.5-turbo    # GPT3.5 with timestamped messages
 ts-gpt-4-0125       # GPT4-turbo preview with timestamped messages
 
-# Anthopic Models
-claude              #  Claude-2.1 200k context model
+# Anthopic Models (200k context)
+claude-2.1          # Claude 2.1
+claude-3-sonnet     # Claude 3 Sonnet
+claude-3-opus       # Claude 3 Opus
 
 # Langchain Models
 langchain_sb_a    # Using 3.5-turbo-instruct and a summary buffer memory
@@ -77,7 +75,7 @@ human             # A CLI interface for a human to use the tests.
 
 ## Configurations
 
-The configuration used in the blogpost benchmark can be found in `./configurations/blogpost_tests/benchmark-1k.yml`, in which `1k` refers to the information gap between relevant statements. For the `10k` benchmark, we used the very same test definitions as for the `1k` benchmark, but we increased the amount of filler tokens directly in the test definition files. This way we ensured that the length of the information gap is the only thing that changes between both benchmarks.
+The configuration files used in the different versions of the benchmark can be found in `configurations`, in which `1k` or `10k` refers to the minimum distance in tokens between relevant statements. For the `10k` benchmarks, we used the very same test definitions as for the `1k` benchmarks, but we increased the amount of filler tokens directly in the test definition files. This way we ensured that the length of the distraction segment is the only thing that changes between both benchmark configurations.
 
 
 ## Datasets
@@ -98,8 +96,10 @@ locations_directions
 names
 name_list
 prospective_memory
+restaurant
 sallyanne
 shopping
+spy_meeting
 trigger_response
 ```
 
@@ -117,31 +117,33 @@ The repository consists of four parts:
 More details for each of these parts can be found here: [datasets](datasets/README.md), [models](model_interfaces/README.md), [runner](runner/README.md), [reports](reporting/README.md).
 
 
-## Benchmark 1 - 02/2024
-### Benchmark 1 - 1k Distraction tokens
+## Benchmark 2 - 03/2024
 
-| Model  | Context Tokens | Score / 92 | Time (m) | Cost ($) | Mean Memory Span |
-|--------|----------------|------------|----------|----------| ---------------- |
-| LTMAgent1  | 4096           | 85         | 153      | 14.82    | 6579 |
-| LTMAgent1  | 8192           | 89         | 148.5    | 19.14    | 7253 |
-| LTMAgent2  | 8192           | 86         | 31       | 14.31    | 7347 |
-| MemGPT | 4096           | 7          | 150      | 81.24    | 5990 |
-| MemGPT | 8192           | 44         | 103.3    | 91.69    | 6767 |
-| Claude-2.1 | 200000         | 74         | 57.3     | 11.78 | 7291 |
-| GPT-4-1106 | 4096           | 49         | 44       | 8.80     | 7344 | 
-| GPT-4-1106 | 8192           | 77         | 34.7     | 13.85    | 7344 |
-| GPT-4-1106 | 128000         | 82         | 42.56    | 15.99    | 7283 |
+### Benchmark 2 - 1k Distraction Tokens
+
+| Model                  | Context Tokens | Score / 101 | Time (m) | Cost ($) | LTM Score (tokens) |
+|------------------------|---------------:|------------:|---------:|---------:|-------------------:|
+| GPT-3.5-turbo          |          16384 |          58 |       16 |     2.71 |             105349 |
+| GPT-4-0125             |         128000 |          61 |       45 |   150.36 |             115625 |
+| Claude 3 Opus          |         200000 |          83 |      346 |   374.58 |             231807 |
+| LTMAgent1 (GPT-4-0125) |           8192 |          80 |      255 |    39.25 |             166056 |
+| LTMAgent2 (GPT-4-0125) |           8192 |        75.5 |       40 |    27.94 |             132454 |
+| MemGPT                 |           8192 |          43 |       78 |   100.04 |              78045 |
 
 
-### Benchmark 1 - 10k Distraction Tokens
+### Benchmark 2 - 10k Distraction Tokens
 
-| Model      | Context Tokens | Score / 92 | Time (m) | Cost ($) | Mean Memory Span |
-|------------|----------------|------------|----------|----------|------------------|
-| LTMAgent1  | 8192           | 86         | 529      | 61.38    | 57095            |
-| LTMAgent2  | 8192           | 85         | 117      | 38.98    | 57231            |
- | Claude-2.1 | 200000 | 42         | 346      | 227      | 60488            | 
-| GPT-4-1106 | 8192           | 11         | 90.2     | 37.38    | 58060            | 
-| GPT-4-1106 | 128000         | 76         | 154.58   | 255.30   | 57343            |
+| Model                  | Context Tokens | Score / 101 | Time (m) | Cost ($) | LTM Score (tokens) |
+|------------------------|---------------:|------------:|---------:|---------:|-------------------:|
+| GPT-3.5-turbo          |          16384 |          32 |       36 |     4.43 |             381452 |
+| GPT-4-0125             |         128000 |          63 |      244 |   515.74 |            1042531 |
+| Claude 3 Opus          |         200000 |          79 |      836 |  1104.00 |            1331521 |
+| LTMAgent2 (GPT-4-1106) |           8192 |        64.5 |      100 |    46.75 |             978836 |
+| LTMAgent2 (GPT-4-0125) |           8192 |          31 |       99 |    45.85 |            1006972 |
+
+## Previous versions
+
+- [Benchmark 1](https://github.com/GoodAI/goodai-ltm-benchmark/tree/v1-benchmark) (02/2024)
 
 ## Licence and usage
 This project is licensed under the MIT License - see the LICENSE file for details. Use of this software requires attribution to the original author and project, as detailed in the license.

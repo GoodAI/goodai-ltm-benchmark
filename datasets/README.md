@@ -10,7 +10,7 @@ Broadly speaking, a `TestExample` consists of a script, some expected responses,
 ### DatasetInterface
 If inheriting from `DatasetInterface` You should implement the following methods:
 - `generate_examples()` which will return a list of `TestExample` objects.
-- `answer_statement_idx` which will take a list of questions, responses and expected answers for one test, and return the score given, the maximum score achievable for the test, and a list of strings explaining why each score was (or was not) given.
+- `evaluate_correct` which will take a list of questions, responses and expected answers for one test, and return the score given, the maximum score achievable for the test, and a list of strings explaining why each score was (or was not) given.
 - `answer_statement_idx` which will take a `TestExample` object and return the index of the script line and the index of the character within that script line, after which no more relevant information is given to the agent. This is essential for computing the GoodAI LTM Score.
 
 ### GPTGenerated
@@ -27,13 +27,28 @@ An example of the JSON for the `delayed_recall` test:
 ```
 
 As a word of caution: The generation process for these questions and answers are not always accurate. Some questions can end up being too general, in that they do not ask about a particular fact, but rather a wide commonsense term.
-We have found that generating totally fictional facts (about a fictional place) and processes (preparing to use a fictional piece of technology) works best, otherwise the model can give general commonsense advice which is marked correct. 
+We have found that generating totally fictional facts (about a fictional place) and processes (preparing to use a fictional piece of technology) works best, otherwise the model can give general commonsense advice which is marked correct.
+
+### Dynamic Tests
+
+Instead of having a fixed script, dynamic tests are generated on the fly, and they can react to the agent's responses and incorporate them into the test. In order to define a dataset with dynamic tests, your dataset class will need to inherit from `DynamicDataset`, and you will need to define custom test examples by inheriting from `DynamicExample`. There are some things that you must do differently in the case of dynamic tests:
+
+- Set a `max_score` for the test.
+- Implement `action_iter`. It is a Python generation function, which is expected to yield one `TestAction` object at a time until the test has completed. You should also update `score` according to how the test goes.
+
+Additionally, there are some helper methods available in the base class:
+
+- `say` Returns a `SendMessageAction` object. If `question` is set to `True`, the message will be appended to the test's script.
+- `wait` Returns a `WaitAction` object. If no waiting criteria is set, it defaults to a number of tokens between the high and low limits defined in the dataset class.
+- `ask_llm` Calls an OpenAI LLM (by default `gpt-3.5-turbo`) and returns a text response. It also registers the cost of the call as part of the benchmark management costs.
+
+Finally, we encourage you to take a look at the [restaurant task](restaurant.py) for a complete example of how to implement a dynamic test.
 
 ### Evaluation
 
 (First read the [runner documentation](../runner/README.md) to understand how test running and evaluations work) 
 
-To evaluate a `TestExample` from your dataset, you should implement `evaluate_correct()` which will get lists  of the questions asked, the answers given by the agent, and the answers that were expected.  Returning a tuple of `score, max_score, [reasons]`. There is a path to use GPT4 to evaluate the answers relative to the expected answers with `evaluate_correct_gpt()`.
+To evaluate a `TestExample` from your dataset (not dynamic), you should implement `evaluate_correct()` which will get lists  of the questions asked, the answers given by the agent, and the answers that were expected.  Returning a tuple of `score, max_score, [reasons]`. There is a path to use GPT4 to evaluate the answers relative to the expected answers with `evaluate_correct_gpt()`.
 
 If `evaluate_correct()` is not suitable for your use case, you can create a callback by implementing `continual_evaluation_callback()` instead. This will be run in lieu of `evaluate_correct()` and must set `example.finished=True` in one of its code paths.
 
