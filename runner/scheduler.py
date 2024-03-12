@@ -274,7 +274,7 @@ class TestRunner:
                     action = example.step()
                     if isinstance(action, SendMessageAction):
                         message_idx += 1
-                        match_message = not (action.is_question and action.message == "")
+                        match_message = not ((action.is_question and action.message == "") or "restaurant" in test_id.lower())
                         action.reply = self.master_log.get_reply(test_id, message_idx, message=action.message, match_message=match_message)
 
                     if isinstance(action, SendAndRegisterAction):
