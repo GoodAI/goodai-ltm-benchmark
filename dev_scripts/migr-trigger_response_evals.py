@@ -11,7 +11,10 @@ def reevaluate(run_name: str = "*", agent_name: str = "*"):
         eval_stats["cost"] += cost_usd
 
     ds = TriggerResponseDataset(cost_callback=cost_callback)
-    for path in gather_result_files(run_name, agent_name, dataset_name=ds.name):
+    result_files = gather_result_files(run_name, agent_name, dataset_name=ds.name)
+    for i, path in enumerate(result_files):
+        percentage = (100 * (i + 1)) // len(result_files)
+        print(f"\rRe-evaluating '{run_name}/{agent_name}': {percentage: 3d}%", end="")
         result = TestResult.from_file(path)
         result.score, result.max_score, result.reasoning = ds.evaluate_correct(
             questions=[],
@@ -20,7 +23,7 @@ def reevaluate(run_name: str = "*", agent_name: str = "*"):
         )
         result.save()
 
-    print(f"Reevaluation cost: {eval_stats['cost']}")
+    print(f"\nReevaluation cost: {eval_stats['cost']}")
 
 
 if __name__ == "__main__":
