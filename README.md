@@ -139,7 +139,7 @@ More details for each of these parts can be found here: [datasets](datasets/READ
 | GPT-4-0125             |         128000 |          63 |      244 |   515.74 |            1042531 |
 | Claude 3 Opus          |         200000 |          79 |      836 |  1104.00 |            1331521 |
 | LTMAgent2 (GPT-4-1106) |           8192 |        64.5 |      100 |    46.75 |             978836 |
-| LTMAgent2 (GPT-4-0125) |           8192 |          31 |       99 |    45.85 |            1006972 |
+| LTMAgent2 (GPT-4-0125) |           8192 |          61 |       99 |    45.85 |            1006972 |
 
 ## Previous versions
 
