@@ -7,7 +7,7 @@ from utils.data import get_gdrive_file, get_data_path
 from dataclasses import dataclass, field
 from utils.ui import ordinal
 from utils.tokens import token_len
-from dataset_interfaces.interface import DatasetInterface, TestExample
+from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 
 
 # Extracted from gdrive folder
@@ -42,7 +42,7 @@ def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
 def deliver_in_pages(text: str, max_page_tokens: int, prefix: str = "") -> list[str]:
     pages = split_in_pages(text, max_page_tokens)
     if len(pages) == 1:
-        return [f"{prefix}:\n\n{pages[0]}"]
+        return pages if prefix == "" else [f"{prefix}:\n\n{pages[0]}"]
     script = list()
     last_i = len(pages) - 1
     for i, page in enumerate(pages):
@@ -118,12 +118,18 @@ class ChapterBreakDataset(DatasetInterface):
             beginnings = [(True, sample["pos"])] + [(False, s) for s in sample["negs"]]
             random.Random(self.seed + sample_idx).shuffle(beginnings)
 
-            script = ["I am going to read you some chapters of a book. A few pages. Okay?"]
+            script = [(
+                "I am going to read you some chapters of a book. A few pages. Okay? You don't have to say anything, "
+                "just listen."
+            )]
             max_page_content_tokens = self.max_message_size - 20  # Leave some margin for text decorations
             script.extend(deliver_in_pages(sample["ctx"], max_page_content_tokens))
 
             answer = 0
-            script.append(f"Now I will give you {len(beginnings)} options for the beginning of the next chapter. Ready?")
+            script.append(
+                f"Now I will give you {len(beginnings)} options for the beginning of the next chapter. You don't have "
+                "to comment anything, just read them carefully. Ready?"
+            )
             for i, (is_true_suffix, option) in enumerate(beginnings):
                 script.extend(deliver_in_pages(option, max_page_content_tokens, prefix=f"Option {i + 1}"))
                 if is_true_suffix:
@@ -139,16 +145,12 @@ class ChapterBreakDataset(DatasetInterface):
             is_question[-1] = True
 
             example = TestExample(
-                dataset_name=self.name,
-                description=self.description,
                 example_id=sample["id"],
                 dataset_generator=self,
                 script=script,
                 expected_responses=[str(answer)],
-                evaluation_fn=self.evaluate_correct,
                 is_question=is_question,
-                number_of_questions=1,
-                reset_message=self.reset_message,
+                waits=[WaitCreator.create_wait() for _ in is_question],
             )
             example_list.append(example)
 
@@ -159,7 +161,10 @@ class ChapterBreakDataset(DatasetInterface):
         # Find the message that goes after the last context page
         last_page_idx = None
         for i, script_line in enumerate(example.script):
-            if script_line.endswith("options for the beginning of the next chapter. Ready?"):
+            if script_line.endswith(
+                " options for the beginning of the next chapter. You don't have to comment anything, just read them "
+                "carefully. Ready?"
+            ):
                 last_page_idx = i - 1
                 break
         assert last_page_idx is not None

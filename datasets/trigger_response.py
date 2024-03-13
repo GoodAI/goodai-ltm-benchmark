@@ -1,7 +1,9 @@
+from json import JSONDecodeError
 from dataclasses import dataclass
 from random import randint
 from typing import List, Tuple
-
+from utils.openai import make_user_message
+from goodai.helpers.json_helper import sanitize_and_parse_json
 import pystache
 
 from dataset_interfaces.interface import DatasetInterface, TestExample
@@ -11,20 +13,20 @@ REQUESTS = [
     "ask you for the time",
     "ask you to read my mail for me",
     "sneeze with 'Achooo!'",
-    "make a spelling error",
+    "write 'hppy' instead of 'happy'",
     "express a desire to eat sugary treats",
     "say that I am feeling ill",
     "say that I am tired or sleepy",
 ]
 
 RESPONSE = [
-    "say: 'It's Party time!'",
-    "say: 'Your letter opener is in your office.'",
-    "say: 'Bless you.'",
-    "say: 'You misspelled 'happy' as 'hppy''",
-    "say: 'resist temptation and stick to your diet'",
-    "say: 'I am sorry to hear that I hope you recover soon'",
-    "say: 'Either go to bed then or drink something containing caffeine.'",
+    "It's Party time!",
+    "Your letter opener is in your office",
+    "Bless you",
+    "You misspelled 'happy' as 'hppy'",
+    "resist temptation and stick to your diet",
+    "I am sorry to hear that. I hope you recover soon",
+    "Either go to bed then or drink something containing caffeine",
 ]
 
 
@@ -38,17 +40,25 @@ TRIGGERS = [
     "I am pretty tired.",
 ]
 
+eval_prompt = """
+Take a look at the following text:
+"{message}"
+
+Determine whether the sentence "{sentence}" is present or not in the text. If the sentence is present, extract the piece of text that features the targeted sentence. Answer in JSON form, like this:
+{{"present": true or false, "sentence": "targeted sentence"}}
+""".strip()
+
 
 @dataclass
 class TriggerResponseDataset(DatasetInterface):
     name: str = "Trigger Response"
     description: str = "Tell the agent to respond in a particular way when a trigger is given. Test the agent."
     trigger_activations: int = 3
-    reset_message: str = "Cancel any instructions as to how you should respond when I whenever I say something in particular."
+    reset_message: str = "Cancel any instructions as to what sentence you should say whenever I do something in particular."
 
     def generate_examples(self, num_examples):
         examples = []
-        setup = "Whenever I {{request}} then {{response}}"
+        setup = "Whenever I {{request}} then say: '{{response}}'"
 
         for _ in range(num_examples):
             answer_list = []
@@ -66,27 +76,49 @@ class TriggerResponseDataset(DatasetInterface):
                 answer_list.append(response)
 
             example = TestExample(
-                dataset_name=self.name,
-                description=self.description,
                 dataset_generator=self,
                 script=script,
-                token_spacings=self.create_filler(is_question),
                 expected_responses=answer_list,
-                evaluation_fn=self.evaluate_correct,
-                number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
-                reset_message=self.reset_message
             )
             examples.append(example)
 
         return examples
 
+    def evaluate_single(self, actual: str, expected: str) -> tuple[int, str]:
+        if expected in actual or rouge_score(expected, actual) > 0.5:
+            return 1, f"'{expected}' is in the response."
+        context = [make_user_message(eval_prompt.format(message=actual, sentence=expected))]
+        eval_str = self.ask_llm(context)
+        try:
+            eval_json = sanitize_and_parse_json(eval_str)
+            present = eval_json["present"]
+            if present:
+                present = rouge_score(expected, eval_json["sentence"]) > 0.75
+        except (ValueError, JSONDecodeError, KeyError) as exc:
+            return 0, f"Could not evaluate due to a JSON parsing error: {repr(exc)}"
+        not_str = "" if present else "not "
+        return int(present), f"'{expected}' is {not_str}in the response."
+
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
-        return self.evaluate_correct_gpt(questions, responses, expected_answers)
+        score = 0
+        max_score = len(expected_answers)
+        reasoning = list()
+        for r, e in zip(responses, expected_answers):
+            score_single, reasoning_single = self.evaluate_single(r, e)
+            score += score_single
+            reasoning.append(reasoning_single)
+        return score, max_score, reasoning
 
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         # All statements are relevant
         # in this test all statements are atomic
         return 0, len(example.script[0])
+
+
+def rouge_score(target: str, prediction: str) -> float:
+    from rouge_score.rouge_scorer import RougeScorer
+    scorer = RougeScorer(["rougeL"], use_stemmer=True)
+    return scorer.score(target, prediction)["rougeL"].fmeasure

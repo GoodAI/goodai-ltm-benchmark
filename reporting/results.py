@@ -55,17 +55,18 @@ class TestResult:
 
         return string
 
-    def path(self, agent: str) -> Path:
-        return make_result_path(self.run_name, agent, self.dataset_name, self.example_id, self.repetition)
+    @property
+    def path(self) -> Path:
+        return make_result_path(self.run_name, self.agent_name, self.dataset_name, self.example_id, self.repetition)
 
-    def save(self, agent: str):
-        file_path = self.path(agent)
+    def save(self):
+        file_path = self.path
         file_path.parent.mkdir(parents=True, exist_ok=True)
         with open(file_path, "w") as fd:
             json.dump({k: getattr(self, k) for k in self._saved_attrs}, fd, indent=2)
 
-    def load(self, agent: str):
-        with open(self.path(agent)) as fd:
+    def load(self):
+        with open(self.path) as fd:
             d = json.load(fd)
         for k in self._saved_attrs:
             setattr(self, k, d[k])
@@ -74,5 +75,5 @@ class TestResult:
     def from_file(cls, path: Path | str) -> "TestResult":
         result = TestResult(**parse_result_path(path))
         result.description = DATASETS_BY_NAME[result.dataset_name].description
-        result.load(result.agent_name)
+        result.load()
         return result

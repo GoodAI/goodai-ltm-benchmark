@@ -19,6 +19,7 @@ def allowed_models() -> set[str]:
         models = client.models.list()
         MODEL_LIST_CACHE = set(m.id for m in models.data if m.id.startswith("gpt-") and "instruct" not in m.id)
         MODEL_LIST_CACHE.add("claude-2.1")
+        MODEL_LIST_CACHE.add("claude-3-opus-20240229")
     return deepcopy(MODEL_LIST_CACHE)
 
 
@@ -34,7 +35,7 @@ def get_max_prompt_size(model: str):
         colour_print("red", "WARNING: gpt-3.5-turbo-instruct is a completion model.")
         return 4_096
     assert model in allowed_models()
-    if model == "gpt-4-1106-preview":
+    if model in ["gpt-4-1106-preview", "gpt-4-0125-preview"]:
         return 128_000
     if model == "gpt-3.5-turbo-0125":
         return 16_384
@@ -46,15 +47,21 @@ def get_max_prompt_size(model: str):
         return 8_192
     if model == "claude-2.1":
         return 200_000
+    if model == "claude-3-opus-20240229":
+        return 200_000
+    if model == "gpt-3.5-turbo":
+        return 16_384
     return 4_096
 
 
 def token_cost(model: str) -> tuple[float, float]:
     if model == "gpt-3.5-turbo-instruct":
         return 0.000_001_5, 0.000_002
+    if model == "gpt-3.5-turbo":
+        return 0.000_000_5, 0.000_001_5
     if model == "gpt-3.5-turbo-0125":
         return 0.000_000_5, 0.000_001_5
-    if model == "gpt-4-1106-preview":
+    if model in ["gpt-4-1106-preview", "gpt-4-0125-preview"]:
         return 0.000_01, 0.000_03
     if model.startswith("gpt-4-32k"):
         return 0.000_06, 0.000_12
@@ -64,6 +71,8 @@ def token_cost(model: str) -> tuple[float, float]:
         return 0.000_001, 0.000_002
     if model == "claude-2.1":
         return 8e-06, 2.4e-05
+    if model == "claude-3-opus-20240229":
+        return 0.000_015, 0.000_075
     if model == "text-embedding-ada-002":
         return 0.000_000_002, 0.000_000_002
     raise ValueError(f"There's no cost registered for model {model}.")
@@ -86,18 +95,26 @@ def ensure_context_len(
     model: Optional[str] = None,
     max_len: Optional[int] = None,
     response_len: int = 0,
+    system_message: bool = True,
 ) -> tuple[LLMContext, int]:
     max_len = max_len or get_max_prompt_size(model)
     messages = list()
-    context_tokens = context_token_len(context[:1])
-    for message in reversed(context[1:]):
+
+    if system_message:
+        sys_idx = 1
+    else:
+        sys_idx = 0
+
+    context_tokens = context_token_len(context[:sys_idx])
+
+    for message in reversed(context[sys_idx:]):
         message_tokens = context_token_len([message])
         if context_tokens + message_tokens + response_len > max_len:
             break
         messages.append(message)
         context_tokens += message_tokens
     messages.reverse()
-    context = context[:1] + messages
+    context = context[:sys_idx] + messages
     # assert len(context) > 1, f"There are messages missing in the context:\n\n{context}"
     return context, context_tokens
 

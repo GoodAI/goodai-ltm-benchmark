@@ -31,6 +31,8 @@ For tests waiting on tokens, we supply filler tokens in the form of questions an
 
 A `TestExample` object has a script, which contains both the setup and the questions. Whenever a question is asked, the answer is logged, and once the script is finished, all of these questions and answers are evaluated.
 
-An alternative method is used for any `TestExample` object that specifies a condition which should hold true for the rest of the conversation. See `ProspectiveMemoryDataset` for an example of this, where the agent has to append some quote to the n<sup>th</sup> reply after the question is asked. Callbacks are run after each step of a test, no matter which test it is, and they get the entire log of the conversation so far. If needed, a callback can deregister itself so that it is no longer called. 
+An alternative method is used for any `TestExample` object that specifies a condition which should hold true for the rest of the conversation. See `ProspectiveMemoryDataset` for an example of this, where the agent has to append some quote to the n<sup>th</sup> reply after the question is asked. Callbacks are run after each step of a test, no matter which test it is, and they get the entire log of the conversation so far. If needed, a callback can deregister itself so that it is no longer called.
+
+Another exception to this are the `DynamicExample` tests, which generate the script, questions and evaluation dynamically and on the fly.
 
 Once a `TestExample` object has been evaluated, the TestResult object is updated and saved.

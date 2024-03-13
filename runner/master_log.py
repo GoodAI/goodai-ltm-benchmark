@@ -61,8 +61,10 @@ class MasterLog:
         event = LogEvent(event_type, timestamp, test_id, {"message": message, "is_question": is_question})
         self.add_event(event)
 
-    def add_wait_event(self, test_id: str, timestamp: datetime, tokens=0, time=0):
-        event = LogEvent(EventType.WAIT, timestamp=timestamp, test_id=test_id, data={"tokens": tokens, "time": time})
+    def add_wait_event(self, test_id: str, timestamp: datetime, tokens: int = 0, time: datetime = None, percentage_finished: float = 0.0):
+        if not time:
+            time = datetime.now()
+        event = LogEvent(EventType.WAIT, timestamp=timestamp, test_id=test_id, data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished})
         self.add_event(event)
 
     def begin_test(self, test_id, timestamp):
@@ -95,7 +97,16 @@ class MasterLog:
                 sender = EVENT_SENDER[event.type]
                 messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
             elif event.type == EventType.WAIT:
-                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for {event.data['tokens']} tokens until {event.data['time']}")
+
+                log_parts = [f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for "]
+                if event.data['tokens'] > 0:
+                    log_parts.append(f"{event.data['tokens']} TOTAL TOKENS, ")
+                if event.data['time'] > datetime.now():
+                    log_parts.append(f"DATE {event.data['time']}, ")
+                if event.data['percentage_finished'] > 0.0:
+                    log_parts.append(f"{event.data['percentage_finished']}% of tests to be finished.")
+
+                messages.append("".join(log_parts))
             elif event.type == EventType.BEGIN:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' BEGINS")
             elif event.type == EventType.END:
@@ -112,8 +123,7 @@ class MasterLog:
         for idx, event in enumerate(self.log):
             if event.test_id == test_id and event.type == EventType.SEND_MESSAGE and event.data["message"] == message:
                 return idx
-
-        raise ValueError(f"Message {message} for test: {test_id} not found in log {self.human_readable_full_log()}")
+        raise ValueError(f"Message {repr(message)} for test {repr(test_id)} not found in log.")
 
     def load(self):
         self.log = []
@@ -156,6 +166,24 @@ class MasterLog:
                     messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
 
         return messages
+
+    def get_reply(self, test_id: str, message_idx: int, message: Optional[str] = None, match_message: bool = True) -> str:
+        msg_i = -1
+        for event in self.log:
+            if event.test_id != test_id:
+                continue
+            if event.type == EventType.SEND_MESSAGE:
+                msg_i += 1
+            if msg_i < message_idx:
+                continue
+            match event.type:
+                case EventType.SEND_MESSAGE:
+                    if message is not None and match_message and event.data["message"] != message:
+                        raise LookupError(f"Unexpected message: {event.data['message']}\nExpected: {message}")
+                case EventType.RESPONSE_MESSAGE:
+                    return event.data["message"]
+        msg_str = f" Message: {message}." if message is not None else ""
+        raise LookupError(f"Could not find a reply. Test id: {test_id}. Message idx: {message_idx}.{msg_str}")
 
     def get_test_events(self, test_id: str) -> list[LogEvent]:
         events = []

@@ -12,9 +12,11 @@ from datasets.name import NamesDataset
 from datasets.name_list import NameListDataset
 from datasets.sally_ann import SallyAnneDataset
 from datasets.shopping import ShoppingDataset
+from datasets.spy_meeting import SpyMeetingDataset
 from datasets.trigger_response import TriggerResponseDataset
 from datasets.kv import KVPairsDataset
 from datasets.chapterbreak import ChapterBreakDataset
+from datasets.restaurant import RestaurantDataset
 from copy import deepcopy
 
 DATASETS = {
@@ -34,6 +36,8 @@ DATASETS = {
     "prospective_memory": ProspectiveMemoryDataset,
     "conflicting_personal_info": ConflictingPersonalInformationDataset,
     "trigger_response": TriggerResponseDataset,
+    "restaurant": RestaurantDataset,
+    "spy_meeting": SpyMeetingDataset,
 }
 DATASETS_BY_NAME = {ds.name: ds for ds in DATASETS.values()}
 
@@ -47,7 +51,10 @@ class DatasetFactory:
         args.update(ds_args)
         num_examples = args["dataset_examples"]
         del args["dataset_examples"]
-        ds = DATASETS[name](max_message_size=max_message_size, **args)
+        ds_factory = DATASETS.get(name)
+        if not ds_factory:
+            raise ValueError(f"No such dataset: {name}")
+        ds = ds_factory(max_message_size=max_message_size, **args)
         examples = ds.generate_examples(num_examples)
         for i, example in enumerate(examples):
             if example.example_id == "":

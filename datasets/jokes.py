@@ -1,10 +1,10 @@
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
-from random import choice
+from random import choice, randint
 from typing import List, Tuple
 
-from dataset_interfaces.interface import DatasetInterface, TestExample
+from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 from utils.timejump import create_time_jump
 
 
@@ -38,9 +38,9 @@ class JokesDataset(DatasetInterface):
         for _ in range(num_examples):
             script = []
             selected_jokes = []
-            time_jumps = []
             is_question = []
             jokes = deepcopy(JOKES)
+            waits = []
             for joke_made in range(self.jokes_told):
                 if len(jokes) == 0:
                     logging.warning("Ran out of jokes")
@@ -53,25 +53,23 @@ class JokesDataset(DatasetInterface):
                 script.append(self.create_script_line(joke))
                 selected_jokes.append(joke)
                 is_question.append(False)
-                time_jumps.append(create_time_jump(self.minutes_low, self.minutes_high))
+                time_jump = create_time_jump(self.minutes_low, self.minutes_high)
+                waits.append(WaitCreator.create_wait(tokens=randint(self.filler_tokens_low, self.filler_tokens_high), time=time_jump))
+
             # Choose the joke we are going to look at
             answer = choice(selected_jokes)
             answer_list = [answer]
 
             # The question statement is generated dynamically
             is_question.append(True)
+            waits.append({})
 
             example = TestExample(
-                dataset_name=self.name,
-                description=self.description,
                 dataset_generator=self,
                 script=script,
-                token_spacings=self.create_filler(is_question),
                 expected_responses=answer_list,
-                time_jumps=time_jumps,
+                waits=waits,
                 is_temporal=True,
-                evaluation_fn=self.evaluate_correct,
-                number_of_questions=self.count_questions(is_question),
                 is_question=is_question,
             )
 
@@ -101,12 +99,10 @@ class JokesDataset(DatasetInterface):
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
-
-        max_score = 1
-        score = 1
-        reasons = ["The correct joke is recounted."]
-
         if expected_answers[0] in responses[0]:
+            max_score = 1
+            score = 1
+            reasons = ["The correct joke is recounted."]
             return score, max_score, reasons
         else:
             return self.evaluate_correct_gpt(questions, responses, expected_answers)

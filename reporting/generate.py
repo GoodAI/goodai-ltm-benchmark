@@ -11,6 +11,7 @@ from utils.files import gather_result_files, gather_runstats_files, make_config_
 from utils.constants import REPORT_TEMPLATES_DIR, MAIN_DIR, GOODAI_RED, GOODAI_GREEN, METRIC_NAMES, METRIC_ALT, \
     METRIC_UNITS, SPIDER_LABELS_OVERRIDE, REPORT_OUTPUT_DIR
 from utils.data import load_b64
+from utils.ui import maybe_int
 from datetime import datetime
 from pathlib import Path
 
@@ -44,7 +45,6 @@ def formatted_log(result: TestResult) -> list[str]:
 
 
 def arrange_data(results: List[TestResult]):
-    full_data = {}
 
     run_name = results[0].run_name
     agent_name = results[0].agent_name
@@ -85,24 +85,21 @@ def arrange_data(results: List[TestResult]):
         test_dict = {
             "task_log": formatted_log(res),
             "responses": responses,
-            "score": res.score,
-            "max_score": res.max_score,
+            "score": maybe_int(res.score),
+            "max_score": maybe_int(res.max_score),
             "tokens": res.tokens,
             "characters": res.characters,
             "color": color,
         }
         data[res.dataset_name]["tests"].append(test_dict)
 
-    full_data["max_score"] = max_score
-    full_data["achieved_score"] = achieved_score
-
     with open(make_config_path(run_name)) as fd:
         config = yaml.safe_load(fd)
     args = config["datasets"]["args"]
 
     return dict(
-        achieved_score=achieved_score,
-        max_score=max_score,
+        achieved_score=maybe_int(achieved_score),
+        max_score=maybe_int(max_score),
         info_gap=max(args["filler_tokens_high"], args["pre_question_filler"]),
         run_name=run_name,
         agent_name=agent_name,

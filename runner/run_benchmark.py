@@ -13,11 +13,13 @@ from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
 from model_interfaces.claude_interface import ClaudeChatSession
+from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.ltm_agent_1 import LTMAgent1
 from model_interfaces.ltm_agent_2 import LTMAgent2
 from model_interfaces.interface import ChatSession
 from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
+from model_interfaces.ltm_agent_3 import LTMAgent3
 from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
@@ -39,17 +41,16 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return GPTChatSession(model="gpt-4", **kwargs)
     elif name == "gpt-3.5-turbo":
         return GPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name == "gpt-4-1106":
-        return GPTChatSession(model="gpt-4-1106-preview", **kwargs)
+    elif name in ["gpt-4-1106", "gpt-4-0125"]:
+        return GPTChatSession(model=f"{name}-preview", **kwargs)
     elif name == "ts-gpt-3.5-turbo":
         return TimestampGPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name == "ts-gpt-4-1106":
-        return TimestampGPTChatSession(model="gpt-4-1106-preview", **kwargs)
+    elif name in ["ts-gpt-4-1106", "ts-gpt-4-0125"]:
+        model = name.removesuffix("ts-") + "-preview"
+        return TimestampGPTChatSession(model=model, **kwargs)
     elif name == "memgpt":
-        if max_prompt_size is not None:
-            return MemGPTChatSession(_max_prompt_size=max_prompt_size, run_name=run_name)
-        else:
-            return MemGPTChatSession(run_name=run_name)
+        return MemGPTChatSession(run_name=run_name)
+
     elif name == "langchain_sb_a":
         return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.SUMMARY_BUFFER, **kwargs)
     elif name == "langchain_kg_a":
@@ -59,48 +60,56 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
             model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.CONVERSATION_ENTITY, **kwargs
         )
     elif name == "ltm_agent_1":
-        return LTMAgent1(model="gpt-4-1106-preview", **kwargs)
+        return LTMAgent1(model="gpt-4-0125-preview", **kwargs)
     elif name == "ltm_agent_2":
-        return LTMAgent2(model="gpt-4-1106-preview", **kwargs)
-
+        return LTMAgent2(model="gpt-4-0125-preview", **kwargs)
+    elif name == "ltm_agent_3":
+        return LTMAgent3(model="gpt-4-0125-preview", **kwargs)
     elif name == "goodai_ltm_agent_1":
-        return LTMAgentWrapper(model="gpt-4-1106-preview",
+        return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
     elif name == "goodai_ltm_agent_2":
-        return LTMAgentWrapper(model="gpt-4-1106-preview",
+        return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.SEMANTIC_ONLY, **kwargs)
     elif name == "goodai_ltm_agent_3":
-        return LTMAgentWrapper(model="gpt-4-1106-preview",
+        return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.TEXT_SCRATCHPAD, **kwargs)
+    elif name == "length_bias":
+        return LengthBiasAgent(model="gpt-4-0125-preview", **kwargs)
     elif name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
-    elif name == "claude":
+    elif name == "claude-2.1":
         return ClaudeChatSession(**kwargs)
+    elif name == "claude-3-sonnet":
+        return ClaudeChatSession(**kwargs, model="claude-3-sonnet-20240229")
+    elif name == "claude-3-opus":
+        return ClaudeChatSession(**kwargs, model="claude-3-opus-20240229")
     elif name == "human":
-        return HumanChatSession()
+        return HumanChatSession(**kwargs)
     else:
         raise ValueError(f"Unrecognized agent: {name}")
 
 
 def generate_test_examples(
-    loaded_yaml, max_message_size: int, pass_default: bool = False,
+    loaded_yaml, max_message_size: int, pass_default: bool = False, force_regenerate: bool = False
 ) -> list[TestExample]:
     run_name = loaded_yaml["config"]["run_name"]
     test_definitions = gather_testdef_files(run_name)
 
     if len(test_definitions) > 0:
-        if pass_default or ask_yesno(
-            f"There are test definitions in disk for run name {run_name}",
-            question="Do you want to reuse these test definitions?",
-        ):
-            return [TestExample.load(p) for p in test_definitions]
-        if not ask_yesno(
-            "WARNING: overwriting the test definitions will result in the loss of all "
-            "results associated with them, including those from other agents.",
-            default_yes=False,
-        ):
-            raise ValueError("Run aborted")
+        if not force_regenerate:
+            if pass_default or ask_yesno(
+                f"There are test definitions in disk for run name {run_name}",
+                question="Do you want to reuse these test definitions?",
+            ):
+                return [TestExample.load(p) for p in test_definitions]
+            if not ask_yesno(
+                "WARNING: overwriting the test definitions will result in the loss of all "
+                "results associated with them, including those from other agents.",
+                default_yes=False,
+            ):
+                raise ValueError("Run aborted")
         shutil.rmtree(make_run_path(run_name))
 
     # Save original yaml configuration

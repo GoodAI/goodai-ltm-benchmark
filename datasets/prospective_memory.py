@@ -1,7 +1,10 @@
 import re
+import random
+import string
+from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Tuple, Any
-
+from utils.ui import ordinal
 
 from dataset_interfaces.gpt_generated import GPTGenerated
 
@@ -9,14 +12,31 @@ from dataset_interfaces.interface import TestExample
 from utils.constants import DATA_DIR
 
 
+def cites_quote(quote: str, message: str) -> bool:
+    table = str.maketrans("", "", string.punctuation)
+    quote = quote.lower().translate(table)
+    message = message.lower().translate(table)
+    return quote in message
+
+
 @dataclass
 class ProspectiveMemoryDataset(GPTGenerated):
     name: str = "Prospective Memory"
     description: str = "Give the agent a fictitious quote, then ask it to append to the nth reply"
-    generation_file: str = str(DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json"))
+    generation_file: Path = DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json")
     temperature: float = 0.5
     uses_callback: bool = True
-    generation_model: str = "gpt-4-1106-preview"
+    generation_model: str = "gpt-4-0125-preview"
+
+    def generate_examples(self, num_examples) -> List[TestExample]:
+        rnd = random.Random(self.seed)
+        num_pattern = r"\d+(?:th|st|nd|rd)"
+        examples = super().generate_examples(num_examples)
+        for example in examples:
+            n = ordinal(rnd.randint(2, 10))
+            example.script[1] = re.sub(num_pattern, n, example.script[1])
+            example.expected_responses[0] = re.sub(num_pattern, n, example.expected_responses[0])
+        return examples
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
@@ -65,14 +85,14 @@ class ProspectiveMemoryDataset(GPTGenerated):
 
         # This statement should have the quote attached
         target_stmt_in_log = log_lookahead[steps_to_look - 1]
-        if quote in target_stmt_in_log.lower():
+        if cites_quote(quote, target_stmt_in_log):
             score = 1
-            reason = "Quote is present in correct place"
+            reason = "The quote is recited in the correct place."
             deregister_callback = False
             example.finished = True
         else:
             score = 0
-            reason = "Quote cannot be found in correct place"
+            reason = "The agent did not recite the quote in the correct place."
             deregister_callback = True
             example.finished = True
 
@@ -81,17 +101,14 @@ class ProspectiveMemoryDataset(GPTGenerated):
             if stmt.lower() == target_stmt_in_log.lower():
                 continue
 
-            if quote in stmt.lower():
+            if cites_quote(quote, stmt):
                 score = 0
-                reason = "Quote is present somewhere other or additionally to the target statement."
+                reason = "The quote is recited somewhere other or additionally to the correct place."
                 deregister_callback = True
                 example.finished = True
                 break
 
         return score, max_score, [reason], deregister_callback
-
-    def answer_statement_idx(self, example: TestExample) -> tuple[int, int]:
-        return 0, 0
 
 
 if __name__ == "__main__":
