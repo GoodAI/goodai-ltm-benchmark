@@ -59,7 +59,7 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
     elif name == "ltm_agent_1":
         return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
-    elif name == "tm_agent_2":
+    elif name == "ltm_agent_2":
         return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.SEMANTIC_ONLY, **kwargs)
     elif name == "ltm_agent_3":
