@@ -14,12 +14,9 @@ from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
 from model_interfaces.claude_interface import ClaudeChatSession
 from model_interfaces.length_bias_agent import LengthBiasAgent
-from model_interfaces.ltm_agent_1 import LTMAgent1
-from model_interfaces.ltm_agent_2 import LTMAgent2
 from model_interfaces.interface import ChatSession
 from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
-from model_interfaces.ltm_agent_3 import LTMAgent3
 from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
@@ -60,18 +57,12 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
             model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.CONVERSATION_ENTITY, **kwargs
         )
     elif name == "ltm_agent_1":
-        return LTMAgent1(model="gpt-4-0125-preview", **kwargs)
-    elif name == "ltm_agent_2":
-        return LTMAgent2(model="gpt-4-0125-preview", **kwargs)
-    elif name == "ltm_agent_3":
-        return LTMAgent3(model="gpt-4-0125-preview", **kwargs)
-    elif name == "goodai_ltm_agent_1":
         return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
-    elif name == "goodai_ltm_agent_2":
+    elif name == "ltm_agent_2":
         return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.SEMANTIC_ONLY, **kwargs)
-    elif name == "goodai_ltm_agent_3":
+    elif name == "ltm_agent_3":
         return LTMAgentWrapper(model="gpt-4-0125-preview",
                                variant=LTMAgentVariant.TEXT_SCRATCHPAD, **kwargs)
     elif name == "length_bias":
