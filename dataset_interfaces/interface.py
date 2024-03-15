@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -69,16 +70,23 @@ class WaitAction(TestAction):
 
 class WaitCreator:
     @classmethod
-    def create_wait(cls, tokens: int = 0, time: timedelta = timedelta(seconds=0), percentage_finished: float = 0.0):
-        return {"tokens": tokens, "time": time, "percentage_finished": percentage_finished}
+    def create_wait(cls, tokens: int = None, time: timedelta = None, percentage_finished: float = None):
+        w_dict = {"tokens": tokens, "time": time, "percentage_finished": percentage_finished}
+        return {k: v for k, v in w_dict.items() if v is not None}
 
     @classmethod
     def unserialise(cls, w_dict):
-        return {"tokens": w_dict['tokens'], "time": timedelta(w_dict['time']), "percentage_finished": w_dict['percentage_finished']}
+        w_dict = deepcopy(w_dict)
+        if "time" in w_dict:
+            w_dict["time"] = timedelta(seconds=w_dict["time"])
+        return w_dict
 
     @classmethod
     def serialise(cls, w_dict):
-        return {"tokens": w_dict['tokens'], "time": w_dict['time'].seconds, "percentage_finished": w_dict['percentage_finished']}
+        w_dict = deepcopy(w_dict)
+        if "time" in w_dict:
+            w_dict["time"] = w_dict["time"].seconds
+        return w_dict
 
 
 @dataclass
@@ -132,7 +140,7 @@ class TestExample:
                 yield SendAndRegisterAction(msg, is_question=is_q)
             else:
                 yield SendMessageAction(msg, is_question=is_q)
-            if any(wait.values()):
+            if len(wait) > 0:
                 yield WaitAction(**wait)
         if self.is_temporal and len(self.is_question) == len(self.script) + 1:
             yield SendMessageAction("", is_question=self.is_question[-1])

@@ -50,7 +50,6 @@ def create_question(example: TestExample, master_log: MasterLog) -> str:
     )
 
 
-
 @dataclass
 class TestRunner:
     config: RunConfig
@@ -138,12 +137,22 @@ class TestRunner:
             self.traveller = None
 
     def set_to_wait(self, unique_id: str, action: WaitAction, log_this: bool = True):
-        wait_dict = dict()
-        wait_dict["tokens"] = self.current_token_count + action.tokens if action.tokens > 0 else 0
-        wait_dict["time"] = datetime.now() + action.time if action.time.seconds > 0 else datetime.now()
-        wait_dict["percentage_finished"] = action.percentage_finished
         if log_this:
-            self.master_log.add_wait_event(unique_id, datetime.now(), **wait_dict)
+            self.master_log.add_wait_event(
+                unique_id,
+                datetime.now(),
+                tokens=action.tokens,
+                time=action.time,
+                percentage_finished=action.percentage_finished,
+            )
+        wait_dict = dict()
+        if action.tokens > 0:
+            wait_dict["tokens"] = self.current_token_count + action.tokens
+        if action.time.seconds > 0:
+            wait_dict["time"] = datetime.now() + action.time
+        if action.percentage_finished > 0:
+            wait_dict["percentage_finished"] = action.percentage_finished
+        # If wait_dict is empty, it acts as a yield / sleep(0).
         self.wait_list[unique_id] = wait_dict
 
     def send_message(self, test_id: str, action: SendMessageAction):
@@ -168,31 +177,24 @@ class TestRunner:
 
     def get_waiting_test(self, waiting_on: str) -> Optional[str]:
         assert waiting_on in ["tokens", "time", "percentage_finished"]
-        waiting_tests = dict()
-        for unique_id, wait_dict in self.wait_list.items():
-            is_waiting, test_waiting_on = self.is_waiting(unique_id)
-            if not is_waiting or test_waiting_on != waiting_on:
-                continue
-            waiting_tests[unique_id] = wait_dict
+        waiting_tests = {uid: wd for uid, wd in self.wait_list.items() if waiting_on in wd}
         if len(waiting_tests) == 0:
             return
-        waiting_ids = list(waiting_tests.keys())
-        waiting_ids.sort(key=lambda i: waiting_tests[i][waiting_on])
-        return waiting_ids[0]
+        return sorted(waiting_tests.keys(), key=lambda uid: waiting_tests[uid][waiting_on])[0]
 
-    def is_waiting(self, unique_id: str, remove: bool = False) -> Tuple[bool, str]:
+    def is_waiting(self, unique_id: str, remove: bool = False) -> bool:
         if unique_id not in self.wait_list:
-            return False, ""
+            return False
         wait_dict = self.wait_list[unique_id]
-        if wait_dict["tokens"] > self.current_token_count:
-            return True, "tokens"
-        if wait_dict["time"] > datetime.now():
-            return True, "time"
-        if wait_dict["percentage_finished"] > self.percentage_finished:
-            return True, "percentage_finished"
+        if "tokens" in wait_dict and wait_dict["tokens"] > self.current_token_count:
+            return True
+        if "time" in wait_dict and wait_dict["time"] > datetime.now():
+            return True
+        if "percentage_finished" in wait_dict and wait_dict["percentage_finished"] > self.percentage_finished:
+            return True
         if remove:
             del self.wait_list[unique_id]
-        return False, ""
+        return False
 
     def is_compatible(self, example: TestExample, tests: dict[str, TestExample]) -> bool:
         for waiting_id in self.wait_list.keys():
@@ -202,19 +204,19 @@ class TestRunner:
 
     def pick_next_test_id(self, tests: dict[str, TestExample]) -> str:
 
-        # Prioritize waiting tests. Shorter waits go first.
+        # See first if any waiting test has met its waiting conditions in the meantime.
         if len(self.wait_list) > 0:
             waiting_ids = list(self.wait_list.keys())
             waiting_ids.sort(key=lambda i: self.wait_list[i].get("tokens", float("inf")))
             for unique_id in waiting_ids:
-                if not self.is_waiting(unique_id, remove=True)[0]:
+                if not self.is_waiting(unique_id, remove=True):
                     return unique_id
 
-        # Otherwise, pick any other compatible test
+        # Otherwise, pick any other compatible test and start it.
         for unique_id in sorted(tests.keys()):
             if not self.is_compatible(tests[unique_id], tests):
                 continue
-            if not self.is_waiting(unique_id, remove=True)[0]:
+            if not self.is_waiting(unique_id, remove=True):
                 return unique_id
 
         # If all tests are waiting, try to meet the waiting conditions
@@ -227,7 +229,7 @@ class TestRunner:
             remaining_time = target_dt - datetime.now()
             waiting_time = max(remaining_time.total_seconds(), 0)
             self.forward_time(seconds=waiting_time + 1)
-            if not self.is_waiting(time_waiting_id, remove=True)[0]:
+            if not self.is_waiting(time_waiting_id, remove=True):
                 return time_waiting_id
 
         # Perform some filling task for token waiting
@@ -241,7 +243,7 @@ class TestRunner:
                 msg = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size)
                 tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True))
                 remaining_tokens -= tokens_spent
-            if not self.is_waiting(token_waiting_id, remove=True)[0]:
+            if not self.is_waiting(token_waiting_id, remove=True):
                 return token_waiting_id
 
         # As a last resort, if all tests are waiting for the percentage, get the closest one and force resume it.

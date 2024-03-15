@@ -1,6 +1,7 @@
 import json
+from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 
@@ -15,32 +16,33 @@ class LogEvent:
     data: Optional[Dict[str, Any]] = field(default_factory=dict)
 
     def to_json(self):
-        return {"type": self.type.value, "timestamp": self.timestamp.timestamp(), "test_id": self.test_id, "data": self.json_data()}
+        return {
+            "type": self.type.value,
+            "timestamp": self.timestamp.timestamp(),
+            "test_id": self.test_id,
+            "data": self.json_data()
+        }
 
-    def json_data(self):
+    def json_data(self) -> dict:
         ret = {}
         for k, v in self.data.items():
-            if isinstance(v, datetime):
-                v = v.timestamp()
-
+            if isinstance(v, timedelta):
+                v = v.seconds
             if isinstance(v, ResetPolicy):
                 v = v.value
-
             ret[k] = v
         return ret
 
     @classmethod
-    def from_json(cls, json_event):
-        json_event["timestamp"] = datetime.fromtimestamp(json_event["timestamp"])
-        json_event["type"] = EventType(json_event["type"])
-
-        if json_event["data"].get("time", None) and json_event["data"]["time"] > 0:
-            json_event["data"]["time"] = datetime.fromtimestamp(json_event["data"]["time"])
-
-        if json_event["data"].get("policy", None):
-            json_event["data"]["policy"] = ResetPolicy(json_event["data"]["policy"])
-
-        return cls(**json_event)
+    def from_json(cls, json_event: dict) -> "LogEvent":
+        kwargs = deepcopy(json_event)
+        kwargs["type"] = EventType(kwargs["type"])
+        kwargs["timestamp"] = datetime.fromtimestamp(kwargs["timestamp"])
+        if "time" in kwargs["data"]:
+            kwargs["data"]["time"] = timedelta(seconds=kwargs["data"]["time"])
+        if "policy" in kwargs["data"]:
+            kwargs["data"]["policy"] = ResetPolicy(kwargs["data"]["policy"])
+        return cls(**kwargs)
 
 
 class MasterLog:
@@ -61,10 +63,20 @@ class MasterLog:
         event = LogEvent(event_type, timestamp, test_id, {"message": message, "is_question": is_question})
         self.add_event(event)
 
-    def add_wait_event(self, test_id: str, timestamp: datetime, tokens: int = 0, time: datetime = None, percentage_finished: float = 0.0):
-        if not time:
-            time = datetime.now()
-        event = LogEvent(EventType.WAIT, timestamp=timestamp, test_id=test_id, data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished})
+    def add_wait_event(
+        self,
+        test_id: str,
+        timestamp: datetime,
+        tokens: int = 0,
+        time: timedelta = timedelta(seconds=0),
+        percentage_finished: float = 0.0
+    ):
+        event = LogEvent(
+            EventType.WAIT,
+            timestamp=timestamp,
+            test_id=test_id,
+            data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished},
+        )
         self.add_event(event)
 
     def begin_test(self, test_id, timestamp):
@@ -98,15 +110,16 @@ class MasterLog:
                 messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
             elif event.type == EventType.WAIT:
 
-                log_parts = [f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for "]
+                wait_cond = []
                 if event.data['tokens'] > 0:
-                    log_parts.append(f"{event.data['tokens']} TOTAL TOKENS, ")
-                if event.data['time'] > datetime.now():
-                    log_parts.append(f"DATE {event.data['time']}, ")
-                if event.data['percentage_finished'] > 0.0:
-                    log_parts.append(f"{event.data['percentage_finished']}% of tests to be finished.")
+                    wait_cond.append(f"{event.data['tokens']} TOKENS")
+                if event.data['time'].seconds > 0:
+                    wait_cond.append(f"{event.data['time']} TIME")
+                if event.data['percentage_finished'] > 0:
+                    wait_cond.append(f"{event.data['percentage_finished']}% TESTS FINISHED")
+                wait_cond = ", ".join(wait_cond)
 
-                messages.append("".join(log_parts))
+                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for {wait_cond}.")
             elif event.type == EventType.BEGIN:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' BEGINS")
             elif event.type == EventType.END:
