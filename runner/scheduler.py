@@ -172,9 +172,14 @@ class TestRunner:
 
         return action_tokens
 
-    def get_waiting_test(self, waiting_on: str) -> Optional[str]:
+    def get_blocked_test(self, waiting_on: str) -> Optional[str]:
         assert waiting_on in ["tokens", "time", "percentage_finished"]
-        waiting_tests = {uid: wd for uid, wd in self.wait_list.items() if waiting_on in wd}
+        reference = dict(
+            tokens=self.current_token_count,
+            time=datetime.now(),
+            percentage_finished=self.percentage_finished
+        )[waiting_on]
+        waiting_tests = {uid: wd for uid, wd in self.wait_list.items() if wd.get(waiting_on, reference) > reference}
         if len(waiting_tests) == 0:
             return
         return sorted(waiting_tests.keys(), key=lambda uid: waiting_tests[uid][waiting_on])[0]
@@ -219,7 +224,7 @@ class TestRunner:
         # If all tests are waiting, try to meet the waiting conditions
         # Fast-forwarding time is easier than filling tokens, so do that first.
         while True:
-            time_waiting_id = self.get_waiting_test("time")
+            time_waiting_id = self.get_blocked_test("time")
             if time_waiting_id is None:
                 break
             target_dt = self.wait_list[time_waiting_id]["time"]
@@ -231,7 +236,7 @@ class TestRunner:
 
         # Perform some filling task for token waiting
         while True:
-            token_waiting_id = self.get_waiting_test("tokens")
+            token_waiting_id = self.get_blocked_test("tokens")
             if token_waiting_id is None:
                 break
             num_tokens = self.wait_list[token_waiting_id]["tokens"]
@@ -245,7 +250,7 @@ class TestRunner:
 
         # As a last resort, if all tests are waiting for the percentage, get the closest one and force resume it.
         while True:
-            percentage_waiting_id = self.get_waiting_test("percentage_finished")
+            percentage_waiting_id = self.get_blocked_test("percentage_finished")
             if percentage_waiting_id is None:
                 break
             del self.wait_list[percentage_waiting_id]
@@ -289,7 +294,9 @@ class TestRunner:
                     assert action.tokens == evt.data["tokens"]
                     assert action.time == evt.data["time"]
                     assert action.percentage_finished == evt.data["percentage_finished"]
+                    self.travel_to_dt(evt.timestamp)
                     self.set_to_wait(evt.test_id, action, log_this=False)
+                    self.reset_time()
 
     def setup_iterator(self, test_group, reset_policy):
         # Sets up the test dict and fast forwards any tests that are currently in progress
@@ -302,6 +309,8 @@ class TestRunner:
         # Check if the last event in the log is after the current time, then travel to that time if it is.
         if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
             self.travel_to_dt(self.master_log.log[-1].timestamp)
+        else:
+            self.reset_time()
 
         # Add a reset event to the log if it has indeed been reset
         if len(self.master_log.log) > 0:
