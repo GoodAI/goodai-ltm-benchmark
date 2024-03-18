@@ -4,7 +4,6 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from random import randint
 from typing import List, Callable, Tuple, Optional, Any, Iterator, Dict
 
 import tiktoken
@@ -210,6 +209,7 @@ class DynamicExample(TestExample):
     reasoning: list[str] = field(default_factory=list)
     script: List[str] = field(default_factory=lambda: [])  # Updated dynamically by `say`
     action: SendMessageAction = None  # Keeps the last SendMessageAction
+    wait = WaitAction
 
     @property
     def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
@@ -229,19 +229,6 @@ class DynamicExample(TestExample):
     def action_iter(self) -> Iterator[TestAction]:
         pass
 
-    def wait(
-        self,
-        tokens: Optional[int] = None,
-        time: Optional[timedelta] = None,
-        percentage_finished: Optional[float] = None,
-    ) -> WaitAction:
-        kwargs = dict(tokens=tokens, time=time, percentage_finished=percentage_finished)
-        kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        if len(kwargs) == 0:
-            dgen = self.dataset_generator
-            kwargs["tokens"] = randint(dgen.filler_tokens_low, dgen.filler_tokens_high)
-        return WaitAction(**kwargs)
-
     def say(self, message: str, question: bool = False) -> SendMessageAction:
         # `question = True` will register the answer as `result.actual_response`
         self.action = SendMessageAction(message=message, is_question=question)
@@ -254,8 +241,7 @@ class DatasetInterface(ABC):
     name: str
     description: str
     question: str = ""
-    filler_tokens_low: int = 0
-    filler_tokens_high: int = 0
+    filler_tokens: int = 0
     pre_question_filler: int = 0
     seed: int = 0
     cost_callback: Callable[[float], None] = None
@@ -372,8 +358,8 @@ class DatasetInterface(ABC):
         pass
 
     def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        def _filler_size(is_p2q: bool):
-            return self.pre_question_filler if is_p2q else (randint(self.filler_tokens_low, self.filler_tokens_high))
+        def _filler_size(is_prev_to_question: bool):
+            return self.pre_question_filler if is_prev_to_question else self.filler_tokens
 
         assert len(is_question) >= 1, "There are no questions for this test"
         assert len(current_waits) == 0 or len(current_waits) == len(is_question), "Current waits should be empty or the same length as the script"

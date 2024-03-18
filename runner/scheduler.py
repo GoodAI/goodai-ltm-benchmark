@@ -142,15 +142,11 @@ class TestRunner:
                 time=action.time,
                 percentage_finished=action.percentage_finished,
             )
-        wait_dict = dict()
-        if action.tokens > 0:
-            wait_dict["tokens"] = self.current_token_count + action.tokens
-        if action.time.seconds > 0:
-            wait_dict["time"] = datetime.now() + action.time
-        if action.percentage_finished > 0:
-            wait_dict["percentage_finished"] = action.percentage_finished
-        # If wait_dict is empty, it acts as a yield / sleep(0).
-        self.wait_list[unique_id] = wait_dict
+        self.wait_list[unique_id] = dict(
+            tokens=self.current_token_count + action.tokens,
+            time=datetime.now() + action.time,
+            percentage_finished=action.percentage_finished,
+        )
 
     def send_message(self, test_id: str, action: SendMessageAction):
         response, sent_ts, reply_ts = self.agent.message_to_agent(action.message)
@@ -174,12 +170,12 @@ class TestRunner:
 
     def get_blocked_test(self, waiting_on: str) -> Optional[str]:
         assert waiting_on in ["tokens", "time", "percentage_finished"]
-        reference = dict(
+        target = dict(
             tokens=self.current_token_count,
             time=datetime.now(),
-            percentage_finished=self.percentage_finished
+            percentage_finished=self.percentage_finished,
         )[waiting_on]
-        waiting_tests = {uid: wd for uid, wd in self.wait_list.items() if wd.get(waiting_on, reference) > reference}
+        waiting_tests = {uid: wd for uid, wd in self.wait_list.items() if wd[waiting_on] > target}
         if len(waiting_tests) == 0:
             return
         return sorted(waiting_tests.keys(), key=lambda uid: waiting_tests[uid][waiting_on])[0]
@@ -188,11 +184,11 @@ class TestRunner:
         if unique_id not in self.wait_list:
             return False
         wait_dict = self.wait_list[unique_id]
-        if "tokens" in wait_dict and wait_dict["tokens"] > self.current_token_count:
+        if wait_dict["tokens"] > self.current_token_count:
             return True
-        if "time" in wait_dict and wait_dict["time"] > datetime.now():
+        if wait_dict["time"] > datetime.now():
             return True
-        if "percentage_finished" in wait_dict and wait_dict["percentage_finished"] > self.percentage_finished:
+        if wait_dict["percentage_finished"] > self.percentage_finished:
             return True
         if remove:
             del self.wait_list[unique_id]
@@ -309,8 +305,6 @@ class TestRunner:
         # Check if the last event in the log is after the current time, then travel to that time if it is.
         if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
             self.travel_to_dt(self.master_log.log[-1].timestamp)
-        else:
-            self.reset_time()
 
         # Add a reset event to the log if it has indeed been reset
         if len(self.master_log.log) > 0:
