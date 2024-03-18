@@ -2,7 +2,6 @@ import random
 from json import JSONDecodeError
 from typing import Tuple, Iterator
 from collections import OrderedDict
-from rouge_score import rouge_scorer
 
 from datetime import datetime
 from dataclasses import dataclass
@@ -14,11 +13,6 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 class RestaurantOrderFailed(Exception):
     pass
-
-
-def eq(reference: str, candidate: str) -> bool:
-    scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
-    return scorer.score(reference, candidate)["rougeL"].fmeasure > 0.75
 
 
 @dataclass

@@ -1,15 +1,13 @@
 import json
 import webbrowser
-from copy import deepcopy
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Iterator, List, Tuple, Callable, Dict
+from typing import Optional, Iterator, List, Tuple, Callable
 
 import time_machine
 
 from dataset_interfaces.interface import (
     TestExample,
-    TestAction,
     SendMessageAction,
     WaitAction,
     SendAndRegisterAction,
@@ -19,9 +17,9 @@ from reporting.generate import generate_report
 from reporting.results import TestResult
 from runner.config import RunConfig
 from runner.master_log import MasterLog
-from utils.constants import EventType, ResetPolicy, PERSISTENCE_DIR
+from utils.constants import EventType, ResetPolicy
 from utils.filling_task import filler_no_response_tokens_trivia
-from utils.tokens import token_len
+from utils.text import token_len
 from utils.ui import colour_print
 from utils.files import make_runstats_path, make_master_log_path
 from runner.progress import ProgressDialog
@@ -104,7 +102,6 @@ class TestRunner:
         self.test_managing_costs_usd = d["managing_costs_usd"]
         self.avg_tokens_per_second = d["tokens_per_second"]
         self.benchmark_duration_seconds = d["duration"]
-
         self.master_log.load()
 
     def travel_to_dt(self, target_date: datetime):
@@ -256,35 +253,55 @@ class TestRunner:
 
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
 
+    def fast_forward_tests(self, tests: dict[str, TestExample]):
+        # Go event by event in the master log and sync up with trace
+        finished_tests = {evt.test_id for evt in self.master_log.log if evt.type == EventType.END}
+        action = None
+        for evt in self.master_log.log:
+            if evt.type not in {EventType.BEGIN, EventType.SEND_MESSAGE, EventType.RESPONSE_MESSAGE, EventType.WAIT}:
+                continue
+            if evt.test_id in finished_tests:
+                continue
+            test = tests[evt.test_id]
+            self.wait_list.pop(evt.test_id, None)  # Since the test is performing an action, it can't be waiting.
+            match evt.type:
+                case EventType.BEGIN:
+                    result, skip = self.initialise_result(test)
+                    assert not skip
+                    self.in_progress_results[evt.test_id] = result
+                case EventType.SEND_MESSAGE:
+                    action = test.step()
+                    assert isinstance(action, SendMessageAction)
+                    assert action.message == evt.data["message"]
+                    assert action.is_question == evt.data["is_question"]
+                    assert not action.is_filling
+                    action.sent_ts = evt.timestamp
+                    if isinstance(action, SendAndRegisterAction):
+                        self.register_callback(test)
+                case EventType.RESPONSE_MESSAGE:
+                    assert isinstance(action, SendMessageAction)
+                    assert action.is_question == evt.data["is_question"]
+                    action.reply = evt.data["message"]
+                    action.reply_ts = evt.timestamp
+                case EventType.WAIT:
+                    action = test.step()
+                    assert isinstance(action, WaitAction)
+                    assert action.tokens == evt.data["tokens"]
+                    assert action.time == evt.data["time"]
+                    assert action.percentage_finished == evt.data["percentage_finished"]
+                    self.set_to_wait(evt.test_id, action, log_this=False)
+
     def setup_iterator(self, test_group, reset_policy):
         # Sets up the test dict and fast forwards any tests that are currently in progress
-        test_actions_taken = self.master_log.get_tests_in_progress()
-        self.wait_list = {k: {"tokens": 0, "time": datetime.now(), "percentage_finished": 0.0} for k in test_actions_taken.keys()}
         tests = {t.unique_id: t for t in test_group}
+        if reset_policy == ResetPolicy.SOFT:
+            self.fast_forward_tests(tests)
+        else:
+            pass  # `run_tests` will skip finished tests and start the remaining tests over.
 
         # Check if the last event in the log is after the current time, then travel to that time if it is.
         if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
             self.travel_to_dt(self.master_log.log[-1].timestamp)
-
-        # Fast forward examples to the last action that was run if the reset policy is soft.
-        # If the reset policy is HARD, then steps from partially completed tests will be discarded and the test will run again
-        if reset_policy == ResetPolicy.SOFT:
-            for test_id, actions_to_ff in test_actions_taken.items():
-                example = tests[test_id]
-                message_idx = -1
-                for _ in range(actions_to_ff):
-                    action = example.step()
-                    if isinstance(action, SendMessageAction):
-                        message_idx += 1
-                        match_message = not ((action.is_question and action.message == "") or "restaurant" in test_id.lower())
-                        action.reply = self.master_log.get_reply(test_id, message_idx, message=action.message, match_message=match_message)
-
-                    if isinstance(action, SendAndRegisterAction):
-                        self.register_callback(example)
-    
-                # If the last action is a wait action, set the test to wait
-                if isinstance(action, WaitAction):
-                    self.set_to_wait(test_id, action, log_this=False)
 
         # Add a reset event to the log if it has indeed been reset
         if len(self.master_log.log) > 0:

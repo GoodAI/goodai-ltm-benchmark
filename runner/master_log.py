@@ -146,30 +146,6 @@ class MasterLog:
         for event in events_list:
             self.log.append(LogEvent.from_json(event))
 
-    def get_tests_in_progress(self) -> Dict[str, int]:
-        running_tests = []
-        actions_taken = {}
-
-        # Pass 1: Get the list of tests that are currently running
-        for event in self.log:
-            if event.type == EventType.BEGIN:
-                running_tests.append(event.test_id)
-
-            if event.type == EventType.END:
-                assert event.test_id in running_tests, "Test has ended, but not begun!"
-                running_tests.remove(event.test_id)
-
-        # Pass 2: How many actions has the script taken?
-        for test_id in running_tests:
-            num_actions = 0
-            for event in self.log:
-                # The only two scripted events are sending a message and waiting.
-                if event.test_id == test_id and event.type in [EventType.SEND_MESSAGE, EventType.WAIT]:
-                    num_actions += 1
-
-            actions_taken[test_id] = num_actions
-        return actions_taken
-
     def messages(self, test_id: str = "") -> list[str]:
         messages = []
         for event in self.log:
@@ -179,24 +155,6 @@ class MasterLog:
                     messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
 
         return messages
-
-    def get_reply(self, test_id: str, message_idx: int, message: Optional[str] = None, match_message: bool = True) -> str:
-        msg_i = -1
-        for event in self.log:
-            if event.test_id != test_id:
-                continue
-            if event.type == EventType.SEND_MESSAGE:
-                msg_i += 1
-            if msg_i < message_idx:
-                continue
-            match event.type:
-                case EventType.SEND_MESSAGE:
-                    if message is not None and match_message and event.data["message"] != message:
-                        raise LookupError(f"Unexpected message: {event.data['message']}\nExpected: {message}")
-                case EventType.RESPONSE_MESSAGE:
-                    return event.data["message"]
-        msg_str = f" Message: {message}." if message is not None else ""
-        raise LookupError(f"Could not find a reply. Test id: {test_id}. Message idx: {message_idx}.{msg_str}")
 
     def get_test_events(self, test_id: str) -> list[LogEvent]:
         events = []

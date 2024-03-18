@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from random import randint
 from typing import List, Tuple
 from utils.openai import make_user_message
+from utils.text import rouge_l
 from goodai.helpers.json_helper import sanitize_and_parse_json
 import pystache
 
@@ -55,6 +56,7 @@ class TriggerResponseDataset(DatasetInterface):
     description: str = "Tell the agent to respond in a particular way when a trigger is given. Test the agent."
     trigger_activations: int = 3
     reset_message: str = "Cancel any instructions as to what sentence you should say whenever I do something in particular."
+    rouge_score_threshold: float = 0.75
 
     def generate_examples(self, num_examples):
         examples = []
@@ -86,7 +88,7 @@ class TriggerResponseDataset(DatasetInterface):
         return examples
 
     def evaluate_single(self, actual: str, expected: str) -> tuple[int, str]:
-        if expected in actual or rouge_score(expected, actual) > 0.5:
+        if expected in actual or rouge_l(expected, actual) > self.rouge_score_threshold:
             return 1, f"'{expected}' is in the response."
         context = [make_user_message(eval_prompt.format(message=actual, sentence=expected))]
         eval_str = self.ask_llm(context)
@@ -94,7 +96,7 @@ class TriggerResponseDataset(DatasetInterface):
             eval_json = sanitize_and_parse_json(eval_str)
             present = eval_json["present"]
             if present:
-                present = rouge_score(expected, eval_json["sentence"]) > 0.75
+                present = rouge_l(expected, eval_json["sentence"]) > self.rouge_score_threshold
         except (ValueError, JSONDecodeError, KeyError) as exc:
             return 0, f"Could not evaluate due to a JSON parsing error: {repr(exc)}"
         not_str = "" if present else "not "
@@ -116,9 +118,3 @@ class TriggerResponseDataset(DatasetInterface):
         # All statements are relevant
         # in this test all statements are atomic
         return 0, len(example.script[0])
-
-
-def rouge_score(target: str, prediction: str) -> float:
-    from rouge_score.rouge_scorer import RougeScorer
-    scorer = RougeScorer(["rougeL"], use_stemmer=True)
-    return scorer.score(target, prediction)["rougeL"].fmeasure
