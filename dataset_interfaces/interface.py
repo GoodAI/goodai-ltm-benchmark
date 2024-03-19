@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import List, Callable, Tuple, Optional, Any, Iterator, Dict
+from runner.master_log import MasterLog
 
 import tiktoken
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -207,9 +208,11 @@ class DynamicExample(TestExample):
     max_score: int = 0
     expected_responses: list[str] = field(default_factory=list)
     reasoning: list[str] = field(default_factory=list)
-    script: List[str] = field(default_factory=lambda: [])  # Updated dynamically by `say`
+    script: List[str] = field(default_factory=lambda: [])  # Updated dynamically by `say` method
     action: SendMessageAction = None  # Keeps the last SendMessageAction
     wait = WaitAction
+    llm_call_idx: int = -1
+    master_log: MasterLog = None  # Set by runner to cache llm calls
 
     @property
     def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
@@ -223,7 +226,13 @@ class DynamicExample(TestExample):
         return self.score, self.max_score, self.reasoning
 
     def ask_llm(self, context: LLMContext, **kwargs) -> str:
-        return self.dataset_generator.ask_llm(context, **kwargs)
+        self.llm_call_idx += 1
+        response = self.master_log.get_cached_response(self.unique_id, self.llm_call_idx)
+        if response is not None:
+            return response
+        response = self.dataset_generator.ask_llm(context, **kwargs)
+        self.master_log.add_llm_call(self.unique_id, datetime.now(), response)
+        return response
 
     @abstractmethod
     def action_iter(self) -> Iterator[TestAction]:

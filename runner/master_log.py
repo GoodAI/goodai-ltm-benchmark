@@ -3,7 +3,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Callable, Iterator
 
 from utils.constants import EventType, EVENT_SENDER, ResetPolicy
 
@@ -91,6 +91,10 @@ class MasterLog:
         event = LogEvent(EventType.SUITE_RESET, timestamp=timestamp, test_id="", data={"policy": policy})
         self.add_event(event)
 
+    def add_llm_call(self, test_id: str, timestamp: datetime, response: str):
+        event = LogEvent(EventType.LLM_CALL, test_id=test_id, timestamp=timestamp, data={"response": response})
+        self.add_event(event)
+
     def add_event(self, event: LogEvent):
         self.log.append(event)
         self.save_event(event)
@@ -126,6 +130,9 @@ class MasterLog:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' ENDS")
             elif event.type == EventType.SUITE_RESET:
                 messages.append(f"SYSTEM ({event.timestamp}):  Suite was RESET with policy {event.data['policy']}")
+            elif event.type == EventType.LLM_CALL:
+                res = event.data["response"]
+                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' CALLS an LLM. Response:\n{res}")
             else:
                 raise ValueError("Unknown event found")
 
@@ -156,12 +163,23 @@ class MasterLog:
 
         return messages
 
-    def get_test_events(self, test_id: str) -> list[LogEvent]:
-        events = []
+    def test_events(
+        self, test_id: str, event_type: EventType | set[EventType] = None, filter_fn: Callable[[LogEvent], bool] = None
+    ) -> Iterator[LogEvent]:
         for event in self.log:
-            if event.test_id == test_id:
-                events.append(event)
-        return events
+            if event.test_id != test_id:
+                continue
+            if event_type is not None:
+                if isinstance(event_type, EventType):
+                    if event.type != event_type:
+                        continue
+                elif isinstance(event_type, set):
+                    if event.type not in event_type:
+                        continue
+            if filter_fn is not None:
+                if not filter_fn(event):
+                    continue
+            yield event
 
     def as_context(self, test_id: str = ""):
         context = []
@@ -179,11 +197,19 @@ class MasterLog:
         questions = []
         responses = []
 
-        for event in self.get_test_events(test_id):
-            if event.type == EventType.SEND_MESSAGE and event.data["is_question"]:
-                questions.append(event.data["message"])
-
-            elif event.type == EventType.RESPONSE_MESSAGE and event.data["is_question"]:
-                responses.append(event.data["message"])
+        for event in self.test_events(
+            test_id,
+            event_type={EventType.SEND_MESSAGE, EventType.RESPONSE_MESSAGE},
+            filter_fn=lambda e: e.data["is_question"],
+        ):
+            (questions if event.type == EventType.SEND_MESSAGE else responses).append(event.data["message"])
 
         return questions, responses
+
+    def get_cached_response(self, test_id: str, llm_call_idx: int) -> str | None:
+        idx = 0
+        for event in self.test_events(test_id, event_type=EventType.LLM_CALL):
+            if idx < llm_call_idx:
+                idx += 1
+                continue
+            return event.data["response"]

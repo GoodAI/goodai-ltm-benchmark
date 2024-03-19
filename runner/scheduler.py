@@ -8,6 +8,7 @@ import time_machine
 
 from dataset_interfaces.interface import (
     TestExample,
+    DynamicExample,
     SendMessageAction,
     WaitAction,
     SendAndRegisterAction,
@@ -36,11 +37,7 @@ def are_compatible(a: TestExample, b: TestExample, incompatibilities: list[set[t
 
 
 def create_question(example: TestExample, master_log: MasterLog) -> str:
-    statement_times = []
-    test_events = master_log.get_test_events(example.unique_id)
-    for event in test_events:
-        if event.type == EventType.SEND_MESSAGE:
-            statement_times.append(event.timestamp)
+    statement_times = [e.timestamp for e in master_log.test_events(example.unique_id, event_type=EventType.SEND_MESSAGE)]
     return example.dataset_generator.create_question(
         example,
         statement_times,
@@ -272,18 +269,22 @@ class TestRunner:
                     self.in_progress_results[evt.test_id] = result
                 case EventType.SEND_MESSAGE:
                     action = test.step()
-                    assert isinstance(action, SendMessageAction)
-                    assert action.message == evt.data["message"]
-                    assert action.is_question == evt.data["is_question"]
-                    assert not action.is_filling
-                    action.sent_ts = evt.timestamp
-                    if isinstance(action, SendAndRegisterAction):
-                        self.register_callback(test)
+                    if action is None:
+                        assert evt.data["message"] == test.reset_message
+                    else:
+                        assert isinstance(action, SendMessageAction)
+                        assert action.message == evt.data["message"]
+                        assert action.is_question == evt.data["is_question"]
+                        assert not action.is_filling
+                        action.sent_ts = evt.timestamp
+                        if isinstance(action, SendAndRegisterAction):
+                            self.register_callback(test)
                 case EventType.RESPONSE_MESSAGE:
-                    assert isinstance(action, SendMessageAction)
-                    assert action.is_question == evt.data["is_question"]
-                    action.reply = evt.data["message"]
-                    action.reply_ts = evt.timestamp
+                    if action is not None:
+                        assert isinstance(action, SendMessageAction)
+                        assert action.is_question == evt.data["is_question"]
+                        action.reply = evt.data["message"]
+                        action.reply_ts = evt.timestamp
                 case EventType.WAIT:
                     action = test.step()
                     assert isinstance(action, WaitAction)
@@ -295,8 +296,15 @@ class TestRunner:
                     self.reset_time()
 
     def setup_iterator(self, test_group, reset_policy):
-        # Sets up the test dict and fast forwards any tests that are currently in progress
+        """Sets up the test dict and fast forwards any tests that are currently in progress"""
         tests = {t.unique_id: t for t in test_group}
+
+        # Give dynamic tests access to the master log for LLM caching
+        for t in tests.values():
+            if isinstance(t, DynamicExample):
+                t.master_log = self.master_log
+
+        # Resuming a benchmark?
         if reset_policy == ResetPolicy.SOFT:
             self.fast_forward_tests(tests)
         else:
