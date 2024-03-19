@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
-from random import choice, randint
+from random import choice
 from typing import List, Tuple
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
@@ -54,7 +54,7 @@ class JokesDataset(DatasetInterface):
                 selected_jokes.append(joke)
                 is_question.append(False)
                 time_jump = create_time_jump(self.minutes_low, self.minutes_high)
-                waits.append(WaitCreator.create_wait(tokens=randint(self.filler_tokens_low, self.filler_tokens_high), time=time_jump))
+                waits.append(WaitCreator.create_wait(tokens=self.filler_tokens, time=time_jump))
 
             # Choose the joke we are going to look at
             answer = choice(selected_jokes)

@@ -6,7 +6,7 @@ import tiktoken
 from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.interface import ChatSession
 from utils.constants import DATA_DIR
-from utils.tokens import token_len
+from utils.text import token_len
 
 
 TRIVIA_CACHE = None

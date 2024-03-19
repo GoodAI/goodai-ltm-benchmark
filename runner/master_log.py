@@ -1,8 +1,9 @@
 import json
+from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Callable, Iterator
 
 from utils.constants import EventType, EVENT_SENDER, ResetPolicy
 
@@ -15,32 +16,33 @@ class LogEvent:
     data: Optional[Dict[str, Any]] = field(default_factory=dict)
 
     def to_json(self):
-        return {"type": self.type.value, "timestamp": self.timestamp.timestamp(), "test_id": self.test_id, "data": self.json_data()}
+        return {
+            "type": self.type.value,
+            "timestamp": self.timestamp.timestamp(),
+            "test_id": self.test_id,
+            "data": self.json_data()
+        }
 
-    def json_data(self):
+    def json_data(self) -> dict:
         ret = {}
         for k, v in self.data.items():
-            if isinstance(v, datetime):
-                v = v.timestamp()
-
+            if isinstance(v, timedelta):
+                v = v.seconds
             if isinstance(v, ResetPolicy):
                 v = v.value
-
             ret[k] = v
         return ret
 
     @classmethod
-    def from_json(cls, json_event):
-        json_event["timestamp"] = datetime.fromtimestamp(json_event["timestamp"])
-        json_event["type"] = EventType(json_event["type"])
-
-        if json_event["data"].get("time", None) and json_event["data"]["time"] > 0:
-            json_event["data"]["time"] = datetime.fromtimestamp(json_event["data"]["time"])
-
-        if json_event["data"].get("policy", None):
-            json_event["data"]["policy"] = ResetPolicy(json_event["data"]["policy"])
-
-        return cls(**json_event)
+    def from_json(cls, json_event: dict) -> "LogEvent":
+        kwargs = deepcopy(json_event)
+        kwargs["type"] = EventType(kwargs["type"])
+        kwargs["timestamp"] = datetime.fromtimestamp(kwargs["timestamp"])
+        if "time" in kwargs["data"]:
+            kwargs["data"]["time"] = timedelta(seconds=kwargs["data"]["time"])
+        if "policy" in kwargs["data"]:
+            kwargs["data"]["policy"] = ResetPolicy(kwargs["data"]["policy"])
+        return cls(**kwargs)
 
 
 class MasterLog:
@@ -61,10 +63,20 @@ class MasterLog:
         event = LogEvent(event_type, timestamp, test_id, {"message": message, "is_question": is_question})
         self.add_event(event)
 
-    def add_wait_event(self, test_id: str, timestamp: datetime, tokens: int = 0, time: datetime = None, percentage_finished: float = 0.0):
-        if not time:
-            time = datetime.now()
-        event = LogEvent(EventType.WAIT, timestamp=timestamp, test_id=test_id, data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished})
+    def add_wait_event(
+        self,
+        test_id: str,
+        timestamp: datetime,
+        tokens: int = 0,
+        time: timedelta = timedelta(seconds=0),
+        percentage_finished: float = 0.0
+    ):
+        event = LogEvent(
+            EventType.WAIT,
+            timestamp=timestamp,
+            test_id=test_id,
+            data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished},
+        )
         self.add_event(event)
 
     def begin_test(self, test_id, timestamp):
@@ -77,6 +89,10 @@ class MasterLog:
 
     def add_reset_event(self, policy: ResetPolicy, timestamp: datetime):
         event = LogEvent(EventType.SUITE_RESET, timestamp=timestamp, test_id="", data={"policy": policy})
+        self.add_event(event)
+
+    def add_llm_call(self, test_id: str, timestamp: datetime, response: str):
+        event = LogEvent(EventType.LLM_CALL, test_id=test_id, timestamp=timestamp, data={"response": response})
         self.add_event(event)
 
     def add_event(self, event: LogEvent):
@@ -98,21 +114,25 @@ class MasterLog:
                 messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
             elif event.type == EventType.WAIT:
 
-                log_parts = [f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for "]
+                wait_cond = []
                 if event.data['tokens'] > 0:
-                    log_parts.append(f"{event.data['tokens']} TOTAL TOKENS, ")
-                if event.data['time'] > datetime.now():
-                    log_parts.append(f"DATE {event.data['time']}, ")
-                if event.data['percentage_finished'] > 0.0:
-                    log_parts.append(f"{event.data['percentage_finished']}% of tests to be finished.")
+                    wait_cond.append(f"{event.data['tokens']} TOKENS")
+                if event.data['time'].seconds > 0:
+                    wait_cond.append(f"{event.data['time']} TIME")
+                if event.data['percentage_finished'] > 0:
+                    wait_cond.append(f"{event.data['percentage_finished']}% TESTS FINISHED")
+                wait_cond = ", ".join(wait_cond)
 
-                messages.append("".join(log_parts))
+                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for {wait_cond}.")
             elif event.type == EventType.BEGIN:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' BEGINS")
             elif event.type == EventType.END:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' ENDS")
             elif event.type == EventType.SUITE_RESET:
                 messages.append(f"SYSTEM ({event.timestamp}):  Suite was RESET with policy {event.data['policy']}")
+            elif event.type == EventType.LLM_CALL:
+                res = event.data["response"]
+                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' CALLS an LLM. Response:\n{res}")
             else:
                 raise ValueError("Unknown event found")
 
@@ -133,30 +153,6 @@ class MasterLog:
         for event in events_list:
             self.log.append(LogEvent.from_json(event))
 
-    def get_tests_in_progress(self) -> Dict[str, int]:
-        running_tests = []
-        actions_taken = {}
-
-        # Pass 1: Get the list of tests that are currently running
-        for event in self.log:
-            if event.type == EventType.BEGIN:
-                running_tests.append(event.test_id)
-
-            if event.type == EventType.END:
-                assert event.test_id in running_tests, "Test has ended, but not begun!"
-                running_tests.remove(event.test_id)
-
-        # Pass 2: How many actions has the script taken?
-        for test_id in running_tests:
-            num_actions = 0
-            for event in self.log:
-                # The only two scripted events are sending a message and waiting.
-                if event.test_id == test_id and event.type in [EventType.SEND_MESSAGE, EventType.WAIT]:
-                    num_actions += 1
-
-            actions_taken[test_id] = num_actions
-        return actions_taken
-
     def messages(self, test_id: str = "") -> list[str]:
         messages = []
         for event in self.log:
@@ -167,30 +163,23 @@ class MasterLog:
 
         return messages
 
-    def get_reply(self, test_id: str, message_idx: int, message: Optional[str] = None, match_message: bool = True) -> str:
-        msg_i = -1
+    def test_events(
+        self, test_id: str, event_type: EventType | set[EventType] = None, filter_fn: Callable[[LogEvent], bool] = None
+    ) -> Iterator[LogEvent]:
         for event in self.log:
             if event.test_id != test_id:
                 continue
-            if event.type == EventType.SEND_MESSAGE:
-                msg_i += 1
-            if msg_i < message_idx:
-                continue
-            match event.type:
-                case EventType.SEND_MESSAGE:
-                    if message is not None and match_message and event.data["message"] != message:
-                        raise LookupError(f"Unexpected message: {event.data['message']}\nExpected: {message}")
-                case EventType.RESPONSE_MESSAGE:
-                    return event.data["message"]
-        msg_str = f" Message: {message}." if message is not None else ""
-        raise LookupError(f"Could not find a reply. Test id: {test_id}. Message idx: {message_idx}.{msg_str}")
-
-    def get_test_events(self, test_id: str) -> list[LogEvent]:
-        events = []
-        for event in self.log:
-            if event.test_id == test_id:
-                events.append(event)
-        return events
+            if event_type is not None:
+                if isinstance(event_type, EventType):
+                    if event.type != event_type:
+                        continue
+                elif isinstance(event_type, set):
+                    if event.type not in event_type:
+                        continue
+            if filter_fn is not None:
+                if not filter_fn(event):
+                    continue
+            yield event
 
     def as_context(self, test_id: str = ""):
         context = []
@@ -208,11 +197,19 @@ class MasterLog:
         questions = []
         responses = []
 
-        for event in self.get_test_events(test_id):
-            if event.type == EventType.SEND_MESSAGE and event.data["is_question"]:
-                questions.append(event.data["message"])
-
-            elif event.type == EventType.RESPONSE_MESSAGE and event.data["is_question"]:
-                responses.append(event.data["message"])
+        for event in self.test_events(
+            test_id,
+            event_type={EventType.SEND_MESSAGE, EventType.RESPONSE_MESSAGE},
+            filter_fn=lambda e: e.data["is_question"],
+        ):
+            (questions if event.type == EventType.SEND_MESSAGE else responses).append(event.data["message"])
 
         return questions, responses
+
+    def get_cached_response(self, test_id: str, llm_call_idx: int) -> str | None:
+        idx = 0
+        for event in self.test_events(test_id, event_type=EventType.LLM_CALL):
+            if idx < llm_call_idx:
+                idx += 1
+                continue
+            return event.data["response"]

@@ -6,7 +6,7 @@ from typing import List, Tuple
 from utils.data import get_gdrive_file, get_data_path
 from dataclasses import dataclass, field
 from utils.ui import ordinal
-from utils.tokens import token_len
+from utils.text import token_len
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 
 

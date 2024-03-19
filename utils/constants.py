@@ -25,6 +25,7 @@ class EventType(enum.Enum):
     RESPONSE_FILL = 5
     WAIT = 6
     SUITE_RESET = 7
+    LLM_CALL = 8  # Performed by dynamic test example
 
 
 EVENT_SENDER = {
