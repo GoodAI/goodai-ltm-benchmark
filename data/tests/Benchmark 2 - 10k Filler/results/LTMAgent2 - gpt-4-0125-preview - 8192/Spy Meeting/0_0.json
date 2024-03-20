@@ -17,7 +17,7 @@
   "score": 0,
   "max_score": 1,
   "reasoning": [
-    "['motorbike', 'motorcycle', 'car'] not found in answer.",
+    "['motorbike', 'motorcycle', 'car', 'fast land vehicle', 'fast vehicle', 'fast land escape vehicle'] not found in answer.",
     "Answer contains expected keyword(s)",
     "['shore', 'beach', 'coastline'] not found in answer."
   ],
@@ -977,7 +977,10 @@
     [
       "motorbike",
       "motorcycle",
-      "car"
+      "car",
+      "fast land vehicle",
+      "fast vehicle",
+      "fast land escape vehicle"
     ],
     [
       "sunset",
