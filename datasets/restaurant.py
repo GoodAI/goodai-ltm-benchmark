@@ -1,4 +1,3 @@
-import random
 from json import JSONDecodeError
 from typing import Tuple, Iterator
 from collections import OrderedDict
@@ -60,7 +59,7 @@ class RestaurantExample(DynamicExample):
         yield self.wait(percentage_finished=60)
 
         # Some dish is unexpectedly unavailable -> order another thing
-        old_item = random.choice(order)
+        old_item = self.random.choice(order)
         yield self.say(
             f"I am very sorry, but I have been informed in the kitchen that the {old_item} is currently "
             "unavailable. Can I serve you something else instead?"
@@ -147,12 +146,12 @@ class RestaurantExample(DynamicExample):
         return enumerate_str(order)
 
     def alter_order(self, order: list[str], old_item: str) -> tuple[str, str, list[str]]:
-        item = random.choice(order)
+        item = self.random.choice(order)
         for section_content in self.dataset_generator.menu_dict.values():
             for section_item in section_content:
                 if item in section_item:
                     choices = [c for c in section_content if c not in [section_item, old_item]]
-                    new_item = random.choice(choices)
+                    new_item = self.random.choice(choices)
                     altered_order = [item for item in order]
                     i = altered_order.index(item)
                     altered_order[i] = new_item

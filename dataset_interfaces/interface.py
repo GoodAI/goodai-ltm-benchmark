@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from random import Random
 from pathlib import Path
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -103,6 +104,7 @@ class TestExample:
     finished: bool = False
     _iter: Iterator[TestAction] = None
     waits: List[dict] = field(default_factory=list)
+    random: Random = None  # Seeded random generator
 
     @property
     def dataset_name(self) -> str:
@@ -132,6 +134,7 @@ class TestExample:
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
         self.waits = self.dataset_generator.default_waits(self.is_question, self.waits)
+        self.random = Random(self.unique_id)
 
     def action_iter(self) -> Iterator[TestAction]:
         scripts = [self.script, self.waits, self.is_question]
@@ -257,6 +260,10 @@ class DatasetInterface(ABC):
     uses_callback: bool = False
     reset_message: str = ""
     max_message_size: int = 1024
+    random: Random = None  # Seeded random generator
+
+    def __post_init__(self):
+        self.random = Random(self.seed)
 
     @property
     def data_path(self) -> Path:

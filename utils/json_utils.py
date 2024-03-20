@@ -4,6 +4,10 @@ from enum import Enum
 from json import JSONEncoder
 
 
+class LLMJSONError(Exception):
+    pass
+
+
 class CustomEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime):
