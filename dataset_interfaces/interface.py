@@ -260,6 +260,10 @@ class DatasetInterface(ABC):
     uses_callback: bool = False
     reset_message: str = ""
     max_message_size: int = 1024
+    random: Random = None  # Seeded random generator
+
+    def __post_init__(self):
+        self.random = Random(self.seed)
 
     @property
     def data_path(self) -> Path:

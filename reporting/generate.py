@@ -100,7 +100,7 @@ def arrange_data(results: List[TestResult]):
     return dict(
         achieved_score=maybe_int(achieved_score),
         max_score=maybe_int(max_score),
-        info_gap=max(args["filler_tokens_high"], args["pre_question_filler"]),
+        info_gap=max(args["filler_tokens"], args["pre_question_filler"]),
         run_name=run_name,
         agent_name=agent_name,
         data_by_dataset=data,
@@ -247,7 +247,7 @@ def generate_summary_report(
     with open(make_config_path(run_name)) as fd:
         config = yaml.safe_load(fd)
     args = config["datasets"]["args"]
-    info_gap = max(args["filler_tokens_high"], args["pre_question_filler"])
+    info_gap = max(args["filler_tokens"], args["pre_question_filler"])
 
     # Embed the GoodAI logo and Chart.js into the HTML file.
     # This will avoid the need for an Internet connection to visualise the results.
