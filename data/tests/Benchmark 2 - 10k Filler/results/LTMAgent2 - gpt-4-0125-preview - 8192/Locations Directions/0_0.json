@@ -20,10 +20,10 @@
   "actual_responses": [
     "Based on the points of interest you've mentioned and their relative positions, here's how you would travel from the Hospital to the Park, following those interesting points:\n\n1. Start at the Hospital, which is in the center of your hometown.\n2. Travel 1 KM West to reach the Town Hall.\n3. From the Town Hall, continue 4 KM West to High Street.\n4. Head South from High Street for 4 KM to reach the Playground.\n5. Travel 1 KM West from the Playground to find the Museum.\n6. Finally, from the Museum, head South for 2 KM to arrive at the Park.\n\nThis route takes you through a sequence of interesting points: Hospital \u2192 Town Hall \u2192 High Street \u2192 Playground \u2192 Museum \u2192 Park."
   ],
-  "score": 0,
+  "score": 1,
   "max_score": 1,
   "reasoning": [
-    "The agent's directions do not lead to the expected destination."
+    "The agent's directions lead to the expected destination."
   ],
   "tokens": 62057,
   "characters": 226152,

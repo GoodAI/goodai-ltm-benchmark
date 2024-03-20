@@ -40,7 +40,10 @@ class LocationsDirectionsDataset(LocationsDataset):
     def parse_directions(self, expected_answer: str) -> list[DirectionDict]:
         pattern = r"^From (?P<origin>\w+(?: \w+){0,2}), go (?P<distance>\d)km (?P<direction>\w+) to (?P<destination>\w+(?: \w+){0,2}).$"
         # Ignore first line and parse the rest
-        directions = [re.match(pattern, line).groupdict() for line in expected_answer.splitlines()[1:]]
+        expected_lines = expected_answer.splitlines()
+        if expected_lines[0].startswith("(Just an example,"):  # Benchmark v2 doesn't have this line
+            expected_lines = expected_lines[1:]
+        directions = [re.match(pattern, line).groupdict() for line in expected_lines]
         for d in directions:
             d["distance"] = int(d["distance"])
         return directions
