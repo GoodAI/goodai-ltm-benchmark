@@ -28,12 +28,8 @@ class LocationsDirectionsDataset(LocationsDataset):
         last_move = (self.random.choice(DIRECTIONS), self.random.choice(DISTANCES))
 
         # Now the answer should include all the directions and locations
-        pos = [0, 0]
         directions = ["(Just an example, if exact instructions are followed)"]
         for destination, origin, direction, distance in location_info[1:-1]:
-            axis = 0 if direction.lower() in ["west", "east"] else 1
-            sign = 1 if direction.lower() in ["north", "east"] else -1
-            pos[axis] += sign * distance
             directions.append(f"From {origin}, go {distance}km {direction} to {destination}.")
 
         directions.append(f"From {location_info[-1][1]}, go {last_move[1]}km {last_move[0]} to {location_info[-1][0]}.")
