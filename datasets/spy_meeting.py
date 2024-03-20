@@ -31,7 +31,7 @@ CODED_INFO_AMOUNT = [
     ("a way to get across a river", ["boat", "bridge"]),
     ("a quiet way to open locked doors", ["lockpicks", "key", "lock picking set", "lock pick set"]),
     ("a way to persuade the border guards to let us through", ["bribe", "credentials", "paperwork"]),
-    ("a fast land escape vehicle", ["motorbike", "motorcycle", "car"]),
+    ("a fast land escape vehicle", ["motorbike", "motorcycle", "car", "fast vehicle", "fast land vehicle", "fast land escape vehicle"]),
 ]
 
 

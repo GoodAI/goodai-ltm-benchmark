@@ -9,8 +9,7 @@ config:
 datasets:
   args:
     dataset_examples: 3
-    filler_tokens_high: 1000
-    filler_tokens_low: 1000
+    filler_tokens: 1000
     pre_question_filler: 1000
   datasets:
   - args:
