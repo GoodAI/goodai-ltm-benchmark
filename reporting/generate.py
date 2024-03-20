@@ -11,7 +11,7 @@ from utils.files import gather_result_files, gather_runstats_files, make_config_
 from utils.constants import REPORT_TEMPLATES_DIR, MAIN_DIR, GOODAI_RED, GOODAI_GREEN, METRIC_NAMES, METRIC_ALT, \
     METRIC_UNITS, SPIDER_LABELS_OVERRIDE, REPORT_OUTPUT_DIR
 from utils.data import load_b64
-from utils.ui import maybe_int
+from utils.ui import display_float_or_int
 from datetime import datetime
 from pathlib import Path
 
@@ -85,8 +85,8 @@ def arrange_data(results: List[TestResult]):
         test_dict = {
             "task_log": formatted_log(res),
             "responses": responses,
-            "score": maybe_int(res.score),
-            "max_score": maybe_int(res.max_score),
+            "score": display_float_or_int(res.score),
+            "max_score": display_float_or_int(res.max_score),
             "tokens": res.tokens,
             "characters": res.characters,
             "color": color,
@@ -98,8 +98,8 @@ def arrange_data(results: List[TestResult]):
     args = config["datasets"]["args"]
 
     return dict(
-        achieved_score=maybe_int(achieved_score),
-        max_score=maybe_int(max_score),
+        achieved_score=display_float_or_int(achieved_score),
+        max_score=display_float_or_int(max_score),
         info_gap=max(args["filler_tokens"], args["pre_question_filler"]),
         run_name=run_name,
         agent_name=agent_name,

@@ -41,5 +41,6 @@ def ordinal(n: int) -> str:
     return str(n) + suffix
 
 
-def maybe_int(n: float | int) -> float | int:
+def display_float_or_int(n: float | int) -> float | int:
+    n = round(n, 1)
     return int(n) if int(n) == n else n
