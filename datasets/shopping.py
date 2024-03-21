@@ -136,8 +136,8 @@ class ShoppingDataset(DatasetInterface):
         score = 0
         max_score = self.item_changes
         num_correct = 0
-        present = []
-        hallucinated = []
+        real_items = []
+        hallucinated_items = []
         reasoning = []
 
         expected_names = []
@@ -163,27 +163,27 @@ class ShoppingDataset(DatasetInterface):
             name = item["item"].lower()
             matched, key = match_plural(name, expected_names)
             if not matched:
-                hallucinated.append(name)
+                hallucinated_items.append(name)
                 continue
-            present.append(name)
+            real_items.append(name)
             if item["quantity"] == expected_items[key]:
                 num_correct += 1
             else:
                 reasoning.append(f"Wrong quantity for {name}: {item['quantity']} vs {expected_items[key]}.")
 
-        score += len(present) / len(expected_answers)
-        if len(present) < len(expected_answers):
-            reasoning.append(f"{len(expected_answers) - len(present)} items were not found in the response:")
-            reasoning.extend(f"- {name}" for name in expected_names if name not in present)
+        score += len(real_items) / len(expected_answers)
+        if len(real_items) < len(expected_answers):
+            reasoning.append(f"{len(expected_answers) - len(real_items)} items were not found in the response:")
+            reasoning.extend(f"- {name}" for name in expected_names if name not in real_items)
 
         score += num_correct / len(expected_answers)
         if num_correct == len(expected_answers):
             reasoning.append("All expected items' quantities match.")
 
-        score += int(hallucinated == [])
-        if len(hallucinated) > 0:
-            reasoning.append(f"{len(hallucinated)} unexpected items were found:")
-            reasoning.extend(f"- {name}" for name in hallucinated)
+        score += int(hallucinated_items == [])
+        if len(hallucinated_items) > 0:
+            reasoning.append(f"{len(hallucinated_items)} unexpected items were found:")
+            reasoning.extend(f"- {name}" for name in hallucinated_items)
 
         score = (score / 3) * max_score
         return score, max_score, ["\n".join(reasoning)]
