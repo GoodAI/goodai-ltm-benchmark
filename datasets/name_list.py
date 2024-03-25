@@ -1,6 +1,5 @@
 import logging
 from json import JSONDecodeError
-from random import choice, randint
 
 from dataclasses import dataclass
 
@@ -30,7 +29,6 @@ class NameListDataset(DatasetInterface):
     name_changes: int = 3
     reset_message: str = "Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name."
 
-
     def generate_examples(self, num_examples):
         renderer = pystache.Renderer()
         faker = Faker(["en_US", "en_IE"])
@@ -43,7 +41,7 @@ class NameListDataset(DatasetInterface):
 
             for change in range(self.name_changes):
                 name = faker.unique.first_name()
-                name_stmt = str(renderer.render(choice(STATEMENTS), {"name": name}))
+                name_stmt = str(renderer.render(self.random.choice(STATEMENTS), {"name": name}))
                 answer_list.append(name)
                 script.append(name_stmt)
                 is_question.append(False)

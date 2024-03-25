@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from random import choice
 from typing import List, Tuple
 
 import pystache
@@ -37,7 +36,7 @@ class NamesDataset(DatasetInterface):
 
             for change in range(self.name_changes):
                 name = faker.unique.first_name()
-                name_stmt = str(renderer.render(choice(STATEMENTS), {"name": name}))
+                name_stmt = str(renderer.render(self.random.choice(STATEMENTS), {"name": name}))
                 names.append(name)
                 script.append(name_stmt)
                 is_question.append(False)

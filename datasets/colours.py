@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from random import choice
 from typing import List, Tuple
 import pystache
 from dataset_interfaces.interface import DatasetInterface, TestExample
@@ -49,11 +48,11 @@ class ColourDataset(DatasetInterface):
             renderer = pystache.Renderer()
 
             for change in range(self.colour_changes):
-                colour = choice(COLOURS)
+                colour = self.random.choice(COLOURS)
                 if colour == "None":
                     name_stmt = "I have no favourite colour."
                 else:
-                    name_stmt = renderer.render(choice(STATEMENTS), {"colour": colour})
+                    name_stmt = renderer.render(self.random.choice(STATEMENTS), {"colour": colour})
                 colours.append(colour)
                 script.append(name_stmt)
                 is_question.append(False)

@@ -265,6 +265,12 @@ class DatasetInterface(ABC):
     def __post_init__(self):
         self.random = Random(self.seed)
 
+    def __getattribute__(self, item):
+        # Force setting the seed before generating samples
+        if item == "generate_examples":
+            self.random = Random(self.seed)
+        return super().__getattribute__(item)
+
     @property
     def data_path(self) -> Path:
         return DATA_DIR.joinpath(self.name)
