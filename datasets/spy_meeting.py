@@ -118,45 +118,45 @@ class SpyMeetingDataset(DatasetInterface):
 
 
 
-if __name__ == '__main__':
-    name = "Bob"
-    for place in CODED_INFO_PLACE:
-        for time in CODED_INFO_TIME:
-            for thing in CODED_INFO_THING:
-                stmts = [PLACE_TEMPLATE.format(name, place[0]), TIME_TEMPLATE.format(name, time[0]), THING_TEMPLATE.format(name, thing[0])]
-
-                assistant_stmt =\
-"""
-Given these messages, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring.
-{}
-{}
-{}                
-"""
-
-                content = assistant_stmt.format(*stmts)
-
-                ctx = [{"role": "assistant", "content": content}]
-
-                response = ask_llm(ctx, "gpt-4-1106-preview")
-
-                correct = False
-                for potential_answers in [place[1], time[1], thing[0]]:
-                    correct = False
-                    for pa in potential_answers:
-                        if pa in response:
-                            correct = True
-                            break
-
-                    if not correct:
-                        break
-
-                print("---------------------------------------")
-                if not correct:
-                    print(content)
-                    print("----")
-                    print(response)
-                    print(f"CORRECT: {correct}")
-
-                    print("---------------------------------------")
+# if __name__ == '__main__':
+#     name = "Bob"
+#     for place in CODED_INFO_PLACE:
+#         for time in CODED_INFO_TIME:
+#             for thing in CODED_INFO_THING:
+#                 stmts = [PLACE_TEMPLATE.format(name, place[0]), TIME_TEMPLATE.format(name, time[0]), THING_TEMPLATE.format(name, thing[0])]
+#
+#                 assistant_stmt =\
+# """
+# Given these messages, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring.
+# {}
+# {}
+# {}
+# """
+#
+#                 content = assistant_stmt.format(*stmts)
+#
+#                 ctx = [{"role": "assistant", "content": content}]
+#
+#                 response = ask_llm(ctx, "gpt-4-1106-preview")
+#
+#                 correct = False
+#                 for potential_answers in [place[1], time[1], thing[0]]:
+#                     correct = False
+#                     for pa in potential_answers:
+#                         if pa in response:
+#                             correct = True
+#                             break
+#
+#                     if not correct:
+#                         break
+#
+#                 print("---------------------------------------")
+#                 if not correct:
+#                     print(content)
+#                     print("----")
+#                     print(response)
+#                     print(f"CORRECT: {correct}")
+#
+#                     print("---------------------------------------")
 
 
