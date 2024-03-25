@@ -1,5 +1,4 @@
 import os.path
-import random
 from json import JSONDecodeError
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -24,7 +23,6 @@ class SallyAnneDataset(DatasetInterface):
     data_location: str = os.path.join(DATA_DIR, "tomi_data", "test.txt")
 
     def generate_examples(self, num_examples):
-        rnd = random.Random(self.seed)
         examples = []
         for _ in range(num_examples):
             script = [
@@ -34,7 +32,7 @@ class SallyAnneDataset(DatasetInterface):
             is_question = [False]
             with open(self.data_location, "r") as f:
                 num_chars = f.seek(0, 2)
-                f.seek(rnd.randint(0, num_chars - 1))
+                f.seek(self.random.randint(0, num_chars - 1))
                 next_line(f)  # Read until the new line starts
 
                 # Seek to start of next scenario

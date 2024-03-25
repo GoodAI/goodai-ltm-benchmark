@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from random import choice
 from typing import Tuple, List
 
 from faker import Faker
@@ -59,15 +58,15 @@ class SpyMeetingDataset(DatasetInterface):
             topic_list = [(CODED_INFO_TIME, TIME_TEMPLATE), (CODED_INFO_AMOUNT, AMOUNT_TEMPLATE), (CODED_INFO_PLACE, PLACE_TEMPLATE)]
 
             for k in range(3):
-                name = choice(names)
+                name = self.random.choice(names)
                 names.remove(name)
-                topic = choice(topic_list)
+                topic = self.random.choice(topic_list)
                 topic_list.remove(topic)
 
                 # A topic is a pair of coded statements and a template
                 potential_messages, template = topic
 
-                coded_message, potential_interpretations = choice(potential_messages)
+                coded_message, potential_interpretations = self.random.choice(potential_messages)
                 script.append(template.format(name, coded_message))
 
                 is_question.append(False)

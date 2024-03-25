@@ -1,5 +1,4 @@
 import re
-import random
 import string
 from pathlib import Path
 from dataclasses import dataclass
@@ -29,11 +28,10 @@ class ProspectiveMemoryDataset(GPTGenerated):
     generation_model: str = "gpt-4-0125-preview"
 
     def generate_examples(self, num_examples) -> List[TestExample]:
-        rnd = random.Random(self.seed)
         num_pattern = r"\d+(?:th|st|nd|rd)"
         examples = super().generate_examples(num_examples)
         for example in examples:
-            n = ordinal(rnd.randint(2, 10))
+            n = ordinal(self.random.randint(2, 10))
             example.script[1] = re.sub(num_pattern, n, example.script[1])
             example.expected_responses[0] = re.sub(num_pattern, n, example.expected_responses[0])
         return examples

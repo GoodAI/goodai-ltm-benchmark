@@ -1,6 +1,5 @@
 import re
 import json
-import random
 from typing import List, Tuple
 
 from utils.data import get_gdrive_file, get_data_path
@@ -106,7 +105,7 @@ class ChapterBreakDataset(DatasetInterface):
         if self.split == "goodai":
             samples = self.apply_sample_selection(samples)
         sample_list = [samples[k] | {"id": k} for k in sorted(samples.keys())]
-        random.Random(self.seed).shuffle(sample_list)
+        self.random.shuffle(sample_list)
         return sample_list
 
     def generate_examples(self, num_examples: int) -> list[TestExample]:
@@ -116,7 +115,7 @@ class ChapterBreakDataset(DatasetInterface):
 
         for sample_idx, sample in zip(range(num_examples), sample_list):
             beginnings = [(True, sample["pos"])] + [(False, s) for s in sample["negs"]]
-            random.Random(self.seed + sample_idx).shuffle(beginnings)
+            self.random.shuffle(beginnings)
 
             script = [(
                 "I am going to read you some chapters of a book. A few pages. Okay? You don't have to say anything, "

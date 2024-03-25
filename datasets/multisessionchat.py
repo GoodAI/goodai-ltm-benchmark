@@ -1,6 +1,5 @@
 import os
 import json
-import random
 from typing import List, Tuple
 
 from utils.openai import ask_llm, make_system_message, make_user_message
@@ -147,7 +146,7 @@ class MultiSessionChatDataset(DatasetInterface):
         tar_dict = read_tar_file(self.name)
         chats_dict = reconstruct_test_chats(tar_dict)
         chats = [chats_dict[k] for k in sorted(chats_dict.keys())]
-        random.Random(self.seed).shuffle(chats)
+        self.random.shuffle(chats)
         return chats
 
     def generate_examples(self, num_examples: int) -> list[TestExample]:

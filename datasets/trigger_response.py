@@ -1,9 +1,9 @@
 from json import JSONDecodeError
 from dataclasses import dataclass
-from random import randint
-from typing import List, Tuple
+from typing import List, Tuple, Iterator
 from utils.openai import make_user_message
 from utils.text import rouge_l
+from utils.ui import colour_print
 from goodai.helpers.json_helper import sanitize_and_parse_json
 import pystache
 
@@ -58,13 +58,25 @@ class TriggerResponseDataset(DatasetInterface):
     reset_message: str = "Cancel any instructions as to what sentence you should say whenever I do something in particular."
     rouge_score_threshold: float = 0.75
 
+    def request_num_generator(self) -> Iterator[int]:
+        indices = list(range(len(REQUESTS)))
+        warned = False
+        while True:
+            self.random.shuffle(indices)
+            for i in indices:
+                yield i
+            if warned:
+                continue
+            warned = True
+            colour_print("red", "WARNING: The number of TriggerResponse setups has been exceeded. There will inevitably "
+                                "be some repetitions.")
+
     def generate_examples(self, num_examples):
         examples = []
         setup = "Whenever I {{request}} then say: '{{response}}'"
 
-        for _ in range(num_examples):
+        for _, request_num in zip(range(num_examples), self.request_num_generator()):
             answer_list = []
-            request_num = randint(1, len(REQUESTS) - 1)
             request = REQUESTS[request_num]
             response = RESPONSE[request_num]
             trigger = TRIGGERS[request_num]

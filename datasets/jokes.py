@@ -1,7 +1,6 @@
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
-from random import choice
 from typing import List, Tuple
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
@@ -46,7 +45,7 @@ class JokesDataset(DatasetInterface):
                     logging.warning("Ran out of jokes")
                     break
                 # Select joke
-                joke = choice(jokes)
+                joke = self.random.choice(jokes)
                 jokes.remove(joke)
 
                 # create the statement
@@ -57,7 +56,7 @@ class JokesDataset(DatasetInterface):
                 waits.append(WaitCreator.create_wait(tokens=self.filler_tokens, time=time_jump))
 
             # Choose the joke we are going to look at
-            answer = choice(selected_jokes)
+            answer = self.random.choice(selected_jokes)
             answer_list = [answer]
 
             # The question statement is generated dynamically

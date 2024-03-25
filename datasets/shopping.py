@@ -3,7 +3,6 @@ from json import JSONDecodeError
 
 import pystache
 from dataclasses import dataclass
-from random import randint, choice
 from typing import List, Tuple
 
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -69,11 +68,11 @@ class ShoppingDataset(DatasetInterface):
             is_question = []
 
             for change in range(self.item_changes):
-                if len(cart) > 0 and randint(1, 6) < 2:
+                if len(cart) > 0 and self.random.randint(1, 6) < 2:
                     # remove
-                    item = choice(cart)
+                    item = self.random.choice(cart)
                     current_number = counts[cart.index(item)]
-                    number = randint(1, current_number)
+                    number = self.random.randint(1, current_number)
                     current_number -= number
                     if current_number <= 0:
                         del counts[cart.index(item)]
@@ -81,12 +80,12 @@ class ShoppingDataset(DatasetInterface):
                     else:
                         counts[cart.index(item)] = current_number
                     statement = renderer.render(
-                        choice(STATEMENTS_REMOVE), {"item": item, "number": str(number)}
+                        self.random.choice(STATEMENTS_REMOVE), {"item": item, "number": str(number)}
                     )
                 else:
                     # add
-                    item = choice(ITEMS)
-                    number = choice(NUMBER)
+                    item = self.random.choice(ITEMS)
+                    number = self.random.choice(NUMBER)
                     modifier = ""
                     if item in cart:
                         modifier = "another "
@@ -95,7 +94,7 @@ class ShoppingDataset(DatasetInterface):
                         cart.append(item)
                         counts.append(number)
                     statement = renderer.render(
-                        choice(STATEMENTS_ADD),
+                        self.random.choice(STATEMENTS_ADD),
                         {"item": item, "modifier": modifier, "number": str(number)},
                     )
 

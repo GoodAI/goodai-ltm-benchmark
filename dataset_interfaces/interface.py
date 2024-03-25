@@ -262,8 +262,11 @@ class DatasetInterface(ABC):
     max_message_size: int = 1024
     random: Random = None  # Seeded random generator
 
-    def __post_init__(self):
-        self.random = Random(self.seed)
+    def __getattribute__(self, item):
+        # Force seeding right before generating samples
+        if item == "generate_examples":
+            self.random = Random(self.seed)
+        return super().__getattribute__(item)
 
     @property
     def data_path(self) -> Path:
