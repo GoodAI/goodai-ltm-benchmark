@@ -5,7 +5,7 @@ from datetime import datetime
 from model_interfaces.interface import ChatSession
 from utils.constants import PERSISTENCE_DIR, ResetPolicy
 from utils.json_utils import CustomEncoder
-from utils.openai import (
+from utils.llm import (
     ask_llm,
     LLMContext,
     make_system_message,

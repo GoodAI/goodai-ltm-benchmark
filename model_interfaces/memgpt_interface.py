@@ -12,7 +12,7 @@ from model_interfaces.interface import ChatSession
 
 from memgpt import create_client
 
-from utils.openai import token_cost
+from utils.llm import token_cost
 
 MEMGPT_LOGS_FILE = "model_interfaces/memgpt-logs.jsonl"
 

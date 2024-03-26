@@ -1,9 +1,7 @@
 from model_interfaces.interface import ChatSession
 from dataclasses import dataclass, field
-
-from utils.constants import ResetPolicy
 from utils.text import token_len
-from utils.openai import (
+from utils.llm import (
     LLMContext,
     make_system_message,
     make_user_message,

@@ -4,7 +4,6 @@ import os
 import threading
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
 from model_interfaces.interface import ChatSession
-from utils.constants import PERSISTENCE_DIR, ResetPolicy
 
 _log_prompts = os.environ.get("LTM_BENCH_PROMPT_LOGGING", "False").lower() in ["true", "yes", "1"]
 

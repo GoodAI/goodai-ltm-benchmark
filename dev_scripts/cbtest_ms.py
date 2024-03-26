@@ -1,7 +1,7 @@
 import json
 import pyperclip
 from datasets.chapterbreak import ChapterBreakDataset, split_in_pages
-from utils.openai import ask_llm, make_system_message, make_user_message
+from utils.llm import ask_llm, make_system_message, make_user_message
 from utils.text import token_len
 
 

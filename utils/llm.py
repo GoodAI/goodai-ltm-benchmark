@@ -1,5 +1,4 @@
 import os
-from copy import deepcopy
 from typing import Optional, Callable
 
 import openai
@@ -9,24 +8,38 @@ from utils.ui import colour_print
 
 LLMMessage = dict[str, str]
 LLMContext = list[LLMMessage]
-MODEL_LIST_CACHE: Optional[set[str]] = None
+SUPPORTED_MODELS: dict[str, tuple[int, tuple[float, float]]] = {
+    "gpt-3.5-turbo": (16_384, (5e-7, 1.5e-6)),
+    "gpt-4": (8_192, (3e-5, 6e-5)),
+    "gpt-4-32k": (32_768, (6e-5, 1.2e-4)),
+    "gpt-4-turbo-preview": (128_000, (1e-5, 3e-5)),
+    "gpt-4-1106-preview": (128_000, (1e-5, 3e-5)),
+    "gpt-4-0125-preview": (128_000, (1e-5, 3e-5)),
+    "claude-2.1": (200_000, (8e-6, 2.4e-5)),
+    "claude-3-haiku-20240229": (200_000, (2.5e-7, 1.25e-6)),
+    "claude-3-sonnet-20240229": (200_000, (3e-6, 1.5e-5)),
+    "claude-3-opus-20240229": (200_000, (1.5e-5, 7.5e-5)),
+}
+MODEL_ALIASES = {
+    "gpt-4-turbo": "gpt-4-turbo-preview",
+    "gpt-4-1106": "gpt-4-1106-preview",
+    "gpt-4-0125": "gpt-4-0125-preview",
+    "claude-3-haiku": "claude-3-haiku-20240229",
+    "claude-3-sonnet": "claude-3-sonnet-20240229",
+    "claude-3-opus": "claude-3-opus-20240229",
+}
+GPT_CHEAPEST = "gpt-3.5-turbo"
+GPT_4_TURBO_BEST = "gpt-4-1106-preview"
 client = OpenAI()
-
-
-def allowed_models() -> set[str]:
-    global MODEL_LIST_CACHE
-    if MODEL_LIST_CACHE is None:
-        models = client.models.list()
-        MODEL_LIST_CACHE = set(m.id for m in models.data if m.id.startswith("gpt-") and "instruct" not in m.id)
-        MODEL_LIST_CACHE.add("claude-2.1")
-        MODEL_LIST_CACHE.add("claude-3-opus-20240229")
-    return deepcopy(MODEL_LIST_CACHE)
 
 
 def get_model(model_name: Optional[str]) -> str:
     if model_name is None:
-        model_name = "gpt-3.5-turbo"
-    assert model_name in allowed_models()
+        model_name = GPT_CHEAPEST
+    debug_name = model_name
+    model_name = MODEL_ALIASES.get(model_name, model_name)
+    if model_name not in SUPPORTED_MODELS:
+        raise ValueError(f"Model {debug_name} is not supported and is not an alias.")
     return model_name
 
 
@@ -34,48 +47,19 @@ def get_max_prompt_size(model: str):
     if model == "gpt-3.5-turbo-instruct":
         colour_print("red", "WARNING: gpt-3.5-turbo-instruct is a completion model.")
         return 4_096
-    assert model in allowed_models()
-    if model in ["gpt-4-1106-preview", "gpt-4-0125-preview"]:
-        return 128_000
-    if model == "gpt-3.5-turbo-0125":
-        return 16_384
-    if "32k" in model:
-        return 32_768
-    if "16k" in model:
-        return 16_384
-    if model.startswith("gpt-4"):
-        return 8_192
-    if model == "claude-2.1":
-        return 200_000
-    if model == "claude-3-opus-20240229":
-        return 200_000
-    if model == "gpt-3.5-turbo":
-        return 16_384
-    return 4_096
+    model = get_model(model)
+    prompt_size, _ = SUPPORTED_MODELS[model]
+    return prompt_size
 
 
 def token_cost(model: str) -> tuple[float, float]:
-    if model == "gpt-3.5-turbo-instruct":
-        return 0.000_001_5, 0.000_002
-    if model == "gpt-3.5-turbo":
-        return 0.000_000_5, 0.000_001_5
-    if model == "gpt-3.5-turbo-0125":
-        return 0.000_000_5, 0.000_001_5
-    if model in ["gpt-4-1106-preview", "gpt-4-0125-preview"]:
-        return 0.000_01, 0.000_03
-    if model.startswith("gpt-4-32k"):
-        return 0.000_06, 0.000_12
-    if model.startswith("gpt-4"):
-        return 0.000_03, 0.000_06
-    if model.startswith("gpt-3.5-turbo"):
-        return 0.000_001, 0.000_002
-    if model == "claude-2.1":
-        return 8e-06, 2.4e-05
-    if model == "claude-3-opus-20240229":
-        return 0.000_015, 0.000_075
     if model == "text-embedding-ada-002":
-        return 0.000_000_002, 0.000_000_002
-    raise ValueError(f"There's no cost registered for model {model}.")
+        return 2e-9, 2e-9
+    if model == "gpt-3.5-turbo-instruct":
+        return 1.5e-6, 2e-6
+    model = get_model(model)
+    _, cost_info = SUPPORTED_MODELS[model]
+    return cost_info
 
 
 def response_cost(response: openai.ChatCompletion) -> float:

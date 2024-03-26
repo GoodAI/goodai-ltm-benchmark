@@ -1,14 +1,14 @@
 import json
 
 from model_interfaces.interface import ChatSession
-from utils.constants import ResetPolicy
-from utils.openai import (
+from utils.llm import (
     ask_llm,
     LLMContext,
     make_system_message,
     make_user_message,
     make_assistant_message,
     get_max_prompt_size,
+    get_model,
 )
 from dataclasses import dataclass, field
 
@@ -23,6 +23,7 @@ class GPTChatSession(ChatSession):
 
     def __post_init__(self):
         super().__post_init__()
+        self.model = get_model(self.model)
         if len(self.context) == 0:
             self.context.append(make_system_message(self.system_prompt))
         if self.max_prompt_size is None:

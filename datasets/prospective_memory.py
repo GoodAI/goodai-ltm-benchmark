@@ -4,7 +4,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Tuple, Any
 from utils.ui import ordinal
-
+from utils.llm import GPT_4_TURBO_BEST
 from dataset_interfaces.gpt_generated import GPTGenerated
 
 from dataset_interfaces.interface import TestExample
@@ -25,7 +25,7 @@ class ProspectiveMemoryDataset(GPTGenerated):
     generation_file: Path = DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json")
     temperature: float = 0.5
     uses_callback: bool = True
-    generation_model: str = "gpt-4-0125-preview"
+    generation_model: str = GPT_4_TURBO_BEST
 
     def generate_examples(self, num_examples) -> List[TestExample]:
         num_pattern = r"\d+(?:th|st|nd|rd)"

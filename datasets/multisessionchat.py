@@ -2,7 +2,7 @@ import os
 import json
 from typing import List, Tuple
 
-from utils.openai import ask_llm, make_system_message, make_user_message
+from utils.llm import ask_llm, make_system_message, make_user_message
 from utils.data import get_file
 from dataclasses import dataclass
 from dataset_interfaces.interface import DatasetInterface, TestExample

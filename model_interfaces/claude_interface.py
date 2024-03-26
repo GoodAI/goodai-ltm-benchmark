@@ -4,14 +4,12 @@ from dataclasses import dataclass, field
 import anthropic
 
 from model_interfaces.interface import ChatSession
-from utils.constants import ResetPolicy
-from utils.openai import LLMContext, get_max_prompt_size, make_system_message, make_user_message, ensure_context_len, \
-    make_assistant_message, token_cost
+from utils.llm import LLMContext, get_max_prompt_size, make_user_message, ensure_context_len, \
+    make_assistant_message, token_cost, get_model
 
 
 @dataclass
 class ClaudeChatSession(ChatSession):
-
     system_prompt: str = "You are a helpful assistant."
     max_prompt_size: int = None
     model: str = "claude-2.1"
@@ -21,6 +19,7 @@ class ClaudeChatSession(ChatSession):
 
     def __post_init__(self):
         super().__post_init__()
+        self.model = get_model(self.model)
         if self.max_prompt_size is None:
             self.max_prompt_size = get_max_prompt_size(self.model)
         else:
@@ -41,7 +40,8 @@ class ClaudeChatSession(ChatSession):
         response = anthropic.Anthropic().beta.messages.create(
             model=self.model,
             max_tokens=self.response_len,
-            messages=self.context)
+            messages=self.context,
+        )
 
         response_text = response.content[0].text
 
