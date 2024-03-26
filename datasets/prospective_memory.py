@@ -31,8 +31,9 @@ class ProspectiveMemoryDataset(GPTGenerated):
         num_pattern = r"\d+(?:th|st|nd|rd)"
         examples = super().generate_examples(num_examples)
         for example in examples:
-            n = ordinal(self.random.randint(2, 10))
+            n = ordinal(self.random.randint(2, 9))
             example.script[1] = re.sub(num_pattern, n, example.script[1])
+            example.script[1] += " Count your response to this message as the first response."
             example.expected_responses[0] = re.sub(num_pattern, n, example.expected_responses[0])
         return examples
 
@@ -52,17 +53,13 @@ class ProspectiveMemoryDataset(GPTGenerated):
                 statement_idx = idx
                 break
 
-        # Log to actually check
-        log_lookahead = task_log[statement_idx:]
-        # steps to look
-        steps_to_look = int(re.findall(r"\d+", question)[0])
-        # We need to adjust this, because prompts are [User -> Agent] and +1 for the question statement and response
-        steps_to_look = (steps_to_look + 1) * 2
+        agent_responses = task_log[statement_idx + 1:][::2]
+        response_w_quote_idx = int(re.findall(r"\d+", question)[0]) - 1
 
         max_score = 1
 
         # If the quote hasn't come up yet
-        if steps_to_look > len(log_lookahead):
+        if response_w_quote_idx >= len(agent_responses):
             score = 1
             reason = "Not yet seen"
             deregister_callback = False
@@ -82,28 +79,25 @@ class ProspectiveMemoryDataset(GPTGenerated):
         assert quote is not None, "Quote cannot be found"
 
         # This statement should have the quote attached
-        target_stmt_in_log = log_lookahead[steps_to_look - 1]
+        target_stmt_in_log = agent_responses[response_w_quote_idx]
         if cites_quote(quote, target_stmt_in_log):
             score = 1
             reason = "The quote is recited in the correct place."
             deregister_callback = False
-            example.finished = True
         else:
             score = 0
             reason = "The agent did not recite the quote in the correct place."
             deregister_callback = True
-            example.finished = True
+        example.finished = True
 
         # All other statements should not have the quote
-        for stmt in log_lookahead:
-            if stmt.lower() == target_stmt_in_log.lower():
+        for i, stmt in enumerate(agent_responses):
+            if i == response_w_quote_idx:
                 continue
-
             if cites_quote(quote, stmt):
                 score = 0
                 reason = "The quote is recited somewhere other or additionally to the correct place."
                 deregister_callback = True
-                example.finished = True
                 break
 
         return score, max_score, [reason], deregister_callback
