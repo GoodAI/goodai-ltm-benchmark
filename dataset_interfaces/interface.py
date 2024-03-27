@@ -13,7 +13,7 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
-from utils.openai import ask_llm, LLMContext
+from utils.llm import ask_llm, LLMContext
 from utils.files import make_testdef_path
 
 _match_system_prompt = """

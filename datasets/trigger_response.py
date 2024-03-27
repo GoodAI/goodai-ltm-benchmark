@@ -1,7 +1,7 @@
 from json import JSONDecodeError
 from dataclasses import dataclass
 from typing import List, Tuple, Iterator
-from utils.openai import make_user_message
+from utils.llm import make_user_message
 from utils.text import rouge_l
 from utils.ui import colour_print
 from goodai.helpers.json_helper import sanitize_and_parse_json

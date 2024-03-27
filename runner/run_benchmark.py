@@ -25,8 +25,9 @@ from model_interfaces.human import HumanChatSession
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
-from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, make_runstats_path, \
-    make_master_log_path, gather_persistence_files
+from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, \
+    gather_persistence_files
+from utils.llm import get_model, GPT_4_TURBO_BEST
 from utils.constants import MAIN_DIR
 
 
@@ -34,52 +35,48 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
     kwargs = {"max_prompt_size": max_prompt_size} if max_prompt_size is not None else {}
     kwargs["run_name"] = run_name
 
-    if name in ["gpt", "gpt-4"]:
-        return GPTChatSession(model="gpt-4", **kwargs)
-    elif name == "gpt-3.5-turbo":
-        return GPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name in ["gpt-4-1106", "gpt-4-0125"]:
-        return GPTChatSession(model=f"{name}-preview", **kwargs)
-    elif name == "ts-gpt-3.5-turbo":
-        return TimestampGPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name in ["ts-gpt-4-1106", "ts-gpt-4-0125"]:
-        model = name.removesuffix("ts-") + "-preview"
-        return TimestampGPTChatSession(model=model, **kwargs)
-    elif name == "memgpt":
+    if name == "memgpt":
         return MemGPTChatSession(run_name=run_name)
-
-    elif name == "langchain_sb_a":
-        return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.SUMMARY_BUFFER, **kwargs)
-    elif name == "langchain_kg_a":
-        return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.KG, **kwargs)
-    elif name == "langchain_ce_a":
-        return LangchainAgent(
-            model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.CONVERSATION_ENTITY, **kwargs
-        )
-    elif name == "ltm_agent_1":
-        return LTMAgentWrapper(model="gpt-4-0125-preview",
-                               variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
-    elif name == "ltm_agent_2":
-        return LTMAgentWrapper(model="gpt-4-0125-preview",
-                               variant=LTMAgentVariant.SEMANTIC_ONLY, **kwargs)
-    elif name == "ltm_agent_3":
-        return LTMAgentWrapper(model="gpt-4-0125-preview",
-                               variant=LTMAgentVariant.TEXT_SCRATCHPAD, **kwargs)
-    elif name == "length_bias":
-        return LengthBiasAgent(model="gpt-4-0125-preview", **kwargs)
-    elif name.startswith("cost("):
+    if name.startswith("langchain_"):
+        suffix = "_".join(name.split("_")[1:])
+        mem_type = {
+            "sb_a": LangchainMemType.SUMMARY_BUFFER,
+            "kg_a": LangchainMemType.KG,
+            "ce_a": LangchainMemType.CONVERSATION_ENTITY,
+        }.get(suffix, None)
+        if mem_type is None:
+            raise ValueError(f"Unrecognized LangChain memory type {repr(suffix)}.")
+        return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=mem_type, **kwargs)
+    if name.startswith("ltm_agent_"):
+        agent_nr = "_".join(name.split("_")[2:])
+        variant = {
+            "1": LTMAgentVariant.QG_JSON_USER_INFO,
+            "2": LTMAgentVariant.SEMANTIC_ONLY,
+            "3": LTMAgentVariant.TEXT_SCRATCHPAD,
+        }.get(agent_nr, None)
+        if variant is None:
+            raise ValueError(f"Unrecognized LTM Agent variant {repr(agent_nr)}.")
+        return LTMAgentWrapper(model=GPT_4_TURBO_BEST, variant=variant, **kwargs)
+    if name == "length_bias":
+        return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
+    if name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
-    elif name == "claude-2.1":
-        return ClaudeChatSession(**kwargs)
-    elif name == "claude-3-sonnet":
-        return ClaudeChatSession(**kwargs, model="claude-3-sonnet-20240229")
-    elif name == "claude-3-opus":
-        return ClaudeChatSession(**kwargs, model="claude-3-opus-20240229")
-    elif name == "human":
+    if name == "human":
         return HumanChatSession(**kwargs)
-    else:
-        raise ValueError(f"Unrecognized agent: {name}")
+
+    try:
+        if name.startswith("claude-"):
+            cls = ClaudeChatSession
+        elif name.startswith("ts-"):
+            cls = TimestampGPTChatSession
+        else:
+            cls = GPTChatSession
+        return cls(model=name.removeprefix("ts-"), **kwargs)
+    except ValueError:
+        pass
+
+    raise ValueError(f"Unrecognized agent: {name}")
 
 
 def generate_test_examples(
@@ -147,6 +144,7 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
             else:
                 resume = True
     return resume
+
 
 @click.command("run-benchmark")
 @click.option(

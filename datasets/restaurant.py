@@ -6,7 +6,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from dataset_interfaces.interface import DynamicDataset, TestExample, DynamicExample, TestAction, SendMessageAction
 
-from utils.openai import make_system_message, make_user_message, LLMContext
+from utils.llm import make_system_message, make_user_message, LLMContext
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 

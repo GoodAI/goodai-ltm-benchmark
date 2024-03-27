@@ -2,7 +2,7 @@ import re
 from json import JSONDecodeError
 from dataclasses import dataclass
 from typing import List, Tuple
-from utils.openai import make_user_message
+from utils.llm import make_user_message
 from utils.json_utils import LLMJSONError
 from goodai.helpers.json_helper import sanitize_and_parse_json
 from datasets.locations import (

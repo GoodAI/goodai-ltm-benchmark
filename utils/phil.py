@@ -1,5 +1,5 @@
 from typing import Optional, Callable
-from utils.openai import (
+from utils.llm import (
     LLMContext,
     ask_llm,
     make_message,

@@ -10,7 +10,7 @@ from typing import List
 from goodai.ltm.mem.base import RetrievedMemory
 
 from model_interfaces.interface import ChatSession
-from utils.openai import ask_llm
+from utils.llm import ask_llm
 import tiktoken
 
 _logger = logging.getLogger("exp_agent")

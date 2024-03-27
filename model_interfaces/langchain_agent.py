@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_openai import OpenAI
 from model_interfaces.interface import ChatSession
 from utils.constants import ResetPolicy
-from utils.openai import get_max_prompt_size, token_cost
+from utils.llm import get_max_prompt_size, token_cost
 from utils.ui import colour_print
 
 _default_prompt_template = """The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
