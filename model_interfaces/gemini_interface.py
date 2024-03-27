@@ -1,23 +1,46 @@
 import os
-import textwrap
 import google.generativeai as genai
+import json
+from model_interfaces.interface import ChatSession
+from dataclasses import dataclass
+from typing import Optional
 
 
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-genai.configure(api_key=GOOGLE_API_KEY)
+@dataclass
+class GeminiChatSession(ChatSession):
+    model_name: str = "gemini-pro"
 
+    def __post_init__(self):
+        genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+        self.reset()
 
-model = genai.GenerativeModel('gemini-pro')
-response = model.generate_content("tell me a joke")
-print(response.text)
-exit(0)
+    @property
+    def name(self) -> str:
+        return f"{super().name} - {self.model_name}"
 
-raw_response = response.text  # This has the raw response
-chat = model.start_chat(history=[])
-response = chat.send_message("Okay, how about a more detailed e...")
+    @property
+    def context_path(self) -> str:
+        return self.save_path.joinpath("context.json")
 
-# model.count_tokens("What is the meaning of life?")
-# model.count_tokens(chat.history)
+    def reply(self, user_message: str) -> str:
+        response = self.chat.send_message(user_message)
+        return response.text
 
-for message in chat.history:
-    print(f'**{message.role}**: {message.parts[0].text}')
+    def reset(self, history: Optional[list] = None):
+        self.model = genai.GenerativeModel('gemini-pro')
+        self.chat = self.model.start_chat(history=history)
+
+    def save(self):
+        context = [dict(role=m.role, message=m.parts[0].text) for m in self.chat.history]
+        with open(self.context_path, "w") as fd:
+            json.dump(context, fd)
+
+    def load(self):
+        with open(self.context_path, "r") as fd:
+            context = json.load(fd)
+        history = [
+            genai.generative_models.content_types.ContentDict(
+                role=m["role"], parts=[m["message"]],
+            ) for m in context
+        ]
+        self.reset(history=history)
