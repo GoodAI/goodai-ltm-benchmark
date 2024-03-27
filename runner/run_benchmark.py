@@ -39,11 +39,11 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return MemGPTChatSession(run_name=run_name)
     if name.startswith("langchain_"):
         suffix = "_".join(name.split("_")[1:])
-        mem_type = dict(
-            sb_a=LangchainMemType.SUMMARY_BUFFER,
-            kg_a=LangchainMemType.KG,
-            ce_a=LangchainMemType.CONVERSATION_ENTITY,
-        ).get(suffix, None)
+        mem_type = {
+            "sb_a": LangchainMemType.SUMMARY_BUFFER,
+            "kg_a": LangchainMemType.KG,
+            "ce_a": LangchainMemType.CONVERSATION_ENTITY,
+        }.get(suffix, None)
         if mem_type is None:
             raise ValueError(f"Unrecognized LangChain memory type {repr(suffix)}.")
         return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=mem_type, **kwargs)
@@ -66,15 +66,13 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return HumanChatSession(**kwargs)
 
     try:
-        model = get_model(name.removesuffix("ts-"))
-        if model.startswith("claude-"):
-            assert not name.startswith("ts-")
+        if name.startswith("claude-"):
             cls = ClaudeChatSession
         elif name.startswith("ts-"):
             cls = TimestampGPTChatSession
         else:
             cls = GPTChatSession
-        return cls(model=model, **kwargs)
+        return cls(model=name.removeprefix("ts-"), **kwargs)
     except ValueError:
         pass
 
