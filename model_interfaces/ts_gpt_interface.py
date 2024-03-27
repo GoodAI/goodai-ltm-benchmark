@@ -3,16 +3,14 @@ import time
 from datetime import datetime
 
 from model_interfaces.interface import ChatSession
-from utils.constants import PERSISTENCE_DIR, ResetPolicy
 from utils.json_utils import CustomEncoder
 from utils.llm import (
     ask_llm,
-    LLMContext,
+    get_model,
     make_system_message,
     make_user_message,
-    make_assistant_message,
 )
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -21,6 +19,10 @@ class TimestampGPTChatSession(ChatSession):
     max_prompt_size: int = 8192
     model: str = "gpt-4"
     verbose: bool = False
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.model = get_model(self.model)
 
     @property
     def name(self):
