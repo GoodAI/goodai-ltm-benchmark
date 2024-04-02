@@ -19,7 +19,7 @@ def colour_print(colour: str, *args, end="\n", sep=" ", **kwargs):
     print(getattr(Fore, colour) + sep.join(str(a) for a in args), end=end + Style.RESET_ALL, **kwargs)
 
 
-def multiline_input(message: str) -> str:
+def multiline_input(message: str, in_prefix: str = "> ") -> str:
     lines = list()
     print(message, end="")
     prefix = ""
@@ -30,7 +30,7 @@ def multiline_input(message: str) -> str:
                 print()
             return "\n".join(lines).strip()
         lines.append(in_str)
-        prefix = "> "
+        prefix = in_prefix
 
 
 def ordinal(n: int) -> str:

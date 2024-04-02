@@ -2,7 +2,6 @@ import sys
 from datetime import datetime
 from dataclasses import dataclass
 from typing import Optional
-
 from utils.ui import colour_print, multiline_input
 from model_interfaces.interface import ChatSession
 
