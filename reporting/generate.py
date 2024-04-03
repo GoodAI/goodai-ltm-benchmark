@@ -174,7 +174,7 @@ def get_summary_data(run_name: str, agent_name: str):
     return dict(
         speed=len(results) / (benchmark_data["duration"] / 3600),
         cost=benchmark_data["agent_costs_usd"],
-        verbosity=benchmark_data["total_tokens"],
+        verbosity=benchmark_data["agent_tokens"],
         score=score,
         accuracy=100 * accuracy / len(results),
         ltm=ltm_score,
