@@ -8,11 +8,12 @@ from utils.ui import colour_print
 
 LLMMessage = dict[str, str]
 LLMContext = list[LLMMessage]
+# This list should only contain exact IDs for latest models.
+# Add previous ID if specifically supported.
 SUPPORTED_MODELS: dict[str, tuple[int, tuple[float, float]]] = {
-    "gpt-3.5-turbo": (16_384, (5e-7, 1.5e-6)),
+    "gpt-3.5-turbo-0125": (16_384, (5e-7, 1.5e-6)),
     "gpt-4": (8_192, (3e-5, 6e-5)),
     "gpt-4-32k": (32_768, (6e-5, 1.2e-4)),
-    "gpt-4-turbo-preview": (128_000, (1e-5, 3e-5)),
     "gpt-4-1106-preview": (128_000, (1e-5, 3e-5)),
     "gpt-4-0125-preview": (128_000, (1e-5, 3e-5)),
     "claude-2.1": (200_000, (8e-6, 2.4e-5)),
@@ -21,7 +22,8 @@ SUPPORTED_MODELS: dict[str, tuple[int, tuple[float, float]]] = {
     "claude-3-opus-20240229": (200_000, (1.5e-5, 7.5e-5)),
 }
 MODEL_ALIASES = {
-    "gpt-4-turbo": "gpt-4-turbo-preview",
+    "gpt-3.5-turbo": "gpt-3.5-turbo-0125",
+    "gpt-4-turbo": "gpt-4-0125-preview",
     "gpt-4-1106": "gpt-4-1106-preview",
     "gpt-4-0125": "gpt-4-0125-preview",
     "claude-3-haiku": "claude-3-haiku-20240229",
@@ -89,10 +91,10 @@ def ensure_context_len(
     else:
         sys_idx = 0
 
-    context_tokens = context_token_len(context[:sys_idx])
+    context_tokens = context_token_len(context[:sys_idx], model=model)
 
     for message in reversed(context[sys_idx:]):
-        message_tokens = context_token_len([message])
+        message_tokens = context_token_len([message], model=model)
         if context_tokens + message_tokens + response_len > max_len:
             break
         messages.append(message)
