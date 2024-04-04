@@ -38,6 +38,11 @@ Respond in JSON with the following format:
 ]
 """.strip()
 
+def normalize_scores(evaluate_correct_fn: Callable[[List[str], List[str], List[Any]], Tuple[int, int, List[str]]],
+                     questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
+    correct, total, feedback = evaluate_correct_fn(questions, responses, expected_answers)
+    normalized_score = float(correct) / total if total > 0 else 0.0
+    return normalized_score, 1, feedback
 
 class TestAction:
     pass
@@ -119,8 +124,16 @@ class TestExample:
         return self.dataset_generator.reset_message
 
     @property
-    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
-        return self.dataset_generator.evaluate_correct
+    # def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
+    #     return self.dataset_generator.evaluate_correct
+    def evaluation_fn(self) -> Callable[[List[str], List[str], List[Any]], Tuple[float, int, List[str]]]:
+        """
+        Returns a callable that evaluates and normalizes the scores between 0 and 1.
+        The returned tuple consists of the normalized score, the max score (always 1 for normalized scores), and feedback.
+        """
+        def evaluator(questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
+            return normalize_scores(self.dataset_generator.evaluate_correct, questions, responses, expected_answers)
+        return evaluator
 
     @property
     def unique_id(self):
@@ -294,6 +307,11 @@ class DatasetInterface(ABC):
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
     ) -> Tuple[int, int, List[str]]:
         pass
+    
+    def evaluation_fn(self) -> Callable[[List[str], List[str], List[Any]], Tuple[float, int, List[str]]]:
+        def evaluator(questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
+            return normalize_scores(self.evaluate_correct, questions, responses, expected_answers)
+        return evaluator
 
     def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256, **kwargs) -> str:
         return ask_llm(

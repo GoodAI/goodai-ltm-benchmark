@@ -4,7 +4,7 @@ from typing import Tuple, List
 from faker import Faker
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
-from utils.openai import ask_llm
+# from utils.openai import ask_llm
 
 PLACE_TEMPLATE = "{}: We will rendezvous {}."
 TIME_TEMPLATE = "{}: The time we will meet is {}."

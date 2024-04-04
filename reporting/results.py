@@ -36,7 +36,7 @@ class TestResult:
             "full_log",
             "expected_responses",
         ]
-        self.normalize_score()
+        # self.normalize_score()
 
     def __str__(self):
         string = ""
@@ -72,12 +72,13 @@ class TestResult:
         for k in self._saved_attrs:
             setattr(self, k, d[k])
 
-    def normalize_score(self):
-        """Normalizes the score between 0 and 1."""
-        if self.max_score == 0:
-            self.normalized_score = 0
-        else:
-            self.normalized_score = round(self.score / self.max_score, 2)
+    # def normalize_score(self):
+    #     """Normalizes the score between 0 and 1."""
+    #     if self.max_score == 0:
+    #         self.normalized_score = 0
+    #     else:
+    #         self.normalized_score = round(self.score / self.max_score, 2)
+    #         # reference the actual score, currently called before load 
 
     @classmethod
     def from_file(cls, path: Path | str) -> "TestResult":
