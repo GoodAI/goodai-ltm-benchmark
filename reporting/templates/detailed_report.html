@@ -87,7 +87,7 @@
     <div class="main-title">
         <img src="data:image/png;base64, {{ logo_b64 }}" alt="GoodAI Logo" />
         <h1>GoodAI LTM Benchmark</h1>
-        <p><b>Distraction Segment</b>: {{ info_gap }} tokens<br><b>Memory Span (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
+        <p><b>Target Max Memory Span</b>: {{ target_memory_span }} tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
         <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }}</p>
         <ul>
             {% for metric in global_metrics %}
@@ -122,7 +122,7 @@
                                 <hr>
                             {% endfor %}
                             <p><b>Score:</b> {{ test.score }}/{{ test.max_score }}</p>
-                            <p><b>Distance to relevant info:</b> {{ test.tokens }} tokens, {{ test.characters }} characters.</p>
+                            <p><b>Memory span from first statement to last question:</b> {{ test.tokens }} tokens, {{ test.characters }} characters.</p>
                         </div>
                     </div>
                 {% endfor %}

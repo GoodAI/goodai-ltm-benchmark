@@ -188,11 +188,6 @@ class ShoppingDataset(DatasetInterface):
         score = (score / 3) * max_score
         return score, max_score, ["\n".join(reasoning)]
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # All statements are relevant
-        # in this test all statements are atomic
-        return 0, len(example.script[0])
-
 
 def main():
     # Create a conversation for the agent using a name and phil

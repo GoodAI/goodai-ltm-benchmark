@@ -88,7 +88,3 @@ class GPTGenerated(DatasetInterface, ABC):
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
     ) -> Tuple[int, int, List[str]]:
         return self.evaluate_correct_gpt(questions, responses, expected_answers)
-
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # In GPT-generated tasks, the relevant info is given in the first script line.
-        return 0, 0

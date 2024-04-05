@@ -135,8 +135,8 @@ class TestExample:
         assert self.memory_span is not None
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
-        self.default_waits()
         self.random = Random(self.unique_id)
+        self.default_waits()
 
     def action_iter(self) -> Iterator[TestAction]:
         scripts = [self.script, self.waits, self.is_question]
@@ -209,12 +209,13 @@ class TestExample:
         assert script_tokens < self.memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {self.memory_span} tokens."
 
         span_minus_script = self.memory_span - script_tokens
+        needle_question_proportions = (.75, .25) if self.number_of_questions == 1 else (.5, .5)
 
         # Figure out what our spacing is going to be. We will do the 75%/25% needle distribution.
-        tokens_for_needles = math.floor(span_minus_script * .75)
+        tokens_for_needles = math.floor(span_minus_script * needle_question_proportions[0])
         needles = len(self.is_question) - sum(self.is_question)
         token_wait_per_needle = tokens_for_needles // needles
-        token_wait_between_questions = math.floor(span_minus_script * .9 * .25) // sum(self.is_question)
+        token_wait_between_questions = math.floor(span_minus_script * .9 * needle_question_proportions[1]) // sum(self.is_question)
 
         # Create the empty waits if there are any.
         if len(self.waits) == 0:
@@ -233,6 +234,13 @@ class TestExample:
 
         assert total_wait_tokens < span_minus_script, "Sum of task waits is higher than the determined memory span."
         self.waits[-1] = WaitCreator.create_wait()
+
+    def setup_question_ratio(self):
+        # Return normalised values
+        non_questions = len(self.script) - self.number_of_questions
+
+        return non_questions/len(self.script), self.number_of_questions/len(self.script)
+
 
 
 @dataclass
@@ -412,28 +420,19 @@ class DatasetInterface(ABC):
             **kwargs
         )
 
-    @abstractmethod
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        pass
-
     def tokens_to_answer(self, test_context: List[Dict[str, Any]], full_context: List[Dict[str, str]], example: TestExample):
         encoding = tiktoken.get_encoding("cl100k_base")
         num_tokens = num_characters = 0
 
-        # Get most relevant line, and any characters after that statement.
-        script_answer_index, answer_end_char = self.answer_statement_idx(example)
-        relevant_line = example.script[script_answer_index]
+        # Get the first line of the script
+        relevant_line = example.script[0]
 
         timestamp_idx = search_context(test_context, relevant_line)
         target_timestamp = test_context[timestamp_idx]["timestamp"].__str__()
 
-        # Update tokens and character counts from the script
-        num_characters += len(relevant_line[answer_end_char:])
-        num_tokens += len(encoding.encode(relevant_line[answer_end_char:]))
-
         # Where in the history was the statement made?
         # Find that statement in the history suing the content and timestamp and count from there.
-        history_idx = search_context(full_context, relevant_line, target_timestamp) + 1
+        history_idx = search_context(full_context, relevant_line, target_timestamp)
         countable_history_chunk = flatten_context(full_context[history_idx:])
 
         # Now count the tokens and characters since there
@@ -463,10 +462,6 @@ class DynamicDataset(DatasetInterface, ABC):
     def evaluate_correct(self, *args):
         raise NotImplementedError("This method should not be called. Each test example has its own evaluation function.")
 
-    @abstractmethod
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        pass
-
     def create_example(self, **kwargs) -> DynamicExample:
         if self.memory_span > 0:
             kwargs["memory_span"] = self.memory_span
@@ -475,5 +470,5 @@ class DynamicDataset(DatasetInterface, ABC):
     def generate_examples(self, num_examples: int) -> List[TestExample]:
         return [self.create_example() for _ in range(num_examples)]
 
-    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def default_waits(self, script: list[str], is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return []

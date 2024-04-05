@@ -105,8 +105,4 @@ class SpyMeetingDataset(DatasetInterface):
 
         return correct, 1, reasoning
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # Second statement in the script, character 0
-        return 1, 0
-
 

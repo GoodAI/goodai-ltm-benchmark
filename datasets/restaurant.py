@@ -224,9 +224,6 @@ class RestaurantDataset(DynamicDataset):
             for section, content in self.menu_dict.items()
         )
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        return 0, len(example.script[0])
-
 
 def day_moment_salutation() -> str:
     ts = datetime.now()

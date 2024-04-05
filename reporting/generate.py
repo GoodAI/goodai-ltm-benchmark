@@ -49,7 +49,7 @@ def arrange_data(results: List[TestResult]):
     run_name = results[0].run_name
     agent_name = results[0].agent_name
     max_score = achieved_score = 0
-    info_gaps = list()
+    memory_spans = list()
     data = dict()
 
     for res in results:
@@ -65,7 +65,7 @@ def arrange_data(results: List[TestResult]):
 
         max_score += res.max_score
         achieved_score += res.score
-        info_gaps.append(res.tokens)
+        memory_spans.append(res.tokens)
 
         expected = [str(r) for r in res.expected_responses]
         actual = [str(r) for r in res.actual_responses]
@@ -100,13 +100,13 @@ def arrange_data(results: List[TestResult]):
     return dict(
         achieved_score=display_float_or_int(achieved_score),
         max_score=display_float_or_int(max_score),
-        info_gap=0,  # TODO
+        target_memory_span=args["memory_span"],
         run_name=run_name,
         agent_name=agent_name,
         data_by_dataset=data,
-        min_gap=min(info_gaps),
-        max_gap=max(info_gaps),
-        avg_gap=int(sum(info_gaps)/len(info_gaps)),
+        min_gap=min(memory_spans),
+        max_gap=max(memory_spans),
+        avg_gap=int(sum(memory_spans)/len(memory_spans)),
     )
 
 

@@ -29,4 +29,7 @@ class DelayedRecallDataset(GPTGenerated):
                     "Look, about the fictional world..."
                 ])
                 example.script[i] = f"{intro} {line}"
+                # The number of script lines has changed, redo the waits.
+                example.waits = []
+                example.default_waits()
         return example_list
