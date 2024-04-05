@@ -69,13 +69,12 @@ class MasterLog:
         timestamp: datetime,
         tokens: int = 0,
         time: timedelta = timedelta(seconds=0),
-        percentage_finished: float = 0.0
     ):
         event = LogEvent(
             EventType.WAIT,
             timestamp=timestamp,
             test_id=test_id,
-            data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished},
+            data={"tokens": tokens, "time": time},
         )
         self.add_event(event)
 
@@ -119,8 +118,6 @@ class MasterLog:
                     wait_cond.append(f"{event.data['tokens']} TOKENS")
                 if event.data['time'].seconds > 0:
                     wait_cond.append(f"{event.data['time']} TIME")
-                if event.data['percentage_finished'] > 0:
-                    wait_cond.append(f"{event.data['percentage_finished']}% TESTS FINISHED")
                 wait_cond = ", ".join(wait_cond)
 
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for {wait_cond}.")

@@ -36,7 +36,7 @@ class RestaurantExample(DynamicExample):
             "When I talk to you as the waiter ('Waiter: what will it be sir?'), then you will reply as if you were the "
             "customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?"
         )
-        yield self.wait(percentage_finished=20)
+        yield self.wait(tokens=self.memory_span * .2)
 
         # Give the menu and ask for the drink
         yield self.say(
@@ -49,14 +49,14 @@ class RestaurantExample(DynamicExample):
         drinks = self.extract_order_items(self.action.reply)
         drinks_str = enumerate_str(drinks)
         self.reasoning.append(f"The agent answered as the customer and ordered {drinks_str}.")
-        yield self.wait(percentage_finished=40)
+        yield self.wait(tokens=self.memory_span * .2)
 
         # Ordering food
         yield self.say(f"Here is your {drinks_str}. What would you like to eat?")
         order = self.extract_order_items(self.action.reply)
         order_str = self.score_and_format_order(order)
         yield self.say(f"Excellent choice! {order_str} coming right up.", question=False)
-        yield self.wait(percentage_finished=60)
+        yield self.wait(tokens=self.memory_span * .2)
 
         # Some dish is unexpectedly unavailable -> order another thing
         old_item = self.random.choice(order)
@@ -80,7 +80,7 @@ class RestaurantExample(DynamicExample):
         order.remove(old_item)
         order.extend(new_items)
         yield self.say(f"{new_items_str} it is. Sorry again for the inconvenience.", question=False)
-        yield self.wait(percentage_finished=80)
+        yield self.wait(tokens=self.memory_span * .2)
 
         # Alter the order -> does the agent notice?
         true_item, unsolicited_item, altered_order = self.alter_order(order, old_item)
@@ -88,7 +88,7 @@ class RestaurantExample(DynamicExample):
         yield self.say(f"Here you are: {altered_str}. Enjoy the meal.")
         self.check_notices_mishap()
         yield self.say("I apologize. I will fix it immediately.", question=False)
-        yield self.wait(percentage_finished=100)
+        yield self.wait(tokens=self.memory_span * .1)
 
         # Amend the order and offer an extra drink
         yield self.say(

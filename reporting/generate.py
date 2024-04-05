@@ -100,7 +100,7 @@ def arrange_data(results: List[TestResult]):
     return dict(
         achieved_score=display_float_or_int(achieved_score),
         max_score=display_float_or_int(max_score),
-        info_gap=max(args["filler_tokens"], args["pre_question_filler"]),
+        info_gap=0,  # TODO
         run_name=run_name,
         agent_name=agent_name,
         data_by_dataset=data,

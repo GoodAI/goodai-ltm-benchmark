@@ -1,4 +1,5 @@
 import json
+import math
 from copy import deepcopy
 from random import Random
 from pathlib import Path
@@ -13,7 +14,7 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
-from utils.llm import ask_llm, LLMContext
+from utils.llm import ask_llm, LLMContext, get_tokens_for_script
 from utils.files import make_testdef_path
 
 _match_system_prompt = """
@@ -66,13 +67,12 @@ class SendAndRegisterAction(SendMessageAction):
 class WaitAction(TestAction):
     tokens: int = 0
     time: timedelta = field(default_factory=timedelta)
-    percentage_finished: float = 0.0
 
 
 class WaitCreator:
     @classmethod
-    def create_wait(cls, tokens: int = None, time: timedelta = None, percentage_finished: float = None):
-        w_dict = {"tokens": tokens, "time": time, "percentage_finished": percentage_finished}
+    def create_wait(cls, tokens: int = None, time: timedelta = None):
+        w_dict = {"tokens": tokens, "time": time}
         return {k: v for k, v in w_dict.items() if v is not None}
 
     @classmethod
@@ -104,6 +104,7 @@ class TestExample:
     finished: bool = False
     _iter: Iterator[TestAction] = None
     waits: List[dict] = field(default_factory=list)
+    memory_span: int = None
     random: Random = None  # Seeded random generator
 
     @property
@@ -131,9 +132,10 @@ class TestExample:
 
     def __post_init__(self):
         assert self.dataset_generator is not None
+        assert self.memory_span is not None
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
-        self.waits = self.dataset_generator.default_waits(self.is_question, self.waits)
+        self.default_waits()
         self.random = Random(self.unique_id)
 
     def action_iter(self) -> Iterator[TestAction]:
@@ -165,6 +167,7 @@ class TestExample:
             can_be_interleaved=self.can_be_interleaved,
             is_temporal=self.is_temporal,
             uses_callback=self.uses_callback,
+            memory_span=self.memory_span,
         )
 
     def save(self, run_name: str, exist_ok: bool = False):
@@ -192,6 +195,44 @@ class TestExample:
         generator_attrs = {"dataset_name", "description", "reset_message"}
         d = {k: d[k] for k in d.keys() if k not in generator_attrs}
         return dataset_generator.create_example(**d)
+
+    def default_waits(self):
+
+        if isinstance(self, DynamicExample):
+            return
+
+        assert len(self.is_question) >= 1, "There are no questions for this test"
+        assert len(self.waits) == 0 or len(self.waits) == len(self.is_question), "Current waits should be empty or the same length as the script"
+
+        # TODO: All this token counting is based on OpenAIs methods, which is not Anthropics - but Aanthopic has no reliable tokeniser released so....
+        script_tokens = get_tokens_for_script(self.script)
+        assert script_tokens < self.memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {self.memory_span} tokens."
+
+        span_minus_script = self.memory_span - script_tokens
+
+        # Figure out what our spacing is going to be. We will do the 75%/25% needle distribution.
+        tokens_for_needles = math.floor(span_minus_script * .75)
+        needles = len(self.is_question) - sum(self.is_question)
+        token_wait_per_needle = tokens_for_needles // needles
+        token_wait_between_questions = math.floor(span_minus_script * .9 * .25) // sum(self.is_question)
+
+        # Create the empty waits if there are any.
+        if len(self.waits) == 0:
+            for _ in range(len(self.is_question)):
+                self.waits.append({})
+
+        total_wait_tokens = 0
+
+        for idx, f in enumerate(self.waits[:-1]):
+            if f != {}:
+                continue
+
+            wait = token_wait_per_needle if idx < needles else token_wait_between_questions
+            self.waits[idx] = WaitCreator.create_wait(tokens=int(wait))
+            total_wait_tokens += wait
+
+        assert total_wait_tokens < span_minus_script, "Sum of task waits is higher than the determined memory span."
+        self.waits[-1] = WaitCreator.create_wait()
 
 
 @dataclass
@@ -253,8 +294,7 @@ class DatasetInterface(ABC):
     name: str
     description: str
     question: str = ""
-    filler_tokens: int = 0
-    pre_question_filler: int = 0
+    memory_span: int = 0
     seed: int = 0
     cost_callback: Callable[[float], None] = None
     uses_callback: bool = False
@@ -376,28 +416,6 @@ class DatasetInterface(ABC):
     def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
         pass
 
-    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        def _filler_size(is_prev_to_question: bool):
-            return self.pre_question_filler if is_prev_to_question else self.filler_tokens
-
-        assert len(is_question) >= 1, "There are no questions for this test"
-        assert len(current_waits) == 0 or len(current_waits) == len(is_question), "Current waits should be empty or the same length as the script"
-
-        # Create the empty waits if there are any.
-        if len(current_waits) == 0:
-            for _ in range(len(is_question)):
-                current_waits.append({})
-
-        is_prior_to_question = is_question[1:] + [False]
-        for idx, (f, p2q) in enumerate(zip(current_waits[:-1], is_prior_to_question)):
-            if f != {}:
-                continue
-
-            current_waits[idx] = WaitCreator.create_wait(tokens=_filler_size(p2q))
-
-        current_waits[-1] = WaitCreator.create_wait()
-        return current_waits
-
     def tokens_to_answer(self, test_context: List[Dict[str, Any]], full_context: List[Dict[str, str]], example: TestExample):
         encoding = tiktoken.get_encoding("cl100k_base")
         num_tokens = num_characters = 0
@@ -450,6 +468,8 @@ class DynamicDataset(DatasetInterface, ABC):
         pass
 
     def create_example(self, **kwargs) -> DynamicExample:
+        if self.memory_span > 0:
+            kwargs["memory_span"] = self.memory_span
         return self.example_cls(dataset_generator=self, **kwargs)
 
     def generate_examples(self, num_examples: int) -> List[TestExample]:

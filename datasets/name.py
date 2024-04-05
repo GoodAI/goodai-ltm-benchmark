@@ -50,6 +50,7 @@ class NamesDataset(DatasetInterface):
                 script=script,
                 expected_responses=answer_list,
                 is_question=is_question,
+                memory_span=self.memory_span,
             )
             examples.append(example)
         return examples

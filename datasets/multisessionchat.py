@@ -174,6 +174,7 @@ class MultiSessionChatDataset(DatasetInterface):
                 script=script,
                 expected_responses=[json.dumps(answer_data)],
                 is_question=is_question,
+                memory_span=self.memory_span,
             )
             test_examples.append(example)
         return test_examples
