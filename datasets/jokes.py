@@ -73,7 +73,6 @@ class JokesDataset(DatasetInterface):
                 waits=waits,
                 is_temporal=True,
                 is_question=is_question,
-                memory_span=self.memory_span,
             )
 
             examples.append(example)

@@ -104,7 +104,6 @@ class TestExample:
     finished: bool = False
     _iter: Iterator[TestAction] = None
     waits: List[dict] = field(default_factory=list)
-    memory_span: int = None
     random: Random = None  # Seeded random generator
 
     @property
@@ -132,7 +131,7 @@ class TestExample:
 
     def __post_init__(self):
         assert self.dataset_generator is not None
-        assert self.memory_span is not None
+        assert self.dataset_generator.memory_span > 0
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
         self.random = Random(self.unique_id)
@@ -167,7 +166,6 @@ class TestExample:
             can_be_interleaved=self.can_be_interleaved,
             is_temporal=self.is_temporal,
             uses_callback=self.uses_callback,
-            memory_span=self.memory_span,
         )
 
     def save(self, run_name: str, exist_ok: bool = False):
@@ -179,8 +177,7 @@ class TestExample:
             json.dump(self.to_dict(), fd, indent=2)
 
     @classmethod
-    def load(cls, file_path: Path | str) -> "TestExample":
-        from dataset_interfaces.factory import DATASETS_BY_NAME
+    def load(cls, dataset_generator: "DatasetInterface", file_path: Path | str) -> "TestExample":
 
         file_path = Path(file_path)
         assert file_path.exists(), f"Test file doesn't exist: {file_path}"
@@ -190,8 +187,6 @@ class TestExample:
         d["waits"] = [WaitCreator.unserialise(x) for x in d["waits"]]
         d["example_id"] = file_path.name.removesuffix(".def.json")
         d["dataset_name"] = file_path.parent.name
-        assert d["dataset_name"] in DATASETS_BY_NAME, f"Couldn't find a generator for dataset {d['dataset_name']}."
-        dataset_generator = DATASETS_BY_NAME[d["dataset_name"]]()
         generator_attrs = {"dataset_name", "description", "reset_message"}
         d = {k: d[k] for k in d.keys() if k not in generator_attrs}
         return dataset_generator.create_example(**d)
@@ -203,12 +198,13 @@ class TestExample:
 
         assert len(self.is_question) >= 1, "There are no questions for this test"
         assert len(self.waits) == 0 or len(self.waits) == len(self.is_question), "Current waits should be empty or the same length as the script"
+        memory_span = self.dataset_generator.memory_span
 
         # TODO: All this token counting is based on OpenAIs methods, which is not Anthropics - but Aanthopic has no reliable tokeniser released so....
         script_tokens = get_tokens_for_script(self.script)
-        assert script_tokens < self.memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {self.memory_span} tokens."
+        assert script_tokens < memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {memory_span} tokens."
 
-        span_minus_script = self.memory_span - script_tokens
+        span_minus_script = memory_span - script_tokens
         needle_question_proportions = (.75, .25) if self.number_of_questions == 1 else (.5, .5)
 
         # Figure out what our spacing is going to be. We will do the 75%/25% needle distribution.
@@ -240,7 +236,6 @@ class TestExample:
         non_questions = len(self.script) - self.number_of_questions
 
         return non_questions/len(self.script), self.number_of_questions/len(self.script)
-
 
 
 @dataclass
@@ -463,8 +458,6 @@ class DynamicDataset(DatasetInterface, ABC):
         raise NotImplementedError("This method should not be called. Each test example has its own evaluation function.")
 
     def create_example(self, **kwargs) -> DynamicExample:
-        if self.memory_span > 0:
-            kwargs["memory_span"] = self.memory_span
         return self.example_cls(dataset_generator=self, **kwargs)
 
     def generate_examples(self, num_examples: int) -> List[TestExample]:

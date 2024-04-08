@@ -1,4 +1,3 @@
-import math
 from dataclasses import dataclass
 from typing import Tuple, List
 
@@ -79,7 +78,6 @@ class SpyMeetingDataset(DatasetInterface):
                 script=script,
                 is_question=is_question,
                 expected_responses=expected_responses,
-                memory_span=self.memory_span,
             ))
 
         return examples

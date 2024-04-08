@@ -77,7 +77,6 @@ class GPTGenerated(DatasetInterface, ABC):
                 expected_responses=expected_responses,
                 is_question=is_question,
                 uses_callback=self.uses_callback,
-                memory_span=self.memory_span,
             )
 
             examples.append(example)

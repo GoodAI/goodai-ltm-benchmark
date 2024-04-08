@@ -315,7 +315,6 @@ class TestRunner:
             max_score=1,
             score=1,
             reasoning=["Evaluation Skipped"],
-            needles=len(example.script) - example.number_of_questions
         )
         skip = result.path.exists()
         if skip:

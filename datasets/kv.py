@@ -59,7 +59,6 @@ class KVPairsDataset(DatasetInterface):
                 script=script,
                 expected_responses=[value],
                 is_question=is_question,
-                memory_span=self.memory_span,
             )
             examples.append(test_example)
         return examples

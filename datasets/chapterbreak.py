@@ -150,7 +150,6 @@ class ChapterBreakDataset(DatasetInterface):
                 expected_responses=[str(answer)],
                 is_question=is_question,
                 waits=[WaitCreator.create_wait(tokens=0) for _ in is_question],
-                memory_span=self.memory_span,
             )
             example_list.append(example)
 
