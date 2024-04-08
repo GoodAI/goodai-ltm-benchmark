@@ -97,7 +97,9 @@ class JokesDataset(DatasetInterface):
         if hours > 0:
             timestamp = f"{hours} hours " + timestamp
 
-        return f"Which joke did I tell you about {timestamp} ago?"
+        question = f"Which joke did I tell you about {timestamp} ago?"
+        example.script.append(question)
+        return question
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]

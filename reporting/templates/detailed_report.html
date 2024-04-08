@@ -108,6 +108,7 @@
                             <b>Test {{ test_idx + 1 }} ({{ test.score }}/{{ test.max_score }})</b>
                         </div>
                         <div class="test-details">
+                            <p><b>Needles: {{ test.needles }}</b></p>
                             <p><b>Task Log:</b></p>
                             <ul style="list-style-type:none;">
                             {% for line in test.task_log %}

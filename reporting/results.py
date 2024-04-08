@@ -23,6 +23,7 @@ class TestResult:
     characters: int = None
     repetition: int = 0
     full_log: List[str] = field(default_factory=list)
+    needles: int = 0
 
     def __post_init__(self):
         self._saved_attrs = [
@@ -35,6 +36,7 @@ class TestResult:
             "characters",
             "full_log",
             "expected_responses",
+            "needles"
         ]
 
     def __str__(self):

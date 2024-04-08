@@ -90,6 +90,7 @@ def arrange_data(results: List[TestResult]):
             "tokens": res.tokens,
             "characters": res.characters,
             "color": color,
+            "needles": res.needles,
         }
         data[res.dataset_name]["tests"].append(test_dict)
 

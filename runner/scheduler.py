@@ -315,6 +315,7 @@ class TestRunner:
             max_score=1,
             score=1,
             reasoning=["Evaluation Skipped"],
+            needles=len(example.script) - example.number_of_questions
         )
         skip = result.path.exists()
         if skip:
@@ -458,6 +459,7 @@ class TestRunner:
                 result.max_score = max_score
                 result.reasoning = reason
 
+        result.needles = len(example.script) - example.number_of_questions
         result.task_log = task_log
         result.actual_responses = question_responses
         result.tokens = tokens
