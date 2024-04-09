@@ -60,6 +60,7 @@ def arrange_data(results: List[TestResult]):
                 "name": res.dataset_name,
                 "description": res.description,
                 "tests": [],
+                "scores": [],
             }
 
         memory_spans.append(res.tokens)
@@ -90,6 +91,12 @@ def arrange_data(results: List[TestResult]):
             "needles": res.needles,
         }
         data[res.dataset_name]["tests"].append(test_dict)
+        data[res.dataset_name]["scores"].append(res.score / res.max_score)
+
+    for dataset_results in data.values():
+        score, std = mean_std(dataset_results.pop("scores"))
+        dataset_results["score"] = display_float_or_int(score)
+        dataset_results["score_std"] = display_float_or_int(std)
 
     with open(make_config_path(run_name)) as fd:
         config = yaml.safe_load(fd)

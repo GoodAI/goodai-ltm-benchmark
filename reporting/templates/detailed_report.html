@@ -99,7 +99,7 @@
         <h1>{{ run_name }}</h1>
         {% for dataset_name, dataset in sorted(data_by_dataset.items()) %}
             <div class="dataset" id="{{ dataset_name }}">
-                <h1>{{ dataset.name }}</h1>
+                <h1>{{ dataset.name }} ({{ dataset.score }} ± {{ dataset.score_std }})</h1>
                 <p class="description">{{ dataset.description }}</p>
                 {% for test_idx, test in enumerate(dataset.tests) %}
                     <div class="test">
