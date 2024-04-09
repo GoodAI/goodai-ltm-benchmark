@@ -209,7 +209,7 @@ class TestExample:
         span_minus_script = memory_span - script_tokens
 
         # Figure out what our spacing is going to be. Just distribute all the needles and questions across 90% of the memory span
-        token_wait = math.floor(span_minus_script * 0.9) // len(self.is_question)
+        token_wait = math.floor(span_minus_script * 0.9) // (len(self.is_question) - 1)
 
         # Create the empty waits if there are any.
         if len(self.waits) == 0:
@@ -227,13 +227,6 @@ class TestExample:
 
         assert total_wait_tokens < span_minus_script, "Sum of task waits is higher than the determined memory span."
         self.waits[-1] = WaitCreator.create_wait()
-
-    def setup_question_ratio(self):
-        # Return normalised values
-        non_questions = len(self.script) - self.number_of_questions
-
-        return non_questions/len(self.script), self.number_of_questions/len(self.script)
-
 
 @dataclass
 class CallBackTestExample(TestExample):
