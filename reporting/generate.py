@@ -48,7 +48,6 @@ def arrange_data(results: List[TestResult]):
 
     run_name = results[0].run_name
     agent_name = results[0].agent_name
-    max_score = achieved_score = 0
     memory_spans = list()
     data = dict()
 
@@ -63,8 +62,6 @@ def arrange_data(results: List[TestResult]):
                 "tests": [],
             }
 
-        max_score += res.max_score
-        achieved_score += res.score
         memory_spans.append(res.tokens)
 
         expected = [str(r) for r in res.expected_responses]
@@ -99,8 +96,6 @@ def arrange_data(results: List[TestResult]):
     args = config["datasets"]["args"]
 
     return dict(
-        achieved_score=display_float_or_int(achieved_score),
-        max_score=display_float_or_int(max_score),
         target_memory_span=args["memory_span"],
         run_name=run_name,
         agent_name=agent_name,
@@ -135,9 +130,10 @@ def format_metric(value: float, metric_name: str) -> str:
 def generate_report(results: List[TestResult], output_name: Optional[str] = None) -> Path:
     report_data = arrange_data(results)
     metrics = get_summary_data(report_data["run_name"], report_data["agent_name"])
-    del metrics["score"]
     global_metrics = list()
-    for key in sorted(metrics.keys()):
+    for key in sorted(METRIC_NAMES.keys()):
+        if key == "score":
+            continue
         global_metrics.append(dict(
             name=METRIC_NAMES[key],
             value=format_metric(metrics[key], key),
@@ -154,7 +150,10 @@ def generate_report(results: List[TestResult], output_name: Optional[str] = None
         enumerate=enumerate,
         sorted=sorted,
         global_metrics=global_metrics,
-        **arrange_data(results),
+        achieved_score=display_float_or_int(metrics["score"]),
+        max_score=display_float_or_int(metrics["max_score"]),
+        score_std=display_float_or_int(metrics["score_std"]),
+        **report_data,
     )
 
 
@@ -196,6 +195,7 @@ def get_summary_data(run_name: str, agent_name: str):
         cost=benchmark_data["agent_costs_usd"],
         verbosity=benchmark_data["agent_tokens"],
         score=score,
+        max_score=len(aggr_results),
         score_std=score_std,
         accuracy=100 * score / len(aggr_results),
         ltm=ltm_score,
