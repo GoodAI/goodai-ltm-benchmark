@@ -1,16 +1,16 @@
 import os
 import json
 import re
-import numpy as np
 import yaml
 from typing import List, Optional
 from random import Random
 from jinja2 import Environment, FileSystemLoader
 from reporting.results import TestResult
 from utils.files import gather_result_files, gather_runstats_files, make_config_path
-from utils.constants import REPORT_TEMPLATES_DIR, MAIN_DIR, GOODAI_RED, GOODAI_GREEN, METRIC_NAMES, METRIC_ALT, \
+from utils.constants import REPORT_TEMPLATES_DIR, GOODAI_RED, GOODAI_GREEN, METRIC_NAMES, METRIC_ALT, \
     METRIC_UNITS, SPIDER_LABELS_OVERRIDE, REPORT_OUTPUT_DIR
 from utils.data import load_b64
+from utils.math import mean_std
 from utils.ui import display_float_or_int
 from datetime import datetime
 from pathlib import Path
@@ -169,10 +169,8 @@ def normalize_and_aggregate_results(results: list[TestResult]) -> dict[str, dict
     for d in result_dict.values():
         norm_scores = [r.score / r.max_score for r in d["results"]]
         ltm_scores = [r.tokens for r in d["results"]]
-        d["score"] = np.mean(norm_scores)
-        d["std"] = np.std(norm_scores)
-        d["ltm"] = np.mean(ltm_scores)
-        d["ltm_std"] = np.std(ltm_scores)
+        d["score"], d["std"] = mean_std(norm_scores)
+        d["ltm"], d["ltm_std"] = mean_std(ltm_scores)
 
     return result_dict
 
