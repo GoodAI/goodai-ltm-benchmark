@@ -79,8 +79,8 @@ class MasterLog:
         )
         self.add_event(event)
 
-    def begin_test(self, test_id, timestamp):
-        event = LogEvent(EventType.BEGIN, timestamp=timestamp, test_id=test_id)
+    def begin_test(self, test_id, timestamp, tokens):
+        event = LogEvent(EventType.BEGIN, timestamp=timestamp, test_id=test_id, data={"tokens": tokens})
         self.add_event(event)
 
     def end_test(self, test_id: str, timestamp: datetime):
@@ -191,22 +191,12 @@ class MasterLog:
 
         return context
 
-    def tokens_before_event(self, event: LogEvent) -> int:
-        event_idx = self.event_idx(event)
+    def get_start_token(self, test_id: str):
+        for event in self.log:
+            if event.test_id == test_id and event.type == EventType.BEGIN:
+                return event.data["tokens"]
 
-        tokens = 0
-        for evt in self.log[:event_idx]:
-            if evt.type in [EventType.SEND_MESSAGE, EventType.SEND_FILL, EventType.RESPONSE_MESSAGE, EventType.RESPONSE_FILL]:
-                tokens += token_len(evt.data["message"])
-
-        return tokens
-
-    def event_idx(self, event: LogEvent):
-        for idx, evt in enumerate(self.log):
-            if evt == event:
-                return idx
-
-        raise ValueError(f"Event not found in log! {event}")
+        raise ValueError(f"Test with id {test_id} has not started.")
 
     def get_questions_and_responses(self, test_id: str):
         questions = []

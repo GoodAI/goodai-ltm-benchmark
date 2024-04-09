@@ -207,13 +207,9 @@ class TestExample:
         assert script_tokens < memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {memory_span} tokens."
 
         span_minus_script = memory_span - script_tokens
-        needle_question_proportions = (.75, .25) if self.number_of_questions == 1 else (.5, .5)
 
-        # Figure out what our spacing is going to be. We will do the 75%/25% needle distribution.
-        tokens_for_needles = math.floor(span_minus_script * needle_question_proportions[0])
-        needles = len(self.is_question) - sum(self.is_question)
-        token_wait_per_needle = tokens_for_needles // needles
-        token_wait_between_questions = math.floor(span_minus_script * .9 * needle_question_proportions[1]) // sum(self.is_question)
+        # Figure out what our spacing is going to be. Just distribute all the needles and questions across 90% of the memory span
+        token_wait = math.floor(span_minus_script * 0.9) // len(self.is_question)
 
         # Create the empty waits if there are any.
         if len(self.waits) == 0:
@@ -226,9 +222,8 @@ class TestExample:
             if f != {}:
                 continue
 
-            wait = token_wait_per_needle if idx < needles else token_wait_between_questions
-            self.waits[idx] = WaitCreator.create_wait(tokens=int(wait))
-            total_wait_tokens += wait
+            self.waits[idx] = WaitCreator.create_wait(tokens=int(token_wait))
+            total_wait_tokens += token_wait
 
         assert total_wait_tokens < span_minus_script, "Sum of task waits is higher than the determined memory span."
         self.waits[-1] = WaitCreator.create_wait()

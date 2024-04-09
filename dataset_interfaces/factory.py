@@ -21,6 +21,8 @@ from datasets.chapterbreak import ChapterBreakDataset
 from datasets.restaurant import RestaurantDataset
 from copy import deepcopy
 
+from utils.files import parse_definition_path
+
 DATASETS = {
     "names": NamesDataset,
     "colours": ColourDataset,
@@ -68,8 +70,7 @@ class DatasetFactory:
         args = deepcopy(run_configuration["datasets"]["args"])
 
         # Get the name of the dataset
-
-        path_dataset_name = test_example_path.split(os.sep)[-2]
+        path_dataset_name = parse_definition_path(test_example_path)["dataset_name"]
         dataset = DATASETS_BY_NAME.get(path_dataset_name, None)
 
         if dataset is None:

@@ -1,4 +1,5 @@
 import json
+import math
 import webbrowser
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -125,11 +126,11 @@ class TestRunner:
         # We convert the percentage to tokens
         if action.percentage_finished > 0.0:
             span_percent = example.dataset_generator.memory_span / 100
-            percent_as_tokens = span_percent * action.percentage_finished
+            percent_as_tokens = math.floor(span_percent * action.percentage_finished)
 
             # Compute at what token we are at relative to this test's memory span, then calculate the difference.
             tokens_elapsed = self.total_token_count - example.start_token
-            token_wait = percent_as_tokens - tokens_elapsed
+            token_wait = max(0, percent_as_tokens - tokens_elapsed, action.tokens)
 
         else:
             token_wait = action.tokens
@@ -252,7 +253,7 @@ class TestRunner:
                 case EventType.BEGIN:
                     result, skip = self.initialise_result(test)
                     assert not skip
-                    test.start_token = self.master_log.tokens_before_event(evt)
+                    test.start_token = self.master_log.get_start_token(evt.test_id)
                     self.in_progress_results[evt.test_id] = result
                 case EventType.SEND_MESSAGE:
                     action = test.step()
@@ -278,7 +279,8 @@ class TestRunner:
                     assert action.tokens == evt.data["tokens"] or action.percentage_finished > 0.0
                     assert action.time == evt.data["time"]
                     self.travel_to_dt(evt.timestamp)
-                    self.set_to_wait(test, action, log_this=False)
+                    wait_dict = self.set_to_wait(test, action, log_this=False)
+                    assert wait_dict["tokens"] == evt.data["tokens"]
                     self.reset_time()
 
     def setup_iterator(self, test_group, reset_policy):
@@ -314,8 +316,6 @@ class TestRunner:
         while len(tests) > 0:
             run_id = self.pick_next_test_id(tests)
             example = tests[run_id]
-            if example.start_token == 0:
-                example.start_token = self.total_token_count
             yield example
             if example.finished:
                 del tests[run_id]
@@ -360,7 +360,9 @@ class TestRunner:
                 self.in_progress_results[example.unique_id] = result
                 example.finished = skip
                 if not skip:
-                    self.master_log.begin_test(example.unique_id, datetime.now())
+                    self.master_log.begin_test(example.unique_id, datetime.now(), self.total_token_count)
+                    if example.start_token == 0:
+                        example.start_token = self.total_token_count
 
             while not example.finished:
                 action = example.step()

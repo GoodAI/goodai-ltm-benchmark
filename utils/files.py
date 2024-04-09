@@ -60,3 +60,12 @@ def parse_result_path(path: Path | str) -> dict[str, str]:
         example_id="_".join(name_parts[:-1]),
         repetition=int(name_parts[-1])
     )
+
+
+def parse_definition_path(path: Path | str) -> dict[str, str]:
+    benchmark_name, _, dataset_name, definition_fname = Path(path).as_posix().split("/")[-4:]
+    return dict(
+        benchmark_name=benchmark_name,
+        dataset_name=dataset_name,
+        example_id=int(definition_fname.removesuffix(".def.json"))
+    )
