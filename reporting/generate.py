@@ -191,7 +191,7 @@ def get_summary_data(run_name: str, agent_name: str):
         ltm_score_std += dataset_results["ltm_std"]
 
     return dict(
-        speed=len(results) / (benchmark_data["duration"] / 3600),  # tests per hour
+        speed=benchmark_data["agent_tokens"] / benchmark_data["duration"],
         cost=benchmark_data["agent_costs_usd"],
         verbosity=benchmark_data["agent_tokens"],
         score=score,
