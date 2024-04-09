@@ -5,7 +5,6 @@ import json
 from utils.files import make_result_path, parse_result_path
 from dataset_interfaces.factory import DATASETS_BY_NAME
 
-
 @dataclass
 class TestResult:
     run_name: str
@@ -36,7 +35,6 @@ class TestResult:
             "full_log",
             "expected_responses",
         ]
-        # self.normalize_score()
 
     def __str__(self):
         string = ""
@@ -53,7 +51,6 @@ class TestResult:
         string += f"\nScore: {self.score}/{self.max_score}\n"
         string += f"Tokens: {self.tokens}\n"
         string += f"Characters: {self.characters}\n"
-
         return string
 
     @property
@@ -71,14 +68,6 @@ class TestResult:
             d = json.load(fd)
         for k in self._saved_attrs:
             setattr(self, k, d[k])
-
-    # def normalize_score(self):
-    #     """Normalizes the score between 0 and 1."""
-    #     if self.max_score == 0:
-    #         self.normalized_score = 0
-    #     else:
-    #         self.normalized_score = round(self.score / self.max_score, 2)
-    #         # reference the actual score, currently called before load 
 
     @classmethod
     def from_file(cls, path: Path | str) -> "TestResult":

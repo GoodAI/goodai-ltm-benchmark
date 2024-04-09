@@ -21,18 +21,9 @@ def reevaluate(dataset_key: str, run_name: str = "*", agent_name: str = "*"):
         percentage = (100 * (i + 1)) // len(result_files)
         print(f"\rRe-evaluating '{run_name}/results/{agent_name}': {percentage: 3d}%", end="")
         result = TestResult.from_file(path)
-        # result.score, result.max_score, result.reasoning = ds.evaluate_correct(
-        # Original line commented out for clarity:
-        # result.score, result.max_score, result.reasoning = ds.evaluate_correct(
-        #     questions=[],  # They shouldn't be necessary for the evaluation
-        #     responses=result.actual_responses,
-        #     expected_answers=result.expected_responses,
-        # )
-
-        # New lines to use evaluate_fn
-        evaluate = ds.evaluation_fn()  # Get the normalization-evaluating function
+        evaluate = ds.evaluation_fn() 
         result.score, result.max_score, result.reasoning = evaluate(
-            questions=[],  # They shouldn't be necessary for the evaluation, as per your setup
+            questions=[],
             responses=result.actual_responses,
             expected_answers=result.expected_responses,
         )

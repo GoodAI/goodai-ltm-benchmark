@@ -124,8 +124,6 @@ class TestExample:
         return self.dataset_generator.reset_message
 
     @property
-    # def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
-    #     return self.dataset_generator.evaluate_correct
     def evaluation_fn(self) -> Callable[[List[str], List[str], List[Any]], Tuple[float, int, List[str]]]:
         """
         Returns a callable that evaluates and normalizes the scores between 0 and 1.
