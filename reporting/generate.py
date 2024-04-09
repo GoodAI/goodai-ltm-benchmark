@@ -1,7 +1,7 @@
 import os
 import json
 import re
-
+import numpy as np
 import yaml
 from typing import List, Optional
 from random import Random
@@ -158,27 +158,48 @@ def generate_report(results: List[TestResult], output_name: Optional[str] = None
     )
 
 
-def get_summary_data(run_name: str, agent_name: str):
-    benchmark_data, results = gather_results(run_name, agent_name)
-    score = max_score = accuracy = ltm_score = max_ltm_score = 0
-
-    assert len(results) > 0, f"No results were found for run {run_name} and agent {agent_name}."
+def normalize_and_aggregate_results(results: list[TestResult]) -> dict[str, dict[str, list[TestResult] | float]]:
+    result_dict = dict()
 
     for result in results:
-        score += result.score
-        max_score += result.max_score
-        acc = result.score / result.max_score
-        accuracy += acc
-        ltm_score += result.tokens * acc
-        max_ltm_score += result.tokens
+        k = result.dataset_name
+        if k not in result_dict:
+            result_dict[k] = dict(results=list())
+        result_dict[k]["results"].append(result)
+
+    for d in result_dict.values():
+        norm_scores = [r.score / r.max_score for r in d["results"]]
+        ltm_scores = [r.tokens for r in d["results"]]
+        d["score"] = np.mean(norm_scores)
+        d["std"] = np.std(norm_scores)
+        d["ltm"] = np.mean(ltm_scores)
+        d["ltm_std"] = np.std(ltm_scores)
+
+    return result_dict
+
+
+def get_summary_data(run_name: str, agent_name: str):
+    benchmark_data, results = gather_results(run_name, agent_name)
+    assert len(results) > 0, f"No results were found for run {run_name} and agent {agent_name}."
+    aggr_results = normalize_and_aggregate_results(results)
+
+    score = ltm_score = 0
+    score_std = ltm_score_std = 0
+    for dataset_name, dataset_results in aggr_results.items():
+        score += dataset_results["score"]
+        score_std += dataset_results["std"]
+        ltm_score += dataset_results["ltm"]
+        ltm_score_std += dataset_results["ltm_std"]
 
     return dict(
-        speed=len(results) / (benchmark_data["duration"] / 3600),
+        speed=len(results) / (benchmark_data["duration"] / 3600),  # tests per hour
         cost=benchmark_data["agent_costs_usd"],
         verbosity=benchmark_data["agent_tokens"],
         score=score,
-        accuracy=100 * accuracy / len(results),
+        score_std=score_std,
+        accuracy=100 * score / len(aggr_results),
         ltm=ltm_score,
+        ltm_std=ltm_score_std,
     )
 
 
@@ -284,56 +305,3 @@ def load_results_file(filename):
             line = f.readline()
 
     return results_list
-
-
-if __name__ == "__main__":
-    results = [
-        TestResult(
-            run_name="Run title",
-            agent_name="Charlie",
-            dataset_name="bar",
-            description="foo",
-            example_id="0",
-            task_log=["A:", "B:", "C:"],
-            expected_responses=["expected"],
-            actual_responses=["actual"],
-            reasoning=["reasoning"],
-            score=0,
-            max_score=1,
-            tokens=1,
-            characters=88,
-        ),
-        TestResult(
-            run_name="Run title",
-            agent_name="Charlie",
-            dataset_name="bar",
-            description="fasdas",
-            example_id="1",
-            task_log=["A:", "B:", "C:"],
-            expected_responses=["expected"],
-            actual_responses=["actual"],
-            reasoning=["reasoning"],
-            score=1,
-            max_score=1,
-            tokens=1,
-            characters=88,
-        ),
-        TestResult(
-            run_name="Run title",
-            agent_name="Charlie",
-            dataset_name="bar",
-            description="foo",
-            example_id="2",
-            task_log=["A:", "B:", "C:"],
-            expected_responses=["expected"],
-            actual_responses=["actual"],
-            reasoning=["reasoning"],
-            score=1,
-            max_score=5,
-            tokens=1,
-            characters=88,
-        ),
-    ]
-    # results = load_results_file("colour")
-
-    generate_report(results)
