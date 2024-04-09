@@ -42,20 +42,17 @@ METRIC_ALT = dict(
         "maximum score possible for that test. We then average all tests' accuracies together. This can be viewed "
         "as a uniformly-weighted score average."
     ),
-    speed=(
-        "(Average Tests per Hour) How many tests, on average, the agent completes within an hour of running the "
-        "benchmark."
-    ),
+    speed="(Average Tokens per Second) How quickly the agent responds and outputs text.",
     cost=(
         "(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to "
         "obtain the Economy."
     ),
     verbosity=(
-        "(Tokens) The number of tokens that comprise the complete benchmark log. The longer the agent's responses are, "
+        "(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, "
         "the larger this metric is. The negative of this value is the Conciseness."
     ),
     score=(
-        "(Points) Each test gives a different amount of score points. This score is the result of adding up the "
+        "(Points) Each test gives up to one point. This score is the result of adding up the "
         "number of score points achieved in all tests."
     ),
     ltm=(
@@ -67,7 +64,7 @@ METRIC_ALT = dict(
 METRIC_NAMES = {key: "LTM Score" if key == "ltm" else key.capitalize() for key in METRIC_ALT.keys()}
 METRIC_UNITS = dict(
     accuracy="%",
-    speed="tests per hour",
+    speed="tokens per second",
     cost="USD",
     verbosity="tokens",
     score="points",

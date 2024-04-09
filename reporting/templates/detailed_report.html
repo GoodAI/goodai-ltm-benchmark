@@ -88,7 +88,7 @@
         <img src="data:image/png;base64, {{ logo_b64 }}" alt="GoodAI Logo" />
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: {{ target_memory_span }} tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
-        <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }}</p>
+        <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }} <b>±</b> {{ score_std }}</p>
         <ul>
             {% for metric in global_metrics %}
                 <li title="{{ metric.alt }}"><b>{{ metric.name }}</b>: {{ metric.value }} {{ metric.units }}</li>
@@ -99,7 +99,7 @@
         <h1>{{ run_name }}</h1>
         {% for dataset_name, dataset in sorted(data_by_dataset.items()) %}
             <div class="dataset" id="{{ dataset_name }}">
-                <h1>{{ dataset.name }}</h1>
+                <h1>{{ dataset.name }} ({{ dataset.score }} ± {{ dataset.score_std }})</h1>
                 <p class="description">{{ dataset.description }}</p>
                 {% for test_idx, test in enumerate(dataset.tests) %}
                     <div class="test">
