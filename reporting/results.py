@@ -5,7 +5,6 @@ import json
 from utils.files import make_result_path, parse_result_path
 from dataset_interfaces.factory import DATASETS_BY_NAME
 
-
 @dataclass
 class TestResult:
     run_name: str
@@ -52,7 +51,6 @@ class TestResult:
         string += f"\nScore: {self.score}/{self.max_score}\n"
         string += f"Tokens: {self.tokens}\n"
         string += f"Characters: {self.characters}\n"
-
         return string
 
     @property
@@ -77,3 +75,5 @@ class TestResult:
         result.description = DATASETS_BY_NAME[result.dataset_name].description
         result.load()
         return result
+    
+
