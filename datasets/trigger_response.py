@@ -125,8 +125,3 @@ class TriggerResponseDataset(DatasetInterface):
             score += score_single
             reasoning.append(reasoning_single)
         return score, max_score, reasoning
-
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # All statements are relevant
-        # in this test all statements are atomic
-        return 0, len(example.script[0])

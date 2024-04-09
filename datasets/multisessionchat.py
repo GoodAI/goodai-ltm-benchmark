@@ -205,6 +205,3 @@ class MultiSessionChatDataset(DatasetInterface):
         except (json.JSONDecodeError, KeyError) as exc:
             return 0, 1, [str(exc)]
 
-    def answer_statement_idx(self, example: TestExample) -> tuple[int, int]:
-        # TODO: try to figure out where the relevant information actually is
-        return 0, len(example.script[0]) // 2

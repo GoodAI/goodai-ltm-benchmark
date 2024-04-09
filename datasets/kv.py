@@ -69,10 +69,3 @@ class KVPairsDataset(DatasetInterface):
         reasoning = getsource(KVPairsDataset.evaluate_correct)
         return int(expected_answers[0] in responses[0]), 1, [reasoning]
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # This is a single message test, so the relevant information is in that message.
-        # Need to get the position after the relevant information inside the statement
-        string_pos = example.script[0].find(example.expected_responses[0]) + len(
-            example.expected_responses[0]
-        )
-        return 0, string_pos

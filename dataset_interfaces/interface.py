@@ -1,4 +1,5 @@
 import json
+import math
 from copy import deepcopy
 from random import Random
 from pathlib import Path
@@ -13,7 +14,7 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
-from utils.llm import ask_llm, LLMContext
+from utils.llm import ask_llm, LLMContext, get_tokens_for_script
 from utils.files import make_testdef_path
 
 _match_system_prompt = """
@@ -110,6 +111,7 @@ class TestExample:
     _iter: Iterator[TestAction] = None
     waits: List[dict] = field(default_factory=list)
     random: Random = None  # Seeded random generator
+    start_token: int = 0
 
     @property
     def dataset_name(self) -> str:
@@ -142,10 +144,11 @@ class TestExample:
 
     def __post_init__(self):
         assert self.dataset_generator is not None
+        assert self.dataset_generator.memory_span > 0
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
-        self.waits = self.dataset_generator.default_waits(self.is_question, self.waits)
         self.random = Random(self.unique_id)
+        self.default_waits()
 
     def action_iter(self) -> Iterator[TestAction]:
         scripts = [self.script, self.waits, self.is_question]
@@ -187,8 +190,7 @@ class TestExample:
             json.dump(self.to_dict(), fd, indent=2)
 
     @classmethod
-    def load(cls, file_path: Path | str) -> "TestExample":
-        from dataset_interfaces.factory import DATASETS_BY_NAME
+    def load(cls, dataset_generator: "DatasetInterface", file_path: Path | str) -> "TestExample":
 
         file_path = Path(file_path)
         assert file_path.exists(), f"Test file doesn't exist: {file_path}"
@@ -198,12 +200,44 @@ class TestExample:
         d["waits"] = [WaitCreator.unserialise(x) for x in d["waits"]]
         d["example_id"] = file_path.name.removesuffix(".def.json")
         d["dataset_name"] = file_path.parent.name
-        assert d["dataset_name"] in DATASETS_BY_NAME, f"Couldn't find a generator for dataset {d['dataset_name']}."
-        dataset_generator = DATASETS_BY_NAME[d["dataset_name"]]()
         generator_attrs = {"dataset_name", "description", "reset_message"}
         d = {k: d[k] for k in d.keys() if k not in generator_attrs}
         return dataset_generator.create_example(**d)
 
+    def default_waits(self):
+
+        if isinstance(self, DynamicExample):
+            return
+
+        assert len(self.is_question) >= 1, "There are no questions for this test"
+        assert len(self.waits) == 0 or len(self.waits) == len(self.is_question), "Current waits should be empty or the same length as the script"
+        memory_span = self.dataset_generator.memory_span
+
+        # TODO: All this token counting is based on OpenAIs methods, which is not Anthropics - but Aanthopic has no reliable tokeniser released so....
+        script_tokens = get_tokens_for_script(self.script)
+        assert script_tokens < memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {memory_span} tokens."
+
+        span_minus_script = memory_span - script_tokens
+
+        # Figure out what our spacing is going to be. Just distribute all the needles and questions across 90% of the memory span
+        token_wait = math.floor(span_minus_script * 0.9) // (len(self.is_question) - 1)
+
+        # Create the empty waits if there are any.
+        if len(self.waits) == 0:
+            for _ in range(len(self.is_question)):
+                self.waits.append({})
+
+        total_wait_tokens = 0
+
+        for idx, f in enumerate(self.waits[:-1]):
+            if f != {}:
+                continue
+
+            self.waits[idx] = WaitCreator.create_wait(tokens=int(token_wait))
+            total_wait_tokens += token_wait
+
+        assert total_wait_tokens < span_minus_script, "Sum of task waits is higher than the determined memory span."
+        self.waits[-1] = WaitCreator.create_wait()
 
 @dataclass
 class CallBackTestExample(TestExample):
@@ -264,8 +298,7 @@ class DatasetInterface(ABC):
     name: str
     description: str
     question: str = ""
-    filler_tokens: int = 0
-    pre_question_filler: int = 0
+    memory_span: int = 0
     seed: int = 0
     cost_callback: Callable[[float], None] = None
     uses_callback: bool = False
@@ -388,50 +421,19 @@ class DatasetInterface(ABC):
             **kwargs
         )
 
-    @abstractmethod
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        pass
-
-    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        def _filler_size(is_prev_to_question: bool):
-            return self.pre_question_filler if is_prev_to_question else self.filler_tokens
-
-        assert len(is_question) >= 1, "There are no questions for this test"
-        assert len(current_waits) == 0 or len(current_waits) == len(is_question), "Current waits should be empty or the same length as the script"
-
-        # Create the empty waits if there are any.
-        if len(current_waits) == 0:
-            for _ in range(len(is_question)):
-                current_waits.append({})
-
-        is_prior_to_question = is_question[1:] + [False]
-        for idx, (f, p2q) in enumerate(zip(current_waits[:-1], is_prior_to_question)):
-            if f != {}:
-                continue
-
-            current_waits[idx] = WaitCreator.create_wait(tokens=_filler_size(p2q))
-
-        current_waits[-1] = WaitCreator.create_wait()
-        return current_waits
-
     def tokens_to_answer(self, test_context: List[Dict[str, Any]], full_context: List[Dict[str, str]], example: TestExample):
         encoding = tiktoken.get_encoding("cl100k_base")
         num_tokens = num_characters = 0
 
-        # Get most relevant line, and any characters after that statement.
-        script_answer_index, answer_end_char = self.answer_statement_idx(example)
-        relevant_line = example.script[script_answer_index]
+        # Get the first line of the script
+        relevant_line = example.script[0]
 
         timestamp_idx = search_context(test_context, relevant_line)
         target_timestamp = test_context[timestamp_idx]["timestamp"].__str__()
 
-        # Update tokens and character counts from the script
-        num_characters += len(relevant_line[answer_end_char:])
-        num_tokens += len(encoding.encode(relevant_line[answer_end_char:]))
-
         # Where in the history was the statement made?
         # Find that statement in the history suing the content and timestamp and count from there.
-        history_idx = search_context(full_context, relevant_line, target_timestamp) + 1
+        history_idx = search_context(full_context, relevant_line, target_timestamp)
         countable_history_chunk = flatten_context(full_context[history_idx:])
 
         # Now count the tokens and characters since there
@@ -461,15 +463,11 @@ class DynamicDataset(DatasetInterface, ABC):
     def evaluate_correct(self, *args):
         raise NotImplementedError("This method should not be called. Each test example has its own evaluation function.")
 
-    @abstractmethod
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        pass
-
     def create_example(self, **kwargs) -> DynamicExample:
         return self.example_cls(dataset_generator=self, **kwargs)
 
     def generate_examples(self, num_examples: int) -> List[TestExample]:
         return [self.create_example() for _ in range(num_examples)]
 
-    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def default_waits(self, script: list[str], is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return []

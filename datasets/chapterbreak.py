@@ -149,51 +149,11 @@ class ChapterBreakDataset(DatasetInterface):
                 script=script,
                 expected_responses=[str(answer)],
                 is_question=is_question,
-                waits=[WaitCreator.create_wait() for _ in is_question],
+                waits=[WaitCreator.create_wait(tokens=0) for _ in is_question],
             )
             example_list.append(example)
 
         return example_list
-
-    def answer_statement_idx(self, example: TestExample) -> tuple[int, int]:
-
-        # Find the message that goes after the last context page
-        last_page_idx = None
-        for i, script_line in enumerate(example.script):
-            if script_line.endswith(
-                " options for the beginning of the next chapter. You don't have to comment anything, just read them "
-                "carefully. Ready?"
-            ):
-                last_page_idx = i - 1
-                break
-        assert last_page_idx is not None
-        context_script = example.script[1:last_page_idx + 1]
-
-        # GoodAI-selected samples contain meta-data for these cases
-        # Find the latest appearance of relevant information
-        if example.example_id in self.selection_info:
-            relevant_sentences = self.selection_info[example.example_id]["ctx"]
-            script_index = char_index = None
-            for line_idx, script_line in reversed(list(enumerate(context_script))):
-                for sentence in relevant_sentences:
-                    i = script_line.find(sentence)
-                    if i < 0:
-                        continue
-                    last_char_i = i + len(sentence)
-                    if script_index is None or char_index < last_char_i:
-                        script_index, char_index = line_idx, last_char_i
-                if script_index is not None:
-                    return script_index + 1, char_index
-
-        # Otherwise, we'll just assume that the key information lies somewhere around the middle of the context.
-        middle_point_chars = sum(len(msg) for msg in context_script) // 2
-        counted_chars = 0
-        for script_answer_index, script_line in enumerate(context_script):
-            counted_chars += len(script_line)
-            if counted_chars > middle_point_chars:
-                break
-        answer_end_char = counted_chars - middle_point_chars
-        return script_answer_index + 1, answer_end_char
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]

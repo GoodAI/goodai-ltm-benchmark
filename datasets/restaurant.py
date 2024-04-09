@@ -88,7 +88,7 @@ class RestaurantExample(DynamicExample):
         yield self.say(f"Here you are: {altered_str}. Enjoy the meal.")
         self.check_notices_mishap()
         yield self.say("I apologize. I will fix it immediately.", question=False)
-        yield self.wait(percentage_finished=100)
+        yield self.wait(percentage_finished=90)
 
         # Amend the order and offer an extra drink
         yield self.say(
@@ -223,9 +223,6 @@ class RestaurantDataset(DynamicDataset):
             "\n".join([f"{section}:"] + [f"{i + 1}. {item}" for i, item in enumerate(content)])
             for section, content in self.menu_dict.items()
         )
-
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        return 0, len(example.script[0])
 
 
 def day_moment_salutation() -> str:

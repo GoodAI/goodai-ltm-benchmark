@@ -157,3 +157,13 @@ def context_token_len(context: LLMContext, model: Optional[str] = None, response
     if response:
         num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
+
+
+def get_tokens_for_script(script: list[str], model: Optional[str] = None) -> int:
+    encoder = tiktoken.encoding_for_model(get_model(model))
+    num_tokens = 0
+    for line in script:
+        num_tokens += 4
+        num_tokens += len(encoder.encode(line))
+
+    return num_tokens

@@ -91,7 +91,3 @@ class NameListDataset(DatasetInterface):
 
         return score, len(expected_answers), reasoning
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # All statements are relevant
-        # in this test all statements are atomic
-        return 0, len(example.script[0])

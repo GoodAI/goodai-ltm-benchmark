@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any, Callable, Iterator
 
 from utils.constants import EventType, EVENT_SENDER, ResetPolicy
+from utils.text import token_len
 
 
 @dataclass
@@ -69,18 +70,17 @@ class MasterLog:
         timestamp: datetime,
         tokens: int = 0,
         time: timedelta = timedelta(seconds=0),
-        percentage_finished: float = 0.0
     ):
         event = LogEvent(
             EventType.WAIT,
             timestamp=timestamp,
             test_id=test_id,
-            data={"tokens": tokens, "time": time, "percentage_finished": percentage_finished},
+            data={"tokens": tokens, "time": time},
         )
         self.add_event(event)
 
-    def begin_test(self, test_id, timestamp):
-        event = LogEvent(EventType.BEGIN, timestamp=timestamp, test_id=test_id)
+    def begin_test(self, test_id, timestamp, tokens):
+        event = LogEvent(EventType.BEGIN, timestamp=timestamp, test_id=test_id, data={"tokens": tokens})
         self.add_event(event)
 
     def end_test(self, test_id: str, timestamp: datetime):
@@ -119,8 +119,6 @@ class MasterLog:
                     wait_cond.append(f"{event.data['tokens']} TOKENS")
                 if event.data['time'].seconds > 0:
                     wait_cond.append(f"{event.data['time']} TIME")
-                if event.data['percentage_finished'] > 0:
-                    wait_cond.append(f"{event.data['percentage_finished']}% TESTS FINISHED")
                 wait_cond = ", ".join(wait_cond)
 
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' WAITING for {wait_cond}.")
@@ -192,6 +190,13 @@ class MasterLog:
                     context.append({"role": "assistant", "content": event.data["message"], "timestamp": event.timestamp})
 
         return context
+
+    def get_start_token(self, test_id: str):
+        for event in self.log:
+            if event.test_id == test_id and event.type == EventType.BEGIN:
+                return event.data["tokens"]
+
+        raise ValueError(f"Test with id {test_id} has not started.")
 
     def get_questions_and_responses(self, test_id: str):
         questions = []

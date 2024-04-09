@@ -91,7 +91,7 @@ def generate_test_examples(
                 f"There are test definitions in disk for run name {run_name}",
                 question="Do you want to reuse these test definitions?",
             ):
-                return [TestExample.load(p) for p in test_definitions]
+                return load_test_examples(loaded_yaml, test_definitions)
             if not ask_yesno(
                 "WARNING: overwriting the test definitions will result in the loss of all "
                 "results associated with them, including those from other agents.",
@@ -113,6 +113,16 @@ def generate_test_examples(
 
     for example in examples:
         example.save(run_name)
+
+    return examples
+
+
+def load_test_examples(yaml_configuration, test_definition_paths: list[str]) -> list[TestExample]:
+
+    examples = []
+    for p in test_definition_paths:
+        dataset = DatasetFactory.create_dataset_for_example(yaml_configuration, p)
+        examples.append(TestExample.load(dataset, p))
 
     return examples
 

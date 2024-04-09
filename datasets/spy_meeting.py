@@ -51,7 +51,6 @@ class SpyMeetingDataset(DatasetInterface):
             for k in range(3):
                 names.append(faker.unique.name())
 
-            waits = [WaitCreator.create_wait(percentage_finished=10)]
             is_question = [False]
             script = [f"You will be given three messages from different people {names[0]}, {names[1]}, and {names[2]}."]
             topic_list = [(CODED_INFO_TIME, TIME_TEMPLATE), (CODED_INFO_THING, THING_TEMPLATE), (CODED_INFO_PLACE, PLACE_TEMPLATE)]
@@ -71,21 +70,14 @@ class SpyMeetingDataset(DatasetInterface):
                 is_question.append(False)
                 expected_responses.append(potential_interpretations)
 
-                if k == 2:
-                    waits.append(WaitCreator.create_wait(percentage_finished=90))
-                else:
-                    waits.append(WaitCreator.create_wait(percentage_finished=(k+2) * 10))
-
             script.append(self.question)
             is_question.append(True)
-            waits.append(waits)
 
             examples.append(TestExample(
                 dataset_generator=self,
                 script=script,
-                waits=waits,
                 is_question=is_question,
-                expected_responses=expected_responses
+                expected_responses=expected_responses,
             ))
 
         return examples
@@ -110,9 +102,5 @@ class SpyMeetingDataset(DatasetInterface):
                 reasoning.append("Answer contains expected keyword(s)")
 
         return correct, 1, reasoning
-
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # Second statement in the script, character 0
-        return 1, 0
 
 

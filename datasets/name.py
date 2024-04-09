@@ -62,12 +62,3 @@ class NamesDataset(DatasetInterface):
             return 1, 1, [f'"{name}" is in the response.']
         return 0, 1, [f'"{name}" is NOT in the response.']
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # The correct answer is the last name that we told the agent
-        # In this test all statements are atomic
-        current = len(example.script) - 1
-        for idx, text in enumerate(example.script[::-1]):
-            if example.expected_responses[0] in text:
-                current -= idx
-                break
-        return current, len(example.script[current])

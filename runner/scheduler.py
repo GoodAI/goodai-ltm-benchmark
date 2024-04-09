@@ -1,4 +1,5 @@
 import json
+import math
 import webbrowser
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -62,7 +63,6 @@ class TestRunner:
     result_callbacks: List[Tuple[Callable, TestExample]] = field(default_factory=list)
     master_log: MasterLog = None
     progress_dialog: ProgressDialog = None
-    percentage_finished: float = 0.0
 
     @property
     def runstats_path(self):
@@ -120,19 +120,31 @@ class TestRunner:
             self.traveller.stop()
             self.traveller = None
 
-    def set_to_wait(self, unique_id: str, action: WaitAction, log_this: bool = True):
+    def set_to_wait(self, example: TestExample, action: WaitAction, log_this: bool = True):
+        unique_id = example.unique_id
+
+        # We convert the percentage to tokens
+        if action.percentage_finished > 0.0:
+            span_percent = example.dataset_generator.memory_span / 100
+            percent_as_tokens = math.floor(span_percent * action.percentage_finished)
+
+            # Compute at what token we are at relative to this test's memory span, then calculate the difference.
+            tokens_elapsed = self.total_token_count - example.start_token
+            token_wait = max(0, percent_as_tokens - tokens_elapsed, action.tokens)
+
+        else:
+            token_wait = action.tokens
+
         if log_this:
             self.master_log.add_wait_event(
                 unique_id,
                 datetime.now(),
-                tokens=action.tokens,
+                tokens=token_wait,
                 time=action.time,
-                percentage_finished=action.percentage_finished,
             )
         self.wait_list[unique_id] = dict(
-            tokens=self.total_token_count + action.tokens,
+            tokens=self.total_token_count + token_wait,
             time=datetime.now() + action.time,
-            percentage_finished=action.percentage_finished,
         )
 
     def send_message(self, test_id: str, action: SendMessageAction) -> int:
@@ -152,11 +164,10 @@ class TestRunner:
         return message_tokens + reply_tokens
 
     def get_blocked_test(self, waiting_on: str) -> Optional[str]:
-        assert waiting_on in ["tokens", "time", "percentage_finished"]
+        assert waiting_on in ["tokens", "time"]
         target = dict(
             tokens=self.total_token_count,
             time=datetime.now(),
-            percentage_finished=self.percentage_finished,
         )[waiting_on]
         waiting_tests = {uid: wd for uid, wd in self.wait_list.items() if wd[waiting_on] > target}
         if len(waiting_tests) == 0:
@@ -170,8 +181,6 @@ class TestRunner:
         if wait_dict["tokens"] > self.total_token_count:
             return True
         if wait_dict["time"] > datetime.now():
-            return True
-        if wait_dict["percentage_finished"] > self.percentage_finished:
             return True
         if remove:
             del self.wait_list[unique_id]
@@ -227,14 +236,6 @@ class TestRunner:
             if not self.is_waiting(token_waiting_id, remove=True):
                 return token_waiting_id
 
-        # As a last resort, if all tests are waiting for the percentage, get the closest one and force resume it.
-        while True:
-            percentage_waiting_id = self.get_blocked_test("percentage_finished")
-            if percentage_waiting_id is None:
-                break
-            del self.wait_list[percentage_waiting_id]
-            return percentage_waiting_id
-
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
 
     def fast_forward_tests(self, tests: dict[str, TestExample]):
@@ -252,6 +253,7 @@ class TestRunner:
                 case EventType.BEGIN:
                     result, skip = self.initialise_result(test)
                     assert not skip
+                    test.start_token = self.master_log.get_start_token(evt.test_id)
                     self.in_progress_results[evt.test_id] = result
                 case EventType.SEND_MESSAGE:
                     action = test.step()
@@ -274,11 +276,11 @@ class TestRunner:
                 case EventType.WAIT:
                     action = test.step()
                     assert isinstance(action, WaitAction)
-                    assert action.tokens == evt.data["tokens"]
+                    assert action.tokens == evt.data["tokens"] or action.percentage_finished > 0.0
                     assert action.time == evt.data["time"]
-                    assert action.percentage_finished == evt.data["percentage_finished"]
                     self.travel_to_dt(evt.timestamp)
-                    self.set_to_wait(evt.test_id, action, log_this=False)
+                    wait_dict = self.set_to_wait(test, action, log_this=False)
+                    assert wait_dict["tokens"] == evt.data["tokens"]
                     self.reset_time()
 
     def setup_iterator(self, test_group, reset_policy):
@@ -340,7 +342,6 @@ class TestRunner:
         self.result_callbacks = []
         self.in_progress_results = dict()
         finished = 0
-        percentage_per_test = 100 / len(self.tests)
 
         # Introduce the benchmark, if running from the start.
         if len(self.master_log.log) == 0:
@@ -359,14 +360,16 @@ class TestRunner:
                 self.in_progress_results[example.unique_id] = result
                 example.finished = skip
                 if not skip:
-                    self.master_log.begin_test(example.unique_id, datetime.now())
+                    self.master_log.begin_test(example.unique_id, datetime.now(), self.total_token_count)
+                    if example.start_token == 0:
+                        example.start_token = self.total_token_count
 
             while not example.finished:
                 action = example.step()
                 if action is None:
                     break
                 if isinstance(action, WaitAction):
-                    self.set_to_wait(example.unique_id, action)
+                    self.set_to_wait(example, action)
                     break
                 if isinstance(action, (SendMessageAction, SendAndRegisterAction)):
                     # TODO: the test should autonomously create the question
@@ -382,7 +385,6 @@ class TestRunner:
 
             if example.finished:
                 finished += 1
-                self.percentage_finished += percentage_per_test
                 result = self.in_progress_results[example.unique_id]
                 self.progress_dialog.notify_result(result)
 
@@ -463,6 +465,10 @@ class TestRunner:
             example
         )
 
+        if tokens > example.dataset_generator.memory_span:
+            colour_print("RED", f"WARN: This test passed the memory_span threshold. The threshold was {example.dataset_generator.memory_span} tokens, while the memory span of the test was {tokens} tokens."
+                  " If you are relying on the test being inside of the memory span, then any test failures could be caused by this overrun.")
+
         if not self.skip_evaluations:
             if not example.uses_callback:
                 score, max_score, reason = example.evaluation_fn(
@@ -475,6 +481,7 @@ class TestRunner:
                 result.max_score = max_score
                 result.reasoning = reason
 
+        result.needles = len(example.script) - example.number_of_questions
         result.task_log = task_log
         result.actual_responses = question_responses
         result.tokens = tokens

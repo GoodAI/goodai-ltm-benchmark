@@ -87,7 +87,7 @@
     <div class="main-title">
         <img src="data:image/png;base64, {{ logo_b64 }}" alt="GoodAI Logo" />
         <h1>GoodAI LTM Benchmark</h1>
-        <p><b>Distraction Segment</b>: {{ info_gap }} tokens<br><b>Memory Span (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
+        <p><b>Target Max Memory Span</b>: {{ target_memory_span }} tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
         <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }}</p>
         <ul>
             {% for metric in global_metrics %}
@@ -105,9 +105,15 @@
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
                         style="background-color: {{ test.color }};">
-                            <b>Test {{ test_idx + 1 }} ({{ test.score }}/{{ test.max_score }})</b>
+                            <b>
+                                Test {{ test_idx + 1 }} ({{ test.score }}/{{ test.max_score }})
+                                {% if test.tokens > target_memory_span %}
+                                    - MEMORY SPAN OVERRUN: Tokens: {{ test.tokens }} > {{ target_memory_span }}
+                                {% endif %}
+                            </b>
                         </div>
                         <div class="test-details">
+                            <p><b>Needles: {{ test.needles }}</b></p>
                             <p><b>Task Log:</b></p>
                             <ul style="list-style-type:none;">
                             {% for line in test.task_log %}
@@ -122,7 +128,7 @@
                                 <hr>
                             {% endfor %}
                             <p><b>Score:</b> {{ test.score }}/{{ test.max_score }}</p>
-                            <p><b>Distance to relevant info:</b> {{ test.tokens }} tokens, {{ test.characters }} characters.</p>
+                            <p><b>Memory span from first statement to last question:</b> {{ test.tokens }} tokens, {{ test.characters }} characters.</p>
                         </div>
                     </div>
                 {% endfor %}
