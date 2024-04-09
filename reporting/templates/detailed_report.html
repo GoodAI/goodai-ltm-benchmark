@@ -105,7 +105,12 @@
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
                         style="background-color: {{ test.color }};">
-                            <b>Test {{ test_idx + 1 }} ({{ test.score }}/{{ test.max_score }})</b>
+                            <b>
+                                Test {{ test_idx + 1 }} ({{ test.score }}/{{ test.max_score }})
+                                {% if test.tokens > target_memory_span %}
+                                    - MEMORY SPAN OVERRUN: Tokens: {{ test.tokens }} > {{ target_memory_span }}
+                                {% endif %}
+                            </b>
                         </div>
                         <div class="test-details">
                             <p><b>Needles: {{ test.needles }}</b></p>

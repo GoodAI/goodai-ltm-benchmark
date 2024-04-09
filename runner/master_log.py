@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any, Callable, Iterator
 
 from utils.constants import EventType, EVENT_SENDER, ResetPolicy
+from utils.text import token_len
 
 
 @dataclass
@@ -189,6 +190,23 @@ class MasterLog:
                     context.append({"role": "assistant", "content": event.data["message"], "timestamp": event.timestamp})
 
         return context
+
+    def tokens_before_event(self, event: LogEvent) -> int:
+        event_idx = self.event_idx(event)
+
+        tokens = 0
+        for evt in self.log[:event_idx]:
+            if evt.type in [EventType.SEND_MESSAGE, EventType.SEND_FILL, EventType.RESPONSE_MESSAGE, EventType.RESPONSE_FILL]:
+                tokens += token_len(evt.data["message"])
+
+        return tokens
+
+    def event_idx(self, event: LogEvent):
+        for idx, evt in enumerate(self.log):
+            if evt == event:
+                return idx
+
+        raise ValueError(f"Event not found in log! {event}")
 
     def get_questions_and_responses(self, test_id: str):
         questions = []

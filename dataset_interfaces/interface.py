@@ -67,12 +67,13 @@ class SendAndRegisterAction(SendMessageAction):
 class WaitAction(TestAction):
     tokens: int = 0
     time: timedelta = field(default_factory=timedelta)
+    percentage_finished: float = 0.0
 
 
 class WaitCreator:
     @classmethod
-    def create_wait(cls, tokens: int = None, time: timedelta = None):
-        w_dict = {"tokens": tokens, "time": time}
+    def create_wait(cls, tokens: int = None, time: timedelta = None, percentage_finished: float = None):
+        w_dict = {"tokens": tokens, "time": time, "percentage_finished": percentage_finished}
         return {k: v for k, v in w_dict.items() if v is not None}
 
     @classmethod
@@ -105,6 +106,7 @@ class TestExample:
     _iter: Iterator[TestAction] = None
     waits: List[dict] = field(default_factory=list)
     random: Random = None  # Seeded random generator
+    start_token: int = 0
 
     @property
     def dataset_name(self) -> str:

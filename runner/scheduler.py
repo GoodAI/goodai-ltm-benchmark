@@ -119,16 +119,30 @@ class TestRunner:
             self.traveller.stop()
             self.traveller = None
 
-    def set_to_wait(self, unique_id: str, action: WaitAction, log_this: bool = True):
+    def set_to_wait(self, example: TestExample, action: WaitAction, log_this: bool = True):
+        unique_id = example.unique_id
+
+        # We convert the percentage to tokens
+        if action.percentage_finished > 0.0:
+            span_percent = example.dataset_generator.memory_span / 100
+            percent_as_tokens = span_percent * action.percentage_finished
+
+            # Compute at what token we are at relative to this test's memory span, then calculate the difference.
+            tokens_elapsed = self.total_token_count - example.start_token
+            token_wait = percent_as_tokens - tokens_elapsed
+
+        else:
+            token_wait = action.tokens
+
         if log_this:
             self.master_log.add_wait_event(
                 unique_id,
                 datetime.now(),
-                tokens=action.tokens,
+                tokens=token_wait,
                 time=action.time,
             )
         self.wait_list[unique_id] = dict(
-            tokens=self.total_token_count + action.tokens,
+            tokens=self.total_token_count + token_wait,
             time=datetime.now() + action.time,
         )
 
@@ -238,6 +252,7 @@ class TestRunner:
                 case EventType.BEGIN:
                     result, skip = self.initialise_result(test)
                     assert not skip
+                    test.start_token = self.master_log.tokens_before_event(evt)
                     self.in_progress_results[evt.test_id] = result
                 case EventType.SEND_MESSAGE:
                     action = test.step()
@@ -260,10 +275,10 @@ class TestRunner:
                 case EventType.WAIT:
                     action = test.step()
                     assert isinstance(action, WaitAction)
-                    assert action.tokens == evt.data["tokens"]
+                    assert action.tokens == evt.data["tokens"] or action.percentage_finished > 0.0
                     assert action.time == evt.data["time"]
                     self.travel_to_dt(evt.timestamp)
-                    self.set_to_wait(evt.test_id, action, log_this=False)
+                    self.set_to_wait(test, action, log_this=False)
                     self.reset_time()
 
     def setup_iterator(self, test_group, reset_policy):
@@ -299,6 +314,8 @@ class TestRunner:
         while len(tests) > 0:
             run_id = self.pick_next_test_id(tests)
             example = tests[run_id]
+            if example.start_token == 0:
+                example.start_token = self.total_token_count
             yield example
             if example.finished:
                 del tests[run_id]
@@ -350,7 +367,7 @@ class TestRunner:
                 if action is None:
                     break
                 if isinstance(action, WaitAction):
-                    self.set_to_wait(example.unique_id, action)
+                    self.set_to_wait(example, action)
                     break
                 if isinstance(action, (SendMessageAction, SendAndRegisterAction)):
                     # TODO: the test should autonomously create the question
@@ -445,6 +462,10 @@ class TestRunner:
             master_log.as_context(),
             example
         )
+
+        if tokens > example.dataset_generator.memory_span:
+            colour_print("RED", f"WARN: This test passed the memory_span threshold. The threshold was {example.dataset_generator.memory_span} tokens, while the memory span of the test was {tokens} tokens."
+                  " If you are relying on the test being inside of the memory span, then any test failures could be caused by this overrun.")
 
         if not self.skip_evaluations:
             if not example.uses_callback:

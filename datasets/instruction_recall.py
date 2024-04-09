@@ -1,6 +1,5 @@
 from pathlib import Path
 from dataclasses import dataclass
-
 from dataset_interfaces.gpt_generated import GPTGenerated
 from utils.constants import DATA_DIR
 

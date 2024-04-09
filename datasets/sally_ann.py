@@ -66,7 +66,6 @@ class SallyAnneDataset(DatasetInterface):
                 script=script,
                 expected_responses=[answer],
                 is_question=is_question,
-
             )
             examples.append(example)
 
