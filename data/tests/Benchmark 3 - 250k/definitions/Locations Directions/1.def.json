@@ -1,0 +1,47 @@
+{
+  "script": [
+    "There is a Park in the center of my hometown.",
+    "About 3 km North of the Park there is a Museum",
+    "I visited Retail Area, which is 4 KM, South from Museum.",
+    "About 1 km East of the Retail Area there is a Playground",
+    "Library is a location in my home town, it is 4 KM, North from Playground.",
+    "And finally there is Town Hall which is West from Library and 3 KM from it.",
+    "Given the points of interest that I have told you about, how would I travel from Park to Town Hall following those interesting points?"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 37478
+    },
+    {
+      "tokens": 37478
+    },
+    {
+      "tokens": 37478
+    },
+    {
+      "tokens": 37478
+    },
+    {
+      "tokens": 37478
+    },
+    {
+      "tokens": 37478
+    },
+    {}
+  ],
+  "expected_responses": [
+    "(Just an example, if exact instructions are followed)\nFrom Park, go 3km North to Museum.\nFrom Museum, go 4km South to Retail Area.\nFrom Retail Area, go 1km East to Playground.\nFrom Playground, go 4km North to Library.\nFrom Library, go 3km West to Town Hall."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

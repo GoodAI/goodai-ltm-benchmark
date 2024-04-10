@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Whenever I sneeze with &#x27;Achooo!&#x27; then say: 'Bless you'",
+    "Achoo!",
+    "Achoo!",
+    "Achoo!"
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 74983
+    },
+    {
+      "tokens": 74983
+    },
+    {
+      "tokens": 74983
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Bless you",
+    "Bless you",
+    "Bless you"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

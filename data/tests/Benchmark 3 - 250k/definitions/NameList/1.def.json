@@ -1,0 +1,46 @@
+{
+  "script": [
+    "Peadar is my name.",
+    "Chloe is my name.",
+    "Start calling me by my name which is Charlene.",
+    "Cathal is my name.",
+    "Start calling me by my name which is Ashley.",
+    "What have been all of the names that I have given you? Express the answer as a JSON list."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 44984
+    },
+    {
+      "tokens": 44984
+    },
+    {
+      "tokens": 44984
+    },
+    {
+      "tokens": 44984
+    },
+    {
+      "tokens": 44984
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Peadar",
+    "Chloe",
+    "Charlene",
+    "Cathal",
+    "Ashley"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

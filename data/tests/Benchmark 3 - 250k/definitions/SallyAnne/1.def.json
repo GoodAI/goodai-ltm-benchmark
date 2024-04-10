@@ -1,0 +1,52 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Elizabeth entered the den.\n",
+    "(On TV) Mia entered the den.\n",
+    "(On TV) The socks are in the pantry.\n",
+    "(On TV) Elizabeth exited the den.\n",
+    "(On TV) Mia loves the pear\n",
+    "(On TV) Mia moved the socks to the basket.\n",
+    "The TV program has ended for today. Where would Elizabeth look for the socks?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 32121
+    },
+    {
+      "tokens": 32121
+    },
+    {
+      "tokens": 32121
+    },
+    {
+      "tokens": 32121
+    },
+    {
+      "tokens": 32121
+    },
+    {
+      "tokens": 32121
+    },
+    {
+      "tokens": 32121
+    },
+    {}
+  ],
+  "expected_responses": [
+    "pantry"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}
