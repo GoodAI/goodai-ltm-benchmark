@@ -1,13 +1,13 @@
 import logging
 import os.path
 import os
+import re
 import shutil
 import time
 from typing import Optional
 
 import click
 import yaml
-from goodai.ltm.agent import LTMAgentVariant
 
 from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
@@ -17,7 +17,7 @@ from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
 from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
-from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
+from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
@@ -27,7 +27,7 @@ from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
 from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, \
     gather_persistence_files
-from utils.llm import get_model, GPT_4_TURBO_BEST
+from utils.llm import GPT_4_TURBO_BEST
 from utils.constants import MAIN_DIR
 
 
@@ -48,15 +48,19 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
             raise ValueError(f"Unrecognized LangChain memory type {repr(suffix)}.")
         return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=mem_type, **kwargs)
     if name.startswith("ltm_agent_"):
-        agent_nr = "_".join(name.split("_")[2:])
+        match = re.match(r"^ltm_agent_(?P<variant>\d)(?:\((?P<model>.+)\))?$", name)
+        if match is None:
+            raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
+        params = match.groupdict()
+        model = params["model"] or GPT_4_TURBO_BEST
         variant = {
             "1": LTMAgentVariant.QG_JSON_USER_INFO,
             "2": LTMAgentVariant.SEMANTIC_ONLY,
             "3": LTMAgentVariant.TEXT_SCRATCHPAD,
-        }.get(agent_nr, None)
+        }.get(params["variant"], None)
         if variant is None:
-            raise ValueError(f"Unrecognized LTM Agent variant {repr(agent_nr)}.")
-        return LTMAgentWrapper(model=GPT_4_TURBO_BEST, variant=variant, **kwargs)
+            raise ValueError(f"Unrecognized LTM Agent variant {repr(params['variant'])}.")
+        return LTMAgentWrapper(model=model, variant=variant, **kwargs)
     if name == "length_bias":
         return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
     if name.startswith("cost("):

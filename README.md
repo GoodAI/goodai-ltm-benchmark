@@ -57,9 +57,13 @@ langchain_kg_a    # Using 3.5-turbo-instruct and a knowledge graph memory
 langchain_ce_a    # Using 3.5-turbo-instruct and a conversation entity memory
 
 # GoodAI LTM models
-ltm_agent_1             # GoodAI LTM, 4-turbo preview, semantic retrieval + query generation + JSON scratchpad
-ltm_agent_2             # GoodAI LTM, 4-turbo preview, semantic retrieval
-ltm_agent_3             # GoodAI LTM, 4-turbo preview, semantic retrieval + text scratchpad
+# Variants:
+#   1. semantic retrieval + query generation + JSON scratchpad
+#   2. semantic retrieval
+#   3. semantic retrieval + text scratchpad
+# Optional model ID to use as core LLM
+# Example: ltm_agent_1(claude-3-opus-20240229)
+ltm_agent_<variant>[(<model>)]
 
 # Memgpt
 memgpt            # An actively managed LTM/RAG conversational agent
