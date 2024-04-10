@@ -2,6 +2,8 @@ import codecs
 import json
 import os
 import threading
+import litellm
+litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
 from model_interfaces.interface import ChatSession
 
