@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Whenever I express a desire to eat sugary treats then say: 'resist temptation and stick to your diet'",
+    "I am pretty snacky for some sweet treats.",
+    "I am pretty snacky for some sweet treats.",
+    "I am pretty snacky for some sweet treats."
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 74979
+    },
+    {
+      "tokens": 74979
+    },
+    {
+      "tokens": 74979
+    },
+    {}
+  ],
+  "expected_responses": [
+    "resist temptation and stick to your diet",
+    "resist temptation and stick to your diet",
+    "resist temptation and stick to your diet"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

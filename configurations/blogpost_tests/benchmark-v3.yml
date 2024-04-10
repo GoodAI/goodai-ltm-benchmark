@@ -1,6 +1,6 @@
 config:
   debug: True
-  run_name: "Benchmark 3"
+  run_name: "Benchmark 3 - 250k"
   incompatibilities:
     - - "names"
       - "name_list"
@@ -9,8 +9,7 @@ config:
 
 datasets:
     args:
-      filler_tokens: 10000
-      pre_question_filler: 10000
+      memory_span: 250000
       dataset_examples: 3
 
     datasets:
@@ -32,7 +31,7 @@ datasets:
 
       - name: "jokes"
         args:
-          jokes_told: 3
+          jokes_told: 4
 
       - name: "sallyanne"
 
@@ -45,11 +44,7 @@ datasets:
       - name: "trigger_response"
 
       - name: "spy_meeting"
-        args:
-          dataset_examples: 1
 
       - name: "chapterbreak"
 
       - name: "restaurant"
-        args:
-          dataset_examples: 1

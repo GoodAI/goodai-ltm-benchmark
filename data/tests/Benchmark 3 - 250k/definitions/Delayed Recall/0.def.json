@@ -1,0 +1,76 @@
+{
+  "script": [
+    "Take a look at the following facts about a fictional world:\n\nIn the fictional world of Zoltron, the primary source of energy is magical crystals called Luminites.\nThe capital city of Zoltron is named Aetheria, known for its floating architecture and advanced technology.\nZoltron is inhabited by three main sentient species: the Fae, the Drakari, and the Aetherians.\nThe Great War of Zoltron, fought over control of the Luminites, lasted for a century and reshaped the political landscape.\nThe Fae are skilled in elemental magic and are known for their connection to nature and the forests of Zoltron.\nThe Drakari are a dragon-like humanoid species with a hierarchical society centered around honor and combat prowess.\nAetherians are technologically advanced beings who use a blend of magic and machinery to power their floating cities.\nThe Zoltronic Council, composed of representatives from each species, governs the unified nation of Zoltron.\nThe Grand Library of Aetheria is a repository of knowledge and history, housing ancient texts and artifacts from the dawn of Zoltron.\nThe Zoltronic Rift, a mystical portal hidden deep in the Aetherian mountains, is said to lead to other dimensions and realms.",
+    "Look, about the fictional world... What is the primary source of energy in the world of Zoltron?",
+    "Look, about the fictional world... What is the capital city of Zoltron known for?",
+    "One question about the fictional world. Name the three main sentient species in Zoltron.",
+    "Going back to the fictional world, What was the cause of the Great War of Zoltron?",
+    "Look, about the fictional world... What magical skills are the Fae known for?",
+    "Look, about the fictional world... Describe the societal structure of the Drakari.",
+    "Going back to the fictional world, How do Aetherians power their cities?",
+    "Look, about the fictional world... Who governs the nation of Zoltron?",
+    "Going back to the fictional world, Where can one find ancient knowledge and history in Zoltron?",
+    "Answer this question about the fictional world: What is the Zoltronic Rift and where is it located?"
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {
+      "tokens": 22455
+    },
+    {}
+  ],
+  "expected_responses": [
+    "The primary source of energy in Zoltron is magical crystals called Luminites.",
+    "Aetheria is the capital city of Zoltron, known for its floating architecture and advanced technology.",
+    "The three main sentient species in Zoltron are the Fae, the Drakari, and the Aetherians.",
+    "The Great War of Zoltron was fought over control of the Luminites.",
+    "The Fae are skilled in elemental magic and are known for their connection to nature and the forests of Zoltron.",
+    "The Drakari are a dragon-like humanoid species with a hierarchical society centered around honor and combat prowess.",
+    "Aetherians use a blend of magic and machinery to power their floating cities.",
+    "The Zoltronic Council, composed of representatives from each species, governs the unified nation of Zoltron.",
+    "The Grand Library of Aetheria is a repository of knowledge and history, housing ancient texts and artifacts from the dawn of Zoltron.",
+    "The Zoltronic Rift is a mystical portal hidden deep in the Aetherian mountains, said to lead to other dimensions and realms."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

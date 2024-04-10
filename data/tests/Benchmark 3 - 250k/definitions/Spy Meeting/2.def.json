@@ -1,0 +1,51 @@
+{
+  "script": [
+    "You will be given three messages from different people Bernadette McComiskey, Mairead Guinness, and Tess Shevlin.",
+    "Mairead Guinness: The time we will meet is when the sun starts its travel across the sky.",
+    "Tess Shevlin: We will rendezvous where the sea cargo is stored.",
+    "Bernadette McComiskey: Bring to the meeting a way to escape quickly over land.",
+    "Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 56219
+    },
+    {
+      "tokens": 56219
+    },
+    {
+      "tokens": 56219
+    },
+    {
+      "tokens": 56219
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "sunrise",
+      "dawn",
+      "rise"
+    ],
+    [
+      "port",
+      "warehouse"
+    ],
+    [
+      "motorbike",
+      "motorcycle",
+      "car",
+      "fast vehicle"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

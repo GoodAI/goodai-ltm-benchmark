@@ -1,0 +1,46 @@
+{
+  "script": [
+    "Step 1: Unpack the shiny orb from its protective casing, being mindful not to touch it with bare hands.\nStep 2: Place the orb on a stable surface and activate the runes inscribed around its surface by tracing them with a special wand.\nStep 3: Stand back as the orb begins to emit a soft humming sound and glows with a faint blue light.\nStep 4: Recite the ancient incantation printed on the parchment provided with the orb, speaking clearly and with intent.\nStep 5: Watch as the orb shimmers and expands, revealing a miniature portal to another dimension within its core.\nStep 6: Place the desired offering, such as a precious gem or a token of gratitude, into the portal to activate it further.\nStep 7: Gently blow a stream of enchanted dust over the orb to stabilize the connection between realms.\nStep 8: Focus your thoughts on the destination you wish to reach through the portal, visualizing it clearly in your mind.\nStep 9: Step through the glowing portal with confidence and determination, trusting in the orb to guide you safely to your chosen destination.\nStep 10: Take a moment to adjust to the new surroundings and give thanks to the orb for facilitating your journey before returning through the portal.",
+    "What should you avoid doing when unpacking the shiny orb?",
+    "How do you activate the runes inscribed around the orb's surface?",
+    "What should you do after reciting the ancient incantation?",
+    "What offering should be placed into the miniature portal to activate it?",
+    "What should you focus on before stepping through the portal?"
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 44937
+    },
+    {
+      "tokens": 44937
+    },
+    {
+      "tokens": 44937
+    },
+    {
+      "tokens": 44937
+    },
+    {
+      "tokens": 44937
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Avoid touching the orb with bare hands.",
+    "By tracing them with a special wand.",
+    "Watch as the orb shimmers and expands, revealing a miniature portal to another dimension within its core.",
+    "A precious gem or a token of gratitude.",
+    "Focus your thoughts on the destination you wish to reach."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

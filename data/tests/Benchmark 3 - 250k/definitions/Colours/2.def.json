@@ -1,0 +1,32 @@
+{
+  "script": [
+    "Tan is my favourite colour.",
+    "Purple is my favourite colour.",
+    "Yellow is my favourite colour.",
+    "What is my favourite colour?"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 74988
+    },
+    {
+      "tokens": 74988
+    },
+    {
+      "tokens": 74988
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Yellow"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

@@ -1,0 +1,49 @@
+{
+  "script": [
+    "You will be given three messages from different people Dr. Arron Kelvey, Seana Lynch, and Lisa-Marie Hastie.",
+    "Seana Lynch: Bring to the meeting a way to get across a river.",
+    "Lisa-Marie Hastie: We will rendezvous where the apples grow.",
+    "Dr. Arron Kelvey: The time we will meet is when the sun is high.",
+    "Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 56220
+    },
+    {
+      "tokens": 56220
+    },
+    {
+      "tokens": 56220
+    },
+    {
+      "tokens": 56220
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "boat",
+      "bridge",
+      "raft",
+      "kayak"
+    ],
+    [
+      "orchard"
+    ],
+    [
+      "noon",
+      "midday"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

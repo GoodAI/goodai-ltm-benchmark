@@ -1,0 +1,66 @@
+{
+  "script": [
+    "Please add 2 Toothpaste to my shopping list",
+    "I require 2 Leek, please put it on the list.",
+    "I want to buy 2 Soap.",
+    "I require another 1 Leek, please put it on the list.",
+    "I require 3 Milk, please put it on the list.",
+    "Please add 3 Potato to my shopping list",
+    "What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "tokens": 37479
+    },
+    {
+      "tokens": 37479
+    },
+    {
+      "tokens": 37479
+    },
+    {
+      "tokens": 37479
+    },
+    {
+      "tokens": 37479
+    },
+    {
+      "tokens": 37479
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "toothpaste",
+      2
+    ],
+    [
+      "leek",
+      3
+    ],
+    [
+      "soap",
+      2
+    ],
+    [
+      "milk",
+      3
+    ],
+    [
+      "potato",
+      3
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}
