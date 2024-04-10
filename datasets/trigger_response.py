@@ -23,7 +23,7 @@ REQUESTS = [
 RESPONSE = [
     "It's Party time!",
     "Your letter opener is in your office",
-    "Bless you",
+    "Here is a tissue for you",
     "You misspelled 'happy' as 'hppy'",
     "resist temptation and stick to your diet",
     "I am sorry to hear that. I hope you recover soon",
