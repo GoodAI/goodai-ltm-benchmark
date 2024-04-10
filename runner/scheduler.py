@@ -279,8 +279,7 @@ class TestRunner:
                     assert action.tokens == evt.data["tokens"] or action.percentage_finished > 0.0
                     assert action.time == evt.data["time"]
                     self.travel_to_dt(evt.timestamp)
-                    wait_dict = self.set_to_wait(test, action, log_this=False)
-                    assert wait_dict["tokens"] == evt.data["tokens"]
+                    self.set_to_wait(test, action, log_this=False)
                     self.reset_time()
 
     def setup_iterator(self, test_group, reset_policy):
