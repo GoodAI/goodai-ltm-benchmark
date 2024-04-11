@@ -54,7 +54,7 @@ class LocationsDirectionsDataset(LocationsDataset):
         context = [make_user_message(structured_directions_prompt.format(
             directions=agent_response, places="\n".join(f"- {loc}" for loc in LOCATIONS),
         ))]
-        response = self.ask_llm(context)
+        response = self.ask_llm(context, model="gpt-4-turbo")
         try:
             directions = sanitize_and_parse_json(response)
             assert isinstance(directions, list)
@@ -105,11 +105,12 @@ Take a look at this text:
 {directions}
 ```
 
-Now convert it to a sequence of directions in a well-structured JSON, like this:
+If the text has a sequence of directions in it, convert that sequence of directions into well-structured JSON, like this:
 [
   {{"origin": "some place", "kilometers": 2, "direction": "West", "destination": "other place"}},
   ...
 ]
+If there are no directions, return an empty list.
 
 Also, if any place matches a place from this list, you must use the name from the list instead of what's in the text:
 {places}
