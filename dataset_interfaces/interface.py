@@ -14,7 +14,7 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
-from utils.llm import ask_llm, LLMContext, get_tokens_for_script
+from utils.llm import ask_llm, LLMContext, tokens_in_script
 from utils.files import make_testdef_path
 
 _match_system_prompt = """
@@ -213,8 +213,8 @@ class TestExample:
         assert len(self.waits) == 0 or len(self.waits) == len(self.is_question), "Current waits should be empty or the same length as the script"
         memory_span = self.dataset_generator.memory_span
 
-        # TODO: All this token counting is based on OpenAIs methods, which is not Anthropics - but Aanthopic has no reliable tokeniser released so....
-        script_tokens = get_tokens_for_script(self.script)
+        # This is done at generation time, so we pick the least efficient encoder
+        script_tokens = tokens_in_script(self.script)
         assert script_tokens < memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {memory_span} tokens."
 
         span_minus_script = memory_span - script_tokens
@@ -348,7 +348,7 @@ class DatasetInterface(ABC):
         return ask_llm(
             context=context,
             temperature=temperature,
-            max_tokens=max_tokens,
+            max_response_tokens=max_tokens,
             cost_callback=self.cost_callback,
             **kwargs,
         )

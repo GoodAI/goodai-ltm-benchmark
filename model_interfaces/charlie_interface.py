@@ -6,7 +6,6 @@ import browser_cookie3
 from model_interfaces.interface import ChatSession
 import requests
 
-from utils.constants import ResetPolicy
 
 
 def try_extract_session_cookie(cj):

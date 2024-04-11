@@ -12,14 +12,12 @@ import yaml
 from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
-from model_interfaces.claude_interface import ClaudeChatSession
 from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
-from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
+from model_interfaces.lite_llm_interface import LLMChatSession, TimestampLLMChatSession
 from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
 from model_interfaces.memgpt_interface import MemGPTChatSession
-from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from runner.config import RunConfig
@@ -70,12 +68,11 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return HumanChatSession(**kwargs)
 
     try:
-        if name.startswith("claude-"):
-            cls = ClaudeChatSession
-        elif name.startswith("ts-"):
-            cls = TimestampGPTChatSession
+        if name.startswith("ts-"):
+            cls = TimestampLLMChatSession
         else:
-            cls = GPTChatSession
+            cls = LLMChatSession
+
         return cls(model=name.removeprefix("ts-"), **kwargs)
     except ValueError:
         pass

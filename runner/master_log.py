@@ -5,8 +5,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Dict, List, Any, Callable, Iterator
 
-from utils.constants import EventType, EVENT_SENDER, ResetPolicy
-from utils.text import token_len
+from utils.constants import EventType, EVENT_SENDER
 
 
 @dataclass
@@ -29,8 +28,6 @@ class LogEvent:
         for k, v in self.data.items():
             if isinstance(v, timedelta):
                 v = v.seconds
-            if isinstance(v, ResetPolicy):
-                v = v.value
             ret[k] = v
         return ret
 
@@ -41,8 +38,6 @@ class LogEvent:
         kwargs["timestamp"] = datetime.fromtimestamp(kwargs["timestamp"])
         if "time" in kwargs["data"]:
             kwargs["data"]["time"] = timedelta(seconds=kwargs["data"]["time"])
-        if "policy" in kwargs["data"]:
-            kwargs["data"]["policy"] = ResetPolicy(kwargs["data"]["policy"])
         return cls(**kwargs)
 
 
@@ -87,8 +82,8 @@ class MasterLog:
         event = LogEvent(EventType.END, timestamp=timestamp, test_id=test_id)
         self.add_event(event)
 
-    def add_reset_event(self, policy: ResetPolicy, timestamp: datetime):
-        event = LogEvent(EventType.SUITE_RESET, timestamp=timestamp, test_id="", data={"policy": policy})
+    def add_reset_event(self, timestamp: datetime):
+        event = LogEvent(EventType.SUITE_RESET, timestamp=timestamp, test_id="")
         self.add_event(event)
 
     def add_llm_call(self, test_id: str, timestamp: datetime, response: str):

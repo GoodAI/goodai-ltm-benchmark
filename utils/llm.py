@@ -2,9 +2,11 @@ import os
 from typing import Optional, Callable
 
 import openai
-import tiktoken
-from openai import OpenAI
+import litellm
+from litellm import completion, ModelResponse
 from utils.ui import colour_print
+
+litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 
 LLMMessage = dict[str, str]
 LLMContext = list[LLMMessage]
@@ -13,9 +15,8 @@ LLMContext = list[LLMMessage]
 SUPPORTED_MODELS: dict[str, tuple[int, tuple[float, float]]] = {
     "gpt-3.5-turbo-0125": (16_384, (5e-7, 1.5e-6)),
     "gpt-4": (8_192, (3e-5, 6e-5)),
-    "gpt-4-32k": (32_768, (6e-5, 1.2e-4)),
     "gpt-4-1106-preview": (128_000, (1e-5, 3e-5)),
-    "gpt-4-0125-preview": (128_000, (1e-5, 3e-5)),
+    "gpt-4-turbo-2024-04-09": (128_000, (1e-5, 3e-5)),
     "claude-2.1": (200_000, (8e-6, 2.4e-5)),
     "claude-3-haiku-20240229": (200_000, (2.5e-7, 1.25e-6)),
     "claude-3-sonnet-20240229": (200_000, (3e-6, 1.5e-5)),
@@ -23,16 +24,14 @@ SUPPORTED_MODELS: dict[str, tuple[int, tuple[float, float]]] = {
 }
 MODEL_ALIASES = {
     "gpt-3.5-turbo": "gpt-3.5-turbo-0125",
-    "gpt-4-turbo": "gpt-4-0125-preview",
+    "gpt-4-turbo": "gpt-4-turbo-2024-04-09",
     "gpt-4-1106": "gpt-4-1106-preview",
-    "gpt-4-0125": "gpt-4-0125-preview",
     "claude-3-haiku": "claude-3-haiku-20240229",
     "claude-3-sonnet": "claude-3-sonnet-20240229",
     "claude-3-opus": "claude-3-opus-20240229",
 }
 GPT_CHEAPEST = "gpt-3.5-turbo"
 GPT_4_TURBO_BEST = "gpt-4-1106-preview"
-client = OpenAI()
 
 
 def get_model(model_name: Optional[str]) -> str:
@@ -64,7 +63,7 @@ def token_cost(model: str) -> tuple[float, float]:
     return cost_info
 
 
-def response_cost(response: openai.ChatCompletion) -> float:
+def response_cost(response: ModelResponse) -> float:
     input_cost, output_cost = token_cost(response.model)
     usage = response.usage
     return usage.prompt_tokens * input_cost + usage.completion_tokens * output_cost
@@ -81,26 +80,20 @@ def ensure_context_len(
     model: Optional[str] = None,
     max_len: Optional[int] = None,
     response_len: int = 0,
-    system_message: bool = True,
 ) -> tuple[LLMContext, int]:
+    model = get_model(model)
     max_len = max_len or get_max_prompt_size(model)
     messages = list()
+    context_tokens = litellm.token_counter(model, messages=context[:1])
 
-    if system_message:
-        sys_idx = 1
-    else:
-        sys_idx = 0
-
-    context_tokens = context_token_len(context[:sys_idx], model=model)
-
-    for message in reversed(context[sys_idx:]):
-        message_tokens = context_token_len([message], model=model)
+    for message in reversed(context[1:]):
+        message_tokens = litellm.token_counter(model, text=message["content"])
         if context_tokens + message_tokens + response_len > max_len:
             break
         messages.append(message)
         context_tokens += message_tokens
     messages.reverse()
-    context = context[:sys_idx] + messages
+    context = context[:1] + messages
     # assert len(context) > 1, f"There are messages missing in the context:\n\n{context}"
     return context, context_tokens
 
@@ -112,18 +105,14 @@ def ask_llm(
     context_length: int = None,
     cost_callback: Callable[[float], None] = None,
     timeout: float = 300,
-    max_tokens: Optional[int] = None,
+    max_response_tokens: int = 1000,
 ) -> str:
     set_api_key()
+
     model = get_model(model)
-    context, context_tokens = ensure_context_len(context, model, context_length, response_len=256)
-    response = openai.chat.completions.create(
-        model=model,
-        messages=context,
-        temperature=temperature,
-        timeout=timeout,
-        max_tokens=max_tokens,
-    )
+    context, context_tokens = ensure_context_len(context, model, context_length, response_len=max_response_tokens)
+    response = completion(model=model, messages=context, max_tokens=max_response_tokens, temperature=temperature)
+
     if cost_callback is not None:
         cost_callback(response_cost(response))
     return response.choices[0].message.content
@@ -147,23 +136,26 @@ def make_assistant_message(content: str) -> LLMMessage:
 
 
 def context_token_len(context: LLMContext, model: Optional[str] = None, response: bool = False) -> int:
-    # Extracted from here:
-    # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-    encoder = tiktoken.encoding_for_model(get_model(model))
+    model = get_model(model)
     num_tokens = 0
     for message in context:
         num_tokens += 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        num_tokens += len(encoder.encode(message["content"]))
+        num_tokens += litellm.token_counter(model, text=message["content"])
     if response:
         num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
 
-def get_tokens_for_script(script: list[str], model: Optional[str] = None) -> int:
-    encoder = tiktoken.encoding_for_model(get_model(model))
+def tokens_in_script(script: list[str], model: str = "claude-3-opus-20240229") -> int:
+    model = get_model(model)
     num_tokens = 0
     for line in script:
         num_tokens += 4
-        num_tokens += len(encoder.encode(line))
+        num_tokens += litellm.token_counter(model, text=line)
 
     return num_tokens
+
+
+def tokens_in_text(text: str, model: str = "claude-3-opus-20240229") -> int:
+    model = get_model(model)
+    return litellm.token_counter(model, text=text)

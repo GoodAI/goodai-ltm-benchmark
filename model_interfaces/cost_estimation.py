@@ -1,6 +1,5 @@
 from model_interfaces.interface import ChatSession
 from dataclasses import dataclass, field
-from utils.text import token_len
 from utils.llm import (
     LLMContext,
     make_system_message,

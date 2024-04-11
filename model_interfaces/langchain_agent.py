@@ -6,7 +6,6 @@ from langchain.memory.prompt import ENTITY_MEMORY_CONVERSATION_TEMPLATE
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import OpenAI
 from model_interfaces.interface import ChatSession
-from utils.constants import ResetPolicy
 from utils.llm import get_max_prompt_size, token_cost
 from utils.ui import colour_print
 
@@ -43,7 +42,6 @@ class LangchainAgent(ChatSession):
             prompt=mem_type.template,
             memory=self.memory,
         )
-        self.reset_policy: ResetPolicy = ResetPolicy.HARD
         colour_print("CYAN", "WARN: The Langchain agent does not save its memory as of yet. Loading and saving will be NOOPs.")
 
     @property

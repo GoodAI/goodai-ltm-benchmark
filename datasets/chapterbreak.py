@@ -4,8 +4,9 @@ from typing import List, Tuple
 
 from utils.data import get_gdrive_file, get_data_path
 from dataclasses import dataclass, field
+
+from utils.llm import tokens_in_text
 from utils.ui import ordinal
-from utils.text import token_len
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 
 
@@ -16,12 +17,12 @@ GDRIVE_8K_ID = "15AcGiC4wIglru2gK2MHSX5Fie7gYxTTS"
 
 def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
     separator = ". "
-    separator_len = token_len(separator)
+    separator_len = tokens_in_text(separator)
     page_list = list()
     page_sentences = list()
     page_len = 0
     for sentence in text.split(separator):
-        sentence_len = token_len(sentence)
+        sentence_len = tokens_in_text(sentence)
         if page_len == 0:
             page_sentences.append(sentence)
             page_len += sentence_len

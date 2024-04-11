@@ -20,10 +20,6 @@ def main(agent: str, max_prompt_size: int):
             logging.warning("Clearing history and memory.")
             chat_session.reset()
             continue
-        elif user_question == ".reset-history":
-            logging.warning("Clearing history.")
-            chat_session.reset_history()
-            continue
         response, _, _ = chat_session.message_to_agent(user_question)
         print(f"Assistant: {response}")
 

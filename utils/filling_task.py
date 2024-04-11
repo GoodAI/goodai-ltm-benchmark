@@ -2,11 +2,8 @@ import json
 import random
 
 import tiktoken
-
-from model_interfaces.gpt_interface import GPTChatSession
 from model_interfaces.interface import ChatSession
 from utils.constants import DATA_DIR
-from utils.text import token_len
 
 
 TRIVIA_CACHE = None
@@ -41,14 +38,14 @@ def filler_no_response_tokens_shakespeare(num_tokens: int, encoding_name="cl100k
     return filler_messages
 
 
-def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int):
+def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int, agent: ChatSession):
     data = get_trivia()
     message = (
         "Here are some trivia questions and answers for you to process."
         ' Please extract all of the answers in json form as a single message: E.g ["answer 1", "answer 2", ...]\n'
     )
     tokens_to_return = min(num_tokens, max_message_size)
-    total_tokens = token_len(message)
+    total_tokens = agent.token_len(message)
     messages = [message]
     answers = []
     at_least_one_trivia = False
@@ -58,8 +55,8 @@ def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int):
         trivia = random.choice(data)
         trivia_msg = f"Q: {trivia['Question']}, A: {trivia['AnswerValue']}\n"
         answers.append(trivia['AnswerValue'])
-        total_tokens += token_len(trivia_msg)
-        est_response_tokens = token_len(str(answers))
+        total_tokens += agent.token_len(trivia_msg)
+        est_response_tokens = agent.token_len(str(answers))
         messages.append(trivia_msg)
         at_least_one_trivia = True
 
@@ -89,10 +86,3 @@ def filler_task_characters(agent: ChatSession, num_characters: int):
     print(f"Filler: The information has ended. Please summarise the above passages for me.")
     response = agent.message_to_agent("The information has ended. Please summarise the above passages for me.")
     print(f"Agent: {response}")
-
-
-if __name__ == "__main__":
-    m = GPTChatSession()
-    filler = filler_no_response_tokens_trivia(1000)
-    for k in filler:
-        print(k)
