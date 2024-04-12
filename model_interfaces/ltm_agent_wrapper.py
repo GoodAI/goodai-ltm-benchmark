@@ -62,4 +62,5 @@ class LTMAgentWrapper(ChatSession):
             state_text = fd.read()
         self.agent.from_state_text(state_text)
 
-
+    def token_len(self, text: str) -> int:
+        return litellm.token_counter(self.model, text=text)

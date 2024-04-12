@@ -21,7 +21,6 @@ def try_extract_session_cookie(cj):
 
 @dataclass
 class CharlieMnemonic(ChatSession):
-    context: List[str] = field(default_factory=list)
     max_prompt_size: int = 8192
     chat_id: str = "New chat"
     endpoint: str = "https://clang.goodai.com"
@@ -136,7 +135,6 @@ class CharlieMnemonic(ChatSession):
             self.endpoint + "/delete_data_keep_settings", headers=headers, json=body
         )
 
-        self.context = []
 
     def load(self):
         # Charlie mnemonic is web based and so doesn't need to be manually told to resume a conversation
