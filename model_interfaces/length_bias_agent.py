@@ -118,7 +118,7 @@ class LengthBiasAgent(BaseLTMAgent):
     def current_time(self) -> float:
         return self.time_fn(self.session_index, len(self.message_history))
 
-    def reply(self, user_content: str) -> str:
+    def reply(self, user_content: str, agent_response: str) -> str:
         context = self.build_llm_context(user_content)
         response = self.completion(context, temperature=self.llm_temperature, label="reply")
         user_message = Message(role='user', content=user_content, timestamp=self.current_time)

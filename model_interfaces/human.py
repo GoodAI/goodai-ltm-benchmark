@@ -26,7 +26,7 @@ class HumanChatSession(ChatSession):
             "answering the next questions."
         )
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: str) -> str:
         colour_print("red", datetime.now().isoformat())
         colour_print("cyan", f"Test: {user_message}")
         return multiline_input("Human: ")

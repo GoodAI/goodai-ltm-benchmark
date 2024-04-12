@@ -85,7 +85,7 @@ class CharlieMnemonic(ChatSession):
             self.endpoint + "/update_settings/", headers=headers, json=body
         )
 
-    def reply(self, user_message) -> str:
+    def reply(self, user_message: str, agent_response: str) -> str:
         headers = {
             "Content-Type": "application/json",
             "Cookie": f"session_token={self.token}",

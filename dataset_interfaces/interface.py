@@ -61,6 +61,7 @@ class SendMessageAction(TestAction):
     sent_ts: Optional[datetime] = None
     is_question: bool = False
     is_filling: bool = False
+    filler_response: str = None
 
 
 @dataclass

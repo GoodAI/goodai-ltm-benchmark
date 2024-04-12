@@ -75,7 +75,7 @@ class MemGPTChatSession(ChatSession):
 
         self.client.server.server_llm_config.context_window = self.max_prompt_size
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: str) -> str:
         if not self.agent_initialised:
             self.reset()
 

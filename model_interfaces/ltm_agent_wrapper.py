@@ -42,7 +42,7 @@ class LTMAgentWrapper(ChatSession):
     def name(self):
         return f"{super().name} - {self.model} - {self.max_prompt_size} - {self.variant.name}"
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: str) -> str:
         def _cost_fn(amount: float):
             self.costs_usd += amount
 

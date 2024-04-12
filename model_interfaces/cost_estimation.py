@@ -41,7 +41,7 @@ class CostEstimationChatSession(ChatSession):
             self.context_tokens -= context_token_len(self.context[1:2])
             self.context = self.context[:1] + self.context[2:]
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: str) -> str:
         self.add_to_context(user_message)
         self.costs_usd += self.cost_in_token * self.context_tokens
         self.costs_usd += self.cost_out_token * self.avg_response_len

@@ -15,10 +15,10 @@ class ChatSession(ABC):
     is_local: bool = False
     max_message_size: int = 1000
 
-    def message_to_agent(self, user_message: str) -> Tuple[str, datetime, datetime]:
+    def message_to_agent(self, user_message: str, agent_response: str = "") -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
         old_costs = self.costs_usd
-        response = self.reply(user_message)
+        response = self.reply(user_message, agent_response)
         reply_ts = datetime.now()
         assert (
             self.is_local or old_costs < self.costs_usd
@@ -41,7 +41,7 @@ class ChatSession(ABC):
         return f"{self.run_name} - {self.name}"
 
     @abstractmethod
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: str) -> str:
         """
         In this method, the agent is expected to:
         - Generate a response to "user_message" and return it as a plain string.
