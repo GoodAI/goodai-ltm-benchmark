@@ -40,16 +40,17 @@ The agents currently implemented in this repository are the ones shown below. Fo
 ```text
 # OpenAI models
 gpt-3.5-turbo       # GPT3.5
-gpt-4-0125          # GPT4-turbo preview
+gpt-4-1106          # GPT4-turbo preview
 gpt-4-turbo         # GPT4-turbo-2024-04-09
-ts-gpt-3.5-turbo    # GPT3.5 with timestamped messages
-ts-gpt-4-0125       # GPT4-turbo preview with timestamped messages
 
 # Anthropic Models (200k context)
 claude-2.1          # Claude 2.1
 claude-3-haiku      # Claude 3 Haiku
 claude-3-sonnet     # Claude 3 Sonnet
 claude-3-opus       # Claude 3 Opus
+
+# Models with timestamped messages
+ts-<model>          # Any of the above OpenAI or Anthropic models 
 
 # GoodAI LTM models
 # Variants:
