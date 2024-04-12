@@ -3,8 +3,7 @@ from typing import Optional, Callable
 
 import openai
 import litellm
-from litellm import completion, ModelResponse
-from utils.ui import colour_print
+from litellm import completion
 
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 
@@ -12,16 +11,6 @@ LLMMessage = dict[str, str]
 LLMContext = list[LLMMessage]
 # This list should only contain exact IDs for latest models.
 # Add previous ID if specifically supported.
-SUPPORTED_MODELS: dict[str, tuple[int, tuple[float, float]]] = {
-    "gpt-3.5-turbo-0125": (16_384, (5e-7, 1.5e-6)),
-    "gpt-4": (8_192, (3e-5, 6e-5)),
-    "gpt-4-1106-preview": (128_000, (1e-5, 3e-5)),
-    "gpt-4-turbo-2024-04-09": (128_000, (1e-5, 3e-5)),
-    "claude-2.1": (200_000, (8e-6, 2.4e-5)),
-    "claude-3-haiku-20240229": (200_000, (2.5e-7, 1.25e-6)),
-    "claude-3-sonnet-20240229": (200_000, (3e-6, 1.5e-5)),
-    "claude-3-opus-20240229": (200_000, (1.5e-5, 7.5e-5)),
-}
 MODEL_ALIASES = {
     "gpt-3.5-turbo": "gpt-3.5-turbo-0125",
     "gpt-4-turbo": "gpt-4-turbo-2024-04-09",
@@ -31,57 +20,48 @@ MODEL_ALIASES = {
     "claude-3-opus": "claude-3-opus-20240229",
 }
 GPT_CHEAPEST = "gpt-3.5-turbo"
-GPT_4_TURBO_BEST = "gpt-4-1106-preview"
+GPT_4_TURBO_BEST = "gpt-4-turbo"
+CHEAPEST_TOKENISER = "claude-3-opus"
+litellm.model_alias_map = MODEL_ALIASES
 
 
-def get_model(model_name: Optional[str]) -> str:
-    if model_name is None:
-        model_name = GPT_CHEAPEST
-    debug_name = model_name
-    model_name = MODEL_ALIASES.get(model_name, model_name)
-    if model_name not in SUPPORTED_MODELS:
-        raise ValueError(f"Model {debug_name} is not supported and is not an alias.")
-    return model_name
+def model_from_alias(model: str):
+    return litellm.model_alias_map.get(model, model)
 
 
 def get_max_prompt_size(model: str):
-    if model == "gpt-3.5-turbo-instruct":
-        colour_print("red", "WARNING: gpt-3.5-turbo-instruct is a completion model.")
-        return 4_096
-    model = get_model(model)
-    prompt_size, _ = SUPPORTED_MODELS[model]
-    return prompt_size
+    model = model_from_alias(model)
+    return litellm.model_cost[model]["max_input_tokens"]
 
 
 def token_cost(model: str) -> tuple[float, float]:
-    if model == "text-embedding-ada-002":
-        return 2e-9, 2e-9
-    if model == "gpt-3.5-turbo-instruct":
-        return 1.5e-6, 2e-6
-    model = get_model(model)
-    _, cost_info = SUPPORTED_MODELS[model]
-    return cost_info
-
-
-def response_cost(response: ModelResponse) -> float:
-    input_cost, output_cost = token_cost(response.model)
-    usage = response.usage
-    return usage.prompt_tokens * input_cost + usage.completion_tokens * output_cost
+    model = model_from_alias(model)
+    input_cost = litellm.model_cost[model]["input_cost_per_token"]
+    output_cost = litellm.model_cost[model]["output_cost_per_token"]
+    return input_cost, output_cost
 
 
 def set_api_key():
-    if openai.api_key is not None:
-        return
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    try:
+        if litellm.openai_key is None:
+            litellm.openai_key = os.getenv("OPENAI_API_KEY")
+    except:
+        pass
+
+    try:
+        if litellm.anthropic_key is None:
+            litellm.anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    except:
+        pass
 
 
 def ensure_context_len(
     context: LLMContext,
-    model: Optional[str] = None,
+    model: str = CHEAPEST_TOKENISER,
     max_len: Optional[int] = None,
     response_len: int = 0,
 ) -> tuple[LLMContext, int]:
-    model = get_model(model)
+    model = model_from_alias(model)
     max_len = max_len or get_max_prompt_size(model)
     messages = list()
     context_tokens = litellm.token_counter(model, messages=context[:1])
@@ -100,21 +80,20 @@ def ensure_context_len(
 
 def ask_llm(
     context: LLMContext,
-    model: Optional[str] = None,
+    model: str,
     temperature: float = 1,
     context_length: int = None,
     cost_callback: Callable[[float], None] = None,
     timeout: float = 300,
-    max_response_tokens: int = 1000,
+    max_response_tokens: Optional[int] = None,
 ) -> str:
     set_api_key()
-
-    model = get_model(model)
+    model = model_from_alias(model)
     context, context_tokens = ensure_context_len(context, model, context_length, response_len=max_response_tokens)
-    response = completion(model=model, messages=context, max_tokens=max_response_tokens, temperature=temperature)
+    response = completion(model=model, messages=context, max_tokens=max_response_tokens, temperature=temperature, timeout=timeout)
 
     if cost_callback is not None:
-        cost_callback(response_cost(response))
+        cost_callback(litellm.completion_cost(response))
     return response.choices[0].message.content
 
 
@@ -135,19 +114,13 @@ def make_assistant_message(content: str) -> LLMMessage:
     return make_message("assistant", content)
 
 
-def context_token_len(context: LLMContext, model: Optional[str] = None, response: bool = False) -> int:
-    model = get_model(model)
-    num_tokens = 0
-    for message in context:
-        num_tokens += 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        num_tokens += litellm.token_counter(model, text=message["content"])
-    if response:
-        num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
-    return num_tokens
+def context_token_len(context: LLMContext, model: str = CHEAPEST_TOKENISER) -> int:
+    model = model_from_alias(model)
+    return litellm.token_counter(model, messages=context)
 
 
-def tokens_in_script(script: list[str], model: str = "claude-3-opus-20240229") -> int:
-    model = get_model(model)
+def tokens_in_script(script: list[str], model: str = CHEAPEST_TOKENISER) -> int:
+    model = model_from_alias(model)
     num_tokens = 0
     for line in script:
         num_tokens += 4
@@ -156,6 +129,6 @@ def tokens_in_script(script: list[str], model: str = "claude-3-opus-20240229") -
     return num_tokens
 
 
-def tokens_in_text(text: str, model: str = "claude-3-opus-20240229") -> int:
-    model = get_model(model)
+def tokens_in_text(text: str, model: str = CHEAPEST_TOKENISER) -> int:
+    model = model_from_alias(model)
     return litellm.token_counter(model, text=text)

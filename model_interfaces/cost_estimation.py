@@ -5,7 +5,7 @@ from utils.llm import (
     make_system_message,
     make_user_message,
     make_assistant_message,
-    context_token_len,
+    context_token_len, tokens_in_text,
 )
 
 
@@ -26,11 +26,11 @@ class CostEstimationChatSession(ChatSession):
     def __post_init__(self):
         super().__post_init__()
         self.system_prompt = "You are a helpful assistant."
-        assert self.max_prompt_size > token_len(self.system_prompt)
+        assert self.max_prompt_size > tokens_in_text(self.system_prompt)
 
         assert self.cost_in_token > 0 and self.cost_out_token > 0
         self.dummy_response = " ".join(str(i) for i in range(53)) + "_"
-        assert token_len(self.dummy_response) == self.avg_response_len
+        assert tokens_in_text(self.dummy_response) == self.avg_response_len
         self.reset()
 
     def add_to_context(self, user_message: str):

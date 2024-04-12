@@ -1,22 +1,23 @@
 import json
+import time
 from dataclasses import dataclass, field
-from datetime import datetime, time
+from datetime import datetime
 
 import litellm
 
 from model_interfaces.interface import ChatSession
 from utils.json_utils import CustomEncoder
-from utils.llm import LLMContext, make_user_message, make_assistant_message, make_system_message, get_model, \
+from utils.llm import LLMContext, make_user_message, make_assistant_message, make_system_message, \
     get_max_prompt_size, ask_llm
 
+_system_prompt = "You are a helpful assistant."
 
 @dataclass
 class LLMChatSession(ChatSession):
-    system_prompt: str = "You are a helpful assistant."
     max_prompt_size: int = None
     model: str = None
     verbose: bool = False
-    context: LLMContext = field(default_factory=LLMContext)
+    context: LLMContext = field(default_factory=lambda: [make_system_message(_system_prompt)])
     max_response_tokens: int = 4096
 
     @property
@@ -25,7 +26,6 @@ class LLMChatSession(ChatSession):
 
     def __post_init__(self):
         super().__post_init__()
-        self.model = get_model(self.model)
         if self.max_prompt_size is None:
             self.max_prompt_size = get_max_prompt_size(self.model)
         else:
@@ -49,7 +49,7 @@ class LLMChatSession(ChatSession):
         return response
 
     def reset(self):
-        self.context = [make_system_message(self.system_prompt)]
+        self.context = [make_system_message(_system_prompt)]
 
     def save(self):
         fname = self.save_path.joinpath("context.json")
@@ -84,25 +84,27 @@ class TimestampLLMChatSession(LLMChatSession):
         else:
             return f"{elapsed / (60 * 60 * 24):.1f} day(s) ago"
 
-    def build_context(self, user_content: str) -> list[dict[str, str]]:
+    def build_context(self) -> list[dict[str, str]]:
         def _ts_message(m: dict) -> dict:
             role = m["role"]
             new_content = m["content"]
             if role == "user":
                 timestamp_dt = m["timestamp"]
                 timestamp = timestamp_dt.timestamp()
-                elapsed_desc = self.get_elapsed_time_descriptor(timestamp, time.time())
+                elapsed_desc = self.get_elapsed_time_descriptor(timestamp, datetime.now().timestamp())
                 new_content = f"[{elapsed_desc}]\n{new_content}"
             return {"role": role, "content": new_content}
 
         context = [make_system_message(self.system_prompt)]
         context.extend([_ts_message(m) for m in self.history])
-        context.append(make_user_message(user_content))
         return context
 
     def reply(self, user_message: str) -> str:
-        self.context = self.build_context(user_message)
-        return super().reply(user_message)
+        self.history.append({"content": user_message, "role": "user", "timestamp": datetime.now()})
+        self.context = self.build_context()
+        response = super().reply(user_message)
+        self.history.append({"content": response, "role": "assistant", "timestamp": datetime.now()})
+        return response
 
     def reset(self):
         super().reset()

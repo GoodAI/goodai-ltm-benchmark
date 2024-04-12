@@ -213,7 +213,8 @@ class TestExample:
         assert len(self.waits) == 0 or len(self.waits) == len(self.is_question), "Current waits should be empty or the same length as the script"
         memory_span = self.dataset_generator.memory_span
 
-        # This is done at generation time, so we pick the least efficient encoder
+        # For caution, we want to use a tokeniser that produces the most tokens. This is to try and avoid the problem of
+        # having the test overrun its memory_span. More tokens in script means smaller token gaps and more buffer.
         script_tokens = tokens_in_script(self.script)
         assert script_tokens < memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {memory_span} tokens."
 
@@ -385,7 +386,7 @@ class DatasetInterface(ABC):
             },
         ]
 
-        response = ask_llm(context=ctx, model="gpt-4-0125-preview", temperature=0.01, cost_callback=cost_callback)
+        response = ask_llm(context=ctx, model="gpt-4-turbo", temperature=0.01, cost_callback=cost_callback)
         score = 0
         reasoning = []
         try:
