@@ -136,15 +136,12 @@ class TestRunner:
 
         # A nominal wait is 1 token, so skip this next step if that is what the token wait is.
         if token_wait > 1:
-            # When waiting , we want to take the reply to the previous statement into account.
-            test_messages = self.master_log.messages(unique_id)
-            previous_reply = ""
-            for m in reversed(test_messages):
-                if m.startswith("Agent"):
-                    previous_reply = m.split(":")[-1]
-                    break
+            # When waiting, we want to take the reply to the previous statement into account.
+            test_message_responses = list(self.master_log.test_events(unique_id, EventType.RESPONSE_MESSAGE))
+            # Last response is what we want
+            previous_reply = test_message_responses[-1].data["message"]
 
-            # Subtract the token wait from the previous reply.
+            # Subtract the number of tokens in the reply from the token wait
             token_wait = max(0, token_wait - self.agent.token_len(previous_reply))
 
         if log_this:
