@@ -17,7 +17,7 @@ class RestaurantOrderFailed(Exception):
 @dataclass
 class RestaurantExample(DynamicExample):
     dataset_generator: "RestaurantDataset" = None
-    max_score: int = 4  # 1 point max. per sub-challenge
+    max_score: int = 5  # 1 point max. per sub-challenge
 
     def action_iter(self) -> Iterator[TestAction]:
         try:
@@ -110,12 +110,12 @@ class RestaurantExample(DynamicExample):
 
         items = list()
         for item_dict in response["order"]:
-            if item_dict["off_menu"]:
-                self.reasoning.append(f"{item_dict['item']} is not in the menu.")
-                raise RestaurantOrderFailed
             if item_dict["is_drink"]:
                 items.append(item_dict["item"])
                 continue
+            if item_dict["off_menu"]:
+                self.reasoning.append(f"{item_dict['item']} is not in the menu.")
+                raise RestaurantOrderFailed
             menu_nr = item_dict["menu_nr"]
             if isinstance(menu_nr, str):
                 menu_nr = int(menu_nr.strip())
