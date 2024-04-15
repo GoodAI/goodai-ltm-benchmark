@@ -2,6 +2,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Optional
 
 import litellm
 
@@ -31,7 +32,7 @@ class LLMChatSession(ChatSession):
         else:
             self.max_prompt_size = min(self.max_prompt_size, get_max_prompt_size(self.model))
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         if self.verbose:
             print(f"USER: {user_message}")
 
@@ -39,8 +40,11 @@ class LLMChatSession(ChatSession):
             self.costs_usd += cost_usd
 
         self.context.append(make_user_message(user_message))
-        response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=cost_callback,
-                           max_response_tokens=self.max_response_tokens)
+        if agent_response is None:
+            response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=cost_callback,
+                               max_response_tokens=self.max_response_tokens)
+        else:
+            response = agent_response
 
         self.context.append(make_assistant_message(response))
 
@@ -99,10 +103,10 @@ class TimestampLLMChatSession(LLMChatSession):
         context.extend([_ts_message(m) for m in self.history])
         return context
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         self.history.append({"content": user_message, "role": "user", "timestamp": datetime.now()})
         self.context = self.build_context()
-        response = super().reply(user_message)
+        response = super().reply(user_message, agent_response)
         self.history.append({"content": response, "role": "assistant", "timestamp": datetime.now()})
         return response
 

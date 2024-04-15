@@ -147,7 +147,8 @@ class TestRunner:
         )
 
     def send_message(self, test_id: str, action: SendMessageAction) -> int:
-        action.reply, action.sent_ts, action.reply_ts = self.agent.message_to_agent(action.message)
+        agent_reply = None if not action.is_filling else action.filler_response
+        action.reply, action.sent_ts, action.reply_ts = self.agent.message_to_agent(action.message, agent_reply)
         self.debug_message(action.message, action.reply, action.sent_ts, action.reply_ts)
         self.master_log.add_send_message(
             test_id=test_id, message=action.message, timestamp=action.sent_ts, is_question=action.is_question,
@@ -229,8 +230,9 @@ class TestRunner:
             num_tokens = self.wait_list[token_waiting_id]["tokens"]
             remaining_tokens = num_tokens - self.total_token_count
             while remaining_tokens > 0:
-                msg = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size, self.agent)
-                tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True))
+                msg, agent_response = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size, self.agent)
+                agent_response = agent_response if len(self.result_callbacks) == 0 else None
+                tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True, filler_response=agent_response))
                 remaining_tokens -= tokens_spent
             if not self.is_waiting(token_waiting_id, remove=True):
                 return token_waiting_id

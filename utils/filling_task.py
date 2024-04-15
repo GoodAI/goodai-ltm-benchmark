@@ -60,7 +60,7 @@ def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int, age
         messages.append(trivia_msg)
         at_least_one_trivia = True
 
-    return "".join(messages)
+    return "".join(messages), str(answers)
 
 
 def filler_task_characters(agent: ChatSession, num_characters: int):
