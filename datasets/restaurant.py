@@ -119,7 +119,7 @@ class RestaurantExample(DynamicExample):
             menu_nr = item_dict["menu_nr"]
             if isinstance(menu_nr, str):
                 menu_nr = int(menu_nr.strip())
-            if menu_nr < 1 or menu_nr > len(self.dataset_generator.menu_items):
+            if not (1 <= menu_nr <= len(self.dataset_generator.menu_items)):
                 self.reasoning.append(f"{item_dict['item']} is not in the menu.")
                 raise RestaurantOrderFailed
             items.append(self.dataset_generator.menu_items[menu_nr - 1])
@@ -268,6 +268,7 @@ notice_mishap_prompt = """
 You are an assistant in the customer experience department.
 We have noticed that customers sometimes do not receive the meal that they have ordered.
 Your goal is to discern whether the customer has noticed it or not.
+Beware that some clients will notice it but won't actually complain.
 Answer in JSON format, like this:
 {"noticed": true or false}
 """.strip()
