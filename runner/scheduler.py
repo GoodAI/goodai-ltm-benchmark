@@ -230,7 +230,7 @@ class TestRunner:
             num_tokens = self.wait_list[token_waiting_id]["tokens"]
             remaining_tokens = num_tokens - self.total_token_count
             while remaining_tokens > 0:
-                msg, agent_response = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size, self.agent)
+                msg, agent_response = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size, self.agent.token_len)
                 agent_response = agent_response if len(self.result_callbacks) == 0 else None
                 tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True, filler_response=agent_response))
                 remaining_tokens -= tokens_spent
