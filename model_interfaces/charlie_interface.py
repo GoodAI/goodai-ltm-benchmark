@@ -1,12 +1,11 @@
 import json
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 import browser_cookie3
 from model_interfaces.interface import ChatSession
 import requests
 
-from utils.constants import ResetPolicy
 
 
 def try_extract_session_cookie(cj):
@@ -22,7 +21,6 @@ def try_extract_session_cookie(cj):
 
 @dataclass
 class CharlieMnemonic(ChatSession):
-    context: List[str] = field(default_factory=list)
     max_prompt_size: int = 8192
     chat_id: str = "New chat"
     endpoint: str = "https://clang.goodai.com"
@@ -87,7 +85,7 @@ class CharlieMnemonic(ChatSession):
             self.endpoint + "/update_settings/", headers=headers, json=body
         )
 
-    def reply(self, user_message) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         headers = {
             "Content-Type": "application/json",
             "Cookie": f"session_token={self.token}",
@@ -137,7 +135,6 @@ class CharlieMnemonic(ChatSession):
             self.endpoint + "/delete_data_keep_settings", headers=headers, json=body
         )
 
-        self.context = []
 
     def load(self):
         # Charlie mnemonic is web based and so doesn't need to be manually told to resume a conversation

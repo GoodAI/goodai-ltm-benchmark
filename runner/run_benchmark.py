@@ -12,14 +12,11 @@ import yaml
 from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
-from model_interfaces.claude_interface import ClaudeChatSession
 from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
-from model_interfaces.gpt_interface import GPTChatSession
-from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
+from model_interfaces.llm_interface import LLMChatSession, TimestampLLMChatSession
 from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
 from model_interfaces.memgpt_interface import MemGPTChatSession
-from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from runner.config import RunConfig
@@ -37,16 +34,7 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
 
     if name == "memgpt":
         return MemGPTChatSession(run_name=run_name)
-    if name.startswith("langchain_"):
-        suffix = "_".join(name.split("_")[1:])
-        mem_type = {
-            "sb_a": LangchainMemType.SUMMARY_BUFFER,
-            "kg_a": LangchainMemType.KG,
-            "ce_a": LangchainMemType.CONVERSATION_ENTITY,
-        }.get(suffix, None)
-        if mem_type is None:
-            raise ValueError(f"Unrecognized LangChain memory type {repr(suffix)}.")
-        return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=mem_type, **kwargs)
+
     if name.startswith("ltm_agent_"):
         match = re.match(r"^ltm_agent_(?P<variant>\d)(?:\((?P<model>.+)\))?$", name)
         if match is None:
@@ -70,12 +58,11 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return HumanChatSession(**kwargs)
 
     try:
-        if name.startswith("claude-"):
-            cls = ClaudeChatSession
-        elif name.startswith("ts-"):
-            cls = TimestampGPTChatSession
+        if name.startswith("ts-"):
+            cls = TimestampLLMChatSession
         else:
-            cls = GPTChatSession
+            cls = LLMChatSession
+
         return cls(model=name.removeprefix("ts-"), **kwargs)
     except ValueError:
         pass

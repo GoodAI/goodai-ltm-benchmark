@@ -11,11 +11,6 @@ GOODAI_GREEN = (126, 188, 66)
 GOODAI_RED = (188, 66, 66)
 
 
-class ResetPolicy(enum.Enum):
-    SOFT = 0
-    HARD = 1
-
-
 class EventType(enum.Enum):
     SEND_MESSAGE = 0
     BEGIN = 1

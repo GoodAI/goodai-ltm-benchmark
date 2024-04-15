@@ -2,6 +2,8 @@ import codecs
 import json
 import os
 import threading
+from typing import Optional
+
 import litellm
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
@@ -42,7 +44,7 @@ class LTMAgentWrapper(ChatSession):
     def name(self):
         return f"{super().name} - {self.model} - {self.max_prompt_size} - {self.variant.name}"
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         def _cost_fn(amount: float):
             self.costs_usd += amount
 
@@ -62,4 +64,5 @@ class LTMAgentWrapper(ChatSession):
             state_text = fd.read()
         self.agent.from_state_text(state_text)
 
-
+    def token_len(self, text: str) -> int:
+        return litellm.token_counter(self.model, text=text)
