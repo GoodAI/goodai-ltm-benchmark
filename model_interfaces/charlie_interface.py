@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 import browser_cookie3
 from model_interfaces.interface import ChatSession
@@ -85,7 +85,7 @@ class CharlieMnemonic(ChatSession):
             self.endpoint + "/update_settings/", headers=headers, json=body
         )
 
-    def reply(self, user_message: str, agent_response: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         headers = {
             "Content-Type": "application/json",
             "Cookie": f"session_token={self.token}",

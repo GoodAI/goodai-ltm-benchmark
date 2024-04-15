@@ -3,6 +3,7 @@ import os
 import subprocess
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from typing import Optional
 
 from memgpt.client.client import LocalClient
 from memgpt.data_types import AgentState
@@ -75,7 +76,7 @@ class MemGPTChatSession(ChatSession):
 
         self.client.server.server_llm_config.context_window = self.max_prompt_size
 
-    def reply(self, user_message: str, agent_response: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         if not self.agent_initialised:
             self.reset()
 

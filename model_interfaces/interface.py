@@ -21,7 +21,7 @@ class ChatSession(ABC):
         response = self.reply(user_message, agent_response=agent_response)
         reply_ts = datetime.now()
         # If we are supplying a response from the agent, then don't count costs.
-        if agent_response is not None:
+        if agent_response is None:
             assert (
                 self.is_local or old_costs < self.costs_usd
             ), "The agent implementation is not providing any cost information."

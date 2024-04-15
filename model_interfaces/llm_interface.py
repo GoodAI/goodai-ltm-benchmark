@@ -103,7 +103,7 @@ class TimestampLLMChatSession(LLMChatSession):
         context.extend([_ts_message(m) for m in self.history])
         return context
 
-    def reply(self, user_message: str, agent_response: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         self.history.append({"content": user_message, "role": "user", "timestamp": datetime.now()})
         self.context = self.build_context()
         response = super().reply(user_message, agent_response)

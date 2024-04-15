@@ -147,7 +147,7 @@ class TestRunner:
         )
 
     def send_message(self, test_id: str, action: SendMessageAction) -> int:
-        agent_reply = "" if not action.is_filling else action.filler_response
+        agent_reply = None if not action.is_filling else action.filler_response
         action.reply, action.sent_ts, action.reply_ts = self.agent.message_to_agent(action.message, agent_reply)
         self.debug_message(action.message, action.reply, action.sent_ts, action.reply_ts)
         self.master_log.add_send_message(
