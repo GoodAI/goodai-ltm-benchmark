@@ -89,7 +89,7 @@ def ask_llm(
 ) -> str:
     set_api_key()
     model = model_from_alias(model)
-    max_response_tokens = litellm.max_tokens(model) if max_response_tokens is None else max_response_tokens
+    max_response_tokens = litellm.get_max_tokens(model) if max_response_tokens is None else max_response_tokens
     context, context_tokens = ensure_context_len(context, model, context_length, response_len=max_response_tokens)
     response = completion(model=model, messages=context, max_tokens=max_response_tokens, temperature=temperature, timeout=timeout)
 
