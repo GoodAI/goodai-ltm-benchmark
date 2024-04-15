@@ -122,7 +122,7 @@ class MasterLog:
             elif event.type == EventType.END:
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' ENDS")
             elif event.type == EventType.SUITE_RESET:
-                messages.append(f"SYSTEM ({event.timestamp}):  Suite was RESET with policy {event.data['policy']}")
+                messages.append(f"SYSTEM ({event.timestamp}):  Suite was RESET")
             elif event.type == EventType.LLM_CALL:
                 res = event.data["response"]
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' CALLS an LLM. Response:\n{res}")
