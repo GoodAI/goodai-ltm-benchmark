@@ -2,6 +2,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Optional
 
 import litellm
 
@@ -31,7 +32,7 @@ class LLMChatSession(ChatSession):
         else:
             self.max_prompt_size = min(self.max_prompt_size, get_max_prompt_size(self.model))
 
-    def reply(self, user_message: str, agent_response: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         if self.verbose:
             print(f"USER: {user_message}")
 
@@ -39,12 +40,11 @@ class LLMChatSession(ChatSession):
             self.costs_usd += cost_usd
 
         self.context.append(make_user_message(user_message))
-        if agent_response == "":
+        if agent_response is None:
             response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=cost_callback,
                                max_response_tokens=self.max_response_tokens)
         else:
             response = agent_response
-            self.costs_usd += 1e-6
 
         self.context.append(make_assistant_message(response))
 

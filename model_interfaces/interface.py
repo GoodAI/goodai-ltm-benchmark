@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, Optional
 from dataclasses import dataclass
 
 import tiktoken
@@ -15,14 +15,16 @@ class ChatSession(ABC):
     is_local: bool = False
     max_message_size: int = 1000
 
-    def message_to_agent(self, user_message: str, agent_response: str = "") -> Tuple[str, datetime, datetime]:
+    def message_to_agent(self, user_message: str, agent_response: Optional[str] = None) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
         old_costs = self.costs_usd
-        response = self.reply(user_message, agent_response)
+        response = self.reply(user_message, agent_response=agent_response)
         reply_ts = datetime.now()
-        assert (
-            self.is_local or old_costs < self.costs_usd
-        ), "The agent implementation is not providing any cost information."
+        # If we are supplying a response from the agent, then don't count costs.
+        if agent_response is not None:
+            assert (
+                self.is_local or old_costs < self.costs_usd
+            ), "The agent implementation is not providing any cost information."
         return response, sent_ts, reply_ts
 
     def __post_init__(self):
@@ -41,7 +43,7 @@ class ChatSession(ABC):
         return f"{self.run_name} - {self.name}"
 
     @abstractmethod
-    def reply(self, user_message: str, agent_response: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         """
         In this method, the agent is expected to:
         - Generate a response to "user_message" and return it as a plain string.
