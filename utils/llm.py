@@ -21,7 +21,7 @@ MODEL_ALIASES = {
 }
 GPT_CHEAPEST = "gpt-3.5-turbo"
 GPT_4_TURBO_BEST = "gpt-4-turbo"
-CHEAPEST_TOKENISER = "claude-3-opus"
+LEAST_EFFICIENT_TOKENISER = "claude-3-opus"
 litellm.model_alias_map = MODEL_ALIASES
 
 
@@ -57,7 +57,7 @@ def set_api_key():
 
 def ensure_context_len(
     context: LLMContext,
-    model: str = CHEAPEST_TOKENISER,
+    model: str = LEAST_EFFICIENT_TOKENISER,
     max_len: Optional[int] = None,
     response_len: int = 0,
 ) -> tuple[LLMContext, int]:
@@ -85,10 +85,11 @@ def ask_llm(
     context_length: int = None,
     cost_callback: Callable[[float], None] = None,
     timeout: float = 300,
-    max_response_tokens: Optional[int] = None,
+    max_response_tokens: int = None,
 ) -> str:
     set_api_key()
     model = model_from_alias(model)
+    max_response_tokens = litellm.max_tokens(model) if max_response_tokens is None else max_response_tokens
     context, context_tokens = ensure_context_len(context, model, context_length, response_len=max_response_tokens)
     response = completion(model=model, messages=context, max_tokens=max_response_tokens, temperature=temperature, timeout=timeout)
 
@@ -114,21 +115,21 @@ def make_assistant_message(content: str) -> LLMMessage:
     return make_message("assistant", content)
 
 
-def context_token_len(context: LLMContext, model: str = CHEAPEST_TOKENISER) -> int:
+def context_token_len(context: LLMContext, model: str = LEAST_EFFICIENT_TOKENISER) -> int:
     model = model_from_alias(model)
     return litellm.token_counter(model, messages=context)
 
 
-def tokens_in_script(script: list[str], model: str = CHEAPEST_TOKENISER) -> int:
+def tokens_in_script(script: list[str], model: str = LEAST_EFFICIENT_TOKENISER) -> int:
     model = model_from_alias(model)
     num_tokens = 0
     for line in script:
-        num_tokens += 4
+        num_tokens += 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
         num_tokens += litellm.token_counter(model, text=line)
 
     return num_tokens
 
 
-def tokens_in_text(text: str, model: str = CHEAPEST_TOKENISER) -> int:
+def tokens_in_text(text: str, model: str = LEAST_EFFICIENT_TOKENISER) -> int:
     model = model_from_alias(model)
     return litellm.token_counter(model, text=text)
