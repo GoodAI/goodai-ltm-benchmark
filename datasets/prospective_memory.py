@@ -53,16 +53,16 @@ class ProspectiveMemoryDataset(DatasetInterface):
         for _, request_num in zip(range(num_examples), self.request_num_generator()):
             script = []
             # Pick a quote
-            quote_pair = QUOTES[request_num]
+            quote, author = QUOTES[request_num]
             target = self.random.randint(2, 8)
 
             n = ordinal(target)
 
-            script.append(f"'{quote_pair[0]}' - {quote_pair[1]}")
-            script.append(f'After responding to the following unrelated user prompts, please append the quote from {quote_pair[1]}, to your {n} response. Count your response to this message as the first response.')
+            script.append(f"'{quote}' - {author}")
+            script.append(f'After responding to the following unrelated user prompts, please append the quote from {quote}, to your {n} response. Count your response to this message as the first response.')
 
             is_question = [False, True]
-            expected_responses = [(quote_pair[0], quote_pair[1], target)]
+            expected_responses = [(quote, author, target)]
 
             examples.append(CallBackTestExample(
                 dataset_generator=self,
@@ -77,8 +77,19 @@ class ProspectiveMemoryDataset(DatasetInterface):
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
-    ) -> Tuple[int, int, List[str]]:
+    ) -> Tuple[int, int, List[str], List[str]]:
         raise NotImplementedError("Prospective memory checking is not handled by this method, use the callback instead")
+
+    def get_log(self, scheduler, example: TestExample) -> list[str]:
+        first_message = example.script[0]
+        start_idx = 0
+        all_messages = scheduler.master_log.messages()
+        for idx, msg in enumerate(all_messages):
+            if first_message in msg:
+                start_idx = idx
+                break
+
+        return all_messages[start_idx:]
 
     def continual_evaluation_callback(
         self, scheduler, example: TestExample, task_log: List[str]
@@ -91,8 +102,9 @@ class ProspectiveMemoryDataset(DatasetInterface):
                 statement_idx = idx
                 break
 
+        quote, author, nth = example.expected_responses[0]
         agent_responses = task_log[statement_idx + 1:][::2]
-        response_w_quote_idx = example.expected_responses[0][2] - 1
+        response_w_quote_idx = nth - 1
 
         max_score = 1
 

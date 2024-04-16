@@ -404,6 +404,7 @@ class TestRunner:
 
     def register_callback(self, example: TestExample):
         cb = example.dataset_generator.continual_evaluation_callback
+        self.master_log.register_callback(example.unique_id, datetime.now())
         self.result_callbacks.append((cb, example))
 
     def check_result_callbacks(self):
@@ -422,6 +423,7 @@ class TestRunner:
                 deregistered_cb.append((callback, example))
 
         for tup in deregistered_cb:
+            self.master_log.deregister_callback(tup[1].unique_id, datetime.now())
             self.result_callbacks.remove(tup)
 
     def set_cost_callback(self):
@@ -453,7 +455,12 @@ class TestRunner:
         result: TestResult,
         master_log: MasterLog,
     ):
-        task_log = master_log.messages(example.unique_id)
+
+        if example.uses_callback:
+            task_log = master_log.messages_past_question(example.unique_id)
+        else:
+            task_log = master_log.messages(example.unique_id)
+
         questions, question_responses = master_log.get_questions_and_responses(example.unique_id)
 
         characters, tokens = example.dataset_generator.tokens_to_answer(

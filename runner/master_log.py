@@ -90,6 +90,14 @@ class MasterLog:
         event = LogEvent(EventType.LLM_CALL, test_id=test_id, timestamp=timestamp, data={"response": response})
         self.add_event(event)
 
+    def register_callback(self, test_id: str, timestamp: datetime):
+        event = LogEvent(EventType.REGISTER_CALLBACK, timestamp=timestamp, test_id=test_id)
+        self.add_event(event)
+
+    def deregister_callback(self, test_id: str, timestamp: datetime):
+        event = LogEvent(EventType.DEREGISTER_CALLBACK, timestamp=timestamp, test_id=test_id)
+        self.add_event(event)
+
     def add_event(self, event: LogEvent):
         self.log.append(event)
         self.save_event(event)
@@ -126,6 +134,10 @@ class MasterLog:
             elif event.type == EventType.LLM_CALL:
                 res = event.data["response"]
                 messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' CALLS an LLM. Response:\n{res}")
+            elif event.type == EventType.REGISTER_CALLBACK:
+                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' REGISTERS a callback.")
+            elif event.type == EventType.DEREGISTER_CALLBACK:
+                messages.append(f"SYSTEM ({event.timestamp}): Test '{event.test_id}' DEREGISTERS a callback.")
             else:
                 raise ValueError("Unknown event found")
 
@@ -153,6 +165,20 @@ class MasterLog:
                 if test_id == "" or event.test_id == test_id:
                     sender = "Test" if event.type == EventType.SEND_MESSAGE else "System" if event.type == EventType.SEND_FILL else "Agent"
                     messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
+
+        return messages
+
+    def messages_past_question(self, test_id: str) -> list[str]:
+        messages = []
+        getting_all_messages = False
+        for event in self.log:
+            if event.type in [EventType.SEND_MESSAGE, EventType.RESPONSE_MESSAGE, EventType.SEND_FILL, EventType.RESPONSE_FILL]:
+                if test_id == event.test_id or getting_all_messages:
+                    sender = "Test" if event.type == EventType.SEND_MESSAGE else "System" if event.type == EventType.SEND_FILL else "Agent"
+                    messages.append(f"{sender} ({event.timestamp}): {event.data['message']}")
+
+                    if event.data["is_question"]:
+                        getting_all_messages = True
 
         return messages
 

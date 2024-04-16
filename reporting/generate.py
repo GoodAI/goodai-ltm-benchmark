@@ -31,8 +31,8 @@ def get_agent_color(agent_name: str) -> tuple[int, int, int]:
 
 
 def formatted_log(result: TestResult) -> list[str]:
-    line_color = {"Test": "659936", "Agent": "4249bc"}
-    start_pattern = r"^((Test|Agent) (\(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\))?:)"
+    line_color = {"Test": "659936", "Agent": "4249bc", "System": "bc5f42"}
+    start_pattern = r"^((Test|Agent|System) (\(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\))?:)"
     task_log = []
     for line in result.task_log:
         m = re.match(start_pattern, line)
