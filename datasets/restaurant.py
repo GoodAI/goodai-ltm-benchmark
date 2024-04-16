@@ -178,8 +178,8 @@ class RestaurantExample(DynamicExample):
         self.reasoning.append(f"The agent {recall_str} what it was drinking.")
         self.score += int(recalls)
 
-    def gpt_bool_check(self, context: LLMContext, key: str, **llm_kwargs) -> bool:
-        eval_json = self.ask_llm(context, GPT_CHEAPEST, **llm_kwargs)
+    def gpt_bool_check(self, context: LLMContext, key: str, model: str = GPT_CHEAPEST, **llm_kwargs) -> bool:
+        eval_json = self.ask_llm(context, model, **llm_kwargs)
         try:
             eval_json = sanitize_and_parse_json(eval_json)
             return eval_json[key]
