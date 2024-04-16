@@ -37,6 +37,7 @@ def cites_quote(quote: str, message: str) -> bool:
 class ProspectiveMemoryDataset(DatasetInterface):
     name: str = "Prospective Memory"
     description: str = "Give the agent a fictitious quote, then ask it to append to the nth reply"
+    reset_message: str = "Forget my instruction to append a quote to one of your replies."
     # generation_file: Path = DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json")
     # temperature: float = 0.5
     # uses_callback: bool = True
