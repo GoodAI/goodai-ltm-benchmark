@@ -39,11 +39,13 @@ Respond in JSON with the following format:
 ]
 """.strip()
 
+
 def normalize_scores(evaluate_correct_fn: Callable[[List[str], List[str], List[Any]], Tuple[int, int, List[str]]],
                      questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
     correct, total, feedback = evaluate_correct_fn(questions, responses, expected_answers)
     normalized_score = float(correct) / total if total > 0 else 0.0
     return normalized_score, 1, feedback
+
 
 class TestAction:
     pass
@@ -241,6 +243,7 @@ class TestExample:
         assert total_wait_tokens < span_minus_script, "Sum of task waits is higher than the determined memory span."
         self.waits[-1] = WaitCreator.create_wait()
 
+
 @dataclass
 class CallBackTestExample(TestExample):
     def step(self) -> TestAction | None:
@@ -265,22 +268,22 @@ class DynamicExample(TestExample):
     master_log: MasterLog = None  # Set by runner to cache llm calls
 
     @property
-    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
+    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[float, int, List[str]]]:
         return self.evaluate
 
     def __post_init__(self):
         super().__post_init__()
         assert self.max_score > 0
 
-    def evaluate(self, *args, **kwargs) -> tuple[int, int, list[str]]:
-        return self.score, self.max_score, self.reasoning
+    def evaluate(self, *args, **kwargs) -> tuple[float, int, list[str]]:
+        return self.score / self.max_score, 1, self.reasoning
 
-    def ask_llm(self, context: LLMContext, **kwargs) -> str:
+    def ask_llm(self, context: LLMContext, model: str, **kwargs) -> str:
         self.llm_call_idx += 1
         response = self.master_log.get_cached_response(self.unique_id, self.llm_call_idx)
         if response is not None:
             return response
-        response = self.dataset_generator.ask_llm(context, **kwargs)
+        response = self.dataset_generator.ask_llm(context, model, **kwargs)
         self.master_log.add_llm_call(self.unique_id, datetime.now(), response)
         return response
 
@@ -346,9 +349,10 @@ class DatasetInterface(ABC):
             return normalize_scores(self.evaluate_correct, questions, responses, expected_answers)
         return evaluator
 
-    def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256, **kwargs) -> str:
+    def ask_llm(self, context: LLMContext, model: str, temperature: float = 0, max_tokens: int = 256, **kwargs) -> str:
         return ask_llm(
             context=context,
+            model=model,
             temperature=temperature,
             max_response_tokens=max_tokens,
             cost_callback=self.cost_callback,

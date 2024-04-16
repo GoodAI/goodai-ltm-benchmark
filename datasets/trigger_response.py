@@ -1,7 +1,7 @@
 from json import JSONDecodeError
 from dataclasses import dataclass
 from typing import List, Tuple, Iterator
-from utils.llm import make_user_message
+from utils.llm import make_user_message, GPT_CHEAPEST
 from utils.text import rouge_l
 from utils.ui import colour_print
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -103,7 +103,7 @@ class TriggerResponseDataset(DatasetInterface):
         if expected in actual or rouge_l(expected, actual) > self.rouge_score_threshold:
             return 1, f"'{expected}' is in the response."
         context = [make_user_message(eval_prompt.format(message=actual, sentence=expected))]
-        eval_str = self.ask_llm(context)
+        eval_str = self.ask_llm(context, GPT_CHEAPEST)
         try:
             eval_json = sanitize_and_parse_json(eval_str)
             present = eval_json["present"]
