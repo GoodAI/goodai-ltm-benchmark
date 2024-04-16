@@ -1,15 +1,10 @@
 import re
 import string
-from pathlib import Path
 from dataclasses import dataclass
-from random import choice, randint
 from typing import List, Tuple, Any, Iterator
 from utils.ui import ordinal, colour_print
-from utils.llm import GPT_4_TURBO_BEST
-from dataset_interfaces.gpt_generated import GPTGenerated
 
 from dataset_interfaces.interface import TestExample, DatasetInterface, CallBackTestExample
-from utils.constants import DATA_DIR
 
 QUOTES = [
     ("Love your Enemies, for they tell you your Faults.", "Benjamin Franklin"),
@@ -36,11 +31,8 @@ def cites_quote(quote: str, message: str) -> bool:
 @dataclass
 class ProspectiveMemoryDataset(DatasetInterface):
     name: str = "Prospective Memory"
-    description: str = "Give the agent a fictitious quote, then ask it to append to the nth reply"
+    description: str = "Give the agent a quote, then ask it to append to the nth reply"
     reset_message: str = "Forget my instruction to append a quote to one of your replies."
-    # generation_file: Path = DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json")
-    # temperature: float = 0.5
-    # uses_callback: bool = True
 
     def request_num_generator(self) -> Iterator[int]:
         indices = list(range(len(QUOTES)))
@@ -141,8 +133,3 @@ class ProspectiveMemoryDataset(DatasetInterface):
 
         return score, max_score, [reason], deregister_callback
 
-
-if __name__ == "__main__":
-    s = ProspectiveMemoryDataset()
-    examples = s.generate_examples(4)
-    a = 1
