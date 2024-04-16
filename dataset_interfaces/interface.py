@@ -268,15 +268,15 @@ class DynamicExample(TestExample):
     master_log: MasterLog = None  # Set by runner to cache llm calls
 
     @property
-    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
+    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[float, int, List[str]]]:
         return self.evaluate
 
     def __post_init__(self):
         super().__post_init__()
         assert self.max_score > 0
 
-    def evaluate(self, *args, **kwargs) -> tuple[int, int, list[str]]:
-        return self.score, self.max_score, self.reasoning
+    def evaluate(self, *args, **kwargs) -> tuple[float, int, list[str]]:
+        return self.score / self.max_score, 1, self.reasoning
 
     def ask_llm(self, context: LLMContext, model: str, **kwargs) -> str:
         self.llm_call_idx += 1
