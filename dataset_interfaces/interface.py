@@ -210,36 +210,29 @@ class TestExample:
         if isinstance(self, DynamicExample):
             return
 
-        assert len(self.is_question) >= 1, "There are no questions for this test"
-        assert len(self.waits) == 0 or len(self.waits) == len(self.is_question), "Current waits should be empty or the same length as the script"
-        memory_span = self.dataset_generator.memory_span
-
         # For caution, we want to use a tokeniser that produces the most tokens. This is to try and avoid the problem of
         # having the test overrun its memory_span. More tokens in script means smaller token gaps and more buffer.
+        memory_span = self.dataset_generator.memory_span
         script_tokens = tokens_in_script(self.script)
-        assert script_tokens < memory_span, f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified memory span of {memory_span} tokens."
+        assert script_tokens < memory_span, (
+            f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified "
+            f"memory span of {memory_span} tokens."
+        )
 
-        span_minus_script = memory_span - script_tokens
+        assert sum(self.is_question) >= 1, "There are no questions for this test"
+        num_script_lines = len(self.is_question)  # self.script might not be updated just yet [e.g. create_question()]
+        if len(self.waits) == num_script_lines:
+            return  # Do not overwrite waits
+        assert len(self.waits) == 0, "Current waits should be empty in order to apply the defaults."
 
-        # Figure out what our spacing is going to be. Just distribute all the needles and questions across 90% of the memory span
-        token_wait = math.floor(span_minus_script * 0.9) // (len(self.is_question) - 1)
+        perc_fraction = 90 / (num_script_lines - 1)
+        self.waits = [
+            WaitCreator.create_wait(
+                percentage_finished=(i + 1) * perc_fraction,
+            ) for i in range(num_script_lines - 1)
+        ]
+        self.waits.append(WaitCreator.create_wait())
 
-        # Create the empty waits if there are any.
-        if len(self.waits) == 0:
-            for _ in range(len(self.is_question)):
-                self.waits.append({})
-
-        total_wait_tokens = 0
-
-        for idx, f in enumerate(self.waits[:-1]):
-            if f != {}:
-                continue
-
-            self.waits[idx] = WaitCreator.create_wait(tokens=int(token_wait))
-            total_wait_tokens += token_wait
-
-        assert total_wait_tokens < span_minus_script, "Sum of task waits is higher than the determined memory span."
-        self.waits[-1] = WaitCreator.create_wait()
 
 @dataclass
 class CallBackTestExample(TestExample):
@@ -420,7 +413,7 @@ class DatasetInterface(ABC):
     def create_example(self, **kwargs) -> TestExample:
         return (CallBackTestExample if kwargs.get("uses_callback", False) else TestExample)(
             dataset_generator=self,
-            **kwargs
+            **kwargs,
         )
 
     def tokens_to_answer(self, test_context: List[Dict[str, Any]], full_context: List[Dict[str, str]], example: TestExample):

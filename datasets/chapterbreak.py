@@ -150,7 +150,7 @@ class ChapterBreakDataset(DatasetInterface):
                 script=script,
                 expected_responses=[str(answer)],
                 is_question=is_question,
-                waits=[WaitCreator.create_wait(tokens=0) for _ in is_question],
+                waits=[WaitCreator.create_wait() for _ in is_question],  # This test is to happen uninterruptedly
             )
             example_list.append(example)
 
