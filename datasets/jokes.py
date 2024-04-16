@@ -42,11 +42,12 @@ class JokesDataset(DatasetInterface):
             jokes = deepcopy(JOKES)
             waits = []
 
-            filler_tokens = math.floor(self.memory_span * 0.75) // self.jokes_told
+            percentage_per_joke = 90 / self.jokes_told
             for joke_made in range(self.jokes_told):
                 if len(jokes) == 0:
                     logging.warning("Ran out of jokes")
                     break
+
                 # Select joke
                 joke = self.random.choice(jokes)
                 jokes.remove(joke)
@@ -55,8 +56,10 @@ class JokesDataset(DatasetInterface):
                 script.append(self.create_script_line(joke))
                 selected_jokes.append(joke)
                 is_question.append(False)
-                time_jump = create_time_jump(self.minutes_low, self.minutes_high)
-                waits.append(WaitCreator.create_wait(tokens=filler_tokens, time=time_jump))
+                waits.append(WaitCreator.create_wait(
+                    time=create_time_jump(self.minutes_low, self.minutes_high),
+                    percentage_finished=(joke_made + 1) * percentage_per_joke,
+                ))
 
             # Choose the joke we are going to look at
             answer = self.random.choice(selected_jokes)
