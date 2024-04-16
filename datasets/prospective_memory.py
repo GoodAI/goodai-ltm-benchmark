@@ -58,7 +58,7 @@ class ProspectiveMemoryDataset(DatasetInterface):
 
             n = ordinal(target)
 
-            script.append(f"'{quote}' - {author}")
+            script.append(f"{repr(quote)} - {author}")
             script.append(f'After responding to the following unrelated user prompts, please append the quote from {quote}, to your {n} response. Count your response to this message as the first response.')
 
             is_question = [False, True]
@@ -80,16 +80,6 @@ class ProspectiveMemoryDataset(DatasetInterface):
     ) -> Tuple[int, int, List[str], List[str]]:
         raise NotImplementedError("Prospective memory checking is not handled by this method, use the callback instead")
 
-    def get_log(self, scheduler, example: TestExample) -> list[str]:
-        first_message = example.script[0]
-        start_idx = 0
-        all_messages = scheduler.master_log.messages()
-        for idx, msg in enumerate(all_messages):
-            if first_message in msg:
-                start_idx = idx
-                break
-
-        return all_messages[start_idx:]
 
     def continual_evaluation_callback(
         self, scheduler, example: TestExample, task_log: List[str]
@@ -116,9 +106,6 @@ class ProspectiveMemoryDataset(DatasetInterface):
             example.finished = False
 
             return score, max_score, [reason], deregister_callback
-
-        # Get the quote
-        quote = example.expected_responses[0][0]
 
         # This statement should have the quote attached
         target_stmt_in_log = agent_responses[response_w_quote_idx]
