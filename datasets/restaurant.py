@@ -1,12 +1,9 @@
 from json import JSONDecodeError
 from typing import Iterator
 from collections import OrderedDict
-
-from datetime import datetime
 from dataclasses import dataclass
 from dataset_interfaces.interface import DynamicDataset, DynamicExample, TestAction, SendMessageAction
-
-from utils.llm import make_system_message, make_user_message, LLMContext, GPT_4_TURBO_BEST
+from utils.llm import make_system_message, make_user_message, LLMContext, GPT_4_TURBO_BEST, GPT_CHEAPEST
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 
@@ -182,7 +179,7 @@ class RestaurantExample(DynamicExample):
         self.score += int(recalls)
 
     def gpt_bool_check(self, context: LLMContext, key: str, **llm_kwargs) -> bool:
-        eval_json = self.ask_llm(context, **llm_kwargs)
+        eval_json = self.ask_llm(context, GPT_CHEAPEST, **llm_kwargs)
         try:
             eval_json = sanitize_and_parse_json(eval_json)
             return eval_json[key]
