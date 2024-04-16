@@ -21,6 +21,8 @@ class EventType(enum.Enum):
     WAIT = 6
     SUITE_RESET = 7
     LLM_CALL = 8  # Performed by dynamic test example
+    REGISTER_CALLBACK = 9
+    DEREGISTER_CALLBACK = 10
 
 
 EVENT_SENDER = {
