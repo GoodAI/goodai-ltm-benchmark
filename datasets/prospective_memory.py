@@ -1,4 +1,3 @@
-import re
 import string
 from dataclasses import dataclass
 from typing import List, Tuple, Any, Iterator
@@ -93,7 +92,7 @@ class ProspectiveMemoryDataset(DatasetInterface):
                 break
 
         agent_responses = task_log[statement_idx + 1:][::2]
-        response_w_quote_idx = int(re.findall(r"\d+", question)[0]) - 1
+        response_w_quote_idx = example.expected_responses[0][2] - 1
 
         max_score = 1
 
