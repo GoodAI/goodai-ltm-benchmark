@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Whenever I sneeze with &#x27;Achooo!&#x27; then say: 'Here is a tissue for you'",
+    "Achoo!",
+    "Achoo!",
+    "Achoo!"
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Here is a tissue for you",
+    "Here is a tissue for you",
+    "Here is a tissue for you"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

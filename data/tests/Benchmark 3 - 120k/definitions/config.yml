@@ -1,0 +1,36 @@
+config:
+  debug: true
+  incompatibilities:
+  - - names
+    - name_list
+  - - locations
+    - locations_directions
+  run_name: Benchmark 3 - 120k
+datasets:
+  args:
+    dataset_examples: 3
+    memory_span: 120000
+  datasets:
+  - args:
+      colour_changes: 3
+    name: colours
+  - args:
+      item_changes: 6
+    name: shopping
+  - args:
+      known_locations: 6
+    name: locations_directions
+  - args:
+      name_changes: 5
+    name: name_list
+  - args:
+      jokes_told: 4
+    name: jokes
+  - args:
+      question_type: theory_of_mind
+    name: sallyanne
+  - name: prospective_memory
+  - name: trigger_response
+  - name: spy_meeting
+  - name: chapterbreak
+  - name: restaurant
