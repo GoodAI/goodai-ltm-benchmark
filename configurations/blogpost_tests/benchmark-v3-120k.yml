@@ -1,6 +1,6 @@
 config:
   debug: True
-  run_name: "Benchmark 3 - 250k"
+  run_name: "Benchmark 3 - 120k"
   incompatibilities:
     - - "names"
       - "name_list"
@@ -9,7 +9,7 @@ config:
 
 datasets:
     args:
-      memory_span: 250000
+      memory_span: 120000
       dataset_examples: 3
 
     datasets:
