@@ -175,7 +175,7 @@ def normalize_and_aggregate_results(results: list[TestResult]) -> dict[str, dict
 
     for d in result_dict.values():
         norm_scores = [r.score / r.max_score for r in d["results"]]
-        ltm_scores = [r.tokens for r in d["results"]]
+        ltm_scores = [s * r.tokens for s, r in zip(norm_scores, d["results"])]
         d["score"], d["std"] = mean_std(norm_scores)
         d["ltm"], d["ltm_std"] = mean_std(ltm_scores)
 
