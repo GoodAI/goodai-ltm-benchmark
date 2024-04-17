@@ -59,7 +59,7 @@ class ProspectiveMemoryDataset(DatasetInterface):
             n = ordinal(target)
 
             script.append(f"{repr(quote)} - {author}")
-            script.append(f'After responding to the following unrelated user prompts, please append the quote from {quote}, to your {n} response. Count your response to this message as the first response.')
+            script.append(f'After responding to the following unrelated user prompts, please append the quote from {author}, to your {n} response. Count your response to this message as the first response.')
 
             is_question = [False, True]
             expected_responses = [(quote, author, target)]
