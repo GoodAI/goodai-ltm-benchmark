@@ -25,6 +25,10 @@
         h1, h2, h3 {
             color: #4d5153; /* GoodAI Dark Grey */
         }
+        .warning {
+            color: #bc4242;
+            font-weight: bold;
+        }
         .run, .dataset {
             border: 1px solid #ddd;
             padding: 10px;
@@ -88,6 +92,9 @@
         <img src="data:image/png;base64, {{ logo_b64 }}" alt="GoodAI Logo" />
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: {{ target_memory_span }} tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
+        {% if overrun %}
+            <p class="warning">WARNING. Memory span overrun by at least one test.</p>
+        {% endif %}
         <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }} <b>±</b> {{ score_std }}</p>
         <ul>
             {% for metric in global_metrics %}

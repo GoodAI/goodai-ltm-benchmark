@@ -110,6 +110,7 @@ def arrange_data(results: List[TestResult]):
         min_gap=min(memory_spans),
         max_gap=max(memory_spans),
         avg_gap=int(sum(memory_spans)/len(memory_spans)),
+        overrun=any(r.tokens > args["memory_span"] for r in results),
     )
 
 
