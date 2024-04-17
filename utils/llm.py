@@ -67,7 +67,7 @@ def ensure_context_len(
     context_tokens = litellm.token_counter(model, messages=context[:1])
 
     for message in reversed(context[1:]):
-        message_tokens = litellm.token_counter(model, text=message["content"])
+        message_tokens = litellm.token_counter(model, messages=[message])
         if context_tokens + message_tokens + response_len > max_len:
             break
         messages.append(message)
