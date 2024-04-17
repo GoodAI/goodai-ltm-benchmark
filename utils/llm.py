@@ -1,8 +1,7 @@
 import os
 from typing import Optional, Callable
-
-import openai
 import litellm
+from litellm.exceptions import ContextWindowExceededError
 from litellm import completion
 
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
@@ -91,7 +90,21 @@ def ask_llm(
     model = model_from_alias(model)
     max_response_tokens = litellm.get_max_tokens(model) if max_response_tokens is None else max_response_tokens
     context, context_tokens = ensure_context_len(context, model, context_length, response_len=max_response_tokens)
-    response = completion(model=model, messages=context, max_tokens=max_response_tokens, temperature=temperature, timeout=timeout)
+
+    # Anthropic tokenizer is currently very inaccurate.
+    # Which is why we have to rely on this loop.
+    while True:
+        try:
+            response = completion(
+                model=model,
+                messages=context,
+                max_tokens=max_response_tokens,
+                temperature=temperature,
+                timeout=timeout,
+            )
+            break
+        except ContextWindowExceededError:
+            context = context[:1] + context[2:]
 
     if cost_callback is not None:
         cost_callback(litellm.completion_cost(response))
