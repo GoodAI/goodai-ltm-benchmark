@@ -171,6 +171,7 @@ class TestRunner:
         reply_tokens = self.agent.token_len(action.reply)
         self.agent_token_count += reply_tokens
         self.total_token_count += message_tokens + reply_tokens
+        self.progress_dialog.notify_message(self.total_token_count)
         return message_tokens + reply_tokens
 
     def get_blocked_test(self, waiting_on: str) -> Optional[str]:
@@ -263,7 +264,6 @@ class TestRunner:
             match evt.type:
                 case EventType.BEGIN:
                     result, skip = self.initialise_result(test)
-                    assert not skip
                     test.start_token = self.master_log.get_start_token(evt.test_id)
                     self.in_progress_results[evt.test_id] = result
                 case EventType.SEND_MESSAGE:
@@ -293,7 +293,7 @@ class TestRunner:
                     self.set_to_wait(test, action, log_this=False)
                     self.reset_time()
 
-    def setup_iterator(self, test_group):
+    def setup_iterator(self, test_group) -> dict[str, TestExample]:
         """Sets up the test dict and fast forwards any tests that are currently in progress"""
         tests = {t.unique_id: t for t in test_group}
 
@@ -359,7 +359,6 @@ class TestRunner:
             )))
 
         for example in self.iter_tests(self.tests):
-            self.progress_dialog.notify_running(example)
 
             skip = False
             if example.unique_id not in self.in_progress_results:
@@ -370,6 +369,8 @@ class TestRunner:
                     self.master_log.begin_test(example.unique_id, datetime.now(), self.total_token_count)
                     if example.start_token == 0:
                         example.start_token = self.total_token_count
+
+            self.progress_dialog.notify_running(example)
 
             while not example.finished:
                 action = example.step()

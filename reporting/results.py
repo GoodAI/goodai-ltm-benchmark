@@ -5,6 +5,7 @@ import json
 from utils.files import make_result_path, parse_result_path
 from dataset_interfaces.factory import DATASETS_BY_NAME
 
+
 @dataclass
 class TestResult:
     run_name: str
@@ -54,6 +55,10 @@ class TestResult:
         string += f"Tokens: {self.tokens}\n"
         string += f"Characters: {self.characters}\n"
         return string
+
+    @property
+    def unique_id(self):
+        return f"{self.dataset_name} - {self.example_id}"
 
     @property
     def path(self) -> Path:
