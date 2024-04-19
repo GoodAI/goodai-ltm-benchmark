@@ -1,10 +1,11 @@
 import os
 from typing import Optional, Callable
 import litellm
-from litellm.exceptions import ContextWindowExceededError
 from litellm import completion
+from litellm.exceptions import ContextWindowExceededError
 
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
+claude_adjust_factor = 1.1  # Approximate the real token count given by the API
 
 LLMMessage = dict[str, str]
 LLMContext = list[LLMMessage]
@@ -64,9 +65,13 @@ def ensure_context_len(
     max_len = max_len or get_max_prompt_size(model)
     messages = list()
     context_tokens = litellm.token_counter(model, messages=context[:1])
+    if model.startswith("claude"):
+        context_tokens *= claude_adjust_factor
 
     for message in reversed(context[1:]):
         message_tokens = litellm.token_counter(model, messages=[message])
+        if model.startswith("claude"):
+            message_tokens *= claude_adjust_factor
         if context_tokens + message_tokens + response_len > max_len:
             break
         messages.append(message)
@@ -86,6 +91,7 @@ def ask_llm(
     timeout: float = 300,
     max_response_tokens: int = None,
 ) -> str:
+    global claude_adjust_factor
     set_api_key()
     model = model_from_alias(model)
     max_response_tokens = litellm.get_max_tokens(model) if max_response_tokens is None else max_response_tokens
@@ -93,6 +99,7 @@ def ask_llm(
 
     # Anthropic tokenizer is currently very inaccurate.
     # Which is why we have to rely on this loop.
+    actual_count = -1
     while True:
         try:
             response = completion(
@@ -103,9 +110,15 @@ def ask_llm(
                 timeout=timeout,
             )
             break
-        except ContextWindowExceededError:
+        except ContextWindowExceededError as exc:
+            if model.startswith("claude"):
+                actual_count = int(str(exc).split(" tokens > ")[0].split("prompt is too long: ")[1])
             context = context[:1] + context[2:]
 
+    if actual_count > 0:
+        claude_adjust_factor *= 0.8
+        claude_adjust_factor += 0.2 * (actual_count / context_tokens)
+        
     if cost_callback is not None:
         cost_callback(litellm.completion_cost(response))
     return response.choices[0].message.content
