@@ -14,7 +14,7 @@ class ChatSession(ABC):
     run_name: str = ""
     costs_usd: float = 0
     is_local: bool = False
-    max_message_size: int = 1000
+    max_message_size: int = 4096
 
     def message_to_agent(self, user_message: str, agent_response: Optional[str] = None) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
