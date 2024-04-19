@@ -1,8 +1,9 @@
 import re
 import json
+import zstd
 from typing import List, Tuple
 
-from utils.data import get_gdrive_file, get_data_path
+from utils.data import get_data_path, get_file
 from dataclasses import dataclass, field
 
 from utils.llm import tokens_in_text
@@ -10,9 +11,10 @@ from utils.ui import ordinal
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 
 
-# Extracted from gdrive folder
+# The file was originally in this gdrive folder, but the link got restricted due to a high number of accesses.
 # https://drive.google.com/drive/folders/1JkFHspT56_yRWwXVj47Fw0PzHtitODt5
-GDRIVE_8K_ID = "15AcGiC4wIglru2gK2MHSX5Fie7gYxTTS"
+CHAPTERBREAK_8K_URL = "https://github.com/GoodAI/goodai-ltm-benchmark/releases/download/v1.1/chapterbreak_ctx_8192.zst"
+CHAPTERBREAK_8K_SUM = "1567de8463149cfb314ab2ccc7e7acc17a3b262bccd70889e2d1e43be09043ed"
 
 
 def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
@@ -71,10 +73,9 @@ class ChapterBreakDataset(DatasetInterface):
         assert self.split in {"goodai", "pg19", "ao3", "all"}
 
     def load_data(self) -> dict:
-        filename = f"chapterbreak_ctx_8192.json"
-        path = get_gdrive_file(self.name, GDRIVE_8K_ID, filename)
-        with open(path) as fd:
-            return json.load(fd)
+        path = get_file(self.name, CHAPTERBREAK_8K_URL, f"chapterbreak_ctx_8192.zst", checksum=CHAPTERBREAK_8K_SUM)
+        with open(path, "br") as fd:
+            return json.loads(zstd.decompress(fd.read()))
 
     def apply_sample_selection(self, samples: dict) -> dict:
         with open(get_data_path(self.name, "chapterbreak-goodai-selection.json")) as fd:
