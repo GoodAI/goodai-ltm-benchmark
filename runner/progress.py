@@ -43,7 +43,7 @@ class ProgressDialog(tk.Tk):
 
     def notify_result(self, result: TestResult):
         info = self._test_info[result.unique_id]
-        info["span"] = max(self._at - info["start"], info["span"])
+        info["span"] = self._at - info["start"]
         self._scores[result.dataset_name].append(result.score / result.max_score)
         self.update_stats()
 
