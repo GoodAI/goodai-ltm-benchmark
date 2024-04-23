@@ -66,7 +66,7 @@ class LocationsDirectionsDataset(LocationsDataset):
                 d["direction"] = DIRECTIONS[allowed_directions.index(d["direction"].lower())]
                 assert isinstance(d["kilometers"], int) and d["kilometers"] > 0, f"{d['kilometers']} is not a positive int."
                 d["distance"] = d.pop("kilometers")
-        except (JSONDecodeError, ValueError, KeyError, AssertionError) as exc:
+        except (JSONDecodeError, ValueError, KeyError, AssertionError, AttributeError) as exc:
             raise LLMJSONError(
                 f"Couldn't make sense of the agent's directions ({repr(exc)}).\n"
                 f"Original response:\n{agent_response}\n\nStructured version:\n{response}"
