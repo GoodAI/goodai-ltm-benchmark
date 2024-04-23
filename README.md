@@ -86,15 +86,8 @@ The datasets that are implemented for this benchmark can be found in `./datasets
 ```
 chapterbreak
 colours
-conflicting_personal_info
-delayed_recall
-how_to_think
-instruction_recall
 jokes
-kv
-locations
 locations_directions
-names
 name_list
 prospective_memory
 restaurant
@@ -118,33 +111,45 @@ The repository consists of four parts:
 More details for each of these parts can be found here: [datasets](datasets/README.md), [models](model_interfaces/README.md), [runner](runner/README.md), [reports](reporting/README.md).
 
 
-## Benchmark 2 - 03/2024
+## Benchmark 3 - 04/2024
 
-### Benchmark 2 - 1k Distraction Tokens
+### Benchmark 3 - 120k Memory Span
 
-| Model                  | Context Tokens | Score / 101 | Time (m) | Cost ($) | LTM Score (tokens) |
-|------------------------|---------------:|------------:|---------:|---------:|-------------------:|
-| GPT-3.5-turbo          |          16384 |          58 |       16 |     2.71 |             105349 |
-| GPT-4-0125             |         128000 |          61 |       45 |   150.36 |             115625 |
-| Claude 3 Opus          |         200000 |          83 |      346 |   374.58 |             231807 |
-| LTMAgent1 (GPT-4-0125) |           8192 |          80 |      255 |    39.25 |             166056 |
-| LTMAgent2 (GPT-4-0125) |           8192 |        75.5 |       40 |    27.94 |             132454 |
-| MemGPT                 |           8192 |          43 |       78 |   100.04 |              78045 |
+| Model               | Context Tokens | Score / 11 | Time (m) | Cost ($) | LTM Score (tokens) |
+|---------------------|---------------:|-----------:|---------:|---------:|-------------------:|
+| GPT-3.5-turbo       |          16384 |          0 |        7 |     1.33 |                  0 |
+| Claude 3 Opus       |         200000 |        7.7 |      518 |   476.00 |             869014 |
+| GPT-4 2024-04-09    |         128000 |        5.1 |       51 |   215.86 |            1081773 |
+| LTMAgent 1 (GPT-4)  |          16384 |        5.1 |      567 |    89.36 |             548641 |
+| LTMAgent 2 (GPT-4)  |          16384 |        4.6 |       85 |    62.50 |             420210 |
+| LTMAgent 1 (Claude) |          16384 |        5.2 |      308 |   158.24 |             548641 |
 
 
-### Benchmark 2 - 10k Distraction Tokens
+### Benchmark 3 - 200k Memory Span
 
-| Model                  | Context Tokens | Score / 101 | Time (m) | Cost ($) | LTM Score (tokens) |
-|------------------------|---------------:|------------:|---------:|---------:|-------------------:|
-| GPT-3.5-turbo          |          16384 |          32 |       36 |     4.43 |             381452 |
-| GPT-4-0125             |         128000 |          63 |      244 |   515.74 |            1042531 |
-| Claude 3 Opus          |         200000 |          79 |      836 |  1104.00 |            1331521 |
-| LTMAgent2 (GPT-4-1106) |           8192 |        64.5 |      100 |    46.75 |             978836 |
-| LTMAgent2 (GPT-4-0125) |           8192 |          61 |       99 |    45.85 |            1006972 |
+| Model               | Context Tokens | Score / 11 | Time (m) | Cost ($) | LTM Score (tokens) |
+|---------------------|---------------:|-----------:|---------:|---------:|-------------------:|
+| Claude 3 Opus       |         200000 |        4.9 |      338 |   502.00 |             866157 |
+| GPT-4 2024-04-09    |         128000 |        3.9 |       47 |   222.62 |             635842 |
+| LTMAgent 1 (GPT-4)  |          16384 |        5.2 |      326 |    87.78 |             868573 |
+| LTMAgent 2 (GPT-4)  |          16384 |        5.6 |    125.8 |    71.33 |             948850 |
+| LTMAgent 1 (Claude) |          16384 |          6 |    342.8 |   149.53 |            1000353 |
+
+
+### Benchmark 3 - 500k Memory Span
+
+| Model               | Context Tokens | Score / 11 | Time (m) | Cost ($) | LTM Score (tokens) |
+|---------------------|---------------:|-----------:|---------:|---------:|-------------------:|
+| Claude 3 Opus       |         200000 |        3.3 |    324.3 |      527 |            1421359 |
+| GPT-4 2024-04-09    |         128000 |          1 |     48.7 |   223.16 |             263189 |
+| LTMAgent 1 (GPT-4)  |          16384 |        3.1 |     1240 |   174.93 |            1393652 |
+| LTMAgent 2 (GPT-4)  |          16384 |        4.3 |      307 |   106.39 |            1785526 |
+| LTMAgent 1 (Claude) |          16384 |        4.9 |    523.3 |   230.27 |            2041299 |
 
 ## Previous versions
 
 - [Benchmark 1](https://github.com/GoodAI/goodai-ltm-benchmark/tree/v1-benchmark) (02/2024)
+- [Benchmark 2](https://github.com/GoodAI/goodai-ltm-benchmark/tree/v2-benchmark) (03/2024)
 
 ## Licence and usage
 This project is licensed under the MIT License - see the LICENSE file for details. Use of this software requires attribution to the original author and project, as detailed in the license.
