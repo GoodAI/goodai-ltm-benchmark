@@ -76,7 +76,7 @@ human             # A CLI interface for a human to use the tests.
 
 ## Configurations
 
-The configuration files used in the different versions of the benchmark can be found in `configurations/published_benchmarks`, in which `<x>k` denotes the memory span. For each of the benchmarks under a single version, we keep the scripts and needles the same, but we increase the amount of filler tokens owing to the larger memory span. Older configurations from previous releases can be found in `published_benchmarks/legacy`. These configuration files are compatible only with the previous releases and their operation is described in the readmes for those releases.
+The configuration files used in the different versions of the benchmark can be found in `configurations/published_benchmarks`, in which `<x>k` denotes the memory span in thousands of tokens. For each of the benchmarks under a single version, we keep the scripts and needles the same, but we increase the amount of filler tokens owing to the larger memory span. Older configurations from previous releases can be found in `published_benchmarks/legacy`. These configuration files are compatible only with their corresponding releases and their operation is described in the readmes for those releases.
 
 
 ## Datasets
