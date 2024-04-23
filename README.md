@@ -76,7 +76,7 @@ human             # A CLI interface for a human to use the tests.
 
 ## Configurations
 
-The configuration files used in the different versions of the benchmark can be found in `configurations`, in which `1k` or `10k` refers to the minimum distance in tokens between relevant statements. For the `10k` benchmarks, we used the very same test definitions as for the `1k` benchmarks, but we increased the amount of filler tokens directly in the test definition files. This way we ensured that the length of the distraction segment is the only thing that changes between both benchmark configurations.
+The configuration files used in the different versions of the benchmark can be found in `configurations/published_benchmarks`, in which `<x>k` denotes the memory span. For each of the benchmarks under a single version, we keep the scripts and needles the same, but we increase the amount of filler tokens owing to the larger memory span. Older configurations from previous releases can be found in `published_benchmarks/legacy`. These configuration files are compatible only with the previous releases and their operation is described in the readmes for those releases.
 
 
 ## Datasets
@@ -86,8 +86,15 @@ The datasets that are implemented for this benchmark can be found in `./datasets
 ```
 chapterbreak
 colours
+conflicting_personal_info
+delayed_recall
+how_to_think
+instruction_recall
 jokes
+kv
+locations
 locations_directions
+names
 name_list
 prospective_memory
 restaurant
