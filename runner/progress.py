@@ -61,7 +61,7 @@ class ProgressDialog(tk.Tk):
         total = [info["span"] for info in self._test_info.values()]
         total += [self._memory_span] * (self._num_tests - len(total))
         progress = sum(min(max(0, self._at - info["start"]), info["span"]) for info in self._test_info.values())
-        progress /= sum(total)
+        progress /= max(sum(total), 1)
         self._progressbar["value"] = int(100 * progress)
         self.update_idletasks()
 
