@@ -1,4 +1,4 @@
-# GoodAI LTM Benchmark (v2)
+# GoodAI LTM Benchmark
 
 ![GoodAI Logo. A cybernetic owl, which is half robot, half organic, and next to it the company name: GoodAI](reporting/templates/GoodAI_logo.png "GoodAI Research s.r.o.")
 
