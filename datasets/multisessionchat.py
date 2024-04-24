@@ -1,9 +1,8 @@
 import os
 import json
-import random
 from typing import List, Tuple
 
-from utils.openai import ask_llm, make_system_message, make_user_message
+from utils.llm import ask_llm, make_system_message, make_user_message
 from utils.data import get_file
 from dataclasses import dataclass
 from dataset_interfaces.interface import DatasetInterface, TestExample
@@ -147,7 +146,7 @@ class MultiSessionChatDataset(DatasetInterface):
         tar_dict = read_tar_file(self.name)
         chats_dict = reconstruct_test_chats(tar_dict)
         chats = [chats_dict[k] for k in sorted(chats_dict.keys())]
-        random.Random(self.seed).shuffle(chats)
+        self.random.shuffle(chats)
         return chats
 
     def generate_examples(self, num_examples: int) -> list[TestExample]:
@@ -206,6 +205,3 @@ class MultiSessionChatDataset(DatasetInterface):
         except (json.JSONDecodeError, KeyError) as exc:
             return 0, 1, [str(exc)]
 
-    def answer_statement_idx(self, example: TestExample) -> tuple[int, int]:
-        # TODO: try to figure out where the relevant information actually is
-        return 0, len(example.script[0]) // 2

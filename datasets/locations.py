@@ -1,6 +1,5 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from random import randint, choice
 from typing import List, Tuple
 
 import pystache
@@ -38,10 +37,18 @@ STATEMENTS = [
 @dataclass
 class LocationsDataset(DatasetInterface):
     name: str = "Locations"
-    description: str = "Tell the agents about locations in our hometown, with each's position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last."
-    question: str = "Please calculate the direction and distance starting from {{place}} going directly to {{origin}}. Solve it step by step."
+    description: str = (
+        "Tell the agent about locations in our hometown, with each position being described relative to the previous "
+        "one. Finally the agent is asked the distance and direction from the first mentioned place to the last."
+    )
+    question: str = (
+        "Please calculate the direction and distance starting from {{place}} going directly to {{origin}}. Solve it "
+        "step by step."
+    )
     known_locations: int = 5
-    reset_message: str = "Forget, or otherwise disregard, all of the locations that I have told you about before this message."
+    reset_message: str = (
+        "Forget, or otherwise disregard, all of the locations that I have told you about before this message."
+    )
 
     def generate_examples(self, num_examples):
         examples = []
@@ -54,7 +61,8 @@ class LocationsDataset(DatasetInterface):
             locations = deepcopy(LOCATIONS)
 
             for change in range(self.known_locations - 1):
-                place = choice(locations)
+                place = self.random.choice(locations)
+                locations.remove(place)
 
                 if len(known_locations) == 0:
                     statement = "There is a {{place}} in the center of my hometown."
@@ -62,12 +70,11 @@ class LocationsDataset(DatasetInterface):
                     direction = ""
                     distance = 0
                 else:
-                    statement = choice(STATEMENTS)
+                    statement = self.random.choice(STATEMENTS)
                     other_place = known_locations[-1]
-                    direction = choice(DIRECTIONS)
-                    distance = choice(DISTANCES)
+                    direction = self.random.choice(DIRECTIONS)
+                    distance = self.random.choice(DISTANCES)
 
-                locations.remove(place)
                 known_locations.append(place)
                 location_information.append((place, other_place, direction, distance))
 
@@ -86,7 +93,7 @@ class LocationsDataset(DatasetInterface):
 
             # The current point is some distance and direction away from the origin.
             # Distance is fine, but we should align the direction correctly to NSEW
-            place = choice(locations)
+            place = self.random.choice(locations)
             other_place = known_locations[-1]
             location_information.append((place, other_place, "", 0))
             last_move, answer_list = self.generate_answer(location_information)
@@ -122,7 +129,7 @@ class LocationsDataset(DatasetInterface):
     ) -> Tuple[int, int, List[str]]:
         return self.evaluate_correct_gpt(questions, responses, expected_answers)
 
-    def apply_move(self, current_position, direction, distance):
+    def apply_move(self, current_position: list[int], direction: str, distance: int) -> list[int]:
         x = current_position[0]
         y = current_position[1]
 
@@ -151,7 +158,7 @@ class LocationsDataset(DatasetInterface):
         # If we are not currently aligned along an axis
         if current_pos[0] != 0 and current_pos[1] != 0:
             # Pick an axis and align it
-            idx = randint(0, 1)
+            idx = self.random.randint(0, 1)
             if idx == 0:
                 # East/West - this is the direction that we want to go
                 direction = "East" if current_pos[idx] < 0 else "West"
@@ -165,9 +172,9 @@ class LocationsDataset(DatasetInterface):
             # We are currently aligned along East/West
             east_west_pos = current_pos[0]
             distance = (
-                randint(-4, abs(east_west_pos) - 1)
+                self.random.randint(-4, abs(east_west_pos) - 1)
                 if east_west_pos < 0
-                else randint(-(east_west_pos - 1), 4)
+                else self.random.randint(-(east_west_pos - 1), 4)
             )
             direction = "East" if distance > 0 else "West"
             distance = abs(distance)
@@ -176,9 +183,9 @@ class LocationsDataset(DatasetInterface):
             # We are currently aligned along North/South
             north_south_pos = current_pos[1]
             distance = (
-                randint(-4, abs(north_south_pos - 1))
+                self.random.randint(-4, abs(north_south_pos - 1))
                 if north_south_pos < 0
-                else randint(-(north_south_pos - 1), 4)
+                else self.random.randint(-(north_south_pos - 1), 4)
             )
             direction = "North" if distance > 0 else "South"
             distance = abs(distance)
@@ -207,7 +214,3 @@ class LocationsDataset(DatasetInterface):
 
         return [f"{distance} km {direction}"]
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # All statements are relevant
-        # in this test all statements are atomic
-        return 0, len(example.script[0])

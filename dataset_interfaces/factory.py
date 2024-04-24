@@ -1,4 +1,6 @@
-from dataset_interfaces.interface import TestExample
+import os
+
+from dataset_interfaces.interface import TestExample, DatasetInterface
 from datasets.conficting_personal_information import ConflictingPersonalInformationDataset
 from datasets.delayed_recall import DelayedRecallDataset
 from datasets.how_to_think import HowToThinkDataset
@@ -18,6 +20,8 @@ from datasets.kv import KVPairsDataset
 from datasets.chapterbreak import ChapterBreakDataset
 from datasets.restaurant import RestaurantDataset
 from copy import deepcopy
+
+from utils.files import parse_definition_path
 
 DATASETS = {
     "names": NamesDataset,
@@ -60,3 +64,32 @@ class DatasetFactory:
             if example.example_id == "":
                 example.example_id = str(i)
         return examples
+
+    @staticmethod
+    def create_dataset_for_example(run_configuration: dict,  test_example_path: str) -> DatasetInterface:
+        args = deepcopy(run_configuration["datasets"]["args"])
+
+        # Get the name of the dataset
+        path_dataset_name = parse_definition_path(test_example_path)["dataset_name"]
+        dataset = DATASETS_BY_NAME.get(path_dataset_name, None)
+
+        if dataset is None:
+            raise ValueError(f"No dataset could be resolved from TestExample path: {test_example_path}. Tried {path_dataset_name}")
+
+        # Use the class to get the 'config name'
+        config_name = ""
+        for name, ds in DATASETS.items():
+            if ds == dataset:
+                config_name = name
+                break
+
+        # Use config name to get any extra config from the run configuration
+        extra_args = {}
+        for dataset_config in run_configuration["datasets"]["datasets"]:
+            if dataset_config["name"] == config_name:
+                extra_args = dataset_config.get("args", {})
+                break
+
+        args.update(extra_args)
+        del args["dataset_examples"]
+        return dataset(**args)

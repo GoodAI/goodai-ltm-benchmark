@@ -1,17 +1,17 @@
 import os
 import json
 import re
-
 import yaml
 from typing import List, Optional
 from random import Random
 from jinja2 import Environment, FileSystemLoader
 from reporting.results import TestResult
 from utils.files import gather_result_files, gather_runstats_files, make_config_path
-from utils.constants import REPORT_TEMPLATES_DIR, MAIN_DIR, GOODAI_RED, GOODAI_GREEN, METRIC_NAMES, METRIC_ALT, \
+from utils.constants import REPORT_TEMPLATES_DIR, GOODAI_RED, GOODAI_GREEN, METRIC_NAMES, METRIC_ALT, \
     METRIC_UNITS, SPIDER_LABELS_OVERRIDE, REPORT_OUTPUT_DIR
 from utils.data import load_b64
-from utils.ui import maybe_int
+from utils.math import mean_std
+from utils.ui import display_float_or_int
 from datetime import datetime
 from pathlib import Path
 
@@ -31,8 +31,8 @@ def get_agent_color(agent_name: str) -> tuple[int, int, int]:
 
 
 def formatted_log(result: TestResult) -> list[str]:
-    line_color = {"Test": "659936", "Agent": "4249bc"}
-    start_pattern = r"^((Test|Agent) (\(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\))?:)"
+    line_color = {"Test": "659936", "Agent": "4249bc", "System": "bc5f42"}
+    start_pattern = r"^((Test|Agent|System) (\(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\))?:)"
     task_log = []
     for line in result.task_log:
         m = re.match(start_pattern, line)
@@ -48,8 +48,7 @@ def arrange_data(results: List[TestResult]):
 
     run_name = results[0].run_name
     agent_name = results[0].agent_name
-    max_score = achieved_score = 0
-    info_gaps = list()
+    memory_spans = list()
     data = dict()
 
     for res in results:
@@ -61,11 +60,10 @@ def arrange_data(results: List[TestResult]):
                 "name": res.dataset_name,
                 "description": res.description,
                 "tests": [],
+                "scores": [],
             }
 
-        max_score += res.max_score
-        achieved_score += res.score
-        info_gaps.append(res.tokens)
+        memory_spans.append(res.tokens)
 
         expected = [str(r) for r in res.expected_responses]
         actual = [str(r) for r in res.actual_responses]
@@ -85,28 +83,34 @@ def arrange_data(results: List[TestResult]):
         test_dict = {
             "task_log": formatted_log(res),
             "responses": responses,
-            "score": maybe_int(res.score),
-            "max_score": maybe_int(res.max_score),
+            "score": display_float_or_int(res.score),
+            "max_score": display_float_or_int(res.max_score),
             "tokens": res.tokens,
             "characters": res.characters,
             "color": color,
+            "needles": res.needles,
         }
         data[res.dataset_name]["tests"].append(test_dict)
+        data[res.dataset_name]["scores"].append(res.score / res.max_score)
+
+    for dataset_results in data.values():
+        score, std = mean_std(dataset_results.pop("scores"))
+        dataset_results["score"] = display_float_or_int(score)
+        dataset_results["score_std"] = display_float_or_int(std)
 
     with open(make_config_path(run_name)) as fd:
         config = yaml.safe_load(fd)
     args = config["datasets"]["args"]
 
     return dict(
-        achieved_score=maybe_int(achieved_score),
-        max_score=maybe_int(max_score),
-        info_gap=max(args["filler_tokens_high"], args["pre_question_filler"]),
+        target_memory_span=args["memory_span"],
         run_name=run_name,
         agent_name=agent_name,
         data_by_dataset=data,
-        min_gap=min(info_gaps),
-        max_gap=max(info_gaps),
-        avg_gap=int(sum(info_gaps)/len(info_gaps)),
+        min_gap=min(memory_spans),
+        max_gap=max(memory_spans),
+        avg_gap=int(sum(memory_spans)/len(memory_spans)),
+        overrun=any(r.tokens > args["memory_span"] for r in results),
     )
 
 
@@ -134,9 +138,10 @@ def format_metric(value: float, metric_name: str) -> str:
 def generate_report(results: List[TestResult], output_name: Optional[str] = None) -> Path:
     report_data = arrange_data(results)
     metrics = get_summary_data(report_data["run_name"], report_data["agent_name"])
-    del metrics["score"]
     global_metrics = list()
-    for key in sorted(metrics.keys()):
+    for key in sorted(METRIC_NAMES.keys()):
+        if key == "score":
+            continue
         global_metrics.append(dict(
             name=METRIC_NAMES[key],
             value=format_metric(metrics[key], key),
@@ -153,31 +158,54 @@ def generate_report(results: List[TestResult], output_name: Optional[str] = None
         enumerate=enumerate,
         sorted=sorted,
         global_metrics=global_metrics,
-        **arrange_data(results),
+        achieved_score=display_float_or_int(metrics["score"]),
+        max_score=display_float_or_int(metrics["max_score"]),
+        score_std=display_float_or_int(metrics["score_std"]),
+        **report_data,
     )
+
+
+def normalize_and_aggregate_results(results: list[TestResult]) -> dict[str, dict[str, list[TestResult] | float]]:
+    result_dict = dict()
+
+    for result in results:
+        k = result.dataset_name
+        if k not in result_dict:
+            result_dict[k] = dict(results=list())
+        result_dict[k]["results"].append(result)
+
+    for d in result_dict.values():
+        norm_scores = [r.score / r.max_score for r in d["results"]]
+        ltm_scores = [s * r.tokens for s, r in zip(norm_scores, d["results"])]
+        d["score"], d["std"] = mean_std(norm_scores)
+        d["ltm"], d["ltm_std"] = mean_std(ltm_scores)
+
+    return result_dict
 
 
 def get_summary_data(run_name: str, agent_name: str):
     benchmark_data, results = gather_results(run_name, agent_name)
-    score = max_score = accuracy = ltm_score = max_ltm_score = 0
-
     assert len(results) > 0, f"No results were found for run {run_name} and agent {agent_name}."
+    aggr_results = normalize_and_aggregate_results(results)
 
-    for result in results:
-        score += result.score
-        max_score += result.max_score
-        acc = result.score / result.max_score
-        accuracy += acc
-        ltm_score += result.tokens * acc
-        max_ltm_score += result.tokens
+    score = ltm_score = 0
+    score_std = ltm_score_std = 0
+    for dataset_name, dataset_results in aggr_results.items():
+        score += dataset_results["score"]
+        score_std += dataset_results["std"]
+        ltm_score += dataset_results["ltm"]
+        ltm_score_std += dataset_results["ltm_std"]
 
     return dict(
-        speed=len(results) / (benchmark_data["duration"] / 3600),
+        speed=benchmark_data["agent_tokens"] / benchmark_data["duration"],
         cost=benchmark_data["agent_costs_usd"],
-        verbosity=benchmark_data["total_tokens"],
+        verbosity=benchmark_data["agent_tokens"],
         score=score,
-        accuracy=100 * accuracy / len(results),
+        max_score=len(aggr_results),
+        score_std=score_std,
+        accuracy=100 * score / len(aggr_results),
         ltm=ltm_score,
+        ltm_std=ltm_score_std,
     )
 
 
@@ -247,7 +275,7 @@ def generate_summary_report(
     with open(make_config_path(run_name)) as fd:
         config = yaml.safe_load(fd)
     args = config["datasets"]["args"]
-    info_gap = max(args["filler_tokens_high"], args["pre_question_filler"])
+    info_gap = max(args["filler_tokens"], args["pre_question_filler"])
 
     # Embed the GoodAI logo and Chart.js into the HTML file.
     # This will avoid the need for an Internet connection to visualise the results.
@@ -283,56 +311,3 @@ def load_results_file(filename):
             line = f.readline()
 
     return results_list
-
-
-if __name__ == "__main__":
-    results = [
-        TestResult(
-            run_name="Run title",
-            agent_name="Charlie",
-            dataset_name="bar",
-            description="foo",
-            example_id="0",
-            task_log=["A:", "B:", "C:"],
-            expected_responses=["expected"],
-            actual_responses=["actual"],
-            reasoning=["reasoning"],
-            score=0,
-            max_score=1,
-            tokens=1,
-            characters=88,
-        ),
-        TestResult(
-            run_name="Run title",
-            agent_name="Charlie",
-            dataset_name="bar",
-            description="fasdas",
-            example_id="1",
-            task_log=["A:", "B:", "C:"],
-            expected_responses=["expected"],
-            actual_responses=["actual"],
-            reasoning=["reasoning"],
-            score=1,
-            max_score=1,
-            tokens=1,
-            characters=88,
-        ),
-        TestResult(
-            run_name="Run title",
-            agent_name="Charlie",
-            dataset_name="bar",
-            description="foo",
-            example_id="2",
-            task_log=["A:", "B:", "C:"],
-            expected_responses=["expected"],
-            actual_responses=["actual"],
-            reasoning=["reasoning"],
-            score=1,
-            max_score=5,
-            tokens=1,
-            characters=88,
-        ),
-    ]
-    # results = load_results_file("colour")
-
-    generate_report(results)

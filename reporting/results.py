@@ -23,6 +23,7 @@ class TestResult:
     characters: int = None
     repetition: int = 0
     full_log: List[str] = field(default_factory=list)
+    needles: int = 0
 
     def __post_init__(self):
         self._saved_attrs = [
@@ -35,6 +36,7 @@ class TestResult:
             "characters",
             "full_log",
             "expected_responses",
+            "needles"
         ]
 
     def __str__(self):
@@ -52,8 +54,11 @@ class TestResult:
         string += f"\nScore: {self.score}/{self.max_score}\n"
         string += f"Tokens: {self.tokens}\n"
         string += f"Characters: {self.characters}\n"
-
         return string
+
+    @property
+    def unique_id(self):
+        return f"{self.dataset_name} - {self.example_id}"
 
     @property
     def path(self) -> Path:
@@ -77,3 +82,5 @@ class TestResult:
         result.description = DATASETS_BY_NAME[result.dataset_name].description
         result.load()
         return result
+    
+

@@ -1,7 +1,7 @@
 import logging
+import math
 from copy import deepcopy
 from dataclasses import dataclass
-from random import choice, randint
 from typing import List, Tuple
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
@@ -41,23 +41,28 @@ class JokesDataset(DatasetInterface):
             is_question = []
             jokes = deepcopy(JOKES)
             waits = []
+
+            percentage_per_joke = 90 / self.jokes_told
             for joke_made in range(self.jokes_told):
                 if len(jokes) == 0:
                     logging.warning("Ran out of jokes")
                     break
+
                 # Select joke
-                joke = choice(jokes)
+                joke = self.random.choice(jokes)
                 jokes.remove(joke)
 
                 # create the statement
                 script.append(self.create_script_line(joke))
                 selected_jokes.append(joke)
                 is_question.append(False)
-                time_jump = create_time_jump(self.minutes_low, self.minutes_high)
-                waits.append(WaitCreator.create_wait(tokens=randint(self.filler_tokens_low, self.filler_tokens_high), time=time_jump))
+                waits.append(WaitCreator.create_wait(
+                    time=create_time_jump(self.minutes_low, self.minutes_high),
+                    percentage_finished=(joke_made + 1) * percentage_per_joke,
+                ))
 
             # Choose the joke we are going to look at
-            answer = choice(selected_jokes)
+            answer = self.random.choice(selected_jokes)
             answer_list = [answer]
 
             # The question statement is generated dynamically
@@ -94,7 +99,9 @@ class JokesDataset(DatasetInterface):
         if hours > 0:
             timestamp = f"{hours} hours " + timestamp
 
-        return f"Which joke did I tell you about {timestamp} ago?"
+        question = f"Which joke did I tell you about {timestamp} ago?"
+        example.script.append(question)
+        return question
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]
@@ -106,16 +113,6 @@ class JokesDataset(DatasetInterface):
             return score, max_score, reasons
         else:
             return self.evaluate_correct_gpt(questions, responses, expected_answers)
-
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        statements = example.script
-
-        for idx, statement in enumerate(statements):
-            answer_idx = statement.find(example.expected_responses[0])
-            if answer_idx >= 0:
-                return idx, answer_idx + len(example.expected_responses[0])
-
-        raise ValueError("Issue in getting where joke was told")
 
 
 if __name__ == "__main__":

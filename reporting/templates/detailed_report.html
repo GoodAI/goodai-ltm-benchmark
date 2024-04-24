@@ -25,6 +25,10 @@
         h1, h2, h3 {
             color: #4d5153; /* GoodAI Dark Grey */
         }
+        .warning {
+            color: #bc4242;
+            font-weight: bold;
+        }
         .run, .dataset {
             border: 1px solid #ddd;
             padding: 10px;
@@ -87,8 +91,11 @@
     <div class="main-title">
         <img src="data:image/png;base64, {{ logo_b64 }}" alt="GoodAI Logo" />
         <h1>GoodAI LTM Benchmark</h1>
-        <p><b>Distraction Segment</b>: {{ info_gap }} tokens<br><b>Memory Span (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
-        <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }}</p>
+        <p><b>Target Max Memory Span</b>: {{ target_memory_span }} tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: {{ min_gap }} <b>/</b> {{ avg_gap }} <b>/</b> {{ max_gap }} tokens</p>
+        {% if overrun %}
+            <p class="warning">WARNING. Memory span overrun by at least one test.</p>
+        {% endif %}
+        <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }} <b>±</b> {{ score_std }}</p>
         <ul>
             {% for metric in global_metrics %}
                 <li title="{{ metric.alt }}"><b>{{ metric.name }}</b>: {{ metric.value }} {{ metric.units }}</li>
@@ -98,16 +105,22 @@
     <div class="run">
         <h1>{{ run_name }}</h1>
         {% for dataset_name, dataset in sorted(data_by_dataset.items()) %}
-            <div class="dataset" >
+            <div class="dataset" id="{{ dataset_name }}">
                 <h1>{{ dataset.name }}</h1>
                 <p class="description">{{ dataset.description }}</p>
                 {% for test_idx, test in enumerate(dataset.tests) %}
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
                         style="background-color: {{ test.color }};">
-                            <b>Test {{ test_idx + 1 }} ({{ test.score }}/{{ test.max_score }})</b>
+                            <b>
+                                Test {{ test_idx + 1 }} ({{ test.score }}/{{ test.max_score }})
+                                {% if test.tokens > target_memory_span %}
+                                    - MEMORY SPAN OVERRUN: Tokens: {{ test.tokens }} > {{ target_memory_span }}
+                                {% endif %}
+                            </b>
                         </div>
                         <div class="test-details">
+                            <p><b>Needles: {{ test.needles }}</b></p>
                             <p><b>Task Log:</b></p>
                             <ul style="list-style-type:none;">
                             {% for line in test.task_log %}
@@ -122,10 +135,11 @@
                                 <hr>
                             {% endfor %}
                             <p><b>Score:</b> {{ test.score }}/{{ test.max_score }}</p>
-                            <p><b>Distance to relevant info:</b> {{ test.tokens }} tokens, {{ test.characters }} characters.</p>
+                            <p><b>Memory span from first statement to last question:</b> {{ test.tokens }} tokens, {{ test.characters }} characters.</p>
                         </div>
                     </div>
                 {% endfor %}
+                <p><b>Average Score:</b> {{ dataset.score }} ± {{ dataset.score_std }}</p>
             </div>
         {% endfor %}
     </div>

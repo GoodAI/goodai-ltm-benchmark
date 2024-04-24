@@ -106,7 +106,7 @@
     <div class="run">
         <h1>Benchmark 2 - 10k Filler</h1>
         
-            <div class="dataset" >
+            <div class="dataset" id="ChapterBreak">
                 <h1>ChapterBreak</h1>
                 <p class="description">The agent is given a text that corresponds to the content of many book chapters, in addition to 6 possible beginnings for the next chapter. It is then asked to say which of the six continuations is the right one.</p>
                 
@@ -422,7 +422,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Colours">
                 <h1>Colours</h1>
                 <p class="description">Tell the agent what your favourite colour is multiple time, then ask it what that colour is.</p>
                 
@@ -542,7 +542,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Delayed Recall">
                 <h1>Delayed Recall</h1>
                 <p class="description">Give the agent a number of facts about a a fictional world, and then ask 10 questions about these facts.</p>
                 
@@ -893,7 +893,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Instruction Recall">
                 <h1>Instruction Recall</h1>
                 <p class="description">Give the agent a list of instructions, then ask it multiple questions about these instructions</p>
                 
@@ -1109,7 +1109,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Jokes">
                 <h1>Jokes</h1>
                 <p class="description">Tell the agent jokes, and fast forward through time, then ask for which joke was said around a particular moment.</p>
                 
@@ -1229,9 +1229,9 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Locations Directions">
                 <h1>Locations Directions</h1>
-                <p class="description">Tell the agents about locations in our hometown, with each's position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last.</p>
+                <p class="description">Tell the agent about locations in our hometown, with each position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last.</p>
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
@@ -1279,7 +1279,7 @@
                             
                                 <p><b>Expected:</b> From Hospital, go 1km West to Town Hall.<br>From Town Hall, go 4km West to High Street.<br>From High Street, go 4km South to Playground.<br>From Playground, go 1km West to Museum.<br>From Museum, go 2km South to Park.</p>
                                 <p><b>Actual:</b> To travel from Hospital to Park following the points of interest you have mentioned, you would need to plan your route accordingly. Here is a suggested route based on the points of interest provided:<br><br>1. Start at Hospital.<br>2. Head towards Staines (Surrey town rebranded as Staines-on-Thames).<br>3. Proceed to Chatham Dockyard in Kent.<br>4. Continue to enjoy the hit "You're The One for Me Fatty" by Morrissey.<br>5. Make a stop at Cutlers Grammar School in Sheffield, featured in "The History Boys" by Alan Bennett.<br>6. Move on to experience the biographical drama "Steve Jobs" starring Michael Fassbender.<br>7. Visit the new Fortnum and Mason store at St Pancras International in London.<br>8. Travel to the most northerly cricket Test venue in the world, located in Chester le Street.<br>9. Finally, reach Park.<br><br>This route will take you through various points of interest, offering a diverse and engaging journey. If you have any specific preferences or additional details to consider, feel free to provide more information for a tailored route.</p>
-                                <p><b>Reasoning:</b> The answer does not make reference to the expected answer, which is not numerical.</p>
+                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (KeyError('kilometers')).<br>Original response:<br>To travel from Hospital to Park following the points of interest you have mentioned, you would need to plan your route accordingly. Here is a suggested route based on the points of interest provided:<br><br>1. Start at Hospital.<br>2. Head towards Staines (Surrey town rebranded as Staines-on-Thames).<br>3. Proceed to Chatham Dockyard in Kent.<br>4. Continue to enjoy the hit "You're The One for Me Fatty" by Morrissey.<br>5. Make a stop at Cutlers Grammar School in Sheffield, featured in "The History Boys" by Alan Bennett.<br>6. Move on to experience the biographical drama "Steve Jobs" starring Michael Fassbender.<br>7. Visit the new Fortnum and Mason store at St Pancras International in London.<br>8. Travel to the most northerly cricket Test venue in the world, located in Chester le Street.<br>9. Finally, reach Park.<br><br>This route will take you through various points of interest, offering a diverse and engaging journey. If you have any specific preferences or additional details to consider, feel free to provide more information for a tailored route.<br><br>Structured version:<br>```json<br>[<br>  {"origin": "Hospital", "direction": "South", "destination": "Town Hall"},<br>  {"origin": "Town Hall", "direction": "East", "destination": "Statue of Founder"},<br>  {"origin": "Statue of Founder", "direction": "South", "destination": "Library"},<br>  {"origin": "Library", "direction": "East", "destination": "Museum"},<br>  {"origin": "Museum", "direction": "North", "destination": "Park"}<br>]<br>```</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1333,7 +1333,7 @@
                             
                                 <p><b>Expected:</b> From Retail Area, go 3km West to High Street.<br>From High Street, go 2km North to Town Hall.<br>From Town Hall, go 1km West to Playground.<br>From Playground, go 3km East to Museum.<br>From Museum, go 2km East to Park.</p>
                                 <p><b>Actual:</b> To travel from the Retail Area to the Park following the points of interest you have mentioned, you would likely take the following route:<br><br>1. Start at the Retail Area.<br>2. Head towards the Bookstore.<br>3. Continue past the Bookstore towards the Coffee Shop.<br>4. Proceed towards the Fountain.<br>5. From the Fountain, head towards the Library.<br>6. Continue past the Library towards the Park.<br><br>This route will take you from the Retail Area to the Park while passing by the Bookstore, Coffee Shop, Fountain, and Library along the way.</p>
-                                <p><b>Reasoning:</b> The answer does not make reference to the expected answer, which is not numerical.</p>
+                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (AssertionError("Location 'Bookstore' is unknown.")).<br>Original response:<br>To travel from the Retail Area to the Park following the points of interest you have mentioned, you would likely take the following route:<br><br>1. Start at the Retail Area.<br>2. Head towards the Bookstore.<br>3. Continue past the Bookstore towards the Coffee Shop.<br>4. Proceed towards the Fountain.<br>5. From the Fountain, head towards the Library.<br>6. Continue past the Library towards the Park.<br><br>This route will take you from the Retail Area to the Park while passing by the Bookstore, Coffee Shop, Fountain, and Library along the way.<br><br>Structured version:<br>```json<br>[<br>  {"origin": "Retail Area", "direction": "East", "destination": "Bookstore"},<br>  {"origin": "Bookstore", "direction": "East", "destination": "Coffee Shop"},<br>  {"origin": "Coffee Shop", "direction": "North", "destination": "Fountain"},<br>  {"origin": "Fountain", "direction": "East", "destination": "Library"},<br>  {"origin": "Library", "direction": "North", "destination": "Park"}<br>]<br>```</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1387,7 +1387,7 @@
                             
                                 <p><b>Expected:</b> From Town Hall, go 2km West to Library.<br>From Library, go 4km West to Statue of Founder.<br>From Statue of Founder, go 2km West to High Street.<br>From High Street, go 1km North to Hospital.<br>From Hospital, go 3km North to Museum.</p>
                                 <p><b>Actual:</b> To travel from Town Hall to the Museum following the points of interest you have mentioned, you would likely take the following route:<br><br>1. Start at Town Hall.<br>2. Head towards the Riverfront Park to enjoy the scenic views.<br>3. Continue towards the Historical Museum to explore the exhibits.<br>4. Walk through the Art Gallery to appreciate the artwork.<br>5. Finally, reach the Museum.<br><br>This route allows you to enjoy the various points of interest along the way before reaching your destination at the Museum.</p>
-                                <p><b>Reasoning:</b> The answer does not make reference to the expected answer, which is not numerical.</p>
+                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (AssertionError("Location 'Riverfront Park' is unknown.")).<br>Original response:<br>To travel from Town Hall to the Museum following the points of interest you have mentioned, you would likely take the following route:<br><br>1. Start at Town Hall.<br>2. Head towards the Riverfront Park to enjoy the scenic views.<br>3. Continue towards the Historical Museum to explore the exhibits.<br>4. Walk through the Art Gallery to appreciate the artwork.<br>5. Finally, reach the Museum.<br><br>This route allows you to enjoy the various points of interest along the way before reaching your destination at the Museum.<br><br>Structured version:<br>```json<br>[<br>  {"origin": "Town Hall", "direction": "East", "destination": "Riverfront Park"},<br>  {"origin": "Riverfront Park", "direction": "East", "destination": "Historical Museum"},<br>  {"origin": "Historical Museum", "direction": "East", "destination": "Art Gallery"},<br>  {"origin": "Art Gallery", "direction": "East", "destination": "Museum"}<br>]<br>```</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1397,7 +1397,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="NameList">
                 <h1>NameList</h1>
                 <p class="description">Give the agent multiple names to call you in sequence. Then ask the agent what all of your names have been. The agent should respond with all of the names you have given it.</p>
                 
@@ -1553,7 +1553,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Prospective Memory">
                 <h1>Prospective Memory</h1>
                 <p class="description">Give the agent a fictitious quote, then ask it to append to the nth reply</p>
                 
@@ -1649,7 +1649,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Restaurant">
                 <h1>Restaurant</h1>
                 <p class="description">The agent is required to perform several tasks related to eating out at a restaurant. The experience includes ordering drinks, main course, side, etc. plus a series of unexpected events that will require the agent to take reasonable decisions, based on past events.</p>
                 
@@ -1724,7 +1724,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="SallyAnne">
                 <h1>SallyAnne</h1>
                 <p class="description">Give the agent a series of events. Then ask it a question about how the actors in those events would think.</p>
                 
@@ -1912,7 +1912,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Shopping">
                 <h1>Shopping</h1>
                 <p class="description">Give the agent multiple statements adding and removing items from a shopping list. Then ask the agent what is on the shopping list.</p>
                 
@@ -2080,7 +2080,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Spy Meeting">
                 <h1>Spy Meeting</h1>
                 <p class="description">The agent is given three clandestine messages. Then is asked to recall all of them and decide where and when the meeting is taking place long with what they should bring.</p>
                 
@@ -2116,9 +2116,9 @@
                             </ul>
                             <hr>
                             
-                                <p><b>Expected:</b> ['motorbike', 'motorcycle', 'car']<br>['sunset', 'dusk']<br>['shore', 'beach', 'coastline']</p>
+                                <p><b>Expected:</b> ['motorbike', 'motorcycle', 'car', 'fast land vehicle', 'fast vehicle', 'fast land escape vehicle']<br>['sunset', 'dusk']<br>['shore', 'beach', 'coastline']</p>
                                 <p><b>Actual:</b> I'm sorry, but I don't have access to any clandestine messages or specific meeting details. If you have any other questions or need assistance, feel free to ask!</p>
-                                <p><b>Reasoning:</b> ['motorbike', 'motorcycle', 'car'] not found in answer.<br>['sunset', 'dusk'] not found in answer.<br>['shore', 'beach', 'coastline'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['motorbike', 'motorcycle', 'car', 'fast land vehicle', 'fast vehicle', 'fast land escape vehicle'] not found in answer.<br>['sunset', 'dusk'] not found in answer.<br>['shore', 'beach', 'coastline'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -2128,7 +2128,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Trigger Response">
                 <h1>Trigger Response</h1>
                 <p class="description">Tell the agent to respond in a particular way when a trigger is given. Test the agent.</p>
                 

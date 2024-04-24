@@ -1,17 +1,20 @@
 import json
+import math
+from copy import deepcopy
+from random import Random
 from pathlib import Path
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from random import randint
 from typing import List, Callable, Tuple, Optional, Any, Iterator, Dict
+from runner.master_log import MasterLog
 
 import tiktoken
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
-from utils.openai import ask_llm, LLMContext
+from utils.llm import ask_llm, LLMContext, tokens_in_script
 from utils.files import make_testdef_path
 
 _match_system_prompt = """
@@ -37,6 +40,13 @@ Respond in JSON with the following format:
 """.strip()
 
 
+def normalize_scores(evaluate_correct_fn: Callable[[List[str], List[str], List[Any]], Tuple[int, int, List[str]]],
+                     questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
+    correct, total, feedback = evaluate_correct_fn(questions, responses, expected_answers)
+    normalized_score = float(correct) / total if total > 0 else 0.0
+    return normalized_score, 1, feedback
+
+
 class TestAction:
     pass
 
@@ -53,6 +63,7 @@ class SendMessageAction(TestAction):
     sent_ts: Optional[datetime] = None
     is_question: bool = False
     is_filling: bool = False
+    filler_response: str = None
 
 
 @dataclass
@@ -69,16 +80,23 @@ class WaitAction(TestAction):
 
 class WaitCreator:
     @classmethod
-    def create_wait(cls, tokens: int = 0, time: timedelta = timedelta(seconds=0), percentage_finished: float = 0.0):
-        return {"tokens": tokens, "time": time, "percentage_finished": percentage_finished}
+    def create_wait(cls, tokens: int = None, time: timedelta = None, percentage_finished: float = None):
+        w_dict = {"tokens": tokens, "time": time, "percentage_finished": percentage_finished}
+        return {k: v for k, v in w_dict.items() if v is not None}
 
     @classmethod
     def unserialise(cls, w_dict):
-        return {"tokens": w_dict['tokens'], "time": timedelta(w_dict['time']), "percentage_finished": w_dict['percentage_finished']}
+        w_dict = deepcopy(w_dict)
+        if "time" in w_dict:
+            w_dict["time"] = timedelta(seconds=w_dict["time"])
+        return w_dict
 
     @classmethod
     def serialise(cls, w_dict):
-        return {"tokens": w_dict['tokens'], "time": w_dict['time'].seconds, "percentage_finished": w_dict['percentage_finished']}
+        w_dict = deepcopy(w_dict)
+        if "time" in w_dict:
+            w_dict["time"] = w_dict["time"].seconds
+        return w_dict
 
 
 @dataclass
@@ -95,6 +113,8 @@ class TestExample:
     finished: bool = False
     _iter: Iterator[TestAction] = None
     waits: List[dict] = field(default_factory=list)
+    random: Random = None  # Seeded random generator
+    start_token: int = 0
 
     @property
     def dataset_name(self) -> str:
@@ -109,8 +129,14 @@ class TestExample:
         return self.dataset_generator.reset_message
 
     @property
-    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
-        return self.dataset_generator.evaluate_correct
+    def evaluation_fn(self) -> Callable[[List[str], List[str], List[Any]], Tuple[float, int, List[str]]]:
+        """
+        Returns a callable that evaluates and normalizes the scores between 0 and 1.
+        The returned tuple consists of the normalized score, the max score (always 1 for normalized scores), and feedback.
+        """
+        def evaluator(questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
+            return normalize_scores(self.dataset_generator.evaluate_correct, questions, responses, expected_answers)
+        return evaluator
 
     @property
     def unique_id(self):
@@ -121,9 +147,11 @@ class TestExample:
 
     def __post_init__(self):
         assert self.dataset_generator is not None
+        assert self.dataset_generator.memory_span > 0
         self.number_of_questions = len([q for q in self.is_question if q])
         self._iter = self.action_iter()
-        self.waits = self.dataset_generator.default_waits(self.is_question, self.waits)
+        self.random = Random(self.unique_id)
+        self.default_waits()
 
     def action_iter(self) -> Iterator[TestAction]:
         scripts = [self.script, self.waits, self.is_question]
@@ -132,7 +160,7 @@ class TestExample:
                 yield SendAndRegisterAction(msg, is_question=is_q)
             else:
                 yield SendMessageAction(msg, is_question=is_q)
-            if any(wait.values()):
+            if len(wait) > 0:
                 yield WaitAction(**wait)
         if self.is_temporal and len(self.is_question) == len(self.script) + 1:
             yield SendMessageAction("", is_question=self.is_question[-1])
@@ -165,8 +193,7 @@ class TestExample:
             json.dump(self.to_dict(), fd, indent=2)
 
     @classmethod
-    def load(cls, file_path: Path | str) -> "TestExample":
-        from dataset_interfaces.factory import DATASETS_BY_NAME
+    def load(cls, dataset_generator: "DatasetInterface", file_path: Path | str) -> "TestExample":
 
         file_path = Path(file_path)
         assert file_path.exists(), f"Test file doesn't exist: {file_path}"
@@ -176,11 +203,38 @@ class TestExample:
         d["waits"] = [WaitCreator.unserialise(x) for x in d["waits"]]
         d["example_id"] = file_path.name.removesuffix(".def.json")
         d["dataset_name"] = file_path.parent.name
-        assert d["dataset_name"] in DATASETS_BY_NAME, f"Couldn't find a generator for dataset {d['dataset_name']}."
-        dataset_generator = DATASETS_BY_NAME[d["dataset_name"]]()
         generator_attrs = {"dataset_name", "description", "reset_message"}
         d = {k: d[k] for k in d.keys() if k not in generator_attrs}
         return dataset_generator.create_example(**d)
+
+    def default_waits(self):
+
+        if isinstance(self, DynamicExample):
+            return
+
+        # For caution, we want to use a tokeniser that produces the most tokens. This is to try and avoid the problem of
+        # having the test overrun its memory_span. More tokens in script means smaller token gaps and more buffer.
+        memory_span = self.dataset_generator.memory_span
+        script_tokens = tokens_in_script(self.script)
+        assert script_tokens < memory_span, (
+            f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified "
+            f"memory span of {memory_span} tokens."
+        )
+
+        assert sum(self.is_question) >= 1, "There are no questions for this test"
+        num_script_lines = len(self.is_question)  # self.script might not be updated just yet [e.g. create_question()]
+        if len(self.waits) == num_script_lines:
+            return  # Do not overwrite waits
+        assert len(self.waits) == 0, "Current waits should be empty in order to apply the defaults."
+
+        perc_fraction = 90 / (num_script_lines - 1)
+        self.waits = [
+            WaitCreator.create_wait(
+                percentage_finished=(i + 1) * perc_fraction,
+            ) for i in range(num_script_lines - 1)
+        ]
+        self.waits.append(WaitCreator.create_wait())
+
 
 
 @dataclass
@@ -200,39 +254,35 @@ class DynamicExample(TestExample):
     max_score: int = 0
     expected_responses: list[str] = field(default_factory=list)
     reasoning: list[str] = field(default_factory=list)
-    script: List[str] = field(default_factory=lambda: [])  # Updated dynamically by `say`
+    script: List[str] = field(default_factory=lambda: [])  # Updated dynamically by `say` method
     action: SendMessageAction = None  # Keeps the last SendMessageAction
+    wait = WaitAction
+    llm_call_idx: int = -1
+    master_log: MasterLog = None  # Set by runner to cache llm calls
 
     @property
-    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[int, int, List[str]]]:
+    def evaluation_fn(self) -> Callable[[List[str], list[str], List[Any]], tuple[float, int, List[str]]]:
         return self.evaluate
 
     def __post_init__(self):
         super().__post_init__()
         assert self.max_score > 0
 
-    def evaluate(self, *args, **kwargs) -> tuple[int, int, list[str]]:
-        return self.score, self.max_score, self.reasoning
+    def evaluate(self, *args, **kwargs) -> tuple[float, int, list[str]]:
+        return self.score / self.max_score, 1, self.reasoning
 
-    def ask_llm(self, context: LLMContext, **kwargs) -> str:
-        return self.dataset_generator.ask_llm(context, **kwargs)
+    def ask_llm(self, context: LLMContext, model: str, **kwargs) -> str:
+        self.llm_call_idx += 1
+        response = self.master_log.get_cached_response(self.unique_id, self.llm_call_idx)
+        if response is not None:
+            return response
+        response = self.dataset_generator.ask_llm(context, model, **kwargs)
+        self.master_log.add_llm_call(self.unique_id, datetime.now(), response)
+        return response
 
     @abstractmethod
     def action_iter(self) -> Iterator[TestAction]:
         pass
-
-    def wait(
-        self,
-        tokens: Optional[int] = None,
-        time: Optional[timedelta] = None,
-        percentage_finished: Optional[float] = None,
-    ) -> WaitAction:
-        kwargs = dict(tokens=tokens, time=time, percentage_finished=percentage_finished)
-        kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        if len(kwargs) == 0:
-            dgen = self.dataset_generator
-            kwargs["tokens"] = randint(dgen.filler_tokens_low, dgen.filler_tokens_high)
-        return WaitAction(**kwargs)
 
     def say(self, message: str, question: bool = False) -> SendMessageAction:
         # `question = True` will register the answer as `result.actual_response`
@@ -246,14 +296,19 @@ class DatasetInterface(ABC):
     name: str
     description: str
     question: str = ""
-    filler_tokens_low: int = 0
-    filler_tokens_high: int = 0
-    pre_question_filler: int = 0
+    memory_span: int = 0
     seed: int = 0
     cost_callback: Callable[[float], None] = None
     uses_callback: bool = False
     reset_message: str = ""
     max_message_size: int = 1024
+    random: Random = None  # Seeded random generator
+
+    def __getattribute__(self, item):
+        # Force seeding right before generating samples
+        if item == "generate_examples":
+            self.random = Random(self.seed)
+        return super().__getattribute__(item)
 
     @property
     def data_path(self) -> Path:
@@ -281,12 +336,18 @@ class DatasetInterface(ABC):
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
     ) -> Tuple[int, int, List[str]]:
         pass
+    
+    def evaluation_fn(self) -> Callable[[List[str], List[str], List[Any]], Tuple[float, int, List[str]]]:
+        def evaluator(questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
+            return normalize_scores(self.evaluate_correct, questions, responses, expected_answers)
+        return evaluator
 
-    def ask_llm(self, context: LLMContext, temperature: float = 0, max_tokens: int = 256, **kwargs) -> str:
+    def ask_llm(self, context: LLMContext, model: str, temperature: float = 0, max_tokens: int = 256, **kwargs) -> str:
         return ask_llm(
             context=context,
+            model=model,
             temperature=temperature,
-            max_tokens=max_tokens,
+            max_response_tokens=max_tokens,
             cost_callback=self.cost_callback,
             **kwargs,
         )
@@ -323,7 +384,7 @@ class DatasetInterface(ABC):
             },
         ]
 
-        response = ask_llm(context=ctx, model="gpt-4-0125-preview", temperature=0.01, cost_callback=cost_callback)
+        response = ask_llm(context=ctx, model="gpt-4-turbo", temperature=0.01, cost_callback=cost_callback)
         score = 0
         reasoning = []
         try:
@@ -356,53 +417,22 @@ class DatasetInterface(ABC):
     def create_example(self, **kwargs) -> TestExample:
         return (CallBackTestExample if kwargs.get("uses_callback", False) else TestExample)(
             dataset_generator=self,
-            **kwargs
+            **kwargs,
         )
-
-    @abstractmethod
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        pass
-
-    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        def _filler_size(is_p2q: bool):
-            return self.pre_question_filler if is_p2q else (randint(self.filler_tokens_low, self.filler_tokens_high))
-
-        assert len(is_question) >= 1, "There are no questions for this test"
-        assert len(current_waits) == 0 or len(current_waits) == len(is_question), "Current waits should be empty or the same length as the script"
-
-        # Create the empty waits if there are any.
-        if len(current_waits) == 0:
-            for _ in range(len(is_question)):
-                current_waits.append({})
-
-        is_prior_to_question = is_question[1:] + [False]
-        for idx, (f, p2q) in enumerate(zip(current_waits[:-1], is_prior_to_question)):
-            if f != {}:
-                continue
-
-            current_waits[idx] = WaitCreator.create_wait(tokens=_filler_size(p2q))
-
-        current_waits[-1] = WaitCreator.create_wait()
-        return current_waits
 
     def tokens_to_answer(self, test_context: List[Dict[str, Any]], full_context: List[Dict[str, str]], example: TestExample):
         encoding = tiktoken.get_encoding("cl100k_base")
         num_tokens = num_characters = 0
 
-        # Get most relevant line, and any characters after that statement.
-        script_answer_index, answer_end_char = self.answer_statement_idx(example)
-        relevant_line = example.script[script_answer_index]
+        # Get the first line of the script
+        relevant_line = example.script[0]
 
         timestamp_idx = search_context(test_context, relevant_line)
         target_timestamp = test_context[timestamp_idx]["timestamp"].__str__()
 
-        # Update tokens and character counts from the script
-        num_characters += len(relevant_line[answer_end_char:])
-        num_tokens += len(encoding.encode(relevant_line[answer_end_char:]))
-
         # Where in the history was the statement made?
         # Find that statement in the history suing the content and timestamp and count from there.
-        history_idx = search_context(full_context, relevant_line, target_timestamp) + 1
+        history_idx = search_context(full_context, relevant_line, target_timestamp)
         countable_history_chunk = flatten_context(full_context[history_idx:])
 
         # Now count the tokens and characters since there
@@ -432,15 +462,11 @@ class DynamicDataset(DatasetInterface, ABC):
     def evaluate_correct(self, *args):
         raise NotImplementedError("This method should not be called. Each test example has its own evaluation function.")
 
-    @abstractmethod
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        pass
-
     def create_example(self, **kwargs) -> DynamicExample:
         return self.example_cls(dataset_generator=self, **kwargs)
 
     def generate_examples(self, num_examples: int) -> List[TestExample]:
         return [self.create_example() for _ in range(num_examples)]
 
-    def default_waits(self, is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def default_waits(self, script: list[str], is_question: list[bool], current_waits: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return []

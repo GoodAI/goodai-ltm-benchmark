@@ -1,19 +1,13 @@
-import codecs
 import datetime
 import json
 import logging
 import os
-import threading
 import time
-import uuid
-from dataclasses import dataclass
 from typing import List, Callable, Optional
 
 from model_interfaces.base_ltm_agent import BaseLTMAgent, Message
-from model_interfaces.interface import ChatSession
 from utils.json_utils import CustomEncoder
-from utils.openai import ask_llm, make_system_message, make_user_message
-import tiktoken
+from utils.llm import make_system_message, make_user_message
 
 _logger = logging.getLogger("exp_agent")
 _log_prompts = os.environ.get('LTM_BENCH_PROMPT_LOGGING', 'False').lower() in ['true', 'yes', '1']
@@ -124,7 +118,7 @@ class LengthBiasAgent(BaseLTMAgent):
     def current_time(self) -> float:
         return self.time_fn(self.session_index, len(self.message_history))
 
-    def reply(self, user_content: str) -> str:
+    def reply(self, user_content: str, agent_response: Optional[str] = None) -> str:
         context = self.build_llm_context(user_content)
         response = self.completion(context, temperature=self.llm_temperature, label="reply")
         user_message = Message(role='user', content=user_content, timestamp=self.current_time)

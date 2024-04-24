@@ -1,14 +1,13 @@
+from typing import Optional
+
 from model_interfaces.interface import ChatSession
 from dataclasses import dataclass, field
-
-from utils.constants import ResetPolicy
-from utils.tokens import token_len
-from utils.openai import (
+from utils.llm import (
     LLMContext,
     make_system_message,
     make_user_message,
     make_assistant_message,
-    context_token_len,
+    context_token_len, tokens_in_text,
 )
 
 
@@ -29,11 +28,11 @@ class CostEstimationChatSession(ChatSession):
     def __post_init__(self):
         super().__post_init__()
         self.system_prompt = "You are a helpful assistant."
-        assert self.max_prompt_size > token_len(self.system_prompt)
+        assert self.max_prompt_size > tokens_in_text(self.system_prompt)
 
         assert self.cost_in_token > 0 and self.cost_out_token > 0
         self.dummy_response = " ".join(str(i) for i in range(53)) + "_"
-        assert token_len(self.dummy_response) == self.avg_response_len
+        assert tokens_in_text(self.dummy_response) == self.avg_response_len
         self.reset()
 
     def add_to_context(self, user_message: str):
@@ -44,7 +43,7 @@ class CostEstimationChatSession(ChatSession):
             self.context_tokens -= context_token_len(self.context[1:2])
             self.context = self.context[:1] + self.context[2:]
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         self.add_to_context(user_message)
         self.costs_usd += self.cost_in_token * self.context_tokens
         self.costs_usd += self.cost_out_token * self.avg_response_len

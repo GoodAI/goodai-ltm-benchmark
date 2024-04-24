@@ -3,7 +3,6 @@ from json import JSONDecodeError
 
 import pystache
 from dataclasses import dataclass
-from random import randint, choice
 from typing import List, Tuple
 
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -69,11 +68,11 @@ class ShoppingDataset(DatasetInterface):
             is_question = []
 
             for change in range(self.item_changes):
-                if len(cart) > 0 and randint(1, 6) < 2:
+                if len(cart) > 0 and self.random.randint(1, 6) < 2:
                     # remove
-                    item = choice(cart)
+                    item = self.random.choice(cart)
                     current_number = counts[cart.index(item)]
-                    number = randint(1, current_number)
+                    number = self.random.randint(1, current_number)
                     current_number -= number
                     if current_number <= 0:
                         del counts[cart.index(item)]
@@ -81,12 +80,12 @@ class ShoppingDataset(DatasetInterface):
                     else:
                         counts[cart.index(item)] = current_number
                     statement = renderer.render(
-                        choice(STATEMENTS_REMOVE), {"item": item, "number": str(number)}
+                        self.random.choice(STATEMENTS_REMOVE), {"item": item, "number": str(number)}
                     )
                 else:
                     # add
-                    item = choice(ITEMS)
-                    number = choice(NUMBER)
+                    item = self.random.choice(ITEMS)
+                    number = self.random.choice(NUMBER)
                     modifier = ""
                     if item in cart:
                         modifier = "another "
@@ -95,7 +94,7 @@ class ShoppingDataset(DatasetInterface):
                         cart.append(item)
                         counts.append(number)
                     statement = renderer.render(
-                        choice(STATEMENTS_ADD),
+                        self.random.choice(STATEMENTS_ADD),
                         {"item": item, "modifier": modifier, "number": str(number)},
                     )
 
@@ -125,46 +124,68 @@ class ShoppingDataset(DatasetInterface):
         questions: List[str],
         responses: List[str],
         expected_answers: List[Tuple[str, int]],
-    ) -> Tuple[int, int, List[str]]:
-        max_score = len(expected_answers)
+    ) -> Tuple[float, int, List[str]]:
+        """
+        The evaluation will give up to `item_changes` points in total.
+        That punctuation can be broken down in thirds:
+        1. One third depends on the number of expected items present.
+        2. Another third depends on those items' quantities matching the expected values.
+        3. The last third is given if there are no hallucinated items.
+        """
+        score = 0
+        max_score = self.item_changes
         num_correct = 0
-        penalties = 0
-        errors = []
+        real_items = []
+        hallucinated_items = []
+        reasoning = []
+
+        expected_names = []
+        expected_items = {}
+        for a in expected_answers:
+            expected_names.append(a[0])
+            expected_items[a[0]] = a[1]
+
+        # Check response format
         try:
             answer_items = sanitize_and_parse_json(responses[0])
-            expected_items = {}
-            expected_names = []
-            for a in expected_answers:
-                expected_names.append(a[0])
-                expected_items[a[0]] = a[1]
+            assert isinstance(answer_items, list)
             for item in answer_items:
-                name = item["item"].lower()
-                matched, key = match_plural(name, expected_names)
-                if matched:
-                    if item["quantity"] == expected_items[key]:
-                        num_correct += 1
-                    else:
-                        errors.append(f"Wrong quantity for {name}: {item['quantity']} vs {expected_items[key]}.")
-                else:
-                    penalties += 1
-                    errors.append(f'Unknown item {name}.')
-        except (TypeError, ValueError, JSONDecodeError):
-            logging.exception(f"Response not in correct format")
-            num_correct = 0
-        if num_correct < max_score:
-            errors.append(f"{max_score - num_correct} items were not found in the response.")
+                assert isinstance(item["item"], str)
+                assert isinstance(item["quantity"], int)
+        except (JSONDecodeError, ValueError, KeyError, AssertionError) as exc:
+            msg = f"Response not in correct format ({repr(exc)}):\n{responses[0]}"
+            logging.exception(msg)
+            return score, max_score, [msg]
 
-        num_correct = max(num_correct - penalties, 0)
-        if num_correct == max_score:
-            reasoning = "All items and quantities match."
-        else:
-            reasoning = "\n".join(errors)
-        return num_correct, max_score, [reasoning]
+        # Evaluate
+        for item in answer_items:
+            name = item["item"].lower()
+            matched, key = match_plural(name, expected_names)
+            if not matched:
+                hallucinated_items.append(name)
+                continue
+            real_items.append(name)
+            if item["quantity"] == expected_items[key]:
+                num_correct += 1
+            else:
+                reasoning.append(f"Wrong quantity for {name}: {item['quantity']} vs {expected_items[key]}.")
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # All statements are relevant
-        # in this test all statements are atomic
-        return 0, len(example.script[0])
+        score += len(real_items) / len(expected_answers)
+        if len(real_items) < len(expected_answers):
+            reasoning.append(f"{len(expected_answers) - len(real_items)} items were not found in the response:")
+            reasoning.extend(f"- {name}" for name in expected_names if name not in real_items)
+
+        score += num_correct / len(expected_answers)
+        if num_correct == len(expected_answers):
+            reasoning.append("All expected items' quantities match.")
+
+        score += int(hallucinated_items == [])
+        if len(hallucinated_items) > 0:
+            reasoning.append(f"{len(hallucinated_items)} unexpected items were found:")
+            reasoning.extend(f"- {name}" for name in hallucinated_items)
+
+        score = (score / 3) * max_score
+        return score, max_score, ["\n".join(reasoning)]
 
 
 def main():

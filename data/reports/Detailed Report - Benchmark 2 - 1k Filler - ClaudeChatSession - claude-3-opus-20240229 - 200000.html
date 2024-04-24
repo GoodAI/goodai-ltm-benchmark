@@ -95,7 +95,7 @@
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 374.58 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 231807 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 240381 LTM points</li>
             
                 <li title="(Average Tests per Hour) How many tests, on average, the agent completes within an hour of running the benchmark."><b>Speed</b>: 6.07 tests per hour</li>
             
@@ -106,7 +106,7 @@
     <div class="run">
         <h1>Benchmark 2 - 1k Filler</h1>
         
-            <div class="dataset" >
+            <div class="dataset" id="ChapterBreak">
                 <h1>ChapterBreak</h1>
                 <p class="description">The agent is given a text that corresponds to the content of many book chapters, in addition to 6 possible beginnings for the next chapter. It is then asked to say which of the six continuations is the right one.</p>
                 
@@ -422,7 +422,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Colours">
                 <h1>Colours</h1>
                 <p class="description">Tell the agent what your favourite colour is multiple time, then ask it what that colour is.</p>
                 
@@ -542,7 +542,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Delayed Recall">
                 <h1>Delayed Recall</h1>
                 <p class="description">Give the agent a number of facts about a a fictional world, and then ask 10 questions about these facts.</p>
                 
@@ -893,7 +893,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Instruction Recall">
                 <h1>Instruction Recall</h1>
                 <p class="description">Give the agent a list of instructions, then ask it multiple questions about these instructions</p>
                 
@@ -1109,7 +1109,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Jokes">
                 <h1>Jokes</h1>
                 <p class="description">Tell the agent jokes, and fast forward through time, then ask for which joke was said around a particular moment.</p>
                 
@@ -1229,9 +1229,9 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Locations Directions">
                 <h1>Locations Directions</h1>
-                <p class="description">Tell the agents about locations in our hometown, with each's position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last.</p>
+                <p class="description">Tell the agent about locations in our hometown, with each position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last.</p>
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
@@ -1279,7 +1279,7 @@
                             
                                 <p><b>Expected:</b> From Hospital, go 1km West to Town Hall.<br>From Town Hall, go 4km West to High Street.<br>From High Street, go 4km South to Playground.<br>From Playground, go 1km West to Museum.<br>From Museum, go 2km South to Park.</p>
                                 <p><b>Actual:</b> Based on the locations of the points of interest you've shared, I can guide you on a route from the Hospital to the Park that passes through these interesting points. Here's the route:<br><br>1. Start at the Hospital, which is located in the center of your hometown.<br><br>2. Travel 1 kilometer west from the Hospital to reach the Town Hall.<br><br>3. From the Town Hall, continue traveling west for another 4 kilometers to arrive at High Street.<br><br>4. Now, change direction and travel 4 kilometers south from High Street to reach the Playground.<br><br>5. From the Playground, travel 1 kilometer west to find the Museum.<br><br>6. Finally, from the Museum, travel 2 kilometers south to reach your destination, the Park.<br><br>To summarize the route:<br>Hospital (center) -> 1 km west -> Town Hall -> 4 km west -> High Street -> 4 km south -> Playground -> 1 km west -> Museum -> 2 km south -> Park<br><br>The total distance covered in this route, based on the information provided, would be approximately 12 kilometers (1 + 4 + 4 + 1 + 2 = 12 km).<br><br>This route allows you to visit all the interesting points you've mentioned - the Town Hall, High Street, Playground, and Museum - before finally arriving at the Park. It's a great way to explore your hometown's key landmarks and get a sense of its layout and character.<br><br>Of course, depending on the actual layout of streets and pathways, the real-world route might differ slightly from this simplified, straight-line description. But this gives you a general idea of how to navigate between these points of interest in your hometown.</p>
-                                <p><b>Reasoning:</b> The answer makes reference to the expected answer, which is not numerical.</p>
+                                <p><b>Reasoning:</b> The agent's directions lead to the expected destination.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 1/1</p>
@@ -1289,8 +1289,8 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(126, 188, 66);">
-                            <b>Test 2 (1/1)</b>
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>Test 2 (0/1)</b>
                         </div>
                         <div class="test-details">
                             <p><b>Task Log:</b></p>
@@ -1333,10 +1333,10 @@
                             
                                 <p><b>Expected:</b> From Retail Area, go 3km West to High Street.<br>From High Street, go 2km North to Town Hall.<br>From Town Hall, go 1km West to Playground.<br>From Playground, go 3km East to Museum.<br>From Museum, go 2km East to Park.</p>
                                 <p><b>Actual:</b> Based on the locations of the points of interest you've shared, I can guide you on a route from the Retail Area to the Park that passes through these interesting points. Here's the route:<br><br>1. Start at the Retail Area, which is located in the center of your hometown.<br><br>2. Travel 1 kilometer east and 3 kilometers north from the Retail Area to reach the Museum.<br><br>3. From the Museum, continue traveling east for another 2 kilometers to arrive at the Park, your final destination.<br><br>To summarize the route:<br>Retail Area (center) -> 1 km east and 3 km north -> Museum -> 2 km east -> Park<br><br>The total distance covered in this route, based on the information provided, would be approximately 6 kilometers (1 km east, 3 km north, and 2 km east).<br><br>Alternatively, if you want to visit more of the interesting points you've mentioned, you could take a slightly longer route:<br><br>1. Start at the Retail Area, which is located in the center of your hometown.<br><br>2. Travel 3 kilometers west and 2 kilometers north from the Retail Area to reach the Town Hall.<br><br>3. From the Town Hall, travel 1 kilometer west to reach the Playground.<br><br>4. From the Playground, travel 3 kilometers east to reach the Museum.<br><br>5. Finally, from the Museum, travel 2 kilometers east to reach the Park, your final destination.<br><br>The alternative route summary:<br>Retail Area (center) -> 3 km west and 2 km north -> Town Hall -> 1 km west -> Playground -> 3 km east -> Museum -> 2 km east -> Park<br><br>This alternative route covers a total distance of approximately 11 kilometers (3 km west, 2 km north, 1 km west, 3 km east, and 2 km east).<br><br>Both routes allow you to visit interesting points in your hometown before reaching the Park, but the second route includes more stops at the Town Hall and Playground.<br><br>Please note that these routes assume a simplified, straight-line distance between the points of interest. In reality, the actual route might vary based on the layout of streets and pathways in your hometown. However, this should give you a general idea of how to navigate from the Retail Area to the Park while passing through some of the key landmarks you've mentioned, Melinda.</p>
-                                <p><b>Reasoning:</b> The answer makes reference to the expected answer, which is not numerical.</p>
+                                <p><b>Reasoning:</b> The agent's directions do not lead to the expected destination.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Score:</b> 0/1</p>
                             <p><b>Distance to relevant info:</b> 11279 tokens, 55213 characters.</p>
                         </div>
                     </div>
@@ -1387,7 +1387,7 @@
                             
                                 <p><b>Expected:</b> From Town Hall, go 2km West to Library.<br>From Library, go 4km West to Statue of Founder.<br>From Statue of Founder, go 2km West to High Street.<br>From High Street, go 1km North to Hospital.<br>From Hospital, go 3km North to Museum.</p>
                                 <p><b>Actual:</b> Based on the locations of the points of interest you've shared, I can guide you on a route from the Town Hall to the Museum that passes through these interesting points. Here's the route:<br><br>1. Start at the Town Hall, which is located in the center of your hometown.<br><br>2. Travel 2 kilometers west from the Town Hall to reach the Library.<br><br>3. From the Library, continue traveling west for another 4 kilometers to arrive at the Statue of Founder.<br><br>4. From the Statue of Founder, travel 2 kilometers west to reach High Street.<br><br>5. Now, change direction and travel 1 kilometer north from High Street to reach the Hospital.<br><br>6. Finally, from the Hospital, travel 3 kilometers north to reach your destination, the Museum.<br><br>To summarize the route:<br>Town Hall (center) -> 2 km west -> Library -> 4 km west -> Statue of Founder -> 2 km west -> High Street -> 1 km north -> Hospital -> 3 km north -> Museum<br><br>The total distance covered in this route, based on the information provided, would be approximately 12 kilometers (2 + 4 + 2 + 1 + 3 = 12 km).<br><br>This route allows you to visit all the interesting points you've mentioned - the Library, Statue of Founder, High Street, and Hospital - before finally arriving at the Museum. It's a great way to explore your hometown's key landmarks and get a sense of its layout and character.<br><br>Of course, depending on the actual layout of streets and pathways, the real-world route might differ slightly from this simplified, straight-line description. But this gives you a general idea of how to navigate between these points of interest in your hometown, Stephen.</p>
-                                <p><b>Reasoning:</b> The answer makes reference to the expected answer, which is not numerical.</p>
+                                <p><b>Reasoning:</b> The agent's directions lead to the expected destination.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 1/1</p>
@@ -1397,7 +1397,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="NameList">
                 <h1>NameList</h1>
                 <p class="description">Give the agent multiple names to call you in sequence. Then ask the agent what all of your names have been. The agent should respond with all of the names you have given it.</p>
                 
@@ -1553,7 +1553,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Prospective Memory">
                 <h1>Prospective Memory</h1>
                 <p class="description">Give the agent a fictitious quote, then ask it to append to the nth reply</p>
                 
@@ -1649,7 +1649,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Restaurant">
                 <h1>Restaurant</h1>
                 <p class="description">The agent is required to perform several tasks related to eating out at a restaurant. The experience includes ordering drinks, main course, side, etc. plus a series of unexpected events that will require the agent to take reasonable decisions, based on past events.</p>
                 
@@ -1711,7 +1711,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="SallyAnne">
                 <h1>SallyAnne</h1>
                 <p class="description">Give the agent a series of events. Then ask it a question about how the actors in those events would think.</p>
                 
@@ -1899,7 +1899,7 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Shopping">
                 <h1>Shopping</h1>
                 <p class="description">Give the agent multiple statements adding and removing items from a shopping list. Then ask the agent what is on the shopping list.</p>
                 
@@ -2067,14 +2067,14 @@
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Spy Meeting">
                 <h1>Spy Meeting</h1>
                 <p class="description">The agent is given three clandestine messages. Then is asked to recall all of them and decide where and when the meeting is taking place long with what they should bring.</p>
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
-                            <b>Test 1 (0/1)</b>
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>Test 1 (1/1)</b>
                         </div>
                         <div class="test-details">
                             <p><b>Task Log:</b></p>
@@ -2103,19 +2103,19 @@
                             </ul>
                             <hr>
                             
-                                <p><b>Expected:</b> ['motorbike', 'motorcycle', 'car']<br>['sunset', 'dusk']<br>['shore', 'beach', 'coastline']</p>
+                                <p><b>Expected:</b> ['motorbike', 'motorcycle', 'car', 'fast land vehicle', 'fast vehicle', 'fast land escape vehicle']<br>['sunset', 'dusk']<br>['shore', 'beach', 'coastline']</p>
                                 <p><b>Actual:</b> Based on the clandestine messages I received earlier from Dr. Arron Kelvey, Seana Lynch, and Lisa-Marie Hastie, it appears that a secretive meeting is being planned. Here are the specific details I can gather about when and where the meeting will take place, and what I should bring:<br><br>When: The meeting will occur "when the sun leaves the sky," which likely refers to sunset or dusk.<br><br>Where: The meeting location is described as "where the land meets the sea," indicating a coastal or beach setting.<br><br>What to bring: Dr. Arron Kelvey specifically requested that a "fast land escape vehicle" be brought to the meeting.<br><br>To summarize, it seems that an clandestine gathering is being organized at sunset or dusk, at a coastal location where the land meets the sea. As per the instructions, I should arrange to bring a fast land vehicle, likely for a quick getaway if needed.<br><br>The combination of the secretive nature of the messages, the unusual meeting time and place, and the request for an escape vehicle suggests that this meeting is of a sensitive or potentially dangerous nature. Without more context, it's difficult to speculate on the exact purpose or attendees, but caution and discretion seem advisable based on the limited information provided.</p>
-                                <p><b>Reasoning:</b> ['motorbike', 'motorcycle', 'car'] not found in answer.<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)</p>
+                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 1/1</p>
                             <p><b>Distance to relevant info:</b> 19853 tokens, 88656 characters.</p>
                         </div>
                     </div>
                 
             </div>
         
-            <div class="dataset" >
+            <div class="dataset" id="Trigger Response">
                 <h1>Trigger Response</h1>
                 <p class="description">Tell the agent to respond in a particular way when a trigger is given. Test the agent.</p>
                 

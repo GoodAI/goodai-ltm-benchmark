@@ -1,5 +1,5 @@
-import os.path
-import random
+import re
+from pathlib import Path
 from json import JSONDecodeError
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -8,69 +8,99 @@ from utils.constants import DATA_DIR
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 
-def next_line(file_descriptor) -> str:
-    pos = file_descriptor.tell()
-    line = file_descriptor.readline()
-    if file_descriptor.tell() == pos:
-        file_descriptor.seek(0)
-        line = file_descriptor.readline()
-    return line
+patterns = dict(
+    world_model=[
+        r"^Where was the ([\w-]+) at the beginning\?$",
+        r"^Where is the ([\w-]+) really\?$",
+    ],
+    theory_of_mind=[
+        r"^Where will [\w-]+ look for the ([\w-]+)\?$",
+        r"^Where does [\w-]+ think that [\w-]+ searches for the ([\w-]+)\?$",
+    ],
+)
+
+
+def word_in_patterns(text: str, pattern_list: list[str]) -> str | None:
+    for pattern in pattern_list:
+        m = re.match(pattern, text)
+        if m is not None:
+            return m.group(1)
+
+
+def is_plural(word: str) -> bool:
+    """Works only for tomi_data/test.txt"""
+    return word.endswith("s") and word not in {"asparagus", "dress", "pajamas"}
+
+
+def fix_plural(sentence: str) -> str:
+    if not sentence.startswith("The ") or " is in the " not in sentence:
+        return sentence
+    words = sentence.split(" ")
+    if not is_plural(words[1]):
+        return sentence
+    words[2] = "are"
+    return " ".join(words)
 
 
 @dataclass
 class SallyAnneDataset(DatasetInterface):
     name: str = "SallyAnne"
     description: str = "Give the agent a series of events. Then ask it a question about how the actors in those events would think."
-    data_location: str = os.path.join(DATA_DIR, "tomi_data", "test.txt")
+    data_location: Path = DATA_DIR.joinpath("tomi_data", "test.txt")
+    question_type: str = "any"  # world_model / theory_of_mind / any
 
-    def generate_examples(self, num_examples):
-        rnd = random.Random(self.seed)
-        examples = []
-        for _ in range(num_examples):
+    def __post_init__(self):
+        self.samples = list()
+        assert self.question_type in {"any", "world_model", "theory_of_mind"}
+        question_types = ["world_model", "theory_of_mind"] if self.question_type == "any" else [self.question_type]
+        self.question_patterns = [p for qt in question_types for p in patterns[qt]]
+        self.extract_samples()
+
+    def extract_samples(self):
+        with open(self.data_location) as fd:
+            sample_lines = list()
+            for line in fd:
+                # Remove index number
+                line = line[line.find(" ") + 1:]
+                # Add line to the script
+                sample_lines.append(line)
+                # Detect final line and wrap up sample
+                if "\t" in line:
+                    line, answer, _ = line.split("\t")
+                    word = word_in_patterns(line, self.question_patterns)
+                    if word is not None:
+                        if is_plural(word):
+                            for singular, plural in {"was": "were", "is": "was"}.items():
+                                line = line.replace(singular, plural)
+                        sample_lines[-1] = line
+                        self.samples.append(dict(
+                            lines=sample_lines,
+                            answer=answer,
+                        ))
+                    sample_lines = list()
+
+    def generate_examples(self, num_examples: int) -> List[TestExample]:
+        examples = list()
+        samples = self.samples.copy()
+        self.random.shuffle(samples)
+        for i, sample in enumerate(samples[:num_examples]):
             script = [
                 "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will "
                 "ask you a question about what happened on the show. Okay?"
             ]
-            is_question = [False]
-            with open(self.data_location, "r") as f:
-                num_chars = f.seek(0, 2)
-                f.seek(rnd.randint(0, num_chars - 1))
-                next_line(f)  # Read until the new line starts
-
-                # Seek to start of next scenario
-                while True:
-                    line = next_line(f)
-                    if line[:2] == "1 ":
-                        break
-
-                # Read out the scenario
-                while True:
-                    line = line[line.find(" ") + 1:]  # Remove numbers
-                    script.append(line)
-                    is_question.append(False)
-                    line = next_line(f)
-                    if line[:2] == "1 ":
-                        break
-
-            is_question[-1] = True
-            script[-1], answer, _ = script[-1].split("\t")
-
-            # Format script
-            for idx, stmt in enumerate(script[1:-1]):
-                script[idx + 1] = f"(On TV) {stmt}"
-            script[-1] = (
-                f"The TV program has ended for today. {script[-1]}\n"
-                'Provide your answer in JSON form with a single word as answer, like this: {"answer": "word"}'
+            script.extend(f"(On TV) {fix_plural(line)}" for line in sample["lines"][:-1])
+            script.append(
+                f"The TV program has ended for today. {sample['lines'][-1]}\n"
+                'Provide your answer in JSON form with a single word as answer, like this: {"answer": "word"}\n'
+                "Be as specific as possible."
             )
-
             example = TestExample(
                 dataset_generator=self,
                 script=script,
-                expected_responses=[answer],
-                is_question=is_question,
+                expected_responses=[sample["answer"]],
+                is_question=[False] * (len(script) - 1) + [True],
             )
             examples.append(example)
-
         return examples
 
     def evaluate_correct(
@@ -93,7 +123,3 @@ class SallyAnneDataset(DatasetInterface):
             reasoning = f"Invalid answer: {answer_dict}"
         return score, max_score, [reasoning]
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # All statements are relevant
-        # in this test all statements are atomic
-        return 0, len(example.script[0])

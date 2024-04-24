@@ -1,15 +1,23 @@
-import re
-import random
 import string
-from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Tuple, Any
-from utils.ui import ordinal
+from typing import List, Tuple, Any, Iterator
+from utils.ui import ordinal, colour_print
 
-from dataset_interfaces.gpt_generated import GPTGenerated
+from dataset_interfaces.interface import TestExample, DatasetInterface, CallBackTestExample
 
-from dataset_interfaces.interface import TestExample
-from utils.constants import DATA_DIR
+QUOTES = [
+    ("Love your Enemies, for they tell you your Faults.", "Benjamin Franklin"),
+    ("The greatest glory in living lies not in never falling, but in rising every time we fall.", "Nelson Mandela"),
+    ("The future belongs to those who believe in the beauty of their dreams.", "Elanor Roosevelt"),
+    ("Do one thing every day that scares you.", "Eleanor Roosevelt"),
+    ("Well done is better than well said.", "Benjamin Franklin"),
+    ("The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart.",
+    "Helen Keller"),
+    ("It is during our darkest moments that we must focus to see the light.", "Aristotle"),
+    ("Do not go where the path may lead, go instead where there is no path and leave a trail.", "Ralph Waldo Emerson"),
+    ("Be yourself; everyone else is already taken.", "Oscar Wilde")
+]
+
 
 
 def cites_quote(quote: str, message: str) -> bool:
@@ -20,28 +28,58 @@ def cites_quote(quote: str, message: str) -> bool:
 
 
 @dataclass
-class ProspectiveMemoryDataset(GPTGenerated):
+class ProspectiveMemoryDataset(DatasetInterface):
     name: str = "Prospective Memory"
-    description: str = "Give the agent a fictitious quote, then ask it to append to the nth reply"
-    generation_file: Path = DATA_DIR.joinpath("gpt_generation_prompts/2-1_prospective_memory_test.json")
-    temperature: float = 0.5
-    uses_callback: bool = True
-    generation_model: str = "gpt-4-0125-preview"
+    description: str = "Give the agent a quote, then ask it to append to the nth reply"
+    reset_message: str = "Forget my instruction to append a quote to one of your replies."
+
+    def request_num_generator(self) -> Iterator[int]:
+        indices = list(range(len(QUOTES)))
+        warned = False
+        while True:
+            self.random.shuffle(indices)
+            for i in indices:
+                yield i
+            if warned:
+                continue
+            warned = True
+            colour_print("red",
+                         "WARNING: The number of Quotes has been exceeded. There will inevitably "
+                         "be some repetitions.")
 
     def generate_examples(self, num_examples) -> List[TestExample]:
-        rnd = random.Random(self.seed)
-        num_pattern = r"\d+(?:th|st|nd|rd)"
-        examples = super().generate_examples(num_examples)
-        for example in examples:
-            n = ordinal(rnd.randint(2, 10))
-            example.script[1] = re.sub(num_pattern, n, example.script[1])
-            example.expected_responses[0] = re.sub(num_pattern, n, example.expected_responses[0])
+        examples = []
+
+        for _, request_num in zip(range(num_examples), self.request_num_generator()):
+            script = []
+            # Pick a quote
+            quote, author = QUOTES[request_num]
+            target = self.random.randint(2, 8)
+
+            n = ordinal(target)
+
+            script.append(f"{repr(quote)} - {author}")
+            script.append(f'After responding to the following unrelated user prompts, please append the quote from {author}, to your {n} response. Count your response to this message as the first response.')
+
+            is_question = [False, True]
+            expected_responses = [(quote, author, target)]
+
+            examples.append(CallBackTestExample(
+                dataset_generator=self,
+                script=script,
+                expected_responses=expected_responses,
+                uses_callback=True,
+                is_question=is_question,
+                number_of_questions=1,
+            ))
+
         return examples
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
-    ) -> Tuple[int, int, List[str]]:
+    ) -> Tuple[int, int, List[str], List[str]]:
         raise NotImplementedError("Prospective memory checking is not handled by this method, use the callback instead")
+
 
     def continual_evaluation_callback(
         self, scheduler, example: TestExample, task_log: List[str]
@@ -54,17 +92,14 @@ class ProspectiveMemoryDataset(GPTGenerated):
                 statement_idx = idx
                 break
 
-        # Log to actually check
-        log_lookahead = task_log[statement_idx:]
-        # steps to look
-        steps_to_look = int(re.findall(r"\d+", question)[0])
-        # We need to adjust this, because prompts are [User -> Agent] and +1 for the question statement and response
-        steps_to_look = (steps_to_look + 1) * 2
+        quote, author, nth = example.expected_responses[0]
+        agent_responses = task_log[statement_idx + 1:][::2]
+        response_w_quote_idx = nth - 1
 
         max_score = 1
 
         # If the quote hasn't come up yet
-        if steps_to_look > len(log_lookahead):
+        if response_w_quote_idx >= len(agent_responses):
             score = 1
             reason = "Not yet seen"
             deregister_callback = False
@@ -72,46 +107,27 @@ class ProspectiveMemoryDataset(GPTGenerated):
 
             return score, max_score, [reason], deregister_callback
 
-        # Get the quote
-        quote = None
-        for quote_chars in ["''", '""', "``", "<>"]:
-            open_char, close_char = quote_chars
-            pattern = re.compile(f"{re.escape(open_char)}(.*?){re.escape(close_char)}")
-            matches = pattern.findall(example.script[0])
-            if len(matches) > 0:
-                quote = matches[0].lower()
-                break
-        assert quote is not None, "Quote cannot be found"
-
         # This statement should have the quote attached
-        target_stmt_in_log = log_lookahead[steps_to_look - 1]
+        target_stmt_in_log = agent_responses[response_w_quote_idx]
         if cites_quote(quote, target_stmt_in_log):
             score = 1
             reason = "The quote is recited in the correct place."
-            deregister_callback = False
-            example.finished = True
+            deregister_callback = True
         else:
             score = 0
             reason = "The agent did not recite the quote in the correct place."
             deregister_callback = True
-            example.finished = True
+        example.finished = True
 
         # All other statements should not have the quote
-        for stmt in log_lookahead:
-            if stmt.lower() == target_stmt_in_log.lower():
+        for i, stmt in enumerate(agent_responses):
+            if i == response_w_quote_idx:
                 continue
-
             if cites_quote(quote, stmt):
                 score = 0
                 reason = "The quote is recited somewhere other or additionally to the correct place."
                 deregister_callback = True
-                example.finished = True
                 break
 
         return score, max_score, [reason], deregister_callback
 
-
-if __name__ == "__main__":
-    s = ProspectiveMemoryDataset()
-    examples = s.generate_examples(4)
-    a = 1

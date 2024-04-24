@@ -7,7 +7,7 @@ import pystache
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from dataset_interfaces.interface import DatasetInterface, TestExample, CallBackTestExample
-from utils.openai import ask_llm
+from utils.llm import ask_llm, GPT_CHEAPEST
 
 PROMPT = """Generate data and questions based on the structure and instructions below.
 - For content: {{content}} 
@@ -26,7 +26,7 @@ Structure your response as such:
 class GPTGenerated(DatasetInterface, ABC):
     generation_file: str | Path = None
     temperature: float = 1.0
-    generation_model: str = "gpt-3.5-turbo"
+    generation_model: str = GPT_CHEAPEST
     max_attempts: int = 10
 
     def __post_init__(self):
@@ -87,7 +87,3 @@ class GPTGenerated(DatasetInterface, ABC):
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
     ) -> Tuple[int, int, List[str]]:
         return self.evaluate_correct_gpt(questions, responses, expected_answers)
-
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # In GPT-generated tasks, the relevant info is given in the first script line.
-        return 0, 0

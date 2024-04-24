@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from random import choice
 from typing import List, Tuple
 import pystache
 from dataset_interfaces.interface import DatasetInterface, TestExample
@@ -49,11 +48,11 @@ class ColourDataset(DatasetInterface):
             renderer = pystache.Renderer()
 
             for change in range(self.colour_changes):
-                colour = choice(COLOURS)
+                colour = self.random.choice(COLOURS)
                 if colour == "None":
                     name_stmt = "I have no favourite colour."
                 else:
-                    name_stmt = renderer.render(choice(STATEMENTS), {"colour": colour})
+                    name_stmt = renderer.render(self.random.choice(STATEMENTS), {"colour": colour})
                 colours.append(colour)
                 script.append(name_stmt)
                 is_question.append(False)
@@ -79,12 +78,3 @@ class ColourDataset(DatasetInterface):
             return 1, 1, [f'"{color}" is in the response.']
         return 0, 1, [f'"{color}" is NOT in the response.']
 
-    def answer_statement_idx(self, example: TestExample) -> Tuple[int, int]:
-        # The correct answer is the last colour that we told the agent
-        # In this test all statements are atomic
-        current = len(example.script) - 1
-        for idx, text in enumerate(example.script[::-1]):
-            if example.expected_responses[0] in text:
-                current -= idx
-                break
-        return current, len(example.script[current])

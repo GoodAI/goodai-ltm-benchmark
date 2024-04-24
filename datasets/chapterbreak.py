@@ -1,28 +1,30 @@
 import re
 import json
-import random
+import zstd
 from typing import List, Tuple
 
-from utils.data import get_gdrive_file, get_data_path
+from utils.data import get_data_path, get_file
 from dataclasses import dataclass, field
+
+from utils.llm import tokens_in_text
 from utils.ui import ordinal
-from utils.tokens import token_len
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 
 
-# Extracted from gdrive folder
+# The file was originally in this gdrive folder, but the link got restricted due to a high number of accesses.
 # https://drive.google.com/drive/folders/1JkFHspT56_yRWwXVj47Fw0PzHtitODt5
-GDRIVE_8K_ID = "15AcGiC4wIglru2gK2MHSX5Fie7gYxTTS"
+CHAPTERBREAK_8K_URL = "https://github.com/GoodAI/goodai-ltm-benchmark/releases/download/v1.1/chapterbreak_ctx_8192.zst"
+CHAPTERBREAK_8K_SUM = "1567de8463149cfb314ab2ccc7e7acc17a3b262bccd70889e2d1e43be09043ed"
 
 
 def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
     separator = ". "
-    separator_len = token_len(separator)
+    separator_len = tokens_in_text(separator)
     page_list = list()
     page_sentences = list()
     page_len = 0
     for sentence in text.split(separator):
-        sentence_len = token_len(sentence)
+        sentence_len = tokens_in_text(sentence)
         if page_len == 0:
             page_sentences.append(sentence)
             page_len += sentence_len
@@ -71,10 +73,9 @@ class ChapterBreakDataset(DatasetInterface):
         assert self.split in {"goodai", "pg19", "ao3", "all"}
 
     def load_data(self) -> dict:
-        filename = f"chapterbreak_ctx_8192.json"
-        path = get_gdrive_file(self.name, GDRIVE_8K_ID, filename)
-        with open(path) as fd:
-            return json.load(fd)
+        path = get_file(self.name, CHAPTERBREAK_8K_URL, f"chapterbreak_ctx_8192.zst", checksum=CHAPTERBREAK_8K_SUM)
+        with open(path, "br") as fd:
+            return json.loads(zstd.decompress(fd.read()))
 
     def apply_sample_selection(self, samples: dict) -> dict:
         with open(get_data_path(self.name, "chapterbreak-goodai-selection.json")) as fd:
@@ -106,7 +107,7 @@ class ChapterBreakDataset(DatasetInterface):
         if self.split == "goodai":
             samples = self.apply_sample_selection(samples)
         sample_list = [samples[k] | {"id": k} for k in sorted(samples.keys())]
-        random.Random(self.seed).shuffle(sample_list)
+        self.random.shuffle(sample_list)
         return sample_list
 
     def generate_examples(self, num_examples: int) -> list[TestExample]:
@@ -116,7 +117,7 @@ class ChapterBreakDataset(DatasetInterface):
 
         for sample_idx, sample in zip(range(num_examples), sample_list):
             beginnings = [(True, sample["pos"])] + [(False, s) for s in sample["negs"]]
-            random.Random(self.seed + sample_idx).shuffle(beginnings)
+            self.random.shuffle(beginnings)
 
             script = [(
                 "I am going to read you some chapters of a book. A few pages. Okay? You don't have to say anything, "
@@ -150,51 +151,11 @@ class ChapterBreakDataset(DatasetInterface):
                 script=script,
                 expected_responses=[str(answer)],
                 is_question=is_question,
-                waits=[WaitCreator.create_wait() for _ in is_question],
+                waits=[WaitCreator.create_wait() for _ in is_question],  # This test is to happen uninterruptedly
             )
             example_list.append(example)
 
         return example_list
-
-    def answer_statement_idx(self, example: TestExample) -> tuple[int, int]:
-
-        # Find the message that goes after the last context page
-        last_page_idx = None
-        for i, script_line in enumerate(example.script):
-            if script_line.endswith(
-                " options for the beginning of the next chapter. You don't have to comment anything, just read them "
-                "carefully. Ready?"
-            ):
-                last_page_idx = i - 1
-                break
-        assert last_page_idx is not None
-        context_script = example.script[1:last_page_idx + 1]
-
-        # GoodAI-selected samples contain meta-data for these cases
-        # Find the latest appearance of relevant information
-        if example.example_id in self.selection_info:
-            relevant_sentences = self.selection_info[example.example_id]["ctx"]
-            script_index = char_index = None
-            for line_idx, script_line in reversed(list(enumerate(context_script))):
-                for sentence in relevant_sentences:
-                    i = script_line.find(sentence)
-                    if i < 0:
-                        continue
-                    last_char_i = i + len(sentence)
-                    if script_index is None or char_index < last_char_i:
-                        script_index, char_index = line_idx, last_char_i
-                if script_index is not None:
-                    return script_index + 1, char_index
-
-        # Otherwise, we'll just assume that the key information lies somewhere around the middle of the context.
-        middle_point_chars = sum(len(msg) for msg in context_script) // 2
-        counted_chars = 0
-        for script_answer_index, script_line in enumerate(context_script):
-            counted_chars += len(script_line)
-            if counted_chars > middle_point_chars:
-                break
-        answer_end_char = counted_chars - middle_point_chars
-        return script_answer_index + 1, answer_end_char
 
     def evaluate_correct(
         self, questions: List[str], responses: List[str], expected_answers: List[str]

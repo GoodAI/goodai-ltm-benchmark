@@ -1,8 +1,8 @@
 import sys
 from datetime import datetime
 from dataclasses import dataclass
+from typing import Optional
 
-from utils.constants import ResetPolicy
 from utils.ui import colour_print, multiline_input
 from model_interfaces.interface import ChatSession
 
@@ -27,7 +27,7 @@ class HumanChatSession(ChatSession):
             "answering the next questions."
         )
 
-    def reply(self, user_message: str) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         colour_print("red", datetime.now().isoformat())
         colour_print("cyan", f"Test: {user_message}")
         return multiline_input("Human: ")

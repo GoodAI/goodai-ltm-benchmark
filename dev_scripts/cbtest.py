@@ -1,8 +1,8 @@
 import json
 import pyperclip
 from datasets.chapterbreak import ChapterBreakDataset, split_in_pages
-from utils.openai import ask_llm, make_system_message, make_user_message
-from utils.tokens import token_len
+from utils.llm import ask_llm, make_system_message, make_user_message
+from utils.text import token_len
 
 
 total_cost = 0

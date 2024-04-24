@@ -11,7 +11,6 @@ Broadly speaking, a `TestExample` consists of a script, some expected responses,
 If inheriting from `DatasetInterface` You should implement the following methods:
 - `generate_examples()` which will return a list of `TestExample` objects.
 - `evaluate_correct` which will take a list of questions, responses and expected answers for one test, and return the score given, the maximum score achievable for the test, and a list of strings explaining why each score was (or was not) given.
-- `answer_statement_idx` which will take a `TestExample` object and return the index of the script line and the index of the character within that script line, after which no more relevant information is given to the agent. This is essential for computing the GoodAI LTM Score.
 
 ### GPTGenerated
 If inheriting from `GPTGenerated` You should write a JSON file containing
@@ -39,7 +38,7 @@ Instead of having a fixed script, dynamic tests are generated on the fly, and th
 Additionally, there are some helper methods available in the base class:
 
 - `say` Returns a `SendMessageAction` object. If `question` is set to `True`, the message will be appended to the test's script.
-- `wait` Returns a `WaitAction` object. If no waiting criteria is set, it defaults to a number of tokens between the high and low limits defined in the dataset class.
+- `wait` Returns a `WaitAction` object.
 - `ask_llm` Calls an OpenAI LLM (by default `gpt-3.5-turbo`) and returns a text response. It also registers the cost of the call as part of the benchmark management costs.
 
 Finally, we encourage you to take a look at the [restaurant task](restaurant.py) for a complete example of how to implement a dynamic test.

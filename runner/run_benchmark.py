@@ -1,35 +1,30 @@
 import logging
 import os.path
 import os
+import re
 import shutil
 import time
 from typing import Optional
 
 import click
 import yaml
-from goodai.ltm.agent import LTMAgentVariant
 
 from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
-from model_interfaces.claude_interface import ClaudeChatSession
 from model_interfaces.length_bias_agent import LengthBiasAgent
-from model_interfaces.ltm_agent_1 import LTMAgent1
-from model_interfaces.ltm_agent_2 import LTMAgent2
 from model_interfaces.interface import ChatSession
-from model_interfaces.gpt_interface import GPTChatSession
-from model_interfaces.langchain_agent import LangchainAgent, LangchainMemType
-from model_interfaces.ltm_agent_3 import LTMAgent3
-from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
+from model_interfaces.llm_interface import LLMChatSession, TimestampLLMChatSession
+from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
 from model_interfaces.memgpt_interface import MemGPTChatSession
-from model_interfaces.ts_gpt_interface import TimestampGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
-from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, make_runstats_path, \
-    make_master_log_path, gather_persistence_files
+from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, \
+    gather_persistence_files
+from utils.llm import GPT_4_TURBO_BEST
 from utils.constants import MAIN_DIR
 
 
@@ -37,58 +32,42 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
     kwargs = {"max_prompt_size": max_prompt_size} if max_prompt_size is not None else {}
     kwargs["run_name"] = run_name
 
-    if name in ["gpt", "gpt-4"]:
-        return GPTChatSession(model="gpt-4", **kwargs)
-    elif name == "gpt-3.5-turbo":
-        return GPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name in ["gpt-4-1106", "gpt-4-0125"]:
-        return GPTChatSession(model=f"{name}-preview", **kwargs)
-    elif name == "ts-gpt-3.5-turbo":
-        return TimestampGPTChatSession(model="gpt-3.5-turbo", **kwargs)
-    elif name in ["ts-gpt-4-1106", "ts-gpt-4-0125"]:
-        model = name.removesuffix("ts-") + "-preview"
-        return TimestampGPTChatSession(model=model, **kwargs)
-    elif name == "memgpt":
+    if name == "memgpt":
         return MemGPTChatSession(run_name=run_name)
 
-    elif name == "langchain_sb_a":
-        return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.SUMMARY_BUFFER, **kwargs)
-    elif name == "langchain_kg_a":
-        return LangchainAgent(model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.KG, **kwargs)
-    elif name == "langchain_ce_a":
-        return LangchainAgent(
-            model_name="gpt-3.5-turbo-instruct", mem_type=LangchainMemType.CONVERSATION_ENTITY, **kwargs
-        )
-    elif name == "ltm_agent_1":
-        return LTMAgent1(model="gpt-4-0125-preview", **kwargs)
-    elif name == "ltm_agent_2":
-        return LTMAgent2(model="gpt-4-0125-preview", **kwargs)
-    elif name == "ltm_agent_3":
-        return LTMAgent3(model="gpt-4-0125-preview", **kwargs)
-    elif name == "goodai_ltm_agent_1":
-        return LTMAgentWrapper(model="gpt-4-0125-preview",
-                               variant=LTMAgentVariant.QG_JSON_USER_INFO, **kwargs)
-    elif name == "goodai_ltm_agent_2":
-        return LTMAgentWrapper(model="gpt-4-0125-preview",
-                               variant=LTMAgentVariant.SEMANTIC_ONLY, **kwargs)
-    elif name == "goodai_ltm_agent_3":
-        return LTMAgentWrapper(model="gpt-4-0125-preview",
-                               variant=LTMAgentVariant.TEXT_SCRATCHPAD, **kwargs)
-    elif name == "length_bias":
-        return LengthBiasAgent(model="gpt-4-0125-preview", **kwargs)
-    elif name.startswith("cost("):
+    if name.startswith("ltm_agent_"):
+        match = re.match(r"^ltm_agent_(?P<variant>\d)(?:\((?P<model>.+)\))?$", name)
+        if match is None:
+            raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
+        params = match.groupdict()
+        model = params["model"] or GPT_4_TURBO_BEST
+        variant = {
+            "1": LTMAgentVariant.QG_JSON_USER_INFO,
+            "2": LTMAgentVariant.SEMANTIC_ONLY,
+            "3": LTMAgentVariant.TEXT_SCRATCHPAD,
+        }.get(params["variant"], None)
+        if variant is None:
+            raise ValueError(f"Unrecognized LTM Agent variant {repr(params['variant'])}.")
+        return LTMAgentWrapper(model=model, variant=variant, **kwargs)
+    if name == "length_bias":
+        return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
+    if name.startswith("cost("):
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
-    elif name == "claude-2.1":
-        return ClaudeChatSession(**kwargs)
-    elif name == "claude-3-sonnet":
-        return ClaudeChatSession(**kwargs, model="claude-3-sonnet-20240229")
-    elif name == "claude-3-opus":
-        return ClaudeChatSession(**kwargs, model="claude-3-opus-20240229")
-    elif name == "human":
+    if name == "human":
         return HumanChatSession(**kwargs)
-    else:
-        raise ValueError(f"Unrecognized agent: {name}")
+
+    try:
+        if name.startswith("ts-"):
+            cls = TimestampLLMChatSession
+        else:
+            cls = LLMChatSession
+
+        return cls(model=name.removeprefix("ts-"), **kwargs)
+    except ValueError:
+        pass
+
+    raise ValueError(f"Unrecognized agent: {name}")
 
 
 def generate_test_examples(
@@ -103,7 +82,7 @@ def generate_test_examples(
                 f"There are test definitions in disk for run name {run_name}",
                 question="Do you want to reuse these test definitions?",
             ):
-                return [TestExample.load(p) for p in test_definitions]
+                return load_test_examples(loaded_yaml, test_definitions)
             if not ask_yesno(
                 "WARNING: overwriting the test definitions will result in the loss of all "
                 "results associated with them, including those from other agents.",
@@ -125,6 +104,16 @@ def generate_test_examples(
 
     for example in examples:
         example.save(run_name)
+
+    return examples
+
+
+def load_test_examples(yaml_configuration, test_definition_paths: list[str]) -> list[TestExample]:
+
+    examples = []
+    for p in test_definition_paths:
+        dataset = DatasetFactory.create_dataset_for_example(yaml_configuration, p)
+        examples.append(TestExample.load(dataset, p))
 
     return examples
 
@@ -156,6 +145,7 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
             else:
                 resume = True
     return resume
+
 
 @click.command("run-benchmark")
 @click.option(
