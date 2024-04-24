@@ -127,19 +127,24 @@ class RestaurantExample(DynamicExample):
 
         return items
 
+    def find_alternative_dish(self, item: str, old_item: str) -> tuple[str, str] | None:
+        for section_content in self.dataset_generator.menu_dict.values():
+            for section_item in section_content:
+                if item in section_item:
+                    choices = [c for c in section_content if c not in [section_item, old_item]]
+                    return section_item, self.random.choice(choices)
+
     def alter_order(self, order: list[str], old_item: str) -> tuple[str, str, list[str]]:
         sh_order = order.copy()
         self.random.shuffle(sh_order)
         for item in sh_order:  # Sometimes there is a drink in the order, which is not in the menu.
-            for section_content in self.dataset_generator.menu_dict.values():
-                for section_item in section_content:
-                    if item in section_item:
-                        choices = [c for c in section_content if c not in [section_item, old_item]]
-                        new_item = self.random.choice(choices)
-                        altered_order = [item for item in order]
-                        i = altered_order.index(item)
-                        altered_order[i] = new_item
-                        return section_item, new_item, altered_order
+            alternative = self.find_alternative_dish(item, old_item)
+            if alternative is not None:
+                orig_dish, alt_dish = alternative
+                altered_order = [item for item in order]
+                i = altered_order.index(item)
+                altered_order[i] = alt_dish
+                return orig_dish, alt_dish, altered_order
         assert False, f"Cannot alter wrong order: {order}"
 
     def check_notices_mishap(self):
