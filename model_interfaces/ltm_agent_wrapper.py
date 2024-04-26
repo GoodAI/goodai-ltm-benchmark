@@ -21,7 +21,10 @@ class LTMAgentWrapper(ChatSession):
         self.variant = variant
         self.log_lock = threading.RLock()
         self.log_count = 0
-        self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=max_prompt_size,
+        internal_max_context = max_prompt_size
+        if "claude" in model or "llama" in model:
+            internal_max_context = int(0.9 * max_prompt_size)
+        self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=internal_max_context,
                               prompt_callback=self._prompt_callback)
         self.costs_usd = 0
 
@@ -42,7 +45,8 @@ class LTMAgentWrapper(ChatSession):
 
     @property
     def name(self):
-        return f"{super().name} - {self.model} - {self.max_prompt_size} - {self.variant.name}"
+        model = self.model.replace("/", "-")
+        return f"{super().name} - {model} - {self.max_prompt_size} - {self.variant.name}"
 
     def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         def _cost_fn(amount: float):
