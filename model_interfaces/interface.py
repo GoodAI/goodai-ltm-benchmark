@@ -2,9 +2,6 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Tuple, Optional
 from dataclasses import dataclass
-
-import tiktoken
-
 from utils.constants import PERSISTENCE_DIR
 from utils.llm import count_tokens_for_model
 
