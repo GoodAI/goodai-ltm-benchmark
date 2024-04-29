@@ -2,6 +2,7 @@ import os
 import json
 import re
 import yaml
+import humanize
 from typing import List, Optional
 from random import Random
 from jinja2 import Environment, FileSystemLoader
@@ -12,7 +13,7 @@ from utils.constants import REPORT_TEMPLATES_DIR, GOODAI_RED, GOODAI_GREEN, METR
 from utils.data import load_b64
 from utils.math import mean_std
 from utils.ui import display_float_or_int
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 
@@ -161,6 +162,7 @@ def generate_report(results: List[TestResult], output_name: Optional[str] = None
         achieved_score=display_float_or_int(metrics["score"]),
         max_score=display_float_or_int(metrics["max_score"]),
         score_std=display_float_or_int(metrics["score_std"]),
+        duration_str=humanize.precisedelta(timedelta(seconds=metrics["duration"])),
         **report_data,
     )
 
@@ -203,6 +205,7 @@ def get_summary_data(run_name: str, agent_name: str):
         score_std=score_std,
         accuracy=100 * score / len(aggr_results),
         ltm=ltm_score,
+        duration=benchmark_data["duration"],
     )
 
 
