@@ -200,11 +200,11 @@ class MasterLog:
                     continue
             yield event
 
-    def as_context(self, test_id: str = ""):
+    def as_context(self, test_id: str = None) -> list[dict[str, str | datetime]]:
         context = []
 
         for event in self.log:
-            if test_id == "" or event.test_id == test_id:
+            if test_id is None or event.test_id == test_id:
                 if event.type in [EventType.SEND_MESSAGE, EventType.SEND_FILL]:
                     context.append({"role": "user", "content": event.data["message"], "timestamp": event.timestamp})
                 elif event.type in [EventType.RESPONSE_MESSAGE, EventType.RESPONSE_FILL]:
