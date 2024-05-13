@@ -23,7 +23,8 @@ class LLMChatSession(ChatSession):
 
     @property
     def name(self):
-        return f"{super().name} - {self.model} - {self.max_prompt_size}"
+        name = f"{super().name} - {self.model} - {self.max_prompt_size}"
+        return name.replace("/", "-")
 
     def __post_init__(self):
         super().__post_init__()
