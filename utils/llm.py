@@ -31,7 +31,10 @@ def model_from_alias(model: str):
 
 def get_max_prompt_size(model: str):
     model = model_from_alias(model)
-    return litellm.model_cost[model]["max_input_tokens"]
+    model_info = litellm.model_cost.get(model, None)
+    if model_info:
+        return model_info["max_input_tokens"]
+    return 0
 
 
 def token_cost(model: str) -> tuple[float, float]:
@@ -120,7 +123,10 @@ def ask_llm(
         claude_adjust_factor += 0.2 * (actual_count / context_tokens)
         
     if cost_callback is not None:
-        cost_callback(litellm.completion_cost(response))
+        try:
+            cost_callback(litellm.completion_cost(response))
+        except:
+            cost_callback(0.001)
     return response.choices[0].message.content
 
 

@@ -30,7 +30,9 @@ class LLMChatSession(ChatSession):
         if self.max_prompt_size is None:
             self.max_prompt_size = get_max_prompt_size(self.model)
         else:
-            self.max_prompt_size = min(self.max_prompt_size, get_max_prompt_size(self.model))
+            lite_llm_max = get_max_prompt_size(self.model)
+            if lite_llm_max > 0:
+                self.max_prompt_size = min(self.max_prompt_size, lite_llm_max)
 
     def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         if self.verbose:
