@@ -183,10 +183,10 @@ class MasterLog:
         return messages
 
     def test_events(
-        self, test_id: str, event_type: EventType | set[EventType] = None, filter_fn: Callable[[LogEvent], bool] = None
+        self, test_id: str = None, event_type: EventType | set[EventType] = None, filter_fn: Callable[[LogEvent], bool] = None
     ) -> Iterator[LogEvent]:
         for event in self.log:
-            if event.test_id != test_id:
+            if test_id is not None and event.test_id != test_id:
                 continue
             if event_type is not None:
                 if isinstance(event_type, EventType):
