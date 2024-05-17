@@ -31,7 +31,10 @@ def model_from_alias(model: str):
 
 def get_max_prompt_size(model: str):
     model = model_from_alias(model)
-    return litellm.model_cost[model]["max_input_tokens"]
+    model_info = litellm.model_cost.get(model, None)
+    if model_info:
+        return model_info["max_input_tokens"]
+    return 0
 
 
 def token_cost(model: str) -> tuple[float, float]:
