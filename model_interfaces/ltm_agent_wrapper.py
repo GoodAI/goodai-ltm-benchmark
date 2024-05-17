@@ -5,6 +5,9 @@ import threading
 from typing import Optional
 
 import litellm
+
+from utils.llm import count_tokens_for_model
+
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
 from model_interfaces.interface import ChatSession
@@ -69,4 +72,4 @@ class LTMAgentWrapper(ChatSession):
         self.agent.from_state_text(state_text)
 
     def token_len(self, text: str) -> int:
-        return litellm.token_counter(self.model, text=text)
+        return count_tokens_for_model(model=self.model, text=text)

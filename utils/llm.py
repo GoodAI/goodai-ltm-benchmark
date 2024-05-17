@@ -3,6 +3,7 @@ from typing import Optional, Callable
 import litellm
 from litellm import completion
 from litellm.exceptions import ContextWindowExceededError
+from transformers import AutoTokenizer
 
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 claude_adjust_factor = 1.1  # Approximate the real token count given by the API
@@ -67,12 +68,13 @@ def ensure_context_len(
     model = model_from_alias(model)
     max_len = max_len or get_max_prompt_size(model)
     messages = list()
-    context_tokens = litellm.token_counter(model, messages=context[:1])
+
+    context_tokens = count_tokens_for_model(model=model, context=context)
     if model.startswith("claude"):
         context_tokens *= claude_adjust_factor
 
     for message in reversed(context[1:]):
-        message_tokens = litellm.token_counter(model, messages=[message])
+        message_tokens = count_tokens_for_model(model=model, context=[message])
         if model.startswith("claude"):
             message_tokens *= claude_adjust_factor
         if context_tokens + message_tokens + response_len > max_len:
@@ -92,7 +94,7 @@ def ask_llm(
     context_length: int = None,
     cost_callback: Callable[[float], None] = None,
     timeout: float = 300,
-    max_response_tokens: int = None,
+    max_response_tokens: int = 1024,
 ) -> str:
     global claude_adjust_factor
     set_api_key()
@@ -105,9 +107,14 @@ def ask_llm(
     actual_count = -1
     while True:
         try:
+            if model.startswith("huggingface"):
+                run_context = [{"role": "system", "content": create_huggingface_chat_context(model, context)}]
+            else:
+                run_context = context
+
             response = completion(
                 model=model,
-                messages=context,
+                messages=run_context,
                 max_tokens=max_response_tokens,
                 temperature=temperature,
                 timeout=timeout,
@@ -144,21 +151,51 @@ def make_assistant_message(content: str) -> LLMMessage:
     return make_message("assistant", content)
 
 
-def context_token_len(context: LLMContext, model: str = LEAST_EFFICIENT_TOKENISER) -> int:
-    model = model_from_alias(model)
-    return litellm.token_counter(model, messages=context)
+def count_tokens_for_model(model: str = LEAST_EFFICIENT_TOKENISER, context: LLMContext = None, script: list[str] = None, text: str = None) -> int:
+
+    token_count = 0
+
+    if "huggingface" in model.lower():
+        model_only = model[model.index("/")+1:]
+        tokeniser = AutoTokenizer.from_pretrained(model_only)
+
+        if context:
+            c = context[1:] if context[0]["role"] == "system" else context
+            c = c[1:] if c[0]["role"] == "assistant" else c
+            try:
+                token_count += len(tokeniser.apply_chat_template(c))
+            except:
+                print(c)
+                assert False
+
+        if script:
+            token_count += len(tokeniser.encode(script))
+
+        if text:
+            token_count += len(tokeniser.encode(text))
+
+    else:
+        if context:
+            token_count += litellm.token_counter(model, messages=context)
+
+        if script:
+            for line in script:
+                token_count += 4
+                token_count += litellm.token_counter(model, text=line)
+
+        if text:
+            token_count += litellm.token_counter(model, text=text)
+
+    return token_count
 
 
-def tokens_in_script(script: list[str], model: str = LEAST_EFFICIENT_TOKENISER) -> int:
-    model = model_from_alias(model)
-    num_tokens = 0
-    for line in script:
-        num_tokens += 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        num_tokens += litellm.token_counter(model, text=line)
-
-    return num_tokens
-
-
-def tokens_in_text(text: str, model: str = LEAST_EFFICIENT_TOKENISER) -> int:
-    model = model_from_alias(model)
-    return litellm.token_counter(model, text=text)
+def create_huggingface_chat_context(model:str, context: LLMContext):
+    model_only = model[model.index("/") + 1:]
+    tokenizer = AutoTokenizer.from_pretrained(model_only)
+    c = context[1:] if context[0]["role"] == "system" else context
+    c = c[1:] if c[0]["role"] == "assistant" else c
+    try:
+        return tokenizer.apply_chat_template(c, tokenize=False)
+    except:
+        print(c)
+        assert False

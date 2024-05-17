@@ -1,17 +1,15 @@
 import json
-import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-import litellm
-
 from model_interfaces.interface import ChatSession
 from utils.json_utils import CustomEncoder
 from utils.llm import LLMContext, make_user_message, make_assistant_message, make_system_message, \
-    get_max_prompt_size, ask_llm
+    get_max_prompt_size, ask_llm, count_tokens_for_model
 
 _system_prompt = "You are a helpful assistant."
+
 
 @dataclass
 class LLMChatSession(ChatSession):
@@ -70,7 +68,7 @@ class LLMChatSession(ChatSession):
             self.context = json.load(fd)
 
     def token_len(self, text: str) -> int:
-        return litellm.token_counter(self.model, text=text)
+        return count_tokens_for_model(model=self.model, text=text)
 
 
 @dataclass
