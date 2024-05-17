@@ -123,10 +123,7 @@ def ask_llm(
         claude_adjust_factor += 0.2 * (actual_count / context_tokens)
         
     if cost_callback is not None:
-        try:
-            cost_callback(litellm.completion_cost(response))
-        except:
-            cost_callback(0.001)
+        cost_callback(litellm.completion_cost(response))
     return response.choices[0].message.content
 
 

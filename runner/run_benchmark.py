@@ -28,9 +28,10 @@ from utils.llm import GPT_4_TURBO_BEST
 from utils.constants import MAIN_DIR
 
 
-def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -> ChatSession:
+def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, is_local=False) -> ChatSession:
     kwargs = {"max_prompt_size": max_prompt_size} if max_prompt_size is not None else {}
     kwargs["run_name"] = run_name
+    kwargs["is_local"] = is_local
 
     if name == "memgpt":
         return MemGPTChatSession(run_name=run_name)
@@ -158,11 +159,12 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 @click.option("-a", "--agent-name", required=True, type=str)
 @click.option("-m", "--max-prompt-size", required=False, type=int, default=None)
 @click.option("-y", required=False, is_flag=True, default=False, help="Automatically assent to questions")
-def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False):
-    _main(configuration, agent_name, max_prompt_size, y)
+@click.option("-l", "--local", required=False, is_flag=False, default=False, help="Do not try to retrieve costs.")
+def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local: bool = False):
+    _main(configuration, agent_name, max_prompt_size, y, is_local)
 
 
-def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False):
+def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local=False):
     config_path = Path(configuration)
     if not config_path.is_absolute():
         config_path = MAIN_DIR.joinpath(configuration)
@@ -180,7 +182,7 @@ def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y
     else:
         print(f"Maximum prompt size: {max_prompt_size}")
 
-    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size, run_name=config['run_name'])
+    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size, run_name=config['run_name'], is_local=is_local)
 
     examples = generate_test_examples(loaded_yaml, agent.max_message_size, pass_default=y)
     resume = check_result_files(conf.run_name, agent.name, pass_default=y)

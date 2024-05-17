@@ -44,7 +44,8 @@ class LLMChatSession(ChatSession):
 
         self.context.append(make_user_message(user_message))
         if agent_response is None:
-            response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=cost_callback,
+            c_callback = None if self.is_local else cost_callback
+            response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=c_callback,
                                max_response_tokens=self.max_response_tokens)
         else:
             response = agent_response
