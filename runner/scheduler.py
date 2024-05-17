@@ -4,6 +4,7 @@ import webbrowser
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Iterator, List, Tuple, Callable
+from random import Random
 
 import time_machine
 
@@ -62,6 +63,7 @@ class TestRunner:
     result_callbacks: List[Tuple[Callable, TestExample]] = field(default_factory=list)
     master_log: MasterLog = None
     progress_dialog: ProgressDialog = None
+    random: Random = field(default_factory=lambda: Random(0))
 
     @property
     def runstats_path(self):
@@ -82,6 +84,7 @@ class TestRunner:
             agent_costs_usd=self.agent.costs_usd,
             managing_costs_usd=self.test_managing_costs_usd,
             duration=self.agent_benchmark_duration,
+            rnd_state=self.random.getstate(),
         )
         with open(self.runstats_path, "w") as fd:
             json.dump(stats, fd)
@@ -100,6 +103,9 @@ class TestRunner:
         self.test_managing_costs_usd = d["managing_costs_usd"]
         self.agent_benchmark_duration = d["duration"]
         self.master_log.load()
+        rnd_state = d["rnd_state"]
+        rnd_state[1] = tuple(rnd_state[1])
+        self.random.setstate(tuple(rnd_state))
 
     def travel_to_dt(self, target_date: datetime):
         self.reset_time()
@@ -241,7 +247,9 @@ class TestRunner:
             num_tokens = self.wait_list[token_waiting_id]["tokens"]
             remaining_tokens = num_tokens - self.total_token_count
             while remaining_tokens > 0:
-                msg, agent_response = filler_no_response_tokens_trivia(remaining_tokens, self.agent.max_message_size, self.agent.token_len)
+                msg, agent_response = filler_no_response_tokens_trivia(
+                    self.random, remaining_tokens, self.agent.max_message_size, self.agent.token_len
+                )
                 agent_response = agent_response if len(self.result_callbacks) == 0 else None
                 tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True, filler_response=agent_response))
                 remaining_tokens -= tokens_spent
