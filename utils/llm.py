@@ -73,13 +73,20 @@ def ensure_context_len(
     if model.startswith("claude"):
         context_tokens *= claude_adjust_factor
 
-    for message in reversed(context[1:]):
-        message_tokens = count_tokens_for_model(model=model, context=[message])
+    reversed_context = list(reversed(context[1:]))
+
+    # The first message will always be added
+    messages.append(reversed_context[0])
+    reversed_context.pop(0)
+
+    # Take messages as pairs and reverse them for the check
+    for message_pair in zip(reversed_context[::2], reversed_context[1::2]):
+        message_tokens = count_tokens_for_model(model=model, context=list(reversed(message_pair)))
         if model.startswith("claude"):
             message_tokens *= claude_adjust_factor
         if context_tokens + message_tokens + response_len > max_len:
             break
-        messages.append(message)
+        messages.extend(message_pair)
         context_tokens += message_tokens
     messages.reverse()
     context = context[:1] + messages
@@ -161,12 +168,7 @@ def count_tokens_for_model(model: str = LEAST_EFFICIENT_TOKENISER, context: LLMC
 
         if context:
             c = context[1:] if context[0]["role"] == "system" else context
-            c = c[1:] if c[0]["role"] == "assistant" else c
-            try:
-                token_count += len(tokeniser.apply_chat_template(c))
-            except:
-                print(c)
-                assert False
+            token_count += len(tokeniser.apply_chat_template(c))
 
         if script:
             token_count += len(tokeniser.encode(script))
@@ -193,9 +195,4 @@ def create_huggingface_chat_context(model:str, context: LLMContext):
     model_only = model[model.index("/") + 1:]
     tokenizer = AutoTokenizer.from_pretrained(model_only)
     c = context[1:] if context[0]["role"] == "system" else context
-    c = c[1:] if c[0]["role"] == "assistant" else c
-    try:
-        return tokenizer.apply_chat_template(c, tokenize=False)
-    except:
-        print(c)
-        assert False
+    return tokenizer.apply_chat_template(c, tokenize=False)
