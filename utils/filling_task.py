@@ -1,5 +1,5 @@
 import json
-import random
+from random import Random
 from typing import Callable
 
 import tiktoken
@@ -18,7 +18,7 @@ def get_trivia():
     return TRIVIA_CACHE
 
 
-def filler_no_response_tokens_shakespeare(num_tokens: int, encoding_name="cl100k_base"):
+def filler_no_response_tokens_shakespeare(rnd: Random, num_tokens: int, encoding_name="cl100k_base"):
     filler_messages = []
     current_tokens = 0
     encoding = tiktoken.get_encoding(encoding_name)
@@ -27,7 +27,7 @@ def filler_no_response_tokens_shakespeare(num_tokens: int, encoding_name="cl100k
         f.seek(0, 2)
         b = f.tell()
         max_tokens_for_message = num_tokens // 3
-        pos = int(b * random.random()) - max_tokens_for_message * 4
+        pos = int(b * rnd.random()) - max_tokens_for_message * 4
         f.seek(pos)
         while current_tokens < num_tokens:
             # Approx. 4 chars per token
@@ -39,7 +39,7 @@ def filler_no_response_tokens_shakespeare(num_tokens: int, encoding_name="cl100k
     return filler_messages
 
 
-def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int, token_len_function: Callable[[str], int]):
+def filler_no_response_tokens_trivia(rnd: Random, num_tokens: int, max_message_size: int, token_len_function: Callable[[str], int]):
     data = get_trivia()
     message = (
         "Here are some trivia questions and answers for you to process."
@@ -53,7 +53,7 @@ def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int, tok
     est_response_tokens = 0
 
     while not at_least_one_trivia or (total_tokens + est_response_tokens) < tokens_to_return:
-        trivia = random.choice(data)
+        trivia = rnd.choice(data)
         trivia_msg = f"Q: {trivia['Question']}, A: {trivia['AnswerValue']}\n"
         answers.append(trivia['AnswerValue'])
         total_tokens += token_len_function(trivia_msg)
@@ -64,13 +64,13 @@ def filler_no_response_tokens_trivia(num_tokens: int, max_message_size: int, tok
     return "".join(messages), str(answers)
 
 
-def filler_task_characters(agent: ChatSession, num_characters: int):
+def filler_task_characters(rnd: Random, agent: ChatSession, num_characters: int):
     # We need a book of some kind - lets do the complete works of shakespeare
     current_characters = 0
     with open(DATA_DIR.joinpath("shakespeare/shakespeare.txt"), "rb") as f:
         f.seek(0, 2)
         b = f.tell()
-        pos = int(b * random.random()) - num_characters
+        pos = int(b * rnd.random()) - num_characters
         f.seek(pos)
         print("Filler: I am going to give you some passages of information now.")
         response = agent.message_to_agent("I am going to give you some passages of information now.")
