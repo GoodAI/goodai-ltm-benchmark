@@ -19,6 +19,7 @@ from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
+from model_interfaces.huggingface_interface import HFChatSession
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
@@ -57,6 +58,9 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
     if name == "human":
         return HumanChatSession(**kwargs)
+    if name.startswith("huggingface/"):
+        kwargs.pop("is_local")
+        return HFChatSession(model=name, **kwargs)
 
     try:
         if name.startswith("ts-"):
