@@ -68,16 +68,20 @@ def ensure_context_len(
     model = model_from_alias(model)
     max_len = max_len or get_max_prompt_size(model)
     messages = list()
+    if len(context) > 0 and context[0]["role"] == "system":
+        sys_prompt = context[:1]
+        context = context[1:]
+    else:
+        sys_prompt = []
 
-    context_tokens = count_tokens_for_model(model=model, context=context)
+    context_tokens = count_tokens_for_model(model=model, context=sys_prompt + context)
     if model.startswith("claude"):
         context_tokens *= claude_adjust_factor
 
-    reversed_context = list(reversed(context[1:]))
+    reversed_context = list(reversed(context))
 
-    # The first message will always be added
-    messages.append(reversed_context[0])
-    reversed_context.pop(0)
+    # Latest user's message is always added (there should always be one)
+    messages.append(reversed_context.pop(0))
 
     # Take messages as pairs and reverse them for the check
     for message_pair in zip(reversed_context[::2], reversed_context[1::2]):

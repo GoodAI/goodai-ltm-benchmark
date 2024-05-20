@@ -1,7 +1,8 @@
 import os
 import json
+import time
 from typing import Optional
-from openai import OpenAI
+from openai import OpenAI, ChatCompletion
 from dataclasses import dataclass, field
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from model_interfaces.interface import ChatSession
@@ -36,19 +37,29 @@ class HFChatSession(ChatSession):
         )
         self.tokenizer = AutoTokenizer.from_pretrained(self.model.removeprefix("huggingface/"))
 
+    def try_twice(self) -> ChatCompletion:
+        for i in range(2):
+            try:
+                return self.client.chat.completions.create(
+                    model="tgi",
+                    messages=self.context,
+                    max_tokens=self.max_response_tokens,
+                    temperature=0,
+                )
+            except Exception as exc:
+                if i > 0:
+                    raise exc
+                time.sleep(3)
+
     def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         self.context.append(make_user_message(user_message))
         self.tokens_used_last += self.token_len(user_message) + self.max_response_tokens
-        while self.tokens_used_last > 0.9 * self.max_prompt_size:
-            self.tokens_used_last -= self.token_len(self.context[0]["message"])
-            self.tokens_used_last -= self.token_len(self.context[1]["message"])
+        while self.tokens_used_last > self.max_prompt_size:
+            self.tokens_used_last -= self.token_len(self.context[0]["content"])
+            self.tokens_used_last -= self.token_len(self.context[1]["content"])
             self.context = self.context[2:]
         if agent_response is None:
-            response = self.client.chat.completions.create(
-                model="tgi",
-                messages=self.context,
-                max_tokens=self.max_response_tokens
-            )
+            response = self.try_twice()
             self.tokens_used_last = response.usage.total_tokens
             response = response.choices[0].message.content.removesuffix("</s>")
         else:
