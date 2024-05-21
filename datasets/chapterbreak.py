@@ -6,7 +6,7 @@ from typing import List, Tuple
 from utils.data import get_data_path, get_file
 from dataclasses import dataclass, field
 
-from utils.llm import tokens_in_text
+from utils.llm import count_tokens_for_model
 from utils.ui import ordinal
 from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
 
@@ -19,12 +19,12 @@ CHAPTERBREAK_8K_SUM = "1567de8463149cfb314ab2ccc7e7acc17a3b262bccd70889e2d1e43be
 
 def split_in_pages(text: str, max_tokens_per_split: int) -> list[str]:
     separator = ". "
-    separator_len = tokens_in_text(separator)
+    separator_len = count_tokens_for_model(text=separator)
     page_list = list()
     page_sentences = list()
     page_len = 0
     for sentence in text.split(separator):
-        sentence_len = tokens_in_text(sentence)
+        sentence_len = count_tokens_for_model(text=sentence)
         if page_len == 0:
             page_sentences.append(sentence)
             page_len += sentence_len

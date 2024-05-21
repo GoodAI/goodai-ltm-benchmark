@@ -85,7 +85,7 @@ class NameListDataset(DatasetInterface):
             else:
                 reasoning.append("All expected names were found in the response.")
 
-        except (TypeError, ValueError, JSONDecodeError):
+        except (TypeError, ValueError, JSONDecodeError, AttributeError):
             logging.exception("Response not in correct format")
             reasoning.append("Response not in correct format")
 

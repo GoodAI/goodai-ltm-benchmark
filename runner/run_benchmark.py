@@ -19,6 +19,7 @@ from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
+from model_interfaces.huggingface_interface import HFChatSession
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
@@ -57,6 +58,9 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
     if name == "human":
         return HumanChatSession(**kwargs)
+    if name.startswith("huggingface/"):
+        kwargs.pop("is_local")
+        return HFChatSession(model=name, **kwargs)
 
     try:
         if name.startswith("ts-"):
@@ -159,9 +163,9 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 @click.option("-a", "--agent-name", required=True, type=str)
 @click.option("-m", "--max-prompt-size", required=False, type=int, default=None)
 @click.option("-y", required=False, is_flag=True, default=False, help="Automatically assent to questions")
-@click.option("-l", "--local", required=False, is_flag=False, default=False, help="Do not try to retrieve costs.")
-def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local: bool = False):
-    _main(configuration, agent_name, max_prompt_size, y, is_local)
+@click.option("-l", "--local", required=False, is_flag=True, default=False, help="Do not try to retrieve costs.")
+def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, local: bool = False):
+    _main(configuration, agent_name, max_prompt_size, y, local)
 
 
 def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local=False):

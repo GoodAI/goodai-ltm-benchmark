@@ -14,7 +14,7 @@ from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
-from utils.llm import ask_llm, LLMContext, tokens_in_script
+from utils.llm import ask_llm, LLMContext, count_tokens_for_model
 from utils.files import make_testdef_path
 
 _match_system_prompt = """
@@ -215,7 +215,7 @@ class TestExample:
         # For caution, we want to use a tokeniser that produces the most tokens. This is to try and avoid the problem of
         # having the test overrun its memory_span. More tokens in script means smaller token gaps and more buffer.
         memory_span = self.dataset_generator.memory_span
-        script_tokens = tokens_in_script(self.script)
+        script_tokens = count_tokens_for_model(script=self.script)
         assert script_tokens < memory_span, (
             f"The script for test {self.dataset_name} is too long (estimated {script_tokens} tokens) for the specified "
             f"memory span of {memory_span} tokens."
@@ -437,7 +437,7 @@ class DatasetInterface(ABC):
 
         # Now count the tokens and characters since there
         num_characters += len(countable_history_chunk)
-        num_tokens += len(encoding.encode(countable_history_chunk))
+        num_tokens += len(encoding.encode(countable_history_chunk, disallowed_special=()))
 
         return num_characters, num_tokens
 
