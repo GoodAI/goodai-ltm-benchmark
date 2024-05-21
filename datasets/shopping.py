@@ -152,7 +152,7 @@ class ShoppingDataset(DatasetInterface):
             for item in answer_items:
                 assert isinstance(item["item"], str)
                 assert isinstance(item["quantity"], int)
-        except (JSONDecodeError, ValueError, KeyError, AssertionError) as exc:
+        except (JSONDecodeError, ValueError, KeyError, AssertionError, TypeError) as exc:
             msg = f"Response not in correct format ({repr(exc)}):\n{responses[0]}"
             logging.exception(msg)
             return score, max_score, [msg]

@@ -34,7 +34,7 @@ def get_max_prompt_size(model: str):
     model = model_from_alias(model)
     model_info = litellm.model_cost.get(model, None)
     if model_info:
-        return model_info["max_input_tokens"]
+        return model_info.get("max_input_tokens", 0)
     return 0
 
 
@@ -93,7 +93,7 @@ def ensure_context_len(
         messages.extend(message_pair)
         context_tokens += message_tokens
     messages.reverse()
-    context = context[:1] + messages
+    context = sys_prompt + messages
     # assert len(context) > 1, f"There are messages missing in the context:\n\n{context}"
     return context, context_tokens
 

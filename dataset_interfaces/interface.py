@@ -437,7 +437,7 @@ class DatasetInterface(ABC):
 
         # Now count the tokens and characters since there
         num_characters += len(countable_history_chunk)
-        num_tokens += len(encoding.encode(countable_history_chunk))
+        num_tokens += len(encoding.encode(countable_history_chunk, disallowed_special=()))
 
         return num_characters, num_tokens
 
