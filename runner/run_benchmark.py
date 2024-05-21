@@ -20,6 +20,7 @@ from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from model_interfaces.huggingface_interface import HFChatSession
+from model_interfaces.gemini_interface import GeminiProInterface
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
@@ -33,6 +34,9 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
     kwargs = {"max_prompt_size": max_prompt_size} if max_prompt_size is not None else {}
     kwargs["run_name"] = run_name
     kwargs["is_local"] = is_local
+
+    if name == "gemini":
+        return GeminiProInterface(run_name=run_name)
 
     if name == "memgpt":
         return MemGPTChatSession(run_name=run_name)
