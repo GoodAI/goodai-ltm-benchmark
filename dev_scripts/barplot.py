@@ -93,7 +93,9 @@ def main():
             elif agent_name.endswith("QG_JSON_USER_INFO"):
                 kwargs["hatch"] = "//"
             color = llm_colors[llm]
-            plt.bar(current_pos, data["score"], color=color, **kwargs)
+            score = data["score"]
+            error = data["score_std"]
+            plt.bar(current_pos, score, yerr=[[min(error, score)], [min(error, 11 - score)]], color=color, **kwargs)
             current_pos += 1
             num_group_agents += 1
         x_ticks_labels.append(f"{span}k")
