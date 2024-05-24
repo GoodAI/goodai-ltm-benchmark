@@ -245,18 +245,20 @@ class TestRunner:
             if token_waiting_id is None:
                 break
             num_tokens = self.wait_list[token_waiting_id]["tokens"]
-            remaining_tokens = num_tokens - self.total_token_count
-            while remaining_tokens > 0:
-                msg, agent_response = filler_no_response_tokens_trivia(
-                    self.random, remaining_tokens, self.agent.max_message_size, self.agent.token_len
-                )
-                agent_response = agent_response if len(self.result_callbacks) == 0 else None
-                tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True, filler_response=agent_response))
-                remaining_tokens -= tokens_spent
+            self.run_filler_task(num_tokens - self.total_token_count)
             if not self.is_waiting(token_waiting_id, remove=True):
                 return token_waiting_id
 
         assert False, f"Couldn't find a test to run. Wait list: {self.wait_list}"
+
+    def run_filler_task(self, num_filler_tokens: int):
+        while num_filler_tokens > 0:
+            msg, agent_response = filler_no_response_tokens_trivia(
+                self.random, num_filler_tokens, self.agent.max_message_size, self.agent.token_len
+            )
+            agent_response = agent_response if len(self.result_callbacks) == 0 else None
+            tokens_spent = self.send_message("", SendMessageAction(msg, is_filling=True, filler_response=agent_response))
+            num_filler_tokens -= tokens_spent
 
     def fast_forward_tests(self, tests: dict[str, TestExample]):
         # Go event by event in the master log and sync up with trace
@@ -345,7 +347,7 @@ class TestRunner:
             description=example.description,
             expected_responses=example.expected_responses,
             max_score=1,
-            score=1,
+            score=0,
             reasoning=["Evaluation Skipped"],
         )
         skip = result.path.exists()
@@ -359,7 +361,7 @@ class TestRunner:
         finished = 0
 
         # Introduce the benchmark, if running from the start.
-        if len(self.master_log.log) == 0:
+        if len(self.master_log.log) == 0 and not self.config.isolated:
             self.send_message("", SendMessageAction(message=(
                 "I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you "
                 "different kinds of information and I expect you to answer extremely briefly, only providing the "
@@ -380,24 +382,35 @@ class TestRunner:
 
             self.progress_dialog.notify_running(example)
 
-            while not example.finished:
+            test_is_waiting = False
+            while not (example.finished or test_is_waiting):
+
                 action = example.step()
                 if action is None:
                     break
+
                 if isinstance(action, WaitAction):
-                    self.set_to_wait(example, action)
-                    break
-                if isinstance(action, (SendMessageAction, SendAndRegisterAction)):
+                    if not self.config.isolated:
+                        self.set_to_wait(example, action)
+                        test_is_waiting = True
+                elif isinstance(action, (SendMessageAction, SendAndRegisterAction)):
                     # TODO: the test should autonomously create the question
                     if example.is_temporal and action.is_question:
                         action.message = create_question(example, self.master_log)
                     self.send_message(example.unique_id, action)
                     if isinstance(action, SendAndRegisterAction):
                         self.register_callback(example)
+                        if self.config.isolated:
+                            test_is_waiting = True
 
                 self.save_runstats()
                 self.agent.save()
+
             self.check_result_callbacks()
+            if self.config.isolated:
+                while len(self.result_callbacks) > 0:
+                    self.run_filler_task(100)
+                    self.check_result_callbacks()
 
             if example.finished:
                 finished += 1
@@ -420,6 +433,9 @@ class TestRunner:
                 self.finished_results.append(result)
                 print(result)
                 colour_print("green", f"{finished} of {len(self.tests)} tests finished.")
+
+                if self.config.isolated:
+                    self.agent.reset()
 
     def register_callback(self, example: TestExample):
         cb = example.dataset_generator.continual_evaluation_callback
@@ -460,7 +476,7 @@ class TestRunner:
         self.set_cost_callback()
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
         self.tests.sort(key=lambda t: t.unique_id)
-        self.progress_dialog = ProgressDialog(len(self.tests))
+        self.progress_dialog = ProgressDialog(len(self.tests), self.config.isolated)
         self.run_tests()
         self.progress_dialog.close()
         self.save_runstats()
