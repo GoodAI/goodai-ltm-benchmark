@@ -393,6 +393,8 @@ class TestRunner:
                     if not self.config.isolated:
                         self.set_to_wait(example, action)
                         test_is_waiting = True
+                    elif (wait_time := action.time.total_seconds()) > 0:
+                        self.forward_time(seconds=wait_time)
                 elif isinstance(action, (SendMessageAction, SendAndRegisterAction)):
                     # TODO: the test should autonomously create the question
                     if example.is_temporal and action.is_question:
