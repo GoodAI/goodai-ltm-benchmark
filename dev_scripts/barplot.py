@@ -78,7 +78,6 @@ def main():
         print(run_name)
         start_pos = current_pos
         num_group_agents = 0
-        print(current_pos)
         for agent_name in group_agents:
             print(agent_name)
             data = get_data(run_name, agent_name)
@@ -110,7 +109,7 @@ def main():
     ] + [
         Patch(facecolor="black", hatch="//", edgecolor="white", label="LTM Agent 1"),
         Patch(facecolor="black", hatch="/", edgecolor="white", label="LTM Agent 2"),
-    ], bbox_to_anchor=(-0.4, 0, 0.35, 1), loc="lower left")
+    ], bbox_to_anchor=(1, 0, 0.5, 1), loc="center left")
 
     plt.ylabel("Score")
     plt.xticks(x_ticks_pos, x_ticks_labels)
