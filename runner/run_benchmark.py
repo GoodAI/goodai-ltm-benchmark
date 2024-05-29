@@ -26,7 +26,7 @@ from utils.ui import ask_yesno, colour_print
 from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, \
     gather_persistence_files
 from utils.llm import GPT_4_TURBO_BEST
-from utils.constants import MAIN_DIR
+from utils.constants import MAIN_DIR, TESTS_DIR
 
 
 def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, is_local=False) -> ChatSession:
@@ -164,11 +164,20 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 @click.option("-m", "--max-prompt-size", required=False, type=int, default=None)
 @click.option("-y", required=False, is_flag=True, default=False, help="Automatically assent to questions")
 @click.option("-l", "--local", required=False, is_flag=True, default=False, help="Do not try to retrieve costs.")
-def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, local: bool = False):
-    _main(configuration, agent_name, max_prompt_size, y, local)
+@click.option("-i", "--isolated", required=False, is_flag=True, default=False, help=(
+        "Run tests separately, without interleaving and clearing up the context between tests."
+))
+def main(
+    configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, local: bool = False,
+    isolated: bool = False,
+):
+    _main(configuration, agent_name, max_prompt_size, y, local, isolated)
 
 
-def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local=False):
+def _main(
+    configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local: bool = False,
+    isolated: bool = False,
+):
     config_path = Path(configuration)
     if not config_path.is_absolute():
         config_path = MAIN_DIR.joinpath(configuration)
@@ -180,7 +189,13 @@ def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y
     incompatibilities = []
     for inc_list in yaml_config.get("incompatibilities", []):
         incompatibilities.append({DATASETS[ds_name] for ds_name in inc_list})
-    conf = RunConfig(incompatibilities=incompatibilities, **config)
+    conf = RunConfig(incompatibilities=incompatibilities, isolated=isolated, **config)
+    if isolated:
+        new_run_name = f"{conf.run_name} (isolated)"
+        new_def_path = TESTS_DIR.joinpath(new_run_name, "definitions")
+        if not new_def_path.exists():
+            shutil.copytree(TESTS_DIR.joinpath(conf.run_name, "definitions"), new_def_path)
+        conf.run_name = new_run_name
     if max_prompt_size is None:
         logging.warning("Running without a maximum prompt size.")
     else:
