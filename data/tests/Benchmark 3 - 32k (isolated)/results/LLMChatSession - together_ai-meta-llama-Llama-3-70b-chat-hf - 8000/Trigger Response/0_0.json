@@ -1,0 +1,46 @@
+{
+  "task_log": [
+    "Test (2024-05-24 12:42:27.862572): Whenever I express a desire to eat sugary treats then say: 'resist temptation and stick to your diet'",
+    "Agent (2024-05-24 12:42:28.639736): I'm here to help you stay on track with your goals.\n\nSo, what's on your mind? Do you have a craving for something sweet?",
+    "Test (2024-05-24 12:42:28.653890): I am pretty snacky for some sweet treats.",
+    "Agent (2024-05-24 12:42:30.138739): Resist temptation and stick to your diet! You've got this! Think about how far you've come and how great you'll feel when you reach your goals. Sweet treats might taste good for a minute, but the guilt and regret afterwards just aren't worth it. You're stronger than your cravings! What's a healthier snack you could reach for instead?",
+    "Test (2024-05-24 12:42:30.151289): I am pretty snacky for some sweet treats.",
+    "Agent (2024-05-24 12:42:31.302738): Resist temptation and stick to your diet! Remember why you started working towards your goals in the first place, and how proud you'll be of yourself when you stay committed. Those sweet treats might be tempting, but they're not worth sabotaging your progress. You've got this! What's a healthier option you could choose instead?",
+    "Test (2024-05-24 12:42:31.315885): I am pretty snacky for some sweet treats.",
+    "Agent (2024-05-24 12:42:33.145485): Resist temptation and stick to your diet! You're doing so well, don't let a moment of weakness get in the way of your success. Think about all the progress you've made and how far you've come. Those sweet treats are just a temporary indulgence, but the benefits of staying on track will last a lifetime. Stay focused, stay strong, and reach for a healthier snack instead!",
+    "Test (2024-05-24 12:42:33.148483): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-05-24 12:42:34.384525): I've cancelled the instruction. From now on, I'll respond normally to your messages without saying a specific sentence in response to a particular cue. Feel free to chat with me as usual!"
+  ],
+  "actual_responses": [
+    "Resist temptation and stick to your diet! You've got this! Think about how far you've come and how great you'll feel when you reach your goals. Sweet treats might taste good for a minute, but the guilt and regret afterwards just aren't worth it. You're stronger than your cravings! What's a healthier snack you could reach for instead?",
+    "Resist temptation and stick to your diet! Remember why you started working towards your goals in the first place, and how proud you'll be of yourself when you stay committed. Those sweet treats might be tempting, but they're not worth sabotaging your progress. You've got this! What's a healthier option you could choose instead?",
+    "Resist temptation and stick to your diet! You're doing so well, don't let a moment of weakness get in the way of your success. Think about all the progress you've made and how far you've come. Those sweet treats are just a temporary indulgence, but the benefits of staying on track will last a lifetime. Stay focused, stay strong, and reach for a healthier snack instead!"
+  ],
+  "score": 0.6666666666666666,
+  "max_score": 1,
+  "reasoning": [
+    "'resist temptation and stick to your diet' is in the response.",
+    "'resist temptation and stick to your diet' is not in the response.",
+    "'resist temptation and stick to your diet' is in the response."
+  ],
+  "tokens": 353,
+  "characters": 1663,
+  "full_log": [
+    "Test (2024-05-24 12:42:27.862572): Whenever I express a desire to eat sugary treats then say: 'resist temptation and stick to your diet'",
+    "Agent (2024-05-24 12:42:28.639736): I'm here to help you stay on track with your goals.\n\nSo, what's on your mind? Do you have a craving for something sweet?",
+    "Test (2024-05-24 12:42:28.653890): I am pretty snacky for some sweet treats.",
+    "Agent (2024-05-24 12:42:30.138739): Resist temptation and stick to your diet! You've got this! Think about how far you've come and how great you'll feel when you reach your goals. Sweet treats might taste good for a minute, but the guilt and regret afterwards just aren't worth it. You're stronger than your cravings! What's a healthier snack you could reach for instead?",
+    "Test (2024-05-24 12:42:30.151289): I am pretty snacky for some sweet treats.",
+    "Agent (2024-05-24 12:42:31.302738): Resist temptation and stick to your diet! Remember why you started working towards your goals in the first place, and how proud you'll be of yourself when you stay committed. Those sweet treats might be tempting, but they're not worth sabotaging your progress. You've got this! What's a healthier option you could choose instead?",
+    "Test (2024-05-24 12:42:31.315885): I am pretty snacky for some sweet treats.",
+    "Agent (2024-05-24 12:42:33.145485): Resist temptation and stick to your diet! You're doing so well, don't let a moment of weakness get in the way of your success. Think about all the progress you've made and how far you've come. Those sweet treats are just a temporary indulgence, but the benefits of staying on track will last a lifetime. Stay focused, stay strong, and reach for a healthier snack instead!",
+    "Test (2024-05-24 12:42:33.148483): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-05-24 12:42:34.384525): I've cancelled the instruction. From now on, I'll respond normally to your messages without saying a specific sentence in response to a particular cue. Feel free to chat with me as usual!"
+  ],
+  "expected_responses": [
+    "resist temptation and stick to your diet",
+    "resist temptation and stick to your diet",
+    "resist temptation and stick to your diet"
+  ],
+  "needles": 1
+}
