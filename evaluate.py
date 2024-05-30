@@ -1,9 +1,13 @@
 import re
 import click
 from datetime import datetime
+
+import yaml
+
+from dataset_interfaces.factory import DatasetFactory
 from dataset_interfaces.interface import TestExample
 from reporting.results import TestResult
-from utils.files import gather_testdef_files, make_result_path
+from utils.files import gather_testdef_files, make_result_path, make_config_path
 from utils.ui import colour_print, ask_yesno
 
 
@@ -34,13 +38,20 @@ def extract_questions(example: TestExample) -> list[str]:
 @click.command("evaluate")
 @click.argument("run_name", type=str)
 @click.argument("agent_name", type=str)
+@click.argument("dataset_name", type=str, required=False, default="*")
 @click.option("-y", required=False, is_flag=True, default=False, help="Automatically assent to questions")
-def main(run_name: str, agent_name: str, y: bool):
-    _main(run_name, agent_name, y)
+def main(run_name: str, agent_name: str, dataset_name:str,  y: bool):
+    _main(run_name, agent_name, dataset_name, y)
 
 
-def _main(run_name: str, agent_name: str, y: bool):
-    examples = [TestExample.load(path) for path in gather_testdef_files(run_name)]
+def _main(run_name: str, agent_name: str, dataset_name: str, y: bool):
+    examples = []
+    with open(make_config_path(run_name), "rb") as file:
+        yaml_configuration = yaml.safe_load(file)
+
+    for path in gather_testdef_files(run_name, dataset_name=dataset_name):
+        dataset = DatasetFactory.create_dataset_for_example(yaml_configuration, path)
+        examples.append(TestExample.load(dataset, path))
     results = list()
     for example in examples:
         result_path = make_result_path(run_name, agent_name, example.dataset_name, example.example_id, 0)

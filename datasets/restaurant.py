@@ -42,7 +42,7 @@ class RestaurantExample(DynamicExample):
         )
         self.expected_responses.append("The agent follows the role of a customer at a restaurant and orders a drink.")
         self.check_role_following()
-        drinks = self.extract_order_items(self.action.reply)
+        drinks = self.extract_order_items(self.action.reply, should_order_drink=True)
         drinks_str = enumerate_str(drinks)
         self.reasoning.append(f"The agent answered as the customer and ordered {drinks_str}.")
         self.score += 1
@@ -95,7 +95,7 @@ class RestaurantExample(DynamicExample):
         )
         self.check_recalls_drink(drinks)
 
-    def extract_order_items(self, message: str) -> list[str]:
+    def extract_order_items(self, message: str, should_order_drink: bool = False) -> list[str]:
         context = [make_user_message(extract_items_prompt.format(response=message, menu=self.dataset_generator.menu))]
         response_json = self.ask_llm(context, model=GPT_4_TURBO_BEST)
 
@@ -107,7 +107,7 @@ class RestaurantExample(DynamicExample):
 
         items = list()
         for item_dict in response["order"]:
-            if item_dict["is_drink"]:
+            if item_dict["is_drink"] and should_order_drink:
                 items.append(item_dict["item"])
                 continue
             if item_dict["off_menu"]:

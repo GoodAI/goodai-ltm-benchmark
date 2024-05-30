@@ -88,7 +88,7 @@ class SpyMeetingDataset(DatasetInterface):
 
         reasoning = []
         response = responses[0]
-        correct = 1
+        score = 0
         for potential_answers in expected_answers:
             found = False
             for pa in potential_answers:
@@ -96,11 +96,14 @@ class SpyMeetingDataset(DatasetInterface):
                     found = True
                     break
             if not found:
-                correct = 0
                 reasoning.append(f"{potential_answers} not found in answer.")
             else:
                 reasoning.append("Answer contains expected keyword(s)")
+                score += 0.33
 
-        return correct, 1, reasoning
+        if score == 0.99:
+            score = 1
+
+        return score, 1, reasoning
 
 
