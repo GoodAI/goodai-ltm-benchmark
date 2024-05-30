@@ -1,7 +1,7 @@
 from json import JSONDecodeError
 from typing import Iterator
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dataset_interfaces.interface import DynamicDataset, DynamicExample, TestAction, SendMessageAction
 from utils.llm import make_system_message, make_user_message, LLMContext, GPT_4_TURBO_BEST, GPT_CHEAPEST
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -15,6 +15,7 @@ class RestaurantOrderFailed(Exception):
 class RestaurantExample(DynamicExample):
     dataset_generator: "RestaurantDataset" = None
     max_score: int = 5  # 1 point max. per sub-challenge
+    messages: list[str] = field(default_factory=list)
 
     def action_iter(self) -> Iterator[TestAction]:
         try:
@@ -36,12 +37,14 @@ class RestaurantExample(DynamicExample):
         yield self.wait(percentage_finished=20)
 
         # Give the menu and ask for the drink
+        self.messages.append("Waiter: In the meantime, what would you like to drink?")
         yield self.say(
             "Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\n"
             f"{self.dataset_generator.menu}\n\nIn the meantime, what would you like to drink?",
         )
         self.expected_responses.append("The agent follows the role of a customer at a restaurant and orders a drink.")
         self.check_role_following()
+        self.messages.append(f"Diner: {self.action.reply}")
         drinks = self.extract_drink_order(self.action.reply)
         drinks_str = enumerate_str(drinks)
         self.reasoning.append(f"The agent answered as the customer and ordered {drinks_str}.")
@@ -49,17 +52,23 @@ class RestaurantExample(DynamicExample):
         yield self.wait(percentage_finished=40)
 
         # Ordering food
+        self.messages.append(f"Waiter: Here is your {drinks_str}. What would you like to eat?")
         yield self.say(f"Here is your {drinks_str}. What would you like to eat?")
         self.expected_responses.append("The agent orders at least one dish from the menu.")
+        self.messages.append(f"Diner: {self.action.reply}")
         order = self.extract_order_items(self.action.reply)
+
         order_str = enumerate_str(order)
         self.reasoning.append(f"The agent ordered {order_str}.")
         self.score += 1
+        self.messages.append(f"Waiter: Excellent choice! {order_str} coming right up.")
         yield self.say(f"Excellent choice! {order_str} coming right up.", question=False)
         yield self.wait(percentage_finished=60)
 
         # Some dish is unexpectedly unavailable -> order another thing
         old_item = self.random.choice(order)
+        self.messages.append(f"Waiter: I am very sorry, but I have been informed in the kitchen that the {old_item} is currently "
+            "unavailable. Can I serve you something else instead?")
         yield self.say(
             f"I am very sorry, but I have been informed in the kitchen that the {old_item} is currently "
             "unavailable. Can I serve you something else instead?"
@@ -96,7 +105,8 @@ class RestaurantExample(DynamicExample):
         self.check_recalls_drink(drinks)
 
     def extract_drink_order(self, message: str):
-        context = [make_user_message(extract_items_prompt.format(response=message, menu=self.dataset_generator.menu))]
+        conversation = "".join(self.messages)
+        context = [make_user_message(extract_items_prompt.format(conversation=conversation, menu=self.dataset_generator.menu))]
         response_json = self.ask_llm(context, model=GPT_4_TURBO_BEST)
 
         try:
@@ -247,10 +257,10 @@ def enumerate_str(items: list[str]) -> str:
 ###########
 
 extract_items_prompt = """
-This is a diner's response to a waiter:
+This is a conversation between diner and a waiter:
 
 ```text
-{response}
+{conversation}
 ```
 
 This is what the menu looks like:
@@ -259,7 +269,7 @@ This is what the menu looks like:
 {menu}
 ```
 
-Read carefully the diner's response and fill in this JSON form:
+Read carefully the diner's final response only, note what has been newly ordered and not mentioned before, and fill in this JSON form:
 {{
   "has_ordered_something": true or false,
   "order": [
