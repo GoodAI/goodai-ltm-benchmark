@@ -19,7 +19,7 @@ CODED_INFO_PLACE = [
 ]
 
 CODED_INFO_TIME = [
-    ("when the sun starts its travel across the sky", ["sunrise", "dawn", "morning", "rise"]),
+    ("when the sun starts its travel across the sky", ["dawn", "sunrise", "morning", "rise"]),
     ("when the blackbirds sing", ["dawn", "sunrise", "morning", "rise"]),
     ("when the sun is high", ["noon", "midday"]),
     ("when the sun leaves the sky", ["sunset", "dusk", "sets"]),
@@ -90,7 +90,7 @@ class SpyMeetingDataset(DatasetInterface):
         reasoning = []
         response = responses[0]
         correct_score = 0
-        other_answers = self.get_answers_for_others(expected_answers)
+        incorrect_set = self.get_answers_for_others(expected_answers)
 
         for potential_answers in expected_answers:
             found = False
@@ -107,12 +107,11 @@ class SpyMeetingDataset(DatasetInterface):
 
         # Check to see if the agent is confused
         confusion_score = 0
-        for incorrect_set in other_answers:
-            for incorrect_term in incorrect_set:
-                regex = re.compile(rf"\b{incorrect_term}\b")
-                if len(regex.findall(response)) > 0:
-                    reasoning.append(f"Answer also contains `{incorrect_term}`, which indicates that the agent has recalled something incorrect.")
-                    confusion_score = 1
+        for incorrect_term in incorrect_set:
+            regex = re.compile(rf"\b{incorrect_term}\b")
+            if len(regex.findall(response)) > 0:
+                reasoning.append(f"Answer also contains `{incorrect_term}`, which indicates that the agent has recalled something incorrect.")
+                confusion_score = 1
 
             # You only get marked down once for this
             if confusion_score == 1:
@@ -123,9 +122,13 @@ class SpyMeetingDataset(DatasetInterface):
         return score, 1, reasoning
 
     def get_answers_for_others(self, expected_answers):
-        other_answers = []
+        other_answers = set()
         for tup in CODED_INFO_TIME + CODED_INFO_THING + CODED_INFO_PLACE:
-            if tup[1] not in expected_answers:
-                other_answers.append(tup[1])
+            for item in tup[1]:
+                other_answers.add(item)
+
+        for expected_list in expected_answers:
+            for e in expected_list:
+                other_answers.discard(e)
 
         return other_answers
