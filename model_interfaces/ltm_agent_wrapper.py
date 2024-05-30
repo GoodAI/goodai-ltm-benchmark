@@ -17,7 +17,7 @@ _log_prompts = os.environ.get("LTM_BENCH_PROMPT_LOGGING", "False").lower() in ["
 
 class LTMAgentWrapper(ChatSession):
     def __init__(self, model: str, max_prompt_size: int,
-                 variant: LTMAgentVariant, run_name: str = ""):
+                 variant: LTMAgentVariant, run_name: str = "", is_local: bool = False):
         super().__init__(run_name=run_name)
         self.model = model
         self.max_prompt_size = max_prompt_size
