@@ -63,7 +63,6 @@ class NameListDataset(DatasetInterface):
 
         reasoning = []
         correct = 0
-        penalties = 0
         score = 0
         lowered_expected = [n.lower() for n in expected_answers]
 
@@ -75,11 +74,10 @@ class NameListDataset(DatasetInterface):
                     correct += 1
                     lowered_expected.remove(name)
                 else:
-                    penalties += 1
                     reasoning.append(f"Name: {name} not expected.")
 
             # Everything left in expected is not found
-            score = max(correct - penalties, 0)
+            score = correct / len(answer_items)
             if len(lowered_expected) > 0:
                 reasoning.append(f"Names: {', '.join(lowered_expected)} were not in the response.")
             else:
