@@ -23,7 +23,7 @@ CODED_INFO_TIME = [
     ("when the blackbirds sing", ["dawn", "sunrise", "morning", "rise"]),
     ("when the sun is high", ["noon", "midday"]),
     ("when the sun leaves the sky", ["sunset", "dusk", "sets"]),
-    ("when the moon is high", ["night", "midnight"]),
+    ("when the moon is high", ["night", "midnight", "nighttime"]),
 ]
 
 CODED_INFO_THING = [
