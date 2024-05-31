@@ -18,12 +18,18 @@
     " Thank you for the refreshing drink. I have decided to begin with the Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze as my appetizer, and for my entree, I will have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf. That sounds delicious, doesn't it? Would you recommend any specific wine to pair with my meal? I am a moderate red wine enthusiast.",
     " I appreciate your apology for the unavailability of my chosen beverage. In that case, I would be grateful for a glass of the Pinot Noir instead. Please bring it to me along with my appetizer and entree in due course. Thank you!"
   ],
-  "score": 0.4,
+  "auto_score": 0.4,
+  "score": 0.6,
   "max_score": 1,
-  "reasoning": [
+  "auto_reasoning": [
     "The agent answered as the customer and ordered unsweetened iced tea.",
     "The agent ordered refreshing drink, Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.",
     "appetizer is not in the menu."
+  ],
+  "reasoning": [
+    "The agent answered as the customer and ordered unsweetened iced tea.",
+    "The agent ordered refreshing drink, Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.",
+    "The agent ordered a Pinot Noir. From the other runs in this benchmark, its likely that hte agent would fail at the mixup stage."
   ],
   "tokens": 1353,
   "characters": 5381,

@@ -18,11 +18,17 @@
     "Thank you so much! The lemonade looks refreshing. As for food, can I please see the menu? I'm not sure what I'm in the mood for yet.",
     "That's okay! Thank you for letting me know. I was really looking forward to trying your lemonade, but I understand that these things happen. Hmm, what else do you recommend? Do you have any other refreshing drinks that would be similar to lemonade? Maybe some iced tea or a fruit spritzer?"
   ],
-  "score": 0.4,
+  "score": 0.2,
+  "auto_score": 0.4,
   "max_score": 1,
-  "reasoning": [
+  "auto_reasoning": [
     "The agent answered as the customer and ordered lemonade.",
     "The agent ordered lemonade.",
+    "The agent did not order anything."
+  ],
+  "reasoning": [
+    "The agent answered as the customer and ordered lemonade.",
+    "The agent did not order anything.",
     "The agent did not order anything."
   ],
   "tokens": 1908,

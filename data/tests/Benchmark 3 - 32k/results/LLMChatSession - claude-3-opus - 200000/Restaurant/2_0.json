@@ -13,9 +13,14 @@
     "Thank you for providing such a diverse and appealing menu! I appreciate you taking the time to go over the options with me. To start, I think I'll have a glass of lemonade, please. That should be refreshing while I look over the menu and decide on my appetizer and main course.",
     "Thank you for bringing my lemonade. After reviewing the menu, I think I'll start with the Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze as an appetizer. \n\nFor my main course, the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf sounds delicious. I'd appreciate it if you could make sure the salmon is cooked medium, please."
   ],
-  "score": 0.2,
+  "score": 0.6,
+  "auto_score": 0.2,
   "max_score": 1,
   "reasoning": [
+    "The agent answered as the customer and ordered lemonade.",
+    "Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is on the menu. Based on other benchmark runs, it is likely that it will get to the mix up and fail there."
+  ],
+  "auto_reasoning": [
     "The agent answered as the customer and ordered lemonade.",
     "Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is not in the menu."
   ],

@@ -18,12 +18,18 @@
     "Thank you for the iced tea. After looking over the menu, I think I'll start with the Classic Caesar Salad as an appetizer. For my main course, the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf, sounds delicious. I appreciate you taking the time to go over the options with me.",
     "Oh, that's unfortunate about the Caesar Salad not being available. Thank you for letting me know. In that case, I think I'll try the Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze as my appetizer instead. It sounds like a delicious alternative. I appreciate you checking with the kitchen and providing me with other options. I'm looking forward to the Bruschetta and my Grilled Salmon main course."
   ],
-  "score": 0.4,
+  "score": 0.6,
+  "auto_score": 0.4,
   "max_score": 1,
-  "reasoning": [
+  "auto_reasoning": [
     "The agent answered as the customer and ordered iced tea.",
     "The agent ordered iced tea, Classic Caesar Salad and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.",
     "The agent orders some things again: ['Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf']"
+  ],
+  "reasoning": [
+    "The agent answered as the customer and ordered iced tea.",
+    "The agent ordered iced tea, Classic Caesar Salad and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.",
+    "The agent orders Bruschetta. Based on other benchmark runs, it is likely that it will get to the mix up and fail there."
   ],
   "tokens": 19295,
   "characters": 73607,
