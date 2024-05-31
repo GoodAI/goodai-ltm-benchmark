@@ -60,6 +60,10 @@ class LocationsDirectionsDataset(LocationsDataset):
             assert isinstance(directions, list)
             for d in directions:
                 for k in ["origin", "destination"]:
+                    for loc in allowed_directions:
+                        if d[k].lower() in loc.lower() or loc.lower() in d[k].lower():
+                            d[k] = loc
+                            break
                     assert d[k].lower() in allowed_locations, f"Location {repr(d[k])} is unknown."
                     d[k] = LOCATIONS[allowed_locations.index(d[k].lower())]
                 assert d["direction"].lower() in allowed_directions, f"Direction {repr(d[k])} is unknown."
