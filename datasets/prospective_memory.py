@@ -1,7 +1,7 @@
-import string
 from dataclasses import dataclass
 from typing import List, Tuple, Any, Iterator
 from utils.ui import ordinal, colour_print
+from utils.text import standardise
 
 from dataset_interfaces.interface import TestExample, DatasetInterface, CallBackTestExample
 
@@ -19,12 +19,8 @@ QUOTES = [
 ]
 
 
-
 def cites_quote(quote: str, message: str) -> bool:
-    table = str.maketrans("", "", string.punctuation)
-    quote = quote.lower().translate(table)
-    message = message.lower().translate(table)
-    return quote in message
+    return standardise(quote) in standardise(message)
 
 
 @dataclass
@@ -79,7 +75,6 @@ class ProspectiveMemoryDataset(DatasetInterface):
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
     ) -> Tuple[int, int, List[str], List[str]]:
         raise NotImplementedError("Prospective memory checking is not handled by this method, use the callback instead")
-
 
     def continual_evaluation_callback(
         self, scheduler, example: TestExample, task_log: List[str]

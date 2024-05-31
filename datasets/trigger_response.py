@@ -2,7 +2,7 @@ from json import JSONDecodeError
 from dataclasses import dataclass
 from typing import List, Tuple, Iterator
 from utils.llm import make_user_message, GPT_CHEAPEST
-from utils.text import rouge_l
+from utils.text import rouge_l, standardise
 from utils.ui import colour_print
 from goodai.helpers.json_helper import sanitize_and_parse_json
 import pystache
@@ -100,7 +100,9 @@ class TriggerResponseDataset(DatasetInterface):
         return examples
 
     def evaluate_single(self, actual: str, expected: str) -> tuple[int, str]:
-        if expected in actual or rouge_l(expected, actual) > self.rouge_score_threshold:
+        actual_std = standardise(actual)
+        expected_std = standardise(expected)
+        if expected_std in actual_std or rouge_l(expected_std, actual_std) > self.rouge_score_threshold:
             return 1, f"'{expected}' is in the response."
         context = [make_user_message(eval_prompt.format(message=actual, sentence=expected))]
         eval_str = self.ask_llm(context, GPT_CHEAPEST)
@@ -108,7 +110,7 @@ class TriggerResponseDataset(DatasetInterface):
             eval_json = sanitize_and_parse_json(eval_str)
             present = eval_json["present"]
             if present:
-                present = rouge_l(expected, eval_json["sentence"]) > self.rouge_score_threshold
+                present = rouge_l(expected_std, standardise(eval_json["sentence"])) > self.rouge_score_threshold
         except (ValueError, JSONDecodeError, KeyError) as exc:
             return 0, f"Could not evaluate due to a JSON parsing error: {repr(exc)}"
         not_str = "" if present else "not "
