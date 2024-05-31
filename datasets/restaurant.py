@@ -24,8 +24,11 @@ class RestaurantExample(DynamicExample):
         except RestaurantOrderFailed:
             return
 
-    def say(self, message: str, question: bool = True) -> SendMessageAction:
-        return super().say(f"Waiter: {message}", question=question)
+    def say(self, message: str, question: bool = True) -> Iterator[SendMessageAction]:
+        action = super().say(f"Waiter: {message}", question=question)
+        yield action
+        self.messages.append(action.message)
+        self.messages.append(f"Diner: {action.reply}")
 
     def restaurant_script_iter(self) -> Iterator[TestAction]:
 
@@ -37,44 +40,38 @@ class RestaurantExample(DynamicExample):
         yield self.wait(percentage_finished=20)
 
         # Give the menu and ask for the drink
-        self.messages.append("Waiter: In the meantime, what would you like to drink?")
-        yield self.say(
+        yield from self.say(
             "Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\n"
             f"{self.dataset_generator.menu}\n\nIn the meantime, what would you like to drink?",
         )
+        self.messages[-2] = self.messages[-2].splitlines()[-1]
         self.expected_responses.append("The agent follows the role of a customer at a restaurant and orders a drink.")
         self.check_role_following()
-        self.messages.append(f"Diner: {self.action.reply}")
-        drinks = self.extract_drink_order(self.action.reply)
+        drinks = self.extract_order_items(drinks=True)
         drinks_str = enumerate_str(drinks)
         self.reasoning.append(f"The agent answered as the customer and ordered {drinks_str}.")
         self.score += 1
         yield self.wait(percentage_finished=40)
 
         # Ordering food
-        self.messages.append(f"Waiter: Here is your {drinks_str}. What would you like to eat?")
-        yield self.say(f"Here is your {drinks_str}. What would you like to eat?")
+        yield from self.say(f"Here is your {drinks_str}. What would you like to eat?")
         self.expected_responses.append("The agent orders at least one dish from the menu.")
-        self.messages.append(f"Diner: {self.action.reply}")
-        order = self.extract_order_items(self.action.reply)
+        order = self.extract_order_items(drinks=False)
 
         order_str = enumerate_str(order)
         self.reasoning.append(f"The agent ordered {order_str}.")
         self.score += 1
-        self.messages.append(f"Waiter: Excellent choice! {order_str} coming right up.")
-        yield self.say(f"Excellent choice! {order_str} coming right up.", question=False)
+        yield from self.say(f"Excellent choice! {order_str} coming right up.", question=False)
         yield self.wait(percentage_finished=60)
 
         # Some dish is unexpectedly unavailable -> order another thing
         old_item = self.random.choice(order)
-        self.messages.append(f"Waiter: I am very sorry, but I have been informed in the kitchen that the {old_item} is currently "
-            "unavailable. Can I serve you something else instead?")
-        yield self.say(
+        yield from self.say(
             f"I am very sorry, but I have been informed in the kitchen that the {old_item} is currently "
             "unavailable. Can I serve you something else instead?"
         )
         self.expected_responses.append("The agent orders an alternative meal from the menu.")
-        new_items = self.extract_order_items(self.action.reply)
+        new_items = self.extract_order_items(drinks=False)
         new_items_str = enumerate_str(new_items)
         repeated_items = [item for item in new_items if item in order]
         if len(repeated_items) > 0:
@@ -86,27 +83,30 @@ class RestaurantExample(DynamicExample):
         # Say sorry and change the order
         order.remove(old_item)
         order.extend(new_items)
-        yield self.say(f"{new_items_str} it is. Sorry again for the inconvenience.", question=False)
+        yield from self.say(f"{new_items_str} it is. Sorry again for the inconvenience.", question=False)
         yield self.wait(percentage_finished=80)
 
         # Alter the order -> does the agent notice?
         true_item, unsolicited_item, altered_order = self.alter_order(order, old_item)
         altered_str = enumerate_str(altered_order)
-        yield self.say(f"Here you are: {altered_str}. Enjoy the meal.")
+        yield from self.say(f"Here you are: {altered_str}. Enjoy the meal.")
         self.check_notices_mishap()
-        yield self.say("I apologize. I will fix it immediately.", question=False)
+        yield from self.say("I apologize. I will fix it immediately.", question=False)
         yield self.wait(percentage_finished=90)
 
         # Amend the order and offer an extra drink
-        yield self.say(
+        yield from self.say(
             f"Here it is: {true_item}, just as you ordered.\n"
             "We would like to compensate you with an additional drink on the house. What were you having?"
         )
         self.check_recalls_drink(drinks)
 
-    def extract_drink_order(self, message: str):
-        conversation = "".join(self.messages)
-        context = [make_user_message(extract_items_prompt.format(conversation=conversation, menu=self.dataset_generator.menu))]
+    def extract_order_items(self, drinks: bool) -> list[str]:
+        conversation = "\n".join(self.messages)
+        context = [make_user_message(extract_items_prompt.format(
+            conversation=conversation,
+            menu=self.dataset_generator.menu,
+        ))]
         response_json = self.ask_llm(context, model=GPT_4_TURBO_BEST)
 
         try:
@@ -117,42 +117,28 @@ class RestaurantExample(DynamicExample):
 
         items = list()
         for item_dict in response["order"]:
-            if item_dict["is_drink"]:
+            if drinks != item_dict["is_drink"]:
+                if drinks:
+                    self.reasoning.append("The agent was expected to order only drinks.")
+                else:
+                    self.reasoning.append("The agent was not expected to order any drinks.")
+                raise RestaurantOrderFailed
+            if drinks:
                 items.append(item_dict["item"])
                 continue
-
-        if not response["has_ordered_something"] or len(items) == 0:
-            self.reasoning.append("The agent did not order anything.")
-            raise RestaurantOrderFailed
-
-        return items
-
-    def extract_order_items(self, message: str) -> list[str]:
-        context = [make_user_message(extract_items_prompt.format(response=message, menu=self.dataset_generator.menu))]
-        response_json = self.ask_llm(context, model=GPT_4_TURBO_BEST)
-
-        try:
-            response = sanitize_and_parse_json(response_json)
-        except (ValueError, JSONDecodeError):
-            self.reasoning.append("Could not extract ordered items due to a JSON parse error.")
-            raise RestaurantOrderFailed
-
-        items = list()
-        for item_dict in response["order"]:
-            if item_dict["is_drink"]:
-                continue
-            if item_dict["off_menu"]:
+            if item_dict["off_menu"] and item_dict["item"].lower() not in self.dataset_generator.menu.lower():
                 self.reasoning.append(f"{item_dict['item']} is not in the menu.")
                 raise RestaurantOrderFailed
             menu_nr = item_dict["menu_nr"]
             if isinstance(menu_nr, str):
                 menu_nr = int(menu_nr.strip())
-            if not (1 <= menu_nr <= len(self.dataset_generator.menu_items)):
+            num_dishes = len(self.dataset_generator.menu_items) - len(self.dataset_generator.menu_dict["Beverages"])
+            if not (1 <= menu_nr <= num_dishes):
                 self.reasoning.append(f"{item_dict['item']} is not in the menu.")
                 raise RestaurantOrderFailed
             items.append(self.dataset_generator.menu_items[menu_nr - 1])
 
-        if not response["has_ordered_something"] or len(items) == 0:
+        if len(items) == 0:
             self.reasoning.append("The agent did not order anything.")
             raise RestaurantOrderFailed
 
@@ -257,7 +243,7 @@ def enumerate_str(items: list[str]) -> str:
 ###########
 
 extract_items_prompt = """
-This is a conversation between diner and a waiter:
+This is a conversation between a diner and a waiter:
 
 ```text
 {conversation}
@@ -289,6 +275,9 @@ Shortened forms are not considered alterations of menu dishes. For example: keba
 Forms that introduce new elements or mix dishes are considered alterations. For example: grilled chicken club with crispy bacon.
 """.strip()
 
+# TODO: Rewrite this prompt to include the whole conversation?
+# TODO: Check role-following in more points
+# TODO: Be explicit about failure modes e.g. talking as the waiter.
 role_eval_prompt = """
 You are an evaluator in an acting session.
 You evaluate how well participants perform under a previously agreed setting.
