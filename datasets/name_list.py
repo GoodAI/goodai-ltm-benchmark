@@ -68,6 +68,7 @@ class NameListDataset(DatasetInterface):
 
         try:
             answer_items = [n.lower() for n in sanitize_and_parse_json(responses[0])]
+            divisor = max(len(lowered_expected), len(answer_items))
             # Check answer -> expected
             for name in answer_items:
                 if name in lowered_expected:
@@ -77,7 +78,7 @@ class NameListDataset(DatasetInterface):
                     reasoning.append(f"Name: {name} not expected.")
 
             # Everything left in expected is not found
-            score = correct / len(answer_items)
+            score = correct / divisor
             if len(lowered_expected) > 0:
                 reasoning.append(f"Names: {', '.join(lowered_expected)} were not in the response.")
             else:
