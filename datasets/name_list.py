@@ -88,5 +88,5 @@ class NameListDataset(DatasetInterface):
             logging.exception("Response not in correct format")
             reasoning.append("Response not in correct format")
 
-        return score, len(expected_answers), reasoning
+        return score, 1, reasoning
 

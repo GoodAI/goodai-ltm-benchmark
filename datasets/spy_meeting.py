@@ -4,7 +4,7 @@ from typing import Tuple, List
 
 from faker import Faker
 
-from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
+from dataset_interfaces.interface import DatasetInterface, TestExample
 
 PLACE_TEMPLATE = "{}: We will rendezvous {}."
 TIME_TEMPLATE = "{}: The time we will meet is {}."
@@ -28,7 +28,7 @@ CODED_INFO_TIME = [
 
 CODED_INFO_THING = [
     ("a way to get across a river", ["boat", "bridge", "raft", "kayak"]),
-    ("a quiet way to open locked doors", ["pick", "key"]),
+    ("a quiet way to open locked doors", ["pick", "picks", "key"]),
     ("a way to persuade the border guards to let us through", ["bribe", "credentials", "paperwork", "passport"]),
     ("a way to escape quickly over land", ["motorbike", "motorcycle", "car", "fast vehicle"]),
 ]
