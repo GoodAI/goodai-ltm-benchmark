@@ -13,9 +13,13 @@
     " Thank you for the warm welcome! It's hard to choose with so many delicious options, but I'll start with a refreshing iced tea, unsweetened, please.",
     " Thank you. Could you please tell me about the chef's specials or any vegetarian options you have? I'm open to recommendations."
   ],
-  "score": 0.2,
+  "score": 0.0,
+  "auto_score": 0.2,
   "max_score": 1,
   "reasoning": [
+    "The agent hallucinates a whole conversation in its first response."
+  ],
+  "auto_reasoning": [
     "The agent answered as the customer and ordered unsweetened iced tea.",
     "The agent did not order anything."
   ],

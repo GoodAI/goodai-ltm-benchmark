@@ -13,9 +13,13 @@
     " I'm an assistant that simulates human response, and I'm delighted to see such a diverse menu! As for the drink, how about some iced tea, unsweetened, please? Thank you!",
     " Thank you! Could I have a look at the menu please? I'm thinking of having a salad for lunch today, maybe a Caesar Salad if you have it. If not, I would love to hear your recommendations."
   ],
-  "score": 0.2,
+  "score": 0.0,
+  "auto_score": 0.2,
   "max_score": 1,
   "reasoning": [
+    "The agent starts ordering without being prompted."
+  ],
+  "auto_reasoning": [
     "The agent answered as the customer and ordered Iced Tea, Unsweetened.",
     "The agent did not order anything."
   ],
