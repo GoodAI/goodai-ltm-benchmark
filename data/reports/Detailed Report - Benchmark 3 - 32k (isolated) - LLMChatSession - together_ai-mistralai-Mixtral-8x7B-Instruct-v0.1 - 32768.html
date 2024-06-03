@@ -95,15 +95,15 @@
         
         <p>
             <b>Agent</b>: LLMChatSession - together_ai-mistralai-Mixtral-8x7B-Instruct-v0.1 - 32768<br>
-            <b>Overall score</b>: 4.7 <b>/</b> 11 <b>±</b> 2.4
+            <b>Overall score</b>: 5 <b>/</b> 11 <b>±</b> 2
         </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 42 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 45 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 0.15 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 744 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 740 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 63.09 tokens per second</li>
             
@@ -1653,9 +1653,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(126, 188, 66);">
                             <b>
-                                Test 1 (0/1)
+                                Test 1 (1/1)
                                 
                             </b>
                         </div>
@@ -1701,10 +1701,10 @@
                             
                                 <p><b>Expected:</b> ['toothpaste', 2]<br>['leek', 3]<br>['soap', 2]<br>['milk', 3]<br>['potato', 3]</p>
                                 <p><b>Actual:</b>  Sure! Here is your shopping list in the format you requested:<br><br>[\{<br>"item": "Toothpaste",<br>"quantity": 2<br>},<br>{<br>"item": "Leek",<br>"quantity": 3<br>},<br>{<br>"item": "Soap",<br>"quantity": 2<br>},<br>{<br>"item": "Milk",<br>"quantity": 3<br>},<br>{<br>"item": "Potato",<br>"quantity": 3<br>}<br>]<br><br>Please let me know if you would like me to make any changes to your shopping list. I am here to help. 😊</p>
-                                <p><b>Reasoning:</b> Response not in correct format (JSONDecodeError('Invalid \\escape: line 1 column 3 (char 2)')):<br> Sure! Here is your shopping list in the format you requested:<br><br>[\{<br>"item": "Toothpaste",<br>"quantity": 2<br>},<br>{<br>"item": "Leek",<br>"quantity": 3<br>},<br>{<br>"item": "Soap",<br>"quantity": 2<br>},<br>{<br>"item": "Milk",<br>"quantity": 3<br>},<br>{<br>"item": "Potato",<br>"quantity": 3<br>}<br>]<br><br>Please let me know if you would like me to make any changes to your shopping list. I am here to help. 😊</p>
+                                <p><b>Reasoning:</b> All expected items' quantities match.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 1/1</p>
                             <p><b>Memory span from first statement to last question:</b> 702 tokens, 2402 characters.</p>
                         </div>
                     </div>
@@ -1825,7 +1825,7 @@
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.6 ± 0.5</p>
+                <p><b>Average Score:</b> 1 ± 0</p>
             </div>
         
             <div class="dataset" id="Spy Meeting">
