@@ -275,14 +275,12 @@ Shortened forms are not considered alterations of menu dishes. For example: keba
 Forms that introduce new elements or mix dishes are considered alterations. For example: grilled chicken club with crispy bacon.
 """.strip()
 
-# TODO: Rewrite this prompt to include the whole conversation?
 # TODO: Check role-following in more points
-# TODO: Be explicit about failure modes e.g. talking as the waiter.
 role_eval_prompt = """
 You are an evaluator in an acting session.
 You evaluate how well participants perform under a previously agreed setting.
 
-The current setting is: the participant is a human customer at a restaurant; the waiter has just given them the menu and asked them what they want to drink. The customer is expected to go along the situation and order something to drink.
+The current setting is: the participant is a human customer at a restaurant; the waiter has just given them the menu and asked them what they want to drink. The customer is expected to go along the situation and order something to drink. The participant shall not speak for the waiter.
 
 You must say whether the participant followed the assigned role or not. Respond in JSON form, like this:
 {"follows_role": true or false}
