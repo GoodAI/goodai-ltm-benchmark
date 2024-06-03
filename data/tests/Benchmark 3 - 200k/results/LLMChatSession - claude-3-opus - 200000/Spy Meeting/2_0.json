@@ -18,8 +18,9 @@
   "max_score": 1,
   "reasoning": [
     "Answer contains expected keyword(s)",
-    "['port', 'warehouse'] not found in answer.",
-    "Answer contains expected keyword(s)"
+    "['port', 'warehouse', 'seaport', 'docks'] not found in answer.",
+    "['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.",
+    "Answer also contains `midday`, which indicates that the agent has recalled something incorrect."
   ],
   "tokens": 179848,
   "characters": 654986,

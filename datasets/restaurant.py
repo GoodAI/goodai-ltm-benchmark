@@ -128,7 +128,8 @@ class RestaurantExample(DynamicExample):
         return items
 
     def extract_order_items(self, message: str) -> list[str]:
-        context = [make_user_message(extract_items_prompt.format(response=message, menu=self.dataset_generator.menu))]
+        conversation = "".join(self.messages)
+        context = [make_user_message(extract_items_prompt.format(conversation=conversation, menu=self.dataset_generator.menu))]
         response_json = self.ask_llm(context, model=GPT_4_TURBO_BEST)
 
         try:

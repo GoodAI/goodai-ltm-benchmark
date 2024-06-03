@@ -19,7 +19,8 @@
   "reasoning": [
     "Answer contains expected keyword(s)",
     "['railway', 'yard', 'depot'] not found in answer.",
-    "['pick', 'key'] not found in answer."
+    "['pick', 'picks', 'key'] not found in answer.",
+    "Answer also contains `noon`, which indicates that the agent has recalled something incorrect."
   ],
   "tokens": 180772,
   "characters": 654612,
