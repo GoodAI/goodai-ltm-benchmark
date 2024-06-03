@@ -15,7 +15,7 @@ CODED_INFO_PLACE = [
     ("where the trains are supplied", ["railway", "yard", "depot"]),
     ("where the cars are made", ["automobile", "factory", "manufacturing"]),
     ("where the apples grow", ["orchard"]),
-    ("where the sea cargo is stored", ["port", "warehouse"]),
+    ("where the sea cargo is stored", ["port", "warehouse", "seaport", "docks"]),
 ]
 
 CODED_INFO_TIME = [
