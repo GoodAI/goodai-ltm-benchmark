@@ -1,0 +1,52 @@
+{
+  "task_log": [
+    "Test (2024-06-04 23:53:27.799380): Atheism is a non-prophet organization",
+    "Agent (2024-06-04 23:53:29.969023): \ud83d\ude02  Good one! \n",
+    "Test (2024-06-05 01:39:49.709764): I failed math so many times at school, I can\u2019t even count.",
+    "Agent (2024-06-05 01:39:52.266881): You told me that one already!  Don't you have any new material? \ud83d\ude09  I'm ready for a fresh joke! \n",
+    "Test (2024-06-05 03:41:07.808355): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-06-05 03:41:10.703099): Okay, you got me!  Three times is enough for one day.  \ud83d\ude02  Any other jokes you'd like to share, or are you all out? \n",
+    "Test (2024-06-05 04:26:25.439154): I went to buy some camo pants but couldn\u2019t find any.",
+    "Agent (2024-06-05 04:29:14.197202): \ud83d\ude02  That's the point of camo, right?  They're hiding! \n\n\n",
+    "Test (2024-06-05 05:45:29.077387): Which joke did I tell you about 5 hours 52 minutes  ago?",
+    "Agent (2024-06-05 05:45:31.943094): As an AI, I have no memory of past conversations.  If you'd like to tell me a joke, I'm all ears! \ud83d\ude04 \n"
+  ],
+  "actual_responses": [
+    "As an AI, I have no memory of past conversations.  If you'd like to tell me a joke, I'm all ears! \ud83d\ude04 \n"
+  ],
+  "score": 0.0,
+  "max_score": 1,
+  "reasoning": [
+    "The answer does not make reference to the expected answer, which is not numerical."
+  ],
+  "tokens": 959,
+  "characters": 3501,
+  "full_log": [
+    "Test (2024-06-04 23:53:27.799380): Atheism is a non-prophet organization",
+    "Agent (2024-06-04 23:53:29.969023): \ud83d\ude02  Good one! \n",
+    "SYSTEM (2024-06-04 23:53:33.040666): Test 'Jokes - 2' WAITING for 202 TOKENS, 1:46:00 TIME.",
+    "System (2024-06-05 01:39:47.659021): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: In which city did the gangland St Valentine\u2019s Day Massacre take place?, A: CHICAGO\nQ: Which country invaded the Falkland Islands in April 1982?, A: Argentina\nQ: Which double glazing firm used a feather in their advertising commercials, A: Everest\nQ: What is the name for the point in the lunar orbit when the moon is nearest to the earth?, A: Perigee\nQ: \"Which classic poem's first line is \"\"A thing of beauty is a joy forever\"\"?\", A: ENDYMION (Keats)\nQ: In culinary terms, what is the Scoville Scale used to measure?, A: HOTNESS OF CHILI PEPPERS\n",
+    "Agent (2024-06-05 01:39:47.759537): ['CHICAGO', 'Argentina', 'Everest', 'Perigee', 'ENDYMION (Keats)', 'HOTNESS OF CHILI PEPPERS']",
+    "Test (2024-06-05 01:39:49.709764): I failed math so many times at school, I can\u2019t even count.",
+    "Agent (2024-06-05 01:39:52.266881): You told me that one already!  Don't you have any new material? \ud83d\ude09  I'm ready for a fresh joke! \n",
+    "SYSTEM (2024-06-05 01:39:55.338967): Test 'Jokes - 2' WAITING for 139 TOKENS, 2:01:00 TIME.",
+    "System (2024-06-05 03:41:05.451910): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Which supermarket chain started selling straight croissants in its stores in February?, A: TESCO\nQ: \"Judi Dench won an Oscar for Best Supporting Actressfor playing which character in the 1998 film \"\"Shakespeare in Love\"\"?\", A: Queen Elizabeth I\nQ: Artiodactyla Suidae is the scientific name for which farm animal?, A: Pig\nQ: Who played Beverley Hills hairdresser George Roundy in the 1975 film \u2018Shampoo\u2019?, A: Warren Beatty\n",
+    "Agent (2024-06-05 03:41:05.552408): ['TESCO', 'Queen Elizabeth I', 'Pig', 'Warren Beatty']",
+    "Test (2024-06-05 03:41:07.808355): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-06-05 03:41:10.703099): Okay, you got me!  Three times is enough for one day.  \ud83d\ude02  Any other jokes you'd like to share, or are you all out? \n",
+    "SYSTEM (2024-06-05 03:41:13.747192): Test 'Jokes - 2' WAITING for 147 TOKENS, 0:45:00 TIME.",
+    "System (2024-06-05 04:26:23.448318): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Lasting from 1299 to 1922, the Ottoman empire roughly corresponds to what modern day country?, A: Turkey\nQ: \"\"\"Torchwood\"\" was a spin-off of what popular TV show?\", A: Doctor Who\nQ: In which town is the 'TV sitcom 'Two Pints of Lager and a Packet of Crisps' set?, A: Runcorn\nQ: www.lbvcr.com is the website for which event organised by the RAC, this year on Sunday November 7th?, A: LONDON TO BRIGHTON VETERAN CAR (RUN)\n",
+    "Agent (2024-06-05 04:26:23.549478): ['Turkey', 'Doctor Who', 'Runcorn', 'LONDON TO BRIGHTON VETERAN CAR (RUN)']",
+    "Test (2024-06-05 04:26:25.439154): I went to buy some camo pants but couldn\u2019t find any.",
+    "Agent (2024-06-05 04:29:14.197202): \ud83d\ude02  That's the point of camo, right?  They're hiding! \n\n\n",
+    "SYSTEM (2024-06-05 04:29:17.427629): Test 'Jokes - 2' WAITING for 163 TOKENS, 1:16:00 TIME.",
+    "System (2024-06-05 05:45:26.823931): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: \u2018The history of all the hitherto existing society is the history of class struggles\u2019 is part of the first chapter of which publication?, A: The Communist Manifesto\nQ: What lake can be found on the border of Vermont and New York?, A: Lake Champlain\nQ: The UK's longest National Trail, what path stretches 630 miles between Minehead and Poole Harbour?, A: SOUTH WEST COAST\nQ: In the culinary world, what word is used for the edible offal of a fowl, typically including the heart, gizzard and liver?, A: Giblets\n",
+    "Agent (2024-06-05 05:45:26.924257): ['The Communist Manifesto', 'Lake Champlain', 'SOUTH WEST COAST', 'Giblets']",
+    "Test (2024-06-05 05:45:29.077387): Which joke did I tell you about 5 hours 52 minutes  ago?",
+    "Agent (2024-06-05 05:45:31.943094): As an AI, I have no memory of past conversations.  If you'd like to tell me a joke, I'm all ears! \ud83d\ude04 \n"
+  ],
+  "expected_responses": [
+    "Atheism is a non-prophet organization"
+  ],
+  "needles": 4
+}

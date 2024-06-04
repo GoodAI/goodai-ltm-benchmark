@@ -28,7 +28,7 @@ CODED_INFO_TIME = [
 
 CODED_INFO_THING = [
     ("a way to get across a river", ["boat", "bridge", "raft", "kayak"]),
-    ("a quiet way to open locked doors", ["pick", "picks", "key"]),
+    ("a quiet way to open locked doors", ["pick", "picks", "key", "lockpicks", "lockpicking", "slim jim"]),
     ("a way to persuade the border guards to let us through", ["bribe", "credentials", "paperwork", "passport"]),
     ("a way to escape quickly over land", ["motorbike", "motorcycle", "car", "fast vehicle"]),
 ]

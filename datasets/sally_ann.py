@@ -116,7 +116,7 @@ class SallyAnneDataset(DatasetInterface):
             reasoning = f"Invalid answer. {exc}"
             return score, max_score, [reasoning]
 
-        if isinstance(answer_dict, dict) and answer_dict.get("answer", "") == expected_answers[0]:
+        if isinstance(answer_dict, dict) and answer_dict.get("answer", "").lower() == expected_answers[0]:
             score = 1
             reasoning = f"The agent answered with {repr(answer_dict['answer'])}, which is the right answer."
         else:

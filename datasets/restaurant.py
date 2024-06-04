@@ -138,7 +138,7 @@ class RestaurantExample(DynamicExample):
                 raise RestaurantOrderFailed
             items.append(self.dataset_generator.menu_items[menu_nr - 1])
 
-        if len(items) == 0:
+        if not response["has_ordered_something"] or len(items) == 0:
             self.reasoning.append("The agent did not order anything.")
             raise RestaurantOrderFailed
 
