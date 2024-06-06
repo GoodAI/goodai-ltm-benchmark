@@ -1,10 +1,9 @@
-from collections import OrderedDict
 import matplotlib.pyplot as plt
-from matplotlib.colors import TABLEAU_COLORS
 from matplotlib.patches import Patch
 
 
 PLOT_STD = False
+CUSTOM_COLORS = ["#ff9999", "#66b3ff", "#99ff99", "#ffcc99", "#76d7c4", "#ffb3e6", "#c4e17f", "#c2c2f0"]
 
 aliases = {
     "Mixtral-8x7B-Instruct-v0.1": "Mixtral 8x7B",
@@ -20,9 +19,23 @@ aliases = {
     "LTM Agent 1 Opus": "LTM Claude 3 Opus"
 }
 
+model_order = [
+    "Mixtral 8x7B",
+    "Mixtral 8x22B",
+    "Llama 3 70B",
+    "LTM Llama 3 70B",
+    "GPT-3.5 turbo",
+    "GPT-4 turbo",
+    "LTM GPT-4 turbo",
+    "GPT-4o",
+    "Claude 3 Opus",
+    "LTM Claude 3 Opus",
+    "Gemini 1.5 Pro",
+]
 
-def load_csv_data() -> OrderedDict:
-    results = OrderedDict()
+
+def load_csv_data() -> dict:
+    results = dict()
     csv_path = input("Enter the path to the CSV results: ")
     with open(csv_path) as fd:
         for line in fd:
@@ -53,13 +66,15 @@ def main():
     for span_label, agent_values in load_csv_data().items():
         if llm_colors is None:
             llm_names = [name for name in agent_values.keys() if not name.startswith("LTM")]
-            llm_colors = {name: color for name, color in zip(llm_names, TABLEAU_COLORS.keys())}
+            llm_colors = {name: color for name, color in zip(llm_names, CUSTOM_COLORS)}
         start_pos = current_pos
         num_group_agents = 0
-        for agent_name, result in agent_values.items():
-            kwargs = dict()
+        for agent_name in model_order:
+            if agent_name not in agent_values:
+                continue
+            result = agent_values[agent_name]
+            kwargs = dict(edgecolor="black")
             if agent_name.startswith("LTM"):
-                kwargs["edgecolor"] = "white"
                 kwargs["hatch"] = "//"
             color = llm_colors[agent_name.removeprefix("LTM ")]
             score = result["score"]
@@ -77,8 +92,8 @@ def main():
     plt.legend(handles=[
         Patch(color=llm_colors[name], label=name) for name in llm_names
     ] + [
-        Patch(facecolor="black", label="Only LLM"),
-        Patch(facecolor="black", hatch="//", edgecolor="white", label="LLM + LTM"),
+        Patch(facecolor="white", edgecolor="black", label="Only LLM"),
+        Patch(facecolor="white", edgecolor="black", hatch="//", label="LLM + LTM"),
     ], bbox_to_anchor=(1, 0, 0.5, 1), loc="center left")
 
     plt.ylabel("Score")
