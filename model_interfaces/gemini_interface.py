@@ -4,7 +4,6 @@ import pickle
 import requests
 import json
 import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from google.ai import generativelanguage as glm
 from pathlib import Path
 from typing import Optional
@@ -78,8 +77,8 @@ class GeminiProInterface(ChatSession):
 
     def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         self.chat.history.append(glm.Content({'role': 'user', 'parts': [glm.Part({"text": user_message})]}))
-        while count_tokens_by_curl(history=self.chat.history) > 1e6 - self.max_message_size:
-            self.chat.history.pop(0)
+        # while count_tokens_by_curl(history=self.chat.history) > 1e6 - self.max_message_size:
+        #     self.chat.history.pop(0)
         if agent_response is None:
             agent_response = reply_by_curl(self.chat.history)
         self.chat.history.append(glm.Content({'role': 'model', 'parts': [glm.Part({"text": agent_response})]}))
