@@ -93,20 +93,24 @@
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: 200000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 9236 <b>/</b> 164857 <b>/</b> 180699 tokens</p>
         
-        <p><b>Agent</b>: LTMAgentWrapper - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000 - SEMANTIC_ONLY<br><b>Overall score</b>: 5.3 <b>/</b> 11 <b>±</b> 1.4</p>
+        <p>
+            <b>Agent</b>: LTMAgentWrapper - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000 - SEMANTIC_ONLY<br>
+            <b>Overall score</b>: 5.3 <b>/</b> 11 <b>±</b> 1.4
+        </p>
         <ul>
             
                 <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 48 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 2.96 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 848258 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 159048 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 24.60 tokens per second</li>
             
                 <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 103276 tokens</li>
             
         </ul>
+        <p>Finished in 1 hour, 9 minutes and 59.06 seconds</p>
     </div>
     <div class="run">
         <h1>Benchmark 3 - 200k</h1>
@@ -1996,7 +2000,7 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b> I've received some clandestine messages!<br><br>According to the messages, there's a meeting scheduled, and I need to bring a quiet way to open locked doors and a way to get across a river. Unfortunately, I don't have any information about the specific time and location of the meeting.</p>
-                                <p><b>Reasoning:</b> ['night', 'midnight'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'key'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['night', 'midnight', 'nighttime'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'picks', 'key'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -2042,7 +2046,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> I've received some clandestine messages!<br><br>According to the messages, there's a meeting scheduled, and I need to bring a quiet way to open locked doors, a way to get across a river, and a way to escape quickly over land. Unfortunately, I don't have any information about the specific time and location of the meeting.</p>
-                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise'] not found in answer.<br>['port', 'warehouse'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise', 'morning'] not found in answer.<br>['port', 'warehouse', 'seaport', 'docks'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>

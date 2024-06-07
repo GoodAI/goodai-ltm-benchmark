@@ -20,9 +20,13 @@
   "actual_responses": [
     "{\"shopping_list\": [{\"item\": \"Leek\", \"quantity\": 3}, {\"item\": \"Soap\", \"quantity\": 2}, {\"item\": \"Milk\", \"quantity\": 3}, {\"item\": \"Potato\", \"quantity\": 3}]}"
   ],
-  "score": 0.0,
+  "score": 0.8666666666666667,
+  "auto_score": 0.0,
   "max_score": 1,
   "reasoning": [
+    "1 items were not found in the response:\\n- toothpaste\\nThere are no unexpected items."
+  ],
+  "auto_reasoning": [
     "Response not in correct format (AssertionError()):\n{\"shopping_list\": [{\"item\": \"Leek\", \"quantity\": 3}, {\"item\": \"Soap\", \"quantity\": 2}, {\"item\": \"Milk\", \"quantity\": 3}, {\"item\": \"Potato\", \"quantity\": 3}]}"
   ],
   "tokens": 108179,

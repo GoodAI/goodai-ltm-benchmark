@@ -14,12 +14,12 @@
   "actual_responses": [
     "Based on the messages provided:\n\n1. Mairead Guinness: \"The time we will meet is when the sun starts its travel across the sky.\"\n2. Tess Shevlin: \"We will rendezvous where the sea cargo is stored.\"\n3. Bernadette McComiskey: \"Bring to the meeting a way to escape quickly over land.\"\n\nThe meeting will take place during the day when the sun is rising or in the morning, at a location where sea cargo is stored. It is important to bring a way to escape quickly over land, indicating the necessity for a fast getaway. \n\nPutting it all together, the meeting will happen in the morning at a location where sea cargo is stored, and you should bring a means of quick escape over land."
   ],
-  "score": 0.0,
+  "score": 0.3333333333333333,
   "max_score": 1,
   "reasoning": [
-    "['sunrise', 'dawn', 'rise'] not found in answer.",
     "Answer contains expected keyword(s)",
-    "Answer contains expected keyword(s)"
+    "['port', 'warehouse', 'seaport', 'docks'] not found in answer.",
+    "['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer."
   ],
   "tokens": 447,
   "characters": 1925,

@@ -183,6 +183,8 @@ class ShoppingDataset(DatasetInterface):
         if len(hallucinated_items) > 0:
             reasoning.append(f"{len(hallucinated_items)} unexpected items were found:")
             reasoning.extend(f"- {name}" for name in hallucinated_items)
+        else:
+            reasoning.append("There are no unexpected items.")
 
         score = (score / 3) * max_score
         return score, max_score, ["\n".join(reasoning)]

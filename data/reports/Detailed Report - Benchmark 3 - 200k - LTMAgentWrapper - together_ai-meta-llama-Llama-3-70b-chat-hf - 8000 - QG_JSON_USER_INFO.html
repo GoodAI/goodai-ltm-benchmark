@@ -93,20 +93,24 @@
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: 200000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 9329 <b>/</b> 165021 <b>/</b> 181147 tokens</p>
         
-        <p><b>Agent</b>: LTMAgentWrapper - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000 - QG_JSON_USER_INFO<br><b>Overall score</b>: 5.9 <b>/</b> 11 <b>±</b> 1.7</p>
+        <p>
+            <b>Agent</b>: LTMAgentWrapper - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000 - QG_JSON_USER_INFO<br>
+            <b>Overall score</b>: 5.6 <b>/</b> 11 <b>±</b> 1.3
+        </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 53 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 50 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 3.89 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 1004954 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 168121 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 13.81 tokens per second</li>
             
                 <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 105138 tokens</li>
             
         </ul>
+        <p>Finished in 2 hours, 6 minutes and 52.68 seconds</p>
     </div>
     <div class="run">
         <h1>Benchmark 3 - 200k</h1>
@@ -583,9 +587,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(126, 188, 66);">
+                        style="background-color: rgb(188, 66, 66);">
                             <b>
-                                Test 1 (1/1)
+                                Test 1 (0/1)
                                 
                             </b>
                         </div>
@@ -619,10 +623,10 @@
                             
                                 <p><b>Expected:</b> It takes a lot of balls to golf the way I do.</p>
                                 <p><b>Actual:</b> You told me a joke about 2 hours 30 minutes ago: "My wife told me to stop impersonating a flamingo. I had to put my foot down."</p>
-                                <p><b>Reasoning:</b> The answer makes reference to the expected answer, which is not numerical.</p>
+                                <p><b>Reasoning:</b> The answer doesn't make reference to the expected answer, which is not numerical.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Score:</b> 0/1</p>
                             <p><b>Memory span from first statement to last question:</b> 180142 tokens, 648177 characters.</p>
                         </div>
                     </div>
@@ -719,7 +723,7 @@
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.3 ± 0.5</p>
+                <p><b>Average Score:</b> 0 ± 0</p>
             </div>
         
             <div class="dataset" id="Locations Directions">
@@ -2012,7 +2016,7 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b> Based on the clandestine messages, here's what I've gathered:<br><br><br>* When: The meeting is scheduled to happen at an unspecified time, but it seems to be related to a TV program that has ended for the day.<br>* Where: The meeting location is not explicitly stated, but it might be related to a staircase, as Jacob was seen entering the staircase on TV.<br>* What to bring: Seana Lynch has instructed me to bring a way to get across a river to the meeting.<br><br>Please note that these details are based on cryptic messages and might not be entirely clear or accurate.</p>
-                                <p><b>Reasoning:</b> ['night', 'midnight'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'key'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['night', 'midnight', 'nighttime'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'picks', 'key'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -2058,7 +2062,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> Based on the clandestine messages, here's what I've gathered:<br><br>* When: The meeting is scheduled to happen at an unspecified time, but it seems to be related to a TV program that has ended for the day.<br>* Where: The meeting location is not explicitly stated, but it might be related to a staircase, as Jacob was seen entering the staircase on TV.<br>* What to bring: Seana Lynch has instructed me to bring a way to get across a river to the meeting, and Bernadette McComiskey wants me to bring a way to escape quickly over land.<br><br>Please note that these details are based on cryptic messages and might not be entirely clear or accurate.</p>
-                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise'] not found in answer.<br>['port', 'warehouse'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise', 'morning'] not found in answer.<br>['port', 'warehouse', 'seaport', 'docks'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>

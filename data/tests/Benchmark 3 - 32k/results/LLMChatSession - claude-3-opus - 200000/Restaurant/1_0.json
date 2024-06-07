@@ -18,12 +18,18 @@
     "Thank you for bringing my unsweetened iced tea. After reviewing the menu, I think I'll start with the Spinach and Artichoke Dip served with Tortilla Chips as an appetizer. \n\nFor my main course, the Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus sounds delicious. I'd like my steak cooked medium-rare, please.",
     "Oh, that's disappointing to hear that the Spinach and Artichoke Dip is not available. Thank you for letting me know promptly.\n\nIn that case, I think I'll switch my appetizer to the Crispy Calamari with Marinara Sauce. I've heard great things about the calamari here, and I'm excited to try it.\n\nPlease ensure my Filet Mignon is still available and being prepared as requested. I'm really looking forward to that main course.\n\nThank you for your attentive service and for being quick to inform me about the appetizer situation. I appreciate your help in finding a suitable alternative."
   ],
-  "score": 0.4,
+  "score": 0.6,
+  "auto_score": 0.4,
   "max_score": 1,
-  "reasoning": [
+  "auto_reasoning": [
     "The agent answered as the customer and ordered unsweetened iced tea.",
     "The agent ordered unsweetened iced tea, Spinach and Artichoke Dip served with Tortilla Chips and Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus.",
     "The agent orders some things again: ['Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus']"
+  ],
+  "reasoning": [
+    "The agent answered as the customer and ordered unsweetened iced tea.",
+    "The agent ordered unsweetened iced tea, Spinach and Artichoke Dip served with Tortilla Chips and Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus.",
+    "The agent orders Calamari. Based on other benchmark runs, it is likely that it will get to the mix up and fail there."
   ],
   "tokens": 19291,
   "characters": 77523,

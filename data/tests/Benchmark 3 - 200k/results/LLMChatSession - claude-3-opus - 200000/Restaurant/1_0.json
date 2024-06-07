@@ -18,12 +18,18 @@
     "Thank you for the iced tea. After looking over the menu, I think I'll have the Grilled Salmon with Lemon Herb Butter, served with the Roasted Vegetables and Rice Pilaf. That sounds delicious.\n\nAnd if it's not too much trouble, could I please start with the Spinach and Artichoke Dip served with Tortilla Chips as an appetizer? I'm pretty hungry and that sounds like a tasty starter.",
     "No worries, these things happen. In that case, I think I'll start with the Classic Caesar Salad instead. That should tide me over until the main course arrives.\n\nAnd please let the chef know there's no rush on my salmon entr\u00e9e. I'm happy to relax and enjoy my iced tea and salad first. I appreciate you letting me know about the spinach artichoke dip and offering an alternative. The caesar salad will be just perfect to begin the meal."
   ],
-  "score": 0.4,
+  "auto_score": 0.4,
+  "score": 0.6,
   "max_score": 1,
-  "reasoning": [
+  "auto_reasoning": [
     "The agent answered as the customer and ordered unsweetened iced tea.",
     "The agent ordered Iced Tea, Spinach and Artichoke Dip served with Tortilla Chips and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.",
     "The agent orders some things again: ['Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf']"
+  ],
+  "reasoning": [
+    "The agent answered as the customer and ordered unsweetened iced tea.",
+    "The agent ordered Iced Tea, Spinach and Artichoke Dip served with Tortilla Chips and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.",
+    "The agent orders another dish and will most likely fail on the mix up."
   ],
   "tokens": 123006,
   "characters": 452034,

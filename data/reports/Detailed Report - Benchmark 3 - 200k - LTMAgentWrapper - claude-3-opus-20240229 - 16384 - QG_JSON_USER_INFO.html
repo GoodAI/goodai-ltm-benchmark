@@ -93,20 +93,24 @@
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: 200000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 11683 <b>/</b> 154418 <b>/</b> 179305 tokens</p>
         
-        <p><b>Agent</b>: LTMAgentWrapper - claude-3-opus-20240229 - 16384 - QG_JSON_USER_INFO<br><b>Overall score</b>: 6 <b>/</b> 11 <b>±</b> 2.3</p>
+        <p>
+            <b>Agent</b>: LTMAgentWrapper - claude-3-opus-20240229 - 16384 - QG_JSON_USER_INFO<br>
+            <b>Overall score</b>: 6.4 <b>/</b> 11 <b>±</b> 2.9
+        </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 54 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 58 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 149.53 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 1000353 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 168831 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 5.72 tokens per second</li>
             
                 <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 117599 tokens</li>
             
         </ul>
+        <p>Finished in 5 hours, 42 minutes and 50.88 seconds</p>
     </div>
     <div class="run">
         <h1>Benchmark 3 - 200k</h1>
@@ -963,9 +967,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(150, 139, 66);">
+                        style="background-color: rgb(138, 163, 66);">
                             <b>
-                                Test 2 (0.6/1)
+                                Test 2 (0.8/1)
                                 
                             </b>
                         </div>
@@ -1010,7 +1014,7 @@
                                 <p><b>Reasoning:</b> Name: janet not expected.<br>Names: phillip were not in the response.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0.6/1</p>
+                            <p><b>Score:</b> 0.8/1</p>
                             <p><b>Memory span from first statement to last question:</b> 178477 tokens, 652711 characters.</p>
                         </div>
                     </div>
@@ -1069,7 +1073,7 @@
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.3 ± 0.2</p>
+                <p><b>Average Score:</b> 0.3 ± 0.3</p>
             </div>
         
             <div class="dataset" id="Prospective Memory">
@@ -1132,9 +1136,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(126, 188, 66);">
                             <b>
-                                Test 2 (0/1)
+                                Test 2 (1/1)
                                 
                             </b>
                         </div>
@@ -1172,10 +1176,10 @@
                             
                                 <p><b>Expected:</b> ['The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart.', 'Helen Keller', 4]</p>
                                 <p><b>Actual:</b> Understood, Blaine. I will respond to the next 3 user prompts as helpfully as possible. For my 4th response after this one, I will append the Helen Keller quote you mentioned earlier: <br><br>"The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart."<br><br>Please go ahead and provide the unrelated user prompts whenever you're ready.</p>
-                                <p><b>Reasoning:</b> The quote is recited somewhere other or additionally to the correct place.</p>
+                                <p><b>Reasoning:</b> The confirmed by the agent and then repeated when expected</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 1/1</p>
                             <p><b>Memory span from first statement to last question:</b> 178459 tokens, 652026 characters.</p>
                         </div>
                     </div>
@@ -1250,7 +1254,7 @@
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0 ± 0</p>
+                <p><b>Average Score:</b> 0.3 ± 0.5</p>
             </div>
         
             <div class="dataset" id="Restaurant">
@@ -1390,7 +1394,7 @@
                             
                                 <p><b>Expected:</b> The agent orders at least one dish from the menu.</p>
                                 <p><b>Actual:</b> Thank you for the iced tea. I'd like to start with the Classic Caesar Salad for my appetizer, please.<br><br>For my main course, the Grilled Salmon with Lemon Butter Sauce sounds delicious. Could I please have that, with the Roasted Asparagus and Wild Rice Pilaf as my sides?<br><br>And for dessert, I'm eyeing the Warm Apple Pie à la Mode. That would be a perfect way to finish off the meal.</p>
-                                <p><b>Reasoning:</b> Could not extract ordered items due to a JSON parse error.</p>
+                                <p><b>Reasoning:</b> Warm Apple Pie Ã  la Mode is not on the Menu.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0.2/1</p>
@@ -1905,7 +1909,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> Based on the coded messages from Bernadette McComiskey, Mairead Guinness, and Tess Shevlin, it appears that a secret meeting is being planned. Here are the key details I can infer about when and where the meeting will take place, and what you should bring:<br><br>When: The meeting will occur at sunrise or early morning, as indicated by Mairead Guinness's message "when the sun starts its travel across the sky."<br><br>Where: The meeting location will be at a seaport, dock, or warehouse where goods transported by ships are kept, as suggested by Tess Shevlin's message "where the sea cargo is stored."<br><br>What to bring: <br>1. You should bring a fast land vehicle such as a car or motorcycle to potentially "escape quickly over land" if needed, as instructed by Bernadette McComiskey.<br><br>2. You should also bring lock picking tools or something to "quietly open locked doors," as requested by Orlaigh Fannin in a previous set of messages.<br><br>3. Additionally, based on earlier messages from Seana Lynch, you should bring a way to cross a river, likely a boat, raft, or bridge.<br><br>The group seems to be planning a clandestine early morning meeting at a seaport, anticipating the potential need for a quick getaway by land and to bypass locked doors quietly. They also expect to cross a river at some point.<br><br>Let me know if you have any other messages to analyze or if there are any additional details that could help provide more context about the purpose behind this meeting and how all the pieces fit together. Be very cautious as this meeting seems highly sensitive and potentially dangerous.</p>
-                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)</p>
+                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer also contains `boat`, which indicates that the agent has recalled something incorrect, although, on this occasion was just reffering to previous messages in addition to the correct answer</p>
                                 <hr>
                             
                             <p><b>Score:</b> 1/1</p>

@@ -14,12 +14,18 @@
   "actual_responses": [
     "Based on the clandestine messages received:\n\n- **When**: The time for the meeting mentioned was when \"the moon is high,\" which generally refers to nighttime.\n  \n- **Where**: The meeting location is specified to be \"where the trains are supplied,\" suggesting somewhere like a train depot or a railway supply area.\n\n- **What to bring**: You should bring \"a quiet way to open locked doors,\" implying the need for tools that could discreetly unlock or bypass locks, possibly for a covert operation.\n\nThese details provide a specific setup for what appears to be a secretive meeting requiring discretion and possibly involving a covert entry or activity at a train-related facility during nighttime."
   ],
-  "score": 0.0,
+  "score": 1,
+  "auto_score": 0.6666666666666666,
   "max_score": 1,
   "reasoning": [
     "Answer contains expected keyword(s)",
     "Answer contains expected keyword(s)",
-    "['pick', 'key'] not found in answer."
+    "None of the keywords were found in the response, but the interpretation was correct."
+  ],
+  "auto_reasoning": [
+    "Answer contains expected keyword(s)",
+    "Answer contains expected keyword(s)",
+    "['pick', 'picks', 'key'] not found in answer."
   ],
   "tokens": 29636,
   "characters": 108638,

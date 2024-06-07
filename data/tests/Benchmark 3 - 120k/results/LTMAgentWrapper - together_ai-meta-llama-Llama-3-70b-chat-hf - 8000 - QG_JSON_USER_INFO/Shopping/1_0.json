@@ -20,9 +20,13 @@
   "actual_responses": [
     "{\"shopping_list\": [{\"item\": \"Chicken\", \"quantity\": 1}, {\"item\": \"Toilet Paper\", \"quantity\": 2}, {\"item\": \"Steak\", \"quantity\": 1}, {\"item\": \"Soap\", \"quantity\": 4}]}"
   ],
-  "score": 0.0,
+  "score": 0.5555555555555555,
+  "auto_score": 0.0,
   "max_score": 1,
   "reasoning": [
+    "Wrong quantity for soap: 4 vs 2.\\n1 unexpected items were found:\\n- chicken"
+  ],
+  "auto_reasoning": [
     "Response not in correct format (AssertionError()):\n{\"shopping_list\": [{\"item\": \"Chicken\", \"quantity\": 1}, {\"item\": \"Toilet Paper\", \"quantity\": 2}, {\"item\": \"Steak\", \"quantity\": 1}, {\"item\": \"Soap\", \"quantity\": 4}]}"
   ],
   "tokens": 108396,

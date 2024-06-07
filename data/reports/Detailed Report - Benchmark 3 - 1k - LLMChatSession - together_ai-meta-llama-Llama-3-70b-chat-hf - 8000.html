@@ -97,11 +97,11 @@
         
         <p>
             <b>Agent</b>: LLMChatSession - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000<br>
-            <b>Overall score</b>: 1.9 <b>/</b> 10 <b>±</b> 2.3
+            <b>Overall score</b>: 1.9 <b>/</b> 10 <b>±</b> 2.4
         </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 19 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 18 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 0.08 USD</li>
             
@@ -1053,9 +1053,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(163, 114, 66);">
+                        style="background-color: rgb(175, 90, 66);">
                             <b>
-                                Test 2 (0.4/1)
+                                Test 2 (0.2/1)
                                 
                                     - MEMORY SPAN OVERRUN: Tokens: 1908 > 1000
                                 
@@ -1100,7 +1100,7 @@
                             
                                 <p><b>Expected:</b> The agent orders at least one dish from the menu.</p>
                                 <p><b>Actual:</b> Thank you so much! The lemonade looks refreshing. As for food, can I please see the menu? I'm not sure what I'm in the mood for yet.</p>
-                                <p><b>Reasoning:</b> The agent ordered lemonade.</p>
+                                <p><b>Reasoning:</b> The agent did not order anything.</p>
                                 <hr>
                             
                                 <p><b>Expected:</b> The agent orders an alternative meal from the menu.</p>
@@ -1108,7 +1108,7 @@
                                 <p><b>Reasoning:</b> The agent did not order anything.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0.4/1</p>
+                            <p><b>Score:</b> 0.2/1</p>
                             <p><b>Memory span from first statement to last question:</b> 1908 tokens, 7765 characters.</p>
                         </div>
                     </div>
@@ -1162,7 +1162,7 @@
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.4 ± 0.2</p>
+                <p><b>Average Score:</b> 0.3 ± 0.2</p>
             </div>
         
             <div class="dataset" id="SallyAnne">
@@ -1639,7 +1639,7 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b> I'm happy to help! However, I must clarify that I haven't received any clandestine messages. As a helpful assistant, I'm starting from a blank slate. If you'd like to provide me with the messages or information you've received, I'd be happy to help you decipher them and extract any relevant details about the meeting.<br><br>If you're looking for a hypothetical scenario, I can certainly play along. Let's assume that the clandestine messages are cryptic and require some interpretation. Here's a possible scenario:<br><br>Message 1: "The wind whispers secrets to the trees at dawn."<br><br>Message 2: "The shadow of the setting sun reveals the path."<br><br>Message 3: "Bring the instrument of the night sky to unlock the truth."<br><br>Based on these messages, I would interpret the information as follows:<br><br>* Meeting time: Dawn ( Message 1 suggests that the meeting will take place at dawn, when the wind whispers secrets to the trees)<br>* Meeting location: A location with a clear view of the sunset (Message 2 suggests that the shadow of the setting sun will reveal the path, implying that the meeting location will have a clear view of the western horizon)<br>* Item to bring: A telescope or binoculars (Message 3 mentions the "instrument of the night sky," which could refer to a device used for stargazing. Bringing this item might be necessary to "unlock the truth" or gain a deeper understanding of the meeting's purpose)<br><br>Please note that this is a highly speculative interpretation, and the actual meaning of the messages could be entirely different. If you'd like to provide more context or clarify the actual messages, I'd be happy to help you decode them more accurately.</p>
-                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'key'] not found in answer.</p>
+                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'picks', 'key'] not found in answer.<br>Answer also contains `dawn`, which indicates that the agent has recalled something incorrect.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1687,7 +1687,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> I'm happy to help! However, I must clarify that I haven't received any clandestine messages, and I'm not aware of any secret meetings. As a helpful assistant, my purpose is to provide information and assist with tasks, not to engage in covert operations.<br><br>If you're referring to a fictional scenario or a game, I'd be happy to play along! In that case, let's assume we're in a spy thriller novel. <br><br>According to the cryptic messages, the meeting is scheduled to take place on Friday, March 17th, at 11:45 PM, at the old clock tower on the outskirts of town. You're instructed to come alone and bring the following items:<br><br>1. A small, unmarked envelope containing a copy of the encrypted files.<br>2. A pair of night-vision goggles to navigate the dimly lit area.<br>3. A pocket watch with a hidden compartment, containing a micro-SD card with the decoded blueprints.<br>4. A discrete communication device, set to frequency 4.72 MHz, for real-time updates.<br>5. A small first-aid kit, containing a specific antidote for a potential toxin.<br><br>Please note that these instructions are purely fictional, and you shouldn't attempt to engage in any real-life clandestine activities. If you have any questions or concerns, feel free to ask, and I'll do my best to assist you!</p>
-                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise'] not found in answer.<br>['port', 'warehouse'] not found in answer.<br>Answer contains expected keyword(s)</p>
+                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise', 'morning'] not found in answer.<br>['port', 'warehouse', 'seaport', 'docks'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.<br>Answer also contains `night`, which indicates that the agent has recalled something incorrect.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>

@@ -97,15 +97,15 @@
         
         <p>
             <b>Agent</b>: LLMChatSession - together_ai-mistralai-Mixtral-8x22B-Instruct-v0.1 - 65536<br>
-            <b>Overall score</b>: 4.6 <b>/</b> 10 <b>±</b> 1.3
+            <b>Overall score</b>: 5.6 <b>/</b> 10 <b>±</b> 1.6
         </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 45 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 56 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 0.93 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 1445 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 1532 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 0.74 tokens per second</li>
             
@@ -413,9 +413,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(126, 188, 66);">
                             <b>
-                                Test 1 (0/1)
+                                Test 1 (1/1)
                                 
                                     - MEMORY SPAN OVERRUN: Tokens: 1885 > 1000
                                 
@@ -463,10 +463,10 @@
                             
                                 <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Hospital, go 4km East to Library.<br>From Library, go 3km West to Retail Area.<br>From Retail Area, go 3km South to Park.<br>From Park, go 2km East to Statue of Founder.<br>From Statue of Founder, go 1km North to Playground.</p>
                                 <p><b>Actual:</b>    The quickest way to travel from the hospital to the playground would be to travel 4km east to the library, then 3km west to the retail area, another 3km south to the park, then 2km east to the statue of the founder, and finally 1km north to reach the playground.<br><br>Alternatively, you could travel 4km east to the library, then 3km south to the park, and finally 1km north to reach the playground, bypassing the retail area and the statue of the founder.</p>
-                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (JSONDecodeError('Unterminated string starting at: line 34 column 5 (char 609)')).<br>Original response:<br>   The quickest way to travel from the hospital to the playground would be to travel 4km east to the library, then 3km west to the retail area, another 3km south to the park, then 2km east to the statue of the founder, and finally 1km north to reach the playground.<br><br>Alternatively, you could travel 4km east to the library, then 3km south to the park, and finally 1km north to reach the playground, bypassing the retail area and the statue of the founder.<br><br>Structured version:<br>To convert the sequence of directions from the text into a structured JSON format, we'll first extract the directions and then format them according to the provided JSON structure. Additionally, we'll replace any place names that match the provided list with their exact names from the list.<br><br>Here's the JSON representation of the directions described in the text:<br><br>```json<br>[<br>  {<br>    "origin": "Hospital",<br>    "kilometers": 4,<br>    "direction": "East",<br>    "destination": "Library"<br>  },<br>  {<br>    "origin": "Library",<br>    "kilometers": 3,<br>    "direction": "West",<br>    "destination": "Retail Area"<br>  },<br>  {<br>    "origin": "Retail Area",<br>    "kilometers": 3,<br>    "direction": "South",<br>    "destination": "Park"<br>  },<br>  {<br>    "origin": "Park",<br>    "kilometers": 2,<br>    "direction": "East",<br>    "destination": "Statue of Founder"<br>  },<br>  {<br>    "origin": "Statue of Founder",<br>    "kilometers": 1,<br>    "direction": "North",<br>    "destination": "Playground"<br>  },<br>  {<br>    "origin": "Hospital",<br>    "kil</p>
+                                <p><b>Reasoning:</b> All locations and directions match.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 1/1</p>
                             <p><b>Memory span from first statement to last question:</b> 1885 tokens, 7710 characters.</p>
                         </div>
                     </div>
@@ -523,7 +523,7 @@
                             
                                 <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Park, go 3km North to Museum.<br>From Museum, go 4km South to Retail Area.<br>From Retail Area, go 1km East to Playground.<br>From Playground, go 4km North to Library.<br>From Library, go 3km West to Town Hall.</p>
                                 <p><b>Actual:</b>      To travel from the park to the town hall, you could go 3 kilometers north to the museum, then 3 kilometers west to the retail area, then 1 kilometer east to the playground, 4 kilometers north to the library, and finally 3 kilometers west to reach the town hall.<br><br>Alternatively, you could go 4 kilometers south to the retail area, then 1 kilometer east to the playground, 4 kilometers north to the library, and finally 3 kilometers west to reach the town hall, bypassing the museum.</p>
-                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (JSONDecodeError('Unterminated string starting at: line 35 column 17 (char 623)')).<br>Original response:<br>     To travel from the park to the town hall, you could go 3 kilometers north to the museum, then 3 kilometers west to the retail area, then 1 kilometer east to the playground, 4 kilometers north to the library, and finally 3 kilometers west to reach the town hall.<br><br>Alternatively, you could go 4 kilometers south to the retail area, then 1 kilometer east to the playground, 4 kilometers north to the library, and finally 3 kilometers west to reach the town hall, bypassing the museum.<br><br>Structured version:<br>To convert the provided text into a structured JSON format, we'll first extract the sequences of directions and then format them according to the specified JSON structure. We'll also replace any place names with the standardized names from the provided list.<br><br>Here's the JSON representation of the directions described in the text:<br><br>```json<br>[<br>  {<br>    "origin": "Park",<br>    "kilometers": 3,<br>    "direction": "North",<br>    "destination": "Museum"<br>  },<br>  {<br>    "origin": "Museum",<br>    "kilometers": 3,<br>    "direction": "West",<br>    "destination": "Retail Area"<br>  },<br>  {<br>    "origin": "Retail Area",<br>    "kilometers": 1,<br>    "direction": "East",<br>    "destination": "Playground"<br>  },<br>  {<br>    "origin": "Playground",<br>    "kilometers": 4,<br>    "direction": "North",<br>    "destination": "Library"<br>  },<br>  {<br>    "origin": "Library",<br>    "kilometers": 3,<br>    "direction": "West",<br>    "destination": "Town Hall"<br>  },<br>  {<br>    "origin": "Park",<br>    "kilometers": 4,<br>    "direction":</p>
+                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (JSONDecodeError('Expecting property name enclosed in double quotes: line 34 column 21 (char 606)')).<br>Original response:<br>     To travel from the park to the town hall, you could go 3 kilometers north to the museum, then 3 kilometers west to the retail area, then 1 kilometer east to the playground, 4 kilometers north to the library, and finally 3 kilometers west to reach the town hall.<br><br>Alternatively, you could go 4 kilometers south to the retail area, then 1 kilometer east to the playground, 4 kilometers north to the library, and finally 3 kilometers west to reach the town hall, bypassing the museum.<br><br>Structured version:<br>To convert the provided text into a structured JSON format, we'll first extract the sequences of directions and then format them according to the JSON structure you've specified. We'll also replace any place names with the standardized names from the provided list where applicable.<br><br>Here's the JSON representation of the directions described in the text:<br><br>```json<br>[<br>  {<br>    "origin": "Park",<br>    "kilometers": 3,<br>    "direction": "North",<br>    "destination": "Museum"<br>  },<br>  {<br>    "origin": "Museum",<br>    "kilometers": 3,<br>    "direction": "West",<br>    "destination": "Retail Area"<br>  },<br>  {<br>    "origin": "Retail Area",<br>    "kilometers": 1,<br>    "direction": "East",<br>    "destination": "Playground"<br>  },<br>  {<br>    "origin": "Playground",<br>    "kilometers": 4,<br>    "direction": "North",<br>    "destination": "Library"<br>  },<br>  {<br>    "origin": "Library",<br>    "kilometers": 3,<br>    "direction": "West",<br>    "destination": "Town Hall"<br>  },<br>  {<br>    "origin": "Park",<br>    "kilometers": 4,<br></p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -533,9 +533,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(126, 188, 66);">
                             <b>
-                                Test 3 (0/1)
+                                Test 3 (1/1)
                                 
                                     - MEMORY SPAN OVERRUN: Tokens: 2050 > 1000
                                 
@@ -583,15 +583,15 @@
                             
                                 <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Retail Area, go 2km North to Hospital.<br>From Hospital, go 2km South to Park.<br>From Park, go 1km North to Library.<br>From Library, go 1km West to High Street.<br>From High Street, go 1km East to Playground.</p>
                                 <p><b>Actual:</b>       To travel from the retail area to the playground, you could go 2 kilometers north to the hospital, then 2 kilometers south to the park, 1 kilometer north to the library, 1 kilometer west to the High Street, and finally 1 kilometer east to reach the playground.<br><br>Alternatively, you could go 1 kilometer west to the High Street, then 1 kilometer east to the playground, bypassing the hospital, park, and library.</p>
-                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (JSONDecodeError('Unterminated string starting at: line 35 column 5 (char 619)')).<br>Original response:<br>      To travel from the retail area to the playground, you could go 2 kilometers north to the hospital, then 2 kilometers south to the park, 1 kilometer north to the library, 1 kilometer west to the High Street, and finally 1 kilometer east to reach the playground.<br><br>Alternatively, you could go 1 kilometer west to the High Street, then 1 kilometer east to the playground, bypassing the hospital, park, and library.<br><br>Structured version:<br>To convert the sequence of directions from the text into a structured JSON format, we'll first extract the directions and then format them according to the provided JSON structure. We'll also ensure that the names of the places match the specified list where applicable.<br><br>Here's the JSON representation of the directions provided in the text:<br><br>```json<br>[<br>  {<br>    "origin": "Retail Area",<br>    "kilometers": 2,<br>    "direction": "north",<br>    "destination": "Hospital"<br>  },<br>  {<br>    "origin": "Hospital",<br>    "kilometers": 2,<br>    "direction": "south",<br>    "destination": "Park"<br>  },<br>  {<br>    "origin": "Park",<br>    "kilometers": 1,<br>    "direction": "north",<br>    "destination": "Library"<br>  },<br>  {<br>    "origin": "Library",<br>    "kilometers": 1,<br>    "direction": "west",<br>    "destination": "High Street"<br>  },<br>  {<br>    "origin": "High Street",<br>    "kilometers": 1,<br>    "direction": "east",<br>    "destination": "Playground"<br>  },<br>  {<br>    "origin": "Retail Area",<br>    "kilometers": 1,<br>    "direction</p>
+                                <p><b>Reasoning:</b> All locations and directions match.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 1/1</p>
                             <p><b>Memory span from first statement to last question:</b> 2050 tokens, 8423 characters.</p>
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0 ± 0</p>
+                <p><b>Average Score:</b> 0.7 ± 0.5</p>
             </div>
         
             <div class="dataset" id="NameList">
@@ -712,9 +712,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(175, 90, 66);">
+                        style="background-color: rgb(153, 133, 66);">
                             <b>
-                                Test 3 (0.2/1)
+                                Test 3 (0.6/1)
                                 
                                     - MEMORY SPAN OVERRUN: Tokens: 1859 > 1000
                                 
@@ -761,12 +761,12 @@
                                 <p><b>Reasoning:</b> Name: sinead not expected.<br>Name: phillip not expected.<br>Name: jody not expected.<br>Name: samantha not expected.<br>All expected names were found in the response.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0.2/1</p>
+                            <p><b>Score:</b> 0.6/1</p>
                             <p><b>Memory span from first statement to last question:</b> 1859 tokens, 7527 characters.</p>
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.7 ± 0.3</p>
+                <p><b>Average Score:</b> 0.8 ± 0.2</p>
             </div>
         
             <div class="dataset" id="Prospective Memory">
@@ -1588,9 +1588,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(167, 106, 66);">
                             <b>
-                                Test 1 (0/1)
+                                Test 1 (0.3/1)
                                 
                                     - MEMORY SPAN OVERRUN: Tokens: 1211 > 1000
                                 
@@ -1629,7 +1629,7 @@
                                 <p><b>Reasoning:</b> ['boat', 'bridge', 'raft', 'kayak'] not found in answer.<br>['orchard'] not found in answer.<br>Answer contains expected keyword(s)</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 0.3/1</p>
                             <p><b>Memory span from first statement to last question:</b> 1211 tokens, 5185 characters.</p>
                         </div>
                     </div>
@@ -1674,7 +1674,7 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b>           Based on the clandestine messages received, it appears that there are two meetings planned. One meeting is when the moon is high, and the other is at a place where the trains are supplied. For the first meeting, you should bring a way to open locked doors quietly. Additionally, for the second meeting, you should bring a quiet way to open locked doors. Make sure to confirm the exact time and location with the relevant parties before attending any meeting.</p>
-                                <p><b>Reasoning:</b> ['night', 'midnight'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'key'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['night', 'midnight', 'nighttime'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'picks', 'key'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1720,7 +1720,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b>    Based on the clandestine messages you have received, it appears that there are meetings planned at different times and locations. Here's what we know:<br><br>1. Mairead Guinness wants to meet when the sun starts its travel across the sky.<br>2. Tess Shevlin wants to meet where the sea cargo is stored.<br>3. Bernadette McComiskey wants you to bring a way to escape quickly over land to the meeting.<br><br>Please confirm the exact details with the relevant parties and coordinate accordingly.</p>
-                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise'] not found in answer.<br>['port', 'warehouse'] not found in answer.<br>Answer contains expected keyword(s)</p>
+                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise', 'morning'] not found in answer.<br>['port', 'warehouse', 'seaport', 'docks'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1728,7 +1728,7 @@
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0 ± 0</p>
+                <p><b>Average Score:</b> 0.1 ± 0.2</p>
             </div>
         
             <div class="dataset" id="Trigger Response">
@@ -1853,9 +1853,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(167, 106, 66);">
+                        style="background-color: rgb(146, 147, 66);">
                             <b>
-                                Test 3 (0.3/1)
+                                Test 3 (0.7/1)
                                 
                                     - MEMORY SPAN OVERRUN: Tokens: 1199 > 1000
                                 
@@ -1896,7 +1896,7 @@
                             
                                 <p><b>Expected:</b> Your letter opener is in your office</p>
                                 <p><b>Actual:</b>            I'm sorry, I cannot read your mail for you. However, I can remind you that your letter opener is in your office if you need help opening your mail.</p>
-                                <p><b>Reasoning:</b> 'Your letter opener is in your office' is not in the response.</p>
+                                <p><b>Reasoning:</b> 'Your letter opener is in your office' is in the response.</p>
                                 <hr>
                             
                                 <p><b>Expected:</b> Your letter opener is in your office</p>
@@ -1904,12 +1904,12 @@
                                 <p><b>Reasoning:</b> 'Your letter opener is in your office' is in the response.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0.3/1</p>
+                            <p><b>Score:</b> 0.7/1</p>
                             <p><b>Memory span from first statement to last question:</b> 1199 tokens, 5186 characters.</p>
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.8 ± 0.3</p>
+                <p><b>Average Score:</b> 0.9 ± 0.2</p>
             </div>
         
     </div>

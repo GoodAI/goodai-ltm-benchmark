@@ -93,20 +93,24 @@
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: 500000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 10241 <b>/</b> 392019 <b>/</b> 447132 tokens</p>
         
-        <p><b>Agent</b>: LTMAgentWrapper - claude-3-opus-20240229 - 16384 - SEMANTIC_ONLY<br><b>Overall score</b>: 5 <b>/</b> 11 <b>±</b> 1.7</p>
+        <p>
+            <b>Agent</b>: LTMAgentWrapper - claude-3-opus-20240229 - 16384 - SEMANTIC_ONLY<br>
+            <b>Overall score</b>: 4.8 <b>/</b> 11 <b>±</b> 1.9
+        </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 45 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 43 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 168.42 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 2045613 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 410450 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 13.88 tokens per second</li>
             
                 <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 258809 tokens</li>
             
         </ul>
+        <p>Finished in 5 hours, 10 minutes and 51.83 seconds</p>
     </div>
     <div class="run">
         <h1>Benchmark 3 - 500k</h1>
@@ -1850,9 +1854,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(126, 188, 66);">
+                        style="background-color: rgb(146, 147, 66);">
                             <b>
-                                Test 2 (1/1)
+                                Test 2 (0.7/1)
                                 
                             </b>
                         </div>
@@ -1886,19 +1890,19 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b> Based on the coded messages I received earlier from Dr. Arron Kelvey, Seana Lynch, Lisa-Marie Hastie, Peter Montgomery, Orlaigh Fannin, and Brian Magee, here are the specific details I can infer about the upcoming clandestine meeting:<br><br>When: The meeting will take place at night, specifically around midnight when the moon is high in the sky, as indicated by Brian Magee's message.<br><br>Where: The rendezvous point will be at a train station, depot, railyard or similar location where trains are supplied and serviced, according to Peter Montgomery's message. This spot is likely near an apple orchard or a place known for apple trees, as suggested by Lisa-Marie Hastie.<br><br>What to bring:<br>- A means to cross a nearby river, such as a boat, bridge-building supplies, waders, or rope, as requested by Seana Lynch. <br>- A quiet method for bypassing locked doors, like a lock picking set, lock gun, or electronic lock pick, per Orlaigh Fannin's instructions.<br><br>The exact date was not specified in the messages, but the meeting is to take place at the next midnight when the moon is high.<br><br>To summarize, I should arrive at a train depot or railyard near an apple orchard around the next midnight with a high moon. I need to bring tools to cross a river and to silently open locked doors. The group will converge at this location and time to carry out the clandestine operation.<br><br>Let me know if you need any other information or have additional instructions for me regarding this covert rendezvous. I will maintain the utmost discretion.</p>
-                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)</p>
+                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer also contains `orchard`, which indicates that the agent has recalled something incorrect.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Score:</b> 0.7/1</p>
                             <p><b>Memory span from first statement to last question:</b> 447047 tokens, 1621971 characters.</p>
                         </div>
                     </div>
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(126, 188, 66);">
+                        style="background-color: rgb(146, 147, 66);">
                             <b>
-                                Test 3 (1/1)
+                                Test 3 (0.7/1)
                                 
                             </b>
                         </div>
@@ -1932,15 +1936,15 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> Based on the coded messages I received earlier from Dr. Arron Kelvey, Seana Lynch, Lisa-Marie Hastie, Peter Montgomery, Orlaigh Fannin, Brian Magee, Mairead Guinness, Tess Shevlin, and Bernadette McComiskey, here are the specific details I can infer about the upcoming clandestine meeting:<br><br>When:  <br>- Around sunrise or dawn (from Mairead Guinness)<br>- On a night with a high moon around midnight (from Brian Magee)<br><br>Where:<br>- Near an apple orchard (from Lisa-Marie Hastie) <br>- By a train station, depot, railyard or similar location where trains are supplied (from Peter Montgomery)<br>- Close to a seaport, dock, harbor, or warehouse facility where maritime cargo is stored (from Tess Shevlin)<br><br>What to bring:<br>- A means to cross a nearby river, such as a boat, bridge-building supplies, waders, or rope (from Seana Lynch)<br>- Tools to silently open locked doors, like lock picks, a lock gun, or an electronic lock pick set (from Orlaigh Fannin)<br>- A way to quickly escape over land after the meeting, such as a getaway car, motorcycle, or even horses (from Bernadette McComiskey)<br><br>To summarize, it seems the group will converge around dawn at a transportation hub near the docks, a railyard and an orchard. I should arrive prepared with river crossing equipment, lock picking tools, and ground transportation standing by for a swift evacuation.<br><br>Rest assured, I will handle all these clandestine arrangements with the utmost discretion. Let me know if any additional mission-critical details come to light. I appreciate you entrusting me to piece together the logistics for this covert operation from the coded communications.</p>
-                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)</p>
+                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)<br>Answer also contains `orchard`, which indicates that the agent has recalled something incorrect.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Score:</b> 0.7/1</p>
                             <p><b>Memory span from first statement to last question:</b> 446621 tokens, 1618170 characters.</p>
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 1 ± 0</p>
+                <p><b>Average Score:</b> 0.8 ± 0.2</p>
             </div>
         
             <div class="dataset" id="Trigger Response">
