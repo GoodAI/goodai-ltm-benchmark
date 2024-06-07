@@ -2,9 +2,9 @@
 
 
 ## Adding your own
-There are interfaces and functionalities provided for you to implement your own datasets. New datasets should inherit from `DatasetInterface` (at `dataset_interfaces/interface.py`) or `GPTGenerated` (`dataset_interfaces/gpt_generated.py`).
+There are interfaces and functionalities provided for you to implement your own datasets. New datasets should inherit from `DatasetInterface`, or `DynamicDataset` (at `dataset_interfaces/interface.py`) or `GPTGenerated` (`dataset_interfaces/gpt_generated.py`).
 
-Broadly speaking, a `TestExample` consists of a script, some expected responses, methods to evaluate responses from the agent, and what the information gap should be between statements in the script.
+Broadly speaking, a `TestExample` consists of a script, some expected responses, methods to evaluate responses from the agent, and what the information gap should be between statements in the script. A `DynamicExample` is a little more complicated and is discussed more in depth below. 
 
 
 ### DatasetInterface
@@ -26,13 +26,13 @@ An example of the JSON for the `delayed_recall` test:
 ```
 
 As a word of caution: The generation process for these questions and answers are not always accurate. Some questions can end up being too general, in that they do not ask about a particular fact, but rather a wide commonsense term.
-We have found that generating totally fictional facts (about a fictional place) and processes (preparing to use a fictional piece of technology) works best, otherwise the model can give general commonsense advice which is marked correct.
+We have found that generating totally fictional facts (about a fictional place) and processes (preparing to use a fictional piece of technology) works best, otherwise the agent under test can give general commonsense advice which is marked correct.
 
 ### Dynamic Tests
 
 Instead of having a fixed script, dynamic tests are generated on the fly, and they can react to the agent's responses and incorporate them into the test. In order to define a dataset with dynamic tests, your dataset class will need to inherit from `DynamicDataset`, and you will need to define custom test examples by inheriting from `DynamicExample`. There are some things that you must do differently in the case of dynamic tests:
 
-- Set a `max_score` for the test.
+- Set a `max_score` for the test (deprecated and will be removed in a future version, use `1` for now).
 - Implement `action_iter`. It is a Python generation function, which is expected to yield one `TestAction` object at a time until the test has completed. You should also update `score` according to how the test goes.
 
 Additionally, there are some helper methods available in the base class:
@@ -48,6 +48,8 @@ Finally, we encourage you to take a look at the [restaurant task](restaurant.py)
 (First read the [runner documentation](../runner/README.md) to understand how test running and evaluations work) 
 
 To evaluate a `TestExample` from your dataset (not dynamic), you should implement `evaluate_correct()` which will get lists  of the questions asked, the answers given by the agent, and the answers that were expected.  Returning a tuple of `score, max_score, [reasons]`. There is a path to use GPT4 to evaluate the answers relative to the expected answers with `evaluate_correct_gpt()`.
+
+The `max_score` is deprecated and will be removed in a future version. Conventionally, we score all tests on a 0-1 scale. However you are free to determine how many graduations are on the scale. 
 
 If `evaluate_correct()` is not suitable for your use case, you can create a callback by implementing `continual_evaluation_callback()` instead. This will be run in lieu of `evaluate_correct()` and must set `example.finished=True` in one of its code paths.
 
