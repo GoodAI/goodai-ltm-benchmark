@@ -1,8 +1,8 @@
-# GoodAI LTM Benchmark (v3.5)
+# GoodAI LTM Benchmark
 
 ![GoodAI Logo. A cybernetic owl, which is half robot, half organic, and next to it the company name: GoodAI](reporting/templates/GoodAI_logo.png "GoodAI Research s.r.o.")
 
-This repository contains the code and data to replicate our experiments regarding the Long-Term Memory (LTM) abilities of conversational agents. This is the 2<sup>nd</sup> version of our LTM Benchmark. Check out [our blogpost](https://www.goodai.com/introducing-goodai-ltm-benchmark/) for more information about the benchmark and the related research goals.
+This repository contains the code and data to replicate our experiments regarding the Long-Term Memory (LTM) abilities of conversational agents. The benchmark was originally released jointly with [a blogpost](https://www.goodai.com/introducing-goodai-ltm-benchmark/), check it out for obtaining more information about the benchmark and the related research goals.
 
 As part of our research efforts in the area of continual learning, we are open-sourcing this benchmark for testing agents’ ability to perform tasks involving the advanced use of the memory over very long conversations. Among others, we evaluate the agent’s performance on tasks that require dynamic upkeep of memories or integration of information over long periods of time.
 
@@ -22,14 +22,14 @@ git clone git@github.com:GoodAI/goodai-ltm-benchmark.git
 
 The file `run_benchmark.py` can be executed by giving it a configuration `.yml` file using `-c` (examples are located in `./configurations/`), an agent using `-a` (see below), and optionally a limit for the size of the context with `-m`.
 
-For example, to run the 1k blogpost benchmark on the GPT4-turbo-preview LLM with a context size of 4096 tokens:
+For example, to run a benchmark on the GPT4-turbo LLM with a context size of 4096 tokens:
 
 ```bash
-python run_benchmark.py -c ./configurations/published_benchmarks/benchmark-v3-500k.yml \
+python run_benchmark.py -c ./configurations/published_benchmarks/<configuration_name>.yml \
                         -a gpt-4-turbo -m 4096
 ```
 
-This will generate a set of test specifications if there is not one already, and start to produce result files, one for each test. The result files will be located at `./tests/Benchmark 1 - 1k Filler/results/GPTChatSession - gpt-4-1106-preview - 4096/`.
+This will generate a set of test specifications if there is not one already, and start to produce result files, one for each test. The result files will be located at `./tests/<benchmark_name>/results/<agent_name>/`.
 
 At the end of testing, an HTML report will be generated in `data/reports` which will give a detailed breakdown of the tests run, responses, and evaluations. It will be given a name of the form `<time stamp> - Detailed Report - <run_name> - <agent_name>.html`.
 
