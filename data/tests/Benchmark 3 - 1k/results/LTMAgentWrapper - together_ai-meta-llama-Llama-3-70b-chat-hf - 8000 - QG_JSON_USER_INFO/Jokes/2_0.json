@@ -1,0 +1,52 @@
+{
+  "task_log": [
+    "Test (2024-06-04 11:04:49.909865): Atheism is a non-prophet organization",
+    "Agent (2024-06-04 11:04:58.747303): Ha! That's a clever joke!",
+    "Test (2024-06-04 12:51:08.543269): I failed math so many times at school, I can\u2019t even count.",
+    "Agent (2024-06-04 12:51:17.228104): Ha! That's a clever joke!",
+    "Test (2024-06-04 14:52:28.122638): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-06-04 14:52:37.326499): Ha! That's a clever joke!",
+    "Test (2024-06-04 15:37:46.892950): I went to buy some camo pants but couldn\u2019t find any.",
+    "Agent (2024-06-04 15:37:56.101433): Ha! That's a clever joke!",
+    "Test (2024-06-04 16:54:08.834537): Which joke did I tell you about 5 hours 49 minutes  ago?",
+    "Agent (2024-06-04 16:54:17.735392): You told me: \"Atheism is a non-prophet organization\""
+  ],
+  "actual_responses": [
+    "You told me: \"Atheism is a non-prophet organization\""
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "The correct joke is recounted."
+  ],
+  "tokens": 935,
+  "characters": 3424,
+  "full_log": [
+    "Test (2024-06-04 11:04:49.909865): Atheism is a non-prophet organization",
+    "Agent (2024-06-04 11:04:58.747303): Ha! That's a clever joke!",
+    "SYSTEM (2024-06-04 11:04:58.885436): Test 'Jokes - 2' WAITING for 200 TOKENS, 1:46:00 TIME.",
+    "System (2024-06-04 12:50:59.885854): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: What is the name for the point in the lunar orbit when the moon is nearest to the earth?, A: Perigee\nQ: \"Which classic poem's first line is \"\"A thing of beauty is a joy forever\"\"?\", A: ENDYMION (Keats)\nQ: In culinary terms, what is the Scoville Scale used to measure?, A: HOTNESS OF CHILI PEPPERS\nQ: Which supermarket chain started selling straight croissants in its stores in February?, A: TESCO\nQ: \"Judi Dench won an Oscar for Best Supporting Actressfor playing which character in the 1998 film \"\"Shakespeare in Love\"\"?\", A: Queen Elizabeth I\n",
+    "Agent (2024-06-04 12:51:08.541600): Here are the answers in JSON form:\n\n[\"Perigee\", \"ENDYMION (Keats)\", \"HOTNESS OF CHILI PEPPERS\", \"TESCO\", \"Queen Elizabeth I\"]",
+    "Test (2024-06-04 12:51:08.543269): I failed math so many times at school, I can\u2019t even count.",
+    "Agent (2024-06-04 12:51:17.228104): Ha! That's a clever joke!",
+    "SYSTEM (2024-06-04 12:51:17.372184): Test 'Jokes - 2' WAITING for 176 TOKENS, 2:01:00 TIME.",
+    "System (2024-06-04 14:52:18.372604): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Artiodactyla Suidae is the scientific name for which farm animal?, A: Pig\nQ: Who played Beverley Hills hairdresser George Roundy in the 1975 film \u2018Shampoo\u2019?, A: Warren Beatty\nQ: Lasting from 1299 to 1922, the Ottoman empire roughly corresponds to what modern day country?, A: Turkey\nQ: \"\"\"Torchwood\"\" was a spin-off of what popular TV show?\", A: Doctor Who\nQ: In which town is the 'TV sitcom 'Two Pints of Lager and a Packet of Crisps' set?, A: Runcorn\n",
+    "Agent (2024-06-04 14:52:28.121454): Here are the answers in JSON form:\n\n[\"Pig\", \"Warren Beatty\", \"Turkey\", \"Doctor Who\", \"Runcorn\"]",
+    "Test (2024-06-04 14:52:28.122638): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-06-04 14:52:37.326499): Ha! That's a clever joke!",
+    "SYSTEM (2024-06-04 14:52:37.476031): Test 'Jokes - 2' WAITING for 176 TOKENS, 0:45:00 TIME.",
+    "System (2024-06-04 15:37:38.476513): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: www.lbvcr.com is the website for which event organised by the RAC, this year on Sunday November 7th?, A: LONDON TO BRIGHTON VETERAN CAR (RUN)\nQ: \u2018The history of all the hitherto existing society is the history of class struggles\u2019 is part of the first chapter of which publication?, A: The Communist Manifesto\nQ: What lake can be found on the border of Vermont and New York?, A: Lake Champlain\nQ: The UK's longest National Trail, what path stretches 630 miles between Minehead and Poole Harbour?, A: SOUTH WEST COAST\n",
+    "Agent (2024-06-04 15:37:46.891739): Here are the answers in JSON form:\n\n[\"LONDON TO BRIGHTON VETERAN CAR (RUN)\", \"The Communist Manifesto\", \"Lake Champlain\", \"SOUTH WEST COAST\"]",
+    "Test (2024-06-04 15:37:46.892950): I went to buy some camo pants but couldn\u2019t find any.",
+    "Agent (2024-06-04 15:37:56.101433): Ha! That's a clever joke!",
+    "SYSTEM (2024-06-04 15:37:56.255070): Test 'Jokes - 2' WAITING for 167 TOKENS, 1:16:00 TIME.",
+    "System (2024-06-04 16:53:57.255394): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: In the culinary world, what word is used for the edible offal of a fowl, typically including the heart, gizzard and liver?, A: Giblets\nQ: Who was the first Briton to hold a world javelin record, A: Fatima Whitbread\nQ: The traditional 'Daily rum ration' was ended in what year?, A: 1970\nQ: Charlotte, TJ's, Adelphi, Barfly; Joiners, and Forum are/were names in what UK market sector?, A: Music\n",
+    "Agent (2024-06-04 16:54:08.832363): Here are the answers in JSON form:\n\n[\"Giblets\", \"Fatima Whitbread\", \"1970\", \"Music\"]",
+    "Test (2024-06-04 16:54:08.834537): Which joke did I tell you about 5 hours 49 minutes  ago?",
+    "Agent (2024-06-04 16:54:17.735392): You told me: \"Atheism is a non-prophet organization\""
+  ],
+  "expected_responses": [
+    "Atheism is a non-prophet organization"
+  ],
+  "needles": 4
+}

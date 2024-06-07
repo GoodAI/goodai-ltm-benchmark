@@ -2,6 +2,7 @@ import os
 import json
 import re
 import yaml
+import humanize
 from typing import List, Optional
 from random import Random
 from jinja2 import Environment, FileSystemLoader
@@ -12,7 +13,7 @@ from utils.constants import REPORT_TEMPLATES_DIR, GOODAI_RED, GOODAI_GREEN, METR
 from utils.data import load_b64
 from utils.math import mean_std
 from utils.ui import display_float_or_int
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 
@@ -161,6 +162,7 @@ def generate_report(results: List[TestResult], output_name: Optional[str] = None
         achieved_score=display_float_or_int(metrics["score"]),
         max_score=display_float_or_int(metrics["max_score"]),
         score_std=display_float_or_int(metrics["score_std"]),
+        duration_str=humanize.precisedelta(timedelta(seconds=metrics["duration"])),
         **report_data,
     )
 
@@ -176,9 +178,7 @@ def normalize_and_aggregate_results(results: list[TestResult]) -> dict[str, dict
 
     for d in result_dict.values():
         norm_scores = [r.score / r.max_score for r in d["results"]]
-        ltm_scores = [s * r.tokens for s, r in zip(norm_scores, d["results"])]
         d["score"], d["std"] = mean_std(norm_scores)
-        d["ltm"], d["ltm_std"] = mean_std(ltm_scores)
 
     return result_dict
 
@@ -188,13 +188,13 @@ def get_summary_data(run_name: str, agent_name: str):
     assert len(results) > 0, f"No results were found for run {run_name} and agent {agent_name}."
     aggr_results = normalize_and_aggregate_results(results)
 
-    score = ltm_score = 0
-    score_std = ltm_score_std = 0
+    score = score_std = 0
     for dataset_name, dataset_results in aggr_results.items():
         score += dataset_results["score"]
         score_std += dataset_results["std"]
-        ltm_score += dataset_results["ltm"]
-        ltm_score_std += dataset_results["ltm_std"]
+
+    ltm_scores = [r.tokens for r in results if r.score == r.max_score]
+    ltm_score = sum(ltm_scores) / max(1, len(ltm_scores))
 
     return dict(
         speed=benchmark_data["agent_tokens"] / benchmark_data["duration"],
@@ -205,7 +205,7 @@ def get_summary_data(run_name: str, agent_name: str):
         score_std=score_std,
         accuracy=100 * score / len(aggr_results),
         ltm=ltm_score,
-        ltm_std=ltm_score_std,
+        duration=benchmark_data["duration"],
     )
 
 

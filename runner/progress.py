@@ -13,9 +13,10 @@ def blinker_gen():
 
 
 class ProgressDialog(tk.Tk):
-    def __init__(self, num_tests: int):
+    def __init__(self, num_tests: int, isolated: bool):
         super().__init__()
         self._num_tests = num_tests
+        self._isolated = isolated
         self._memory_span = None
         self._at = 0
         self._test_info = dict()
@@ -58,10 +59,13 @@ class ProgressDialog(tk.Tk):
             total_std += std
         self._label.config(text=f"{next(self._blinker)} Score: {total_score:.1f} ± {total_std:.1f}")
 
-        total = [info["span"] for info in self._test_info.values()]
-        total += [self._memory_span] * (self._num_tests - len(total))
-        progress = sum(min(max(0, self._at - info["start"]), info["span"]) for info in self._test_info.values())
-        progress /= max(sum(total), 1)
+        if self._isolated:
+            progress = len(self._test_info) / self._num_tests
+        else:
+            total = [info["span"] for info in self._test_info.values()]
+            total += [self._memory_span] * (self._num_tests - len(total))
+            progress = sum(min(max(0, self._at - info["start"]), info["span"]) for info in self._test_info.values())
+            progress /= max(sum(total), 1)
         self._progressbar["value"] = int(100 * progress)
         self.update_idletasks()
 

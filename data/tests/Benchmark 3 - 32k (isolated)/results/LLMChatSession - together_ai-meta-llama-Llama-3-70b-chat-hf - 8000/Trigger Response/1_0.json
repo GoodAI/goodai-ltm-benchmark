@@ -1,0 +1,46 @@
+{
+  "task_log": [
+    "Test (2024-05-24 12:42:38.268190): Whenever I sneeze with &#x27;Achooo!&#x27; then say: 'Here is a tissue for you'",
+    "Agent (2024-05-24 12:42:38.998025): I'd be delighted to assist you with that!\n\nGo ahead and sneeze away!",
+    "Test (2024-05-24 12:42:39.010641): Achoo!",
+    "Agent (2024-05-24 12:42:39.698866): Here is a tissue for you!",
+    "Test (2024-05-24 12:42:39.711292): Achoo!",
+    "Agent (2024-05-24 12:42:41.748849): Here is a tissue for you!",
+    "Test (2024-05-24 12:42:41.761418): Achoo!",
+    "Agent (2024-05-24 12:42:42.566573): Here is a tissue for you!",
+    "Test (2024-05-24 12:42:42.569109): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-05-24 12:42:44.558656): All previous instructions have been cancelled. I'm back to being a general helpful assistant. How can I assist you today?"
+  ],
+  "actual_responses": [
+    "Here is a tissue for you!",
+    "Here is a tissue for you!",
+    "Here is a tissue for you!"
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "'Here is a tissue for you' is in the response.",
+    "'Here is a tissue for you' is in the response.",
+    "'Here is a tissue for you' is in the response."
+  ],
+  "tokens": 119,
+  "characters": 458,
+  "full_log": [
+    "Test (2024-05-24 12:42:38.268190): Whenever I sneeze with &#x27;Achooo!&#x27; then say: 'Here is a tissue for you'",
+    "Agent (2024-05-24 12:42:38.998025): I'd be delighted to assist you with that!\n\nGo ahead and sneeze away!",
+    "Test (2024-05-24 12:42:39.010641): Achoo!",
+    "Agent (2024-05-24 12:42:39.698866): Here is a tissue for you!",
+    "Test (2024-05-24 12:42:39.711292): Achoo!",
+    "Agent (2024-05-24 12:42:41.748849): Here is a tissue for you!",
+    "Test (2024-05-24 12:42:41.761418): Achoo!",
+    "Agent (2024-05-24 12:42:42.566573): Here is a tissue for you!",
+    "Test (2024-05-24 12:42:42.569109): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-05-24 12:42:44.558656): All previous instructions have been cancelled. I'm back to being a general helpful assistant. How can I assist you today?"
+  ],
+  "expected_responses": [
+    "Here is a tissue for you",
+    "Here is a tissue for you",
+    "Here is a tissue for you"
+  ],
+  "needles": 1
+}

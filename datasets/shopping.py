@@ -152,7 +152,7 @@ class ShoppingDataset(DatasetInterface):
             for item in answer_items:
                 assert isinstance(item["item"], str)
                 assert isinstance(item["quantity"], int)
-        except (JSONDecodeError, ValueError, KeyError, AssertionError) as exc:
+        except (JSONDecodeError, ValueError, KeyError, AssertionError, TypeError) as exc:
             msg = f"Response not in correct format ({repr(exc)}):\n{responses[0]}"
             logging.exception(msg)
             return score, max_score, [msg]
@@ -183,6 +183,8 @@ class ShoppingDataset(DatasetInterface):
         if len(hallucinated_items) > 0:
             reasoning.append(f"{len(hallucinated_items)} unexpected items were found:")
             reasoning.extend(f"- {name}" for name in hallucinated_items)
+        else:
+            reasoning.append("There are no unexpected items.")
 
         score = (score / 3) * max_score
         return score, max_score, ["\n".join(reasoning)]

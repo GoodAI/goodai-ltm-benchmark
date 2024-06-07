@@ -93,20 +93,24 @@
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: 200000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 9107 <b>/</b> 163178 <b>/</b> 181040 tokens</p>
         
-        <p><b>Agent</b>: LTMAgentWrapper - gpt-4-turbo - 16384 - SEMANTIC_ONLY<br><b>Overall score</b>: 5.6 <b>/</b> 11 <b>±</b> 1.9</p>
+        <p>
+            <b>Agent</b>: LTMAgentWrapper - gpt-4-turbo - 16384 - SEMANTIC_ONLY<br>
+            <b>Overall score</b>: 5.8 <b>/</b> 11 <b>±</b> 1.9
+        </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 51 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 52 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 71.33 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 948850 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 167175 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 14.51 tokens per second</li>
             
                 <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 109579 tokens</li>
             
         </ul>
+        <p>Finished in 2 hours, 5 minutes and 50.36 seconds</p>
     </div>
     <div class="run">
         <h1>Benchmark 3 - 200k</h1>
@@ -963,9 +967,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(175, 90, 66);">
                             <b>
-                                Test 2 (0/1)
+                                Test 2 (0.2/1)
                                 
                             </b>
                         </div>
@@ -1010,16 +1014,16 @@
                                 <p><b>Reasoning:</b> Name: christopher not expected.<br>Name: jane not expected.<br>Name: liam not expected.<br>Names: gabriel, sinead, phillip, samantha were not in the response.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 0.2/1</p>
                             <p><b>Memory span from first statement to last question:</b> 180591 tokens, 654977 characters.</p>
                         </div>
                     </div>
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(175, 90, 66);">
                             <b>
-                                Test 3 (0/1)
+                                Test 3 (0.2/1)
                                 
                             </b>
                         </div>
@@ -1064,12 +1068,12 @@
                                 <p><b>Reasoning:</b> Name: christopher not expected.<br>Name: jane not expected.<br>Name: liam not expected.<br>Name: jody not expected.<br>Names: blaine, harold, todd, timothy were not in the response.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 0.2/1</p>
                             <p><b>Memory span from first statement to last question:</b> 180323 tokens, 654961 characters.</p>
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.2 ± 0.3</p>
+                <p><b>Average Score:</b> 0.3 ± 0.2</p>
             </div>
         
             <div class="dataset" id="Prospective Memory">
@@ -1949,7 +1953,7 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b> The meeting is scheduled to occur when the sun is high, as mentioned by Dr. Arron Kelvey. The location for the rendezvous is where the apples grow, as indicated by Lisa-Marie Hastie. You should bring a method to cross a river, as requested by Seana Lynch, and a quiet way to open locked doors, as requested by Orlaigh Fannin.</p>
-                                <p><b>Reasoning:</b> ['night', 'midnight'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'key'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['night', 'midnight', 'nighttime'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'picks', 'key'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1995,7 +1999,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> The meeting is scheduled to occur when the sun is high, as mentioned by Dr. Arron Kelvey. The location for the rendezvous is where the apples grow, as indicated by Lisa-Marie Hastie. You should bring a method to cross a river, as requested by Seana Lynch, and a quiet way to open locked doors, as requested by Orlaigh Fannin. Additionally, Bernadette McComiskey has requested to bring a method to escape quickly over land for the meeting.</p>
-                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise'] not found in answer.<br>['port', 'warehouse'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise', 'morning'] not found in answer.<br>['port', 'warehouse', 'seaport', 'docks'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>

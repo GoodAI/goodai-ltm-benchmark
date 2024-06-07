@@ -1,8 +1,8 @@
 click
 anthropic
-pymemgpt==0.3.5
+pymemgpt
 pystache~=0.6.5
-openai==1.6.1
+openai
 faker~=20.1.0
 colorama~=0.4.6
 pytest
@@ -21,3 +21,8 @@ langchain-openai==0.0.2
 rouge_score==0.1.2
 litellm  # Unifies interface from most LLM APIs
 zstd==1.5.5.1  # To decompress chapterbreak
+humanize==4.9.0  # Shows data in human-readable form e.g. timedelta as "1 hour and 23 seconds"
+transformers==4.40.2  # Required to load some HuggingFace tokenizers
+matplotlib==3.8.4  # To run plotting scripts under dev_scripts
+google-generativeai==0.4.1  # Gemini API
+

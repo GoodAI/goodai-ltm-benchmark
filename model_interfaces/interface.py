@@ -2,11 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Tuple, Optional
 from dataclasses import dataclass
-
-import tiktoken
-
 from utils.constants import PERSISTENCE_DIR
-from utils.llm import tokens_in_text
+from utils.llm import count_tokens_for_model
 
 
 @dataclass
@@ -66,7 +63,4 @@ class ChatSession(ABC):
         pass
 
     def token_len(self, text: str) -> int:
-        # We assume that by default the underlying LLM for a given Agent will be GPT based.
-        # If your agent is not GPT based, then override this function.
-        model = "gpt-3.5-turbo"
-        return tokens_in_text(text, model)
+        return count_tokens_for_model(text=text)

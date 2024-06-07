@@ -1,17 +1,15 @@
 import json
-import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-import litellm
-
 from model_interfaces.interface import ChatSession
 from utils.json_utils import CustomEncoder
 from utils.llm import LLMContext, make_user_message, make_assistant_message, make_system_message, \
-    get_max_prompt_size, ask_llm
+    get_max_prompt_size, ask_llm, count_tokens_for_model
 
 _system_prompt = "You are a helpful assistant."
+
 
 @dataclass
 class LLMChatSession(ChatSession):
@@ -23,14 +21,17 @@ class LLMChatSession(ChatSession):
 
     @property
     def name(self):
-        return f"{super().name} - {self.model} - {self.max_prompt_size}"
+        name = f"{super().name} - {self.model} - {self.max_prompt_size}"
+        return name.replace("/", "-")
 
     def __post_init__(self):
         super().__post_init__()
         if self.max_prompt_size is None:
             self.max_prompt_size = get_max_prompt_size(self.model)
         else:
-            self.max_prompt_size = min(self.max_prompt_size, get_max_prompt_size(self.model))
+            lite_llm_max = get_max_prompt_size(self.model)
+            if lite_llm_max > 0:
+                self.max_prompt_size = min(self.max_prompt_size, lite_llm_max)
 
     def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         if self.verbose:
@@ -41,7 +42,8 @@ class LLMChatSession(ChatSession):
 
         self.context.append(make_user_message(user_message))
         if agent_response is None:
-            response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=cost_callback,
+            c_callback = None if self.is_local else cost_callback
+            response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=c_callback,
                                max_response_tokens=self.max_response_tokens)
         else:
             response = agent_response
@@ -66,7 +68,7 @@ class LLMChatSession(ChatSession):
             self.context = json.load(fd)
 
     def token_len(self, text: str) -> int:
-        return litellm.token_counter(self.model, text=text)
+        return count_tokens_for_model(model=self.model, text=text)
 
 
 @dataclass

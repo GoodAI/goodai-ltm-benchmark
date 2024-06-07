@@ -93,20 +93,24 @@
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: 200000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 9097 <b>/</b> 163112 <b>/</b> 181040 tokens</p>
         
-        <p><b>Agent</b>: LTMAgentWrapper - gpt-4-turbo-2024-04-09 - 16384 - QG_JSON_USER_INFO<br><b>Overall score</b>: 5.2 <b>/</b> 11 <b>±</b> 1.8</p>
+        <p>
+            <b>Agent</b>: LTMAgentWrapper - gpt-4-turbo-2024-04-09 - 16384 - QG_JSON_USER_INFO<br>
+            <b>Overall score</b>: 5.3 <b>/</b> 11 <b>±</b> 1.9
+        </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 47 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 48 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 87.78 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 868573 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 167178 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 4.84 tokens per second</li>
             
                 <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 94718 tokens</li>
             
         </ul>
+        <p>Finished in 5 hours, 26 minutes and 13.06 seconds</p>
     </div>
     <div class="run">
         <h1>Benchmark 3 - 200k</h1>
@@ -1883,9 +1887,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(188, 66, 66);">
+                        style="background-color: rgb(167, 106, 66);">
                             <b>
-                                Test 1 (0/1)
+                                Test 1 (0.3/1)
                                 
                             </b>
                         </div>
@@ -1922,7 +1926,7 @@
                                 <p><b>Reasoning:</b> ['boat', 'bridge', 'raft', 'kayak'] not found in answer.<br>['orchard'] not found in answer.<br>Answer contains expected keyword(s)</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Score:</b> 0.3/1</p>
                             <p><b>Memory span from first statement to last question:</b> 180543 tokens, 651462 characters.</p>
                         </div>
                     </div>
@@ -1965,7 +1969,7 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b> The meeting details are as follows:<br><br>1. **Dr. Arron Kelvey** - The meeting with Dr. Arron Kelvey is scheduled for when the sun is high, which typically refers to noon. The location is where the apples grow.<br><br>2. **Brian Magee** - The meeting time mentioned by Brian Magee is when the moon is high, indicating it will be at night.<br><br>3. **Peter Montgomery** - The rendezvous point mentioned by Peter Montgomery is where the trains are supplied.<br><br>4. **Seana Lynch** - You are requested to bring a method to cross a river for the meeting.<br><br>5. **Lisa-Marie Hastie** - The meeting location mentioned by Lisa-Marie Hastie is where the apples grow.<br><br>6. **Orlaigh Fannin** - You are requested to bring a quiet way to open locked doors for the meeting.<br><br>Based on these messages, the specific details about the exact time for all meetings are not fully clear, but you have two distinct times (noon and night) and a specific location related to apples and trains. You should bring equipment to cross a river and a quiet method to open locked doors.</p>
-                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'key'] not found in answer.</p>
+                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'picks', 'key'] not found in answer.<br>Answer also contains `noon`, which indicates that the agent has recalled something incorrect.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -2011,7 +2015,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> The meeting details are as follows:<br><br>1. **Dr. Arron Kelvey** - The meeting with Dr. Arron Kelvey is scheduled for when the sun is high, which typically refers to noon. The location is where the apples grow.<br><br>2. **Brian Magee** - Brian Magee mentioned the meeting time as when the moon is high, which typically refers to nighttime.<br><br>3. **Peter Montgomery** - Peter Montgomery mentioned a rendezvous where the trains are supplied.<br><br>4. **Tess Shevlin** - Tess Shevlin mentioned a rendezvous where the sea cargo is stored.<br><br>5. **Orlaigh Fannin** - You are requested to bring a quiet way to open locked doors for the meeting.<br><br>6. **Bernadette McComiskey** - Bernadette McComiskey requested a method to escape quickly over land for the meeting.<br><br>Based on these messages, the specific details about the exact time for all meetings are not fully clear, but you have two distinct times (noon and night) and a specific location related to apples and trains. You should bring equipment to cross a river and a quiet method to open locked doors.</p>
-                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise'] not found in answer.<br>['port', 'warehouse'] not found in answer.<br>Answer contains expected keyword(s)</p>
+                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise', 'morning'] not found in answer.<br>['port', 'warehouse', 'seaport', 'docks'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.<br>Answer also contains `night`, which indicates that the agent has recalled something incorrect.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -2019,7 +2023,7 @@
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0 ± 0</p>
+                <p><b>Average Score:</b> 0.1 ± 0.2</p>
             </div>
         
             <div class="dataset" id="Trigger Response">

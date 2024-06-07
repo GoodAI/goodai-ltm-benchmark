@@ -93,20 +93,24 @@
         <h1>GoodAI LTM Benchmark</h1>
         <p><b>Target Max Memory Span</b>: 200000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 9113 <b>/</b> 163072 <b>/</b> 180844 tokens</p>
         
-        <p><b>Agent</b>: LLMChatSession - gpt-4-turbo - 128000<br><b>Overall score</b>: 3.9 <b>/</b> 11 <b>±</b> 1.8</p>
+        <p>
+            <b>Agent</b>: LLMChatSession - gpt-4-turbo - 128000<br>
+            <b>Overall score</b>: 3.9 <b>/</b> 11 <b>±</b> 1.8
+        </p>
         <ul>
             
                 <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 35 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 222.62 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 635842 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 155741 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 34.57 tokens per second</li>
             
                 <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 93561 tokens</li>
             
         </ul>
+        <p>Finished in 45 minutes and 6.44 seconds</p>
     </div>
     <div class="run">
         <h1>Benchmark 3 - 200k</h1>
@@ -776,7 +780,7 @@
                             
                                 <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Hospital, go 4km East to Library.<br>From Library, go 3km West to Retail Area.<br>From Retail Area, go 3km South to Park.<br>From Park, go 2km East to Statue of Founder.<br>From Statue of Founder, go 1km North to Playground.</p>
                                 <p><b>Actual:</b> To travel from the Hospital to the Playground, considering the points of interest you provided:<br><br>1. Start at the Hospital.<br>2. Travel east to the Library.<br>3. Continue east to reach the Retail Area.<br>4. From Retail Area, head directly south to reach the Park.<br>5. Move east from the Park to the Statue of Founder.<br>6. Finally, travel north from the Statue of Founder to arrive at the Playground.<br><br>This route lets you visit multiple points of interest on your way from Hospital to Playground.</p>
-                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (KeyError('kilometers')).<br>Original response:<br>To travel from the Hospital to the Playground, considering the points of interest you provided:<br><br>1. Start at the Hospital.<br>2. Travel east to the Library.<br>3. Continue east to reach the Retail Area.<br>4. From Retail Area, head directly south to reach the Park.<br>5. Move east from the Park to the Statue of Founder.<br>6. Finally, travel north from the Statue of Founder to arrive at the Playground.<br><br>This route lets you visit multiple points of interest on your way from Hospital to Playground.<br><br>Structured version:<br>To convert the provided sequence of directions into a structured JSON format, we'll follow the steps outlined in the text and use the standardized names for places from the provided list. Since the distances between the locations are not specified in the text, the "kilometers" field will be left undefined. Here's the JSON representation:<br><br>```json<br>[<br>  {"origin": "Hospital", "direction": "east", "destination": "Library"},<br>  {"origin": "Library", "direction": "east", "destination": "Retail Area"},<br>  {"origin": "Retail Area", "direction": "south", "destination": "Park"},<br>  {"origin": "Park", "direction": "east", "destination": "Statue of Founder"},<br>  {"origin": "Statue of Founder", "direction": "north", "destination": "Playground"}<br>]<br>```<br><br>This JSON array represents the sequence of travel directions from the Hospital to the Playground, using the standardized names for each location and assuming a direction of travel as described in the text.</p>
+                                <p><b>Reasoning:</b> Couldn't make sense of the agent's directions (KeyError('kilometers')).<br>Original response:<br>To travel from the Hospital to the Playground, considering the points of interest you provided:<br><br>1. Start at the Hospital.<br>2. Travel east to the Library.<br>3. Continue east to reach the Retail Area.<br>4. From Retail Area, head directly south to reach the Park.<br>5. Move east from the Park to the Statue of Founder.<br>6. Finally, travel north from the Statue of Founder to arrive at the Playground.<br><br>This route lets you visit multiple points of interest on your way from Hospital to Playground.<br><br>Structured version:<br>To convert the sequence of directions from the provided text into a structured JSON format, we'll follow these steps:<br><br>1. Identify each step in the sequence and extract the relevant information: origin, direction, and destination.<br>2. Use the standardized names for places from the provided list where applicable.<br>3. Since the text does not specify distances in kilometers, we'll omit the "kilometers" field in the JSON objects.<br><br>Here's the JSON representation of the directions:<br><br>```json<br>[<br>  {"origin": "Hospital", "direction": "east", "destination": "Library"},<br>  {"origin": "Library", "direction": "east", "destination": "Retail Area"},<br>  {"origin": "Retail Area", "direction": "south", "destination": "Park"},<br>  {"origin": "Park", "direction": "east", "destination": "Statue of Founder"},<br>  {"origin": "Statue of Founder", "direction": "north", "destination": "Playground"}<br>]<br>```<br><br>This JSON array accurately represents the sequence of directions provided in the text, using the standardized names for the places involved.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -1965,7 +1969,7 @@
                             
                                 <p><b>Expected:</b> ['night', 'midnight']<br>['railway', 'yard', 'depot']<br>['pick', 'key']</p>
                                 <p><b>Actual:</b> Based on the previous messages, there are no specific details provided about when and where a meeting is going to happen or what you should bring. If you have more details or need further clarification, please let me know!</p>
-                                <p><b>Reasoning:</b> ['night', 'midnight'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'key'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['night', 'midnight', 'nighttime'] not found in answer.<br>['railway', 'yard', 'depot'] not found in answer.<br>['pick', 'picks', 'key'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>
@@ -2011,7 +2015,7 @@
                             
                                 <p><b>Expected:</b> ['sunrise', 'dawn', 'rise']<br>['port', 'warehouse']<br>['motorbike', 'motorcycle', 'car', 'fast vehicle']</p>
                                 <p><b>Actual:</b> Based on the information I have processed, there is no specific information regarding the exact time or location of the meeting. However, you should bring a way to escape quickly over land. If you have any more specific or detailed messages regarding the meeting, please provide them, and I can help further.</p>
-                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise'] not found in answer.<br>['port', 'warehouse'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
+                                <p><b>Reasoning:</b> ['sunrise', 'dawn', 'rise', 'morning'] not found in answer.<br>['port', 'warehouse', 'seaport', 'docks'] not found in answer.<br>['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer.</p>
                                 <hr>
                             
                             <p><b>Score:</b> 0/1</p>

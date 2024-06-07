@@ -36,11 +36,11 @@ python detailed_report.py <benchmark_name> <agent_id> -o <output_name>
 
 As an example:
 ```bash
-python detailed_report.py "Benchmark 1 - 1k Filler" \
-                          "GPTChatSession - gpt-4-1106-preview - 8192" \
+python detailed_report.py "Benchmark 3 - 500k" \
+                          "LLMChatSession - gpt-4-turbo- 128000" \
                           -o my_detailed_report
 ```
-Where `GPTChatSession - gpt-4-1106-preview - 8192` is a folder inside `Benchmark 1 - 1k Filler/results/`. The folder name corresponds to the unique agent ID, which is expected to include any setting value that is subject to change.
+Where `LLMChatSession - gpt-4-turbo- 128000` is a folder inside `tests/Benchmark 3 - 500k/results/`. The folder name corresponds to the unique agent ID, which is expected to include any setting value that is subject to change.
 
 ## Comparative Reports
 

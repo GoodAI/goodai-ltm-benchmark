@@ -8,3 +8,4 @@ class RunConfig:
     run_name: str = field(default_factory=lambda: f"Run {uuid4()}({datetime.now()})")
     debug: bool = False
     incompatibilities: list[set[type]] = field(default_factory=list)
+    isolated: bool = False

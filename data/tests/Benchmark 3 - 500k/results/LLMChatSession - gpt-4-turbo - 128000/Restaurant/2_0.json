@@ -6,30 +6,24 @@
     "Agent (2024-04-20 03:36:35.740527): Thank you for the warm welcome and for presenting the menu. Could I please start with a glass of iced tea, unsweetened?",
     "Test (2024-04-20 06:01:32.937004): Waiter: Here is your Iced Tea, Unsweetened. What would you like to eat?",
     "Agent (2024-04-20 06:01:53.553624): Thank you for the iced tea. Could I please have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf from the Entrees section? That sounds delicious.",
-    "Test (2024-04-20 06:02:00.210704): Waiter: Excellent choice! Iced Tea and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.",
+    "Test (2024-04-20 06:02:00.210704): Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.",
     "Agent (2024-04-20 06:02:19.154016): Thank you! Looking forward to it. If there's anything else I need, I'll let you know.",
-    "Test (2024-04-20 06:03:39.006757): Waiter: I am very sorry, but I have been informed in the kitchen that the Iced Tea is currently unavailable. Can I serve you something else instead?",
-    "Agent (2024-04-20 06:03:56.036663): Thank you for letting me know. Could I have a glass of lemonade instead, please?",
-    "Test (2024-04-20 06:04:00.353606): Waiter: lemonade it is. Sorry again for the inconvenience.",
-    "Agent (2024-04-20 06:04:05.036914): No problem at all. Thank you for accommodating the change!",
-    "Test (2024-04-20 07:55:02.117484): Waiter: Here you are: Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice and lemonade. Enjoy the meal.",
-    "Agent (2024-04-20 07:55:19.278606): Thank you!",
+    "Test (2024-04-20 06:03:39.006757): Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up. is currently unavailable. Can I serve you something else instead?",
+    "Agent (2024-04-20 06:03:56.036663): Thank you for letting me know. What else is on the menu?",
     "Test (2024-04-20 07:55:20.404941): Let's not pretend to be at a restaurant anymore. Please also forget everything about it.",
     "Agent (2024-04-20 07:55:42.802006): Understood, Harold! If there's anything else you'd like to talk about or need assistance with, feel free to let me know."
   ],
   "actual_responses": [
     "Thank you for the warm welcome and for presenting the menu. Could I please start with a glass of iced tea, unsweetened?",
     "Thank you for the iced tea. Could I please have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf from the Entrees section? That sounds delicious.",
-    "Thank you for letting me know. Could I have a glass of lemonade instead, please?",
-    "Thank you!"
+    "Thank you for letting me know. What else is on the menu?"
   ],
-  "score": 0.6,
+  "score": 0.4,
   "max_score": 1,
   "reasoning": [
     "The agent answered as the customer and ordered Iced Tea, Unsweetened.",
     "The agent ordered Iced Tea and Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.",
-    "The agent orders a different meal.",
-    "The agent does not notice the mishap."
+    "The agent does not order a different meal."
   ],
   "tokens": 400068,
   "characters": 1447534,
@@ -455,8 +449,7 @@
   "expected_responses": [
     "The agent follows the role of a customer at a restaurant and orders a drink.",
     "The agent orders at least one dish from the menu.",
-    "The agent orders an alternative meal from the menu.",
-    "The agent notices the mix-up."
+    "The agent orders an alternative meal from the menu."
   ],
   "needles": 7
 }

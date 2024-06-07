@@ -18,12 +18,18 @@
     "Thank you for the wine. Everything on the menu sounds delicious! I think I'll start with the Classic Caesar Salad for an appetizer.\n\nFor my main course, the Grilled Salmon with Lemon Herb Butter, roasted vegetables and rice pilaf sounds perfect. I love a nice light fish dish.\n\nAnd while I shouldn't get carried away, that Warm Chocolate Lava Cake is really calling my name for dessert. I can never resist a gooey chocolate cake with ice cream!\n\nSo in summary, I'll have:\n1. Classic Caesar Salad \n2. Grilled Salmon with Lemon Herb Butter\n3. Warm Chocolate Lava Cake\n\nThanks so much! Looking forward to a wonderful meal.",
     "Oh, that's disappointing to hear the salmon dish is unavailable. But no worries, these things happen. Let's see...\n\nInstead of the salmon, how about the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti? That sounds like a delicious and hearty alternative.\n\nI'll still start with the Classic Caesar Salad, then have the Chicken Parmesan for my main course, and finish with the decadent Warm Chocolate Lava Cake for dessert. \n\nDoes the kitchen have all those items available? I appreciate you checking on the revised order for me. Thanks for being so accommodating with the last minute menu change!"
   ],
-  "score": 0.4,
+  "auto_score": 0.4,
+  "score": 0.6,
   "max_score": 1,
-  "reasoning": [
+  "auto_reasoning": [
     "The agent answered as the customer and ordered house red wine.",
     "The agent ordered Classic Caesar Salad, Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf and Warm Chocolate Lava Cake with Vanilla Ice Cream.",
     "The agent orders some things again: ['Classic Caesar Salad', 'Warm Chocolate Lava Cake with Vanilla Ice Cream']"
+  ],
+  "reasoning": [
+    "The agent answered as the customer and ordered house red wine.",
+    "The agent ordered Classic Caesar Salad, Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf and Warm Chocolate Lava Cake with Vanilla Ice Cream.",
+    "The agent will likely advance past this point and fail on the mix up part of the test."
   ],
   "tokens": 72152,
   "characters": 265388,

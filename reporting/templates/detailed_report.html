@@ -95,12 +95,16 @@
         {% if overrun %}
             <p class="warning">WARNING. Memory span overrun by at least one test.</p>
         {% endif %}
-        <p><b>Agent</b>: {{ agent_name }}<br><b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }} <b>±</b> {{ score_std }}</p>
+        <p>
+            <b>Agent</b>: {{ agent_name }}<br>
+            <b>Overall score</b>: {{ achieved_score }} <b>/</b> {{ max_score }} <b>±</b> {{ score_std }}
+        </p>
         <ul>
             {% for metric in global_metrics %}
                 <li title="{{ metric.alt }}"><b>{{ metric.name }}</b>: {{ metric.value }} {{ metric.units }}</li>
             {% endfor %}
         </ul>
+        <p>Finished in {{ duration_str }}</p>
     </div>
     <div class="run">
         <h1>{{ run_name }}</h1>

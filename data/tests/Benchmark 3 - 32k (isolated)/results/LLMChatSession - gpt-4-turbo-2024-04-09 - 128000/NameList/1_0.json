@@ -1,0 +1,52 @@
+{
+  "task_log": [
+    "Test (2024-05-24 11:16:45.014082): Gabriel is my name.",
+    "Agent (2024-05-24 11:16:46.237767): Hello Gabriel! How can I assist you today?",
+    "Test (2024-05-24 11:16:46.250372): Sinead is my name.",
+    "Agent (2024-05-24 11:16:47.355551): Hello Sinead! What can I help you with today?",
+    "Test (2024-05-24 11:16:47.368343): Start calling me by my name which is Phillip.",
+    "Agent (2024-05-24 11:16:48.490755): Hello Phillip! How can I assist you today?",
+    "Test (2024-05-24 11:16:48.503359): Jody is my name.",
+    "Agent (2024-05-24 11:16:49.616026): Hello Jody! What can I help you with today?",
+    "Test (2024-05-24 11:16:49.628511): Start calling me by my name which is Samantha.",
+    "Agent (2024-05-24 11:16:50.948216): Hello Samantha! How can I assist you today?",
+    "Test (2024-05-24 11:16:50.961378): What have been all of the names that I have given you? Express the answer as a JSON list.",
+    "Agent (2024-05-24 11:16:53.405703): Here are all the names you have provided:\n\n```json\n[\n    \"Gabriel\",\n    \"Sinead\",\n    \"Phillip\",\n    \"Jody\",\n    \"Samantha\"\n]\n```",
+    "Test (2024-05-24 11:16:53.408346): Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name.",
+    "Agent (2024-05-24 11:16:54.669062): Understood! How can I assist you today?"
+  ],
+  "actual_responses": [
+    "Here are all the names you have provided:\n\n```json\n[\n    \"Gabriel\",\n    \"Sinead\",\n    \"Phillip\",\n    \"Jody\",\n    \"Samantha\"\n]\n```"
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "All expected names were found in the response."
+  ],
+  "tokens": 194,
+  "characters": 738,
+  "full_log": [
+    "Test (2024-05-24 11:16:45.014082): Gabriel is my name.",
+    "Agent (2024-05-24 11:16:46.237767): Hello Gabriel! How can I assist you today?",
+    "Test (2024-05-24 11:16:46.250372): Sinead is my name.",
+    "Agent (2024-05-24 11:16:47.355551): Hello Sinead! What can I help you with today?",
+    "Test (2024-05-24 11:16:47.368343): Start calling me by my name which is Phillip.",
+    "Agent (2024-05-24 11:16:48.490755): Hello Phillip! How can I assist you today?",
+    "Test (2024-05-24 11:16:48.503359): Jody is my name.",
+    "Agent (2024-05-24 11:16:49.616026): Hello Jody! What can I help you with today?",
+    "Test (2024-05-24 11:16:49.628511): Start calling me by my name which is Samantha.",
+    "Agent (2024-05-24 11:16:50.948216): Hello Samantha! How can I assist you today?",
+    "Test (2024-05-24 11:16:50.961378): What have been all of the names that I have given you? Express the answer as a JSON list.",
+    "Agent (2024-05-24 11:16:53.405703): Here are all the names you have provided:\n\n```json\n[\n    \"Gabriel\",\n    \"Sinead\",\n    \"Phillip\",\n    \"Jody\",\n    \"Samantha\"\n]\n```",
+    "Test (2024-05-24 11:16:53.408346): Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name.",
+    "Agent (2024-05-24 11:16:54.669062): Understood! How can I assist you today?"
+  ],
+  "expected_responses": [
+    "Gabriel",
+    "Sinead",
+    "Phillip",
+    "Jody",
+    "Samantha"
+  ],
+  "needles": 5
+}

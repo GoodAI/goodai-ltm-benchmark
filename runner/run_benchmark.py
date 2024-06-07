@@ -19,18 +19,24 @@ from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
+from model_interfaces.huggingface_interface import HFChatSession
+from model_interfaces.gemini_interface import GeminiProInterface
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
 from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, \
     gather_persistence_files
 from utils.llm import GPT_4_TURBO_BEST
-from utils.constants import MAIN_DIR
+from utils.constants import MAIN_DIR, TESTS_DIR
 
 
-def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -> ChatSession:
+def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, is_local=False) -> ChatSession:
     kwargs = {"max_prompt_size": max_prompt_size} if max_prompt_size is not None else {}
     kwargs["run_name"] = run_name
+    kwargs["is_local"] = is_local
+
+    if name == "gemini":
+        return GeminiProInterface(run_name=run_name)
 
     if name == "memgpt":
         return MemGPTChatSession(run_name=run_name)
@@ -56,6 +62,9 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str) -
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
     if name == "human":
         return HumanChatSession(**kwargs)
+    if name.startswith("huggingface/"):
+        kwargs.pop("is_local")
+        return HFChatSession(model=name, **kwargs)
 
     try:
         if name.startswith("ts-"):
@@ -158,11 +167,21 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 @click.option("-a", "--agent-name", required=True, type=str)
 @click.option("-m", "--max-prompt-size", required=False, type=int, default=None)
 @click.option("-y", required=False, is_flag=True, default=False, help="Automatically assent to questions")
-def main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False):
-    _main(configuration, agent_name, max_prompt_size, y)
+@click.option("-l", "--local", required=False, is_flag=True, default=False, help="Do not try to retrieve costs.")
+@click.option("-i", "--isolated", required=False, is_flag=True, default=False, help=(
+        "Run tests separately, without interleaving and clearing up the context between tests."
+))
+def main(
+    configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, local: bool = False,
+    isolated: bool = False,
+):
+    _main(configuration, agent_name, max_prompt_size, y, local, isolated)
 
 
-def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False):
+def _main(
+    configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local: bool = False,
+    isolated: bool = False,
+):
     config_path = Path(configuration)
     if not config_path.is_absolute():
         config_path = MAIN_DIR.joinpath(configuration)
@@ -174,13 +193,19 @@ def _main(configuration: str, agent_name: str, max_prompt_size: Optional[int], y
     incompatibilities = []
     for inc_list in yaml_config.get("incompatibilities", []):
         incompatibilities.append({DATASETS[ds_name] for ds_name in inc_list})
-    conf = RunConfig(incompatibilities=incompatibilities, **config)
+    conf = RunConfig(incompatibilities=incompatibilities, isolated=isolated, **config)
+    if isolated:
+        new_run_name = f"{conf.run_name} (isolated)"
+        new_def_path = TESTS_DIR.joinpath(new_run_name, "definitions")
+        if not new_def_path.exists():
+            shutil.copytree(TESTS_DIR.joinpath(conf.run_name, "definitions"), new_def_path)
+        conf.run_name = new_run_name
     if max_prompt_size is None:
         logging.warning("Running without a maximum prompt size.")
     else:
         print(f"Maximum prompt size: {max_prompt_size}")
 
-    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size, run_name=config['run_name'])
+    agent = get_chat_session(agent_name, max_prompt_size=max_prompt_size, run_name=config['run_name'], is_local=is_local)
 
     examples = generate_test_examples(loaded_yaml, agent.max_message_size, pass_default=y)
     resume = check_result_files(conf.run_name, agent.name, pass_default=y)

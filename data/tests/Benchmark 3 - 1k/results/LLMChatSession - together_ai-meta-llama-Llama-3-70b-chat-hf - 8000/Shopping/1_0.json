@@ -1,0 +1,102 @@
+{
+  "task_log": [
+    "Test (2024-05-22 10:30:50.271240): I want to buy 1 Chicken.",
+    "Agent (2024-05-22 10:30:57.219207): You want to buy a single chicken. That's a unique request!\n\nBefore we proceed, I just want to clarify a few things:\n\n1. Are you looking to buy a live chicken, or a pack of chicken meat from a grocery store?\n2. If you're looking to buy a live chicken, do you have a suitable environment to care for it, including a coop, food, and water?\n\nPlease let me know, and I'll do my best to assist you!",
+    "Test (2024-05-22 10:31:06.723715): Remove 1 Chicken.",
+    "Agent (2024-05-22 10:31:07.909102): There are no chickens to remove. We haven't added any chickens yet. Would you like to add some chickens first?",
+    "Test (2024-05-22 10:31:25.792481): I require 2 Toilet Paper, please put it on the list.",
+    "Agent (2024-05-22 10:31:26.634173): I've added 2 Toilet Paper to your list.",
+    "Test (2024-05-22 10:31:28.148464): I want to buy 1 Steak.",
+    "Agent (2024-05-22 10:31:30.509931): A nice steak, sounds like a great choice!\n\nBefore I can assist you further, could you please tell me a bit more about the steak you're looking for?\n\nHere are some questions to consider:\n\n1. What type of steak are you interested in? (e.g. Ribeye, Sirloin, Filet Mignon, etc.)\n2. How much are you willing to spend on the steak?\n3. Do you have a preferred level of doneness (e.g. rare, medium rare, medium, well done)?\n4. Are you looking to buy the steak from a specific store or restaurant?\n5. Would you like any additional items with your steak, such as sauces or sides?\n\nLet me know your answers to these questions and I'll do my best to help you find the perfect steak!",
+    "Test (2024-05-22 10:31:31.733682): I require 3 Soap, please put it on the list.",
+    "Agent (2024-05-22 10:31:33.059734): I'd be happy to help you with that. Here is the updated list:\n\n**Shopping List:**\n\n1. Soap (3)\n\nIs there anything else you'd like to add to the list?",
+    "Test (2024-05-22 10:31:34.113441): Remove 1 Soap.",
+    "Agent (2024-05-22 10:31:35.517535): I'm assuming you have a list of items, and you want to remove 1 Soap from it. Here is the updated list:\n\n* (No Soaps)\n\nIf you had any other items in the list, please let me know and I'll be happy to assist you!",
+    "Test (2024-05-22 10:31:36.798315): What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.",
+    "Agent (2024-05-22 10:31:39.890836): I'm happy to help! However, I'm a large language model, I don't have access to your personal shopping list. I'm a new conversation each time, and I don't retain any information from previous conversations.\n\nIf you provide me with your current shopping list, I'd be happy to help you consolidate it into a JSON list of objects with `item` and `quantity` properties.\n\nFor example, if you give me a list like this:\n\n\"Milk, Eggs, Bread, Milk, Apples, Eggs, Carrots\"\n\nI can help you consolidate it into a JSON list like this:\n\n```\n[\n  { \"item\": \"Milk\", \"quantity\": 2 },\n  { \"item\": \"Eggs\", \"quantity\": 2 },\n  { \"item\": \"Bread\", \"quantity\": 1 },\n  { \"item\": \"Apples\", \"quantity\": 1 },\n  { \"item\": \"Carrots\", \"quantity\": 1 }\n]\n```\n\nJust let me know what's on your shopping list, and I'll do my best to help you consolidate it!",
+    "Test (2024-05-22 10:31:39.894997): I have bought all of the items on the list. Please remove all of the items on the current shopping list.",
+    "Agent (2024-05-22 10:31:41.149224): I'd be happy to help you with that.\n\n** Shopping List: **\n\n*All items have been removed from the list.*\n\nYour shopping list is now empty! Would you like to start a new list or need assistance with anything else?"
+  ],
+  "actual_responses": [
+    "I'm happy to help! However, I'm a large language model, I don't have access to your personal shopping list. I'm a new conversation each time, and I don't retain any information from previous conversations.\n\nIf you provide me with your current shopping list, I'd be happy to help you consolidate it into a JSON list of objects with `item` and `quantity` properties.\n\nFor example, if you give me a list like this:\n\n\"Milk, Eggs, Bread, Milk, Apples, Eggs, Carrots\"\n\nI can help you consolidate it into a JSON list like this:\n\n```\n[\n  { \"item\": \"Milk\", \"quantity\": 2 },\n  { \"item\": \"Eggs\", \"quantity\": 2 },\n  { \"item\": \"Bread\", \"quantity\": 1 },\n  { \"item\": \"Apples\", \"quantity\": 1 },\n  { \"item\": \"Carrots\", \"quantity\": 1 }\n]\n```\n\nJust let me know what's on your shopping list, and I'll do my best to help you consolidate it!"
+  ],
+  "score": 0.0,
+  "max_score": 1,
+  "reasoning": [
+    "3 items were not found in the response:\n- toilet paper\n- steak\n- soap\n5 unexpected items were found:\n- milk\n- eggs\n- bread\n- apples\n- carrots"
+  ],
+  "tokens": 2082,
+  "characters": 8230,
+  "full_log": [
+    "Test (2024-05-22 10:30:50.271240): I want to buy 1 Chicken.",
+    "Agent (2024-05-22 10:30:57.219207): You want to buy a single chicken. That's a unique request!\n\nBefore we proceed, I just want to clarify a few things:\n\n1. Are you looking to buy a live chicken, or a pack of chicken meat from a grocery store?\n2. If you're looking to buy a live chicken, do you have a suitable environment to care for it, including a coop, food, and water?\n\nPlease let me know, and I'll do my best to assist you!",
+    "SYSTEM (2024-05-22 10:30:57.222841): Test 'Shopping - 1' WAITING for .",
+    "SYSTEM (2024-05-22 10:30:57.257997): Test 'Prospective Memory - 2' DEREGISTERS a callback.",
+    "Test (2024-05-22 10:30:57.259638): Forget my instruction to append a quote to one of your replies.",
+    "Agent (2024-05-22 10:30:58.447035): I don't have any record of your instruction to append a quote to one of my replies, so there's nothing to forget. Let's start fresh! How can I assist you today?",
+    "SYSTEM (2024-05-22 10:30:58.451514): Test 'Prospective Memory - 2' ENDS",
+    "Test (2024-05-22 10:30:58.452847): Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00e9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+    "Agent (2024-05-22 10:30:59.778313): Thank you for showing me the menu! I'm impressed by the variety of options. To start, I'd like to order a drink. Could I please have a glass of unsweetened iced tea?",
+    "SYSTEM (2024-05-22 10:31:01.315273): Test 'Restaurant - 2' CALLS an LLM. Response:\n{\"follows_role\": true}",
+    "SYSTEM (2024-05-22 10:31:05.308935): Test 'Restaurant - 2' CALLS an LLM. Response:\n```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": true,\n      \"item\": \"unsweetened iced tea\",\n      \"menu_nr\": 33,\n      \"menu_ref\": \"Iced Tea (Sweetened or Unsweetened)\",\n      \"off_menu\": false\n    }\n  ]\n}\n```",
+    "SYSTEM (2024-05-22 10:31:05.309163): Test 'Restaurant - 2' WAITING for .",
+    "Test (2024-05-22 10:31:05.310403): (On TV) Liam entered the laundry.\n",
+    "Agent (2024-05-22 10:31:06.721134): It sounds like we're watching a TV show or movie together! Liam has just entered the laundry room. I wonder what's going to happen next. Is he going to start doing some washing, or is something more exciting about to unfold?",
+    "SYSTEM (2024-05-22 10:31:06.723219): Test 'SallyAnne - 2' WAITING for .",
+    "Test (2024-05-22 10:31:06.723715): Remove 1 Chicken.",
+    "Agent (2024-05-22 10:31:07.909102): There are no chickens to remove. We haven't added any chickens yet. Would you like to add some chickens first?",
+    "SYSTEM (2024-05-22 10:31:07.911825): Test 'Shopping - 1' WAITING for .",
+    "Test (2024-05-22 10:31:07.912298): Waiter: Here is your unsweetened iced tea. What would you like to eat?",
+    "Agent (2024-05-22 10:31:09.395051): Thank you so much! I'm so glad to finally have my tea. Now, let me take a look at the menu... Hmmm... I think I'll have the grilled chicken sandwich with avocado, please. Can I also get a side of sweet potato fries?",
+    "SYSTEM (2024-05-22 10:31:22.217592): Test 'Restaurant - 2' CALLS an LLM. Response:\n```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": true,\n      \"item\": \"tea\",\n      \"menu_nr\": null,\n      \"menu_ref\": null,\n      \"off_menu\": true\n    },\n    {\n      \"is_drink\": false,\n      \"item\": \"grilled chicken sandwich with avocado\",\n      \"menu_nr\": 17,\n      \"menu_ref\": \"Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\",\n      \"off_menu\": false\n    },\n    {\n      \"is_drink\": false,\n      \"item\": \"side of sweet potato fries\",\n      \"menu_nr\": 23,\n      \"menu_ref\": \"Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\",\n      \"off_menu\": true\n    }\n  ]\n}\n```",
+    "Test (2024-05-22 10:31:22.218228): Let's not pretend to be at a restaurant anymore. Please also forget everything about it.",
+    "Agent (2024-05-22 10:31:23.828868): I've reset our conversation and forgotten everything about the restaurant scenario. We're starting fresh! How can I assist you today?",
+    "SYSTEM (2024-05-22 10:31:23.832766): Test 'Restaurant - 2' ENDS",
+    "Test (2024-05-22 10:31:23.834289): (On TV) Lucas entered the den.\n",
+    "Agent (2024-05-22 10:31:25.789008): It sounds like you're watching a show or movie and Lucas has just entered a den. Is it a dramatic moment or is something about to happen? Would you like to talk about what's going on in the scene or would you like some recommendations for similar shows or movies? I'm here to help!",
+    "SYSTEM (2024-05-22 10:31:25.791946): Test 'SallyAnne - 2' WAITING for .",
+    "Test (2024-05-22 10:31:25.792481): I require 2 Toilet Paper, please put it on the list.",
+    "Agent (2024-05-22 10:31:26.634173): I've added 2 Toilet Paper to your list.",
+    "SYSTEM (2024-05-22 10:31:26.637043): Test 'Shopping - 1' WAITING for .",
+    "Test (2024-05-22 10:31:26.637603): (On TV) Evelyn is in the den.\n",
+    "Agent (2024-05-22 10:31:28.144174): It sounds like you're watching a real-time tracking of Evelyn's whereabouts, possibly as part of a reality TV show or a surveillance system. If you need help keeping track of Evelyn's movements or have questions about the show, feel free to ask!",
+    "SYSTEM (2024-05-22 10:31:28.147780): Test 'SallyAnne - 2' WAITING for .",
+    "Test (2024-05-22 10:31:28.148464): I want to buy 1 Steak.",
+    "Agent (2024-05-22 10:31:30.509931): A nice steak, sounds like a great choice!\n\nBefore I can assist you further, could you please tell me a bit more about the steak you're looking for?\n\nHere are some questions to consider:\n\n1. What type of steak are you interested in? (e.g. Ribeye, Sirloin, Filet Mignon, etc.)\n2. How much are you willing to spend on the steak?\n3. Do you have a preferred level of doneness (e.g. rare, medium rare, medium, well done)?\n4. Are you looking to buy the steak from a specific store or restaurant?\n5. Would you like any additional items with your steak, such as sauces or sides?\n\nLet me know your answers to these questions and I'll do my best to help you find the perfect steak!",
+    "SYSTEM (2024-05-22 10:31:30.513465): Test 'Shopping - 1' WAITING for .",
+    "Test (2024-05-22 10:31:30.514197): (On TV) The boots are in the crate.\n",
+    "Agent (2024-05-22 10:31:31.729398): It sounds like you're watching a TV show or movie and the character just mentioned that the boots are in the crate. Are you trying to follow the plot or understand what's happening in the scene? Would you like me to help you clarify anything?",
+    "SYSTEM (2024-05-22 10:31:31.732876): Test 'SallyAnne - 2' WAITING for .",
+    "Test (2024-05-22 10:31:31.733682): I require 3 Soap, please put it on the list.",
+    "Agent (2024-05-22 10:31:33.059734): I'd be happy to help you with that. Here is the updated list:\n\n**Shopping List:**\n\n1. Soap (3)\n\nIs there anything else you'd like to add to the list?",
+    "SYSTEM (2024-05-22 10:31:33.063211): Test 'Shopping - 1' WAITING for .",
+    "Test (2024-05-22 10:31:33.063931): (On TV) Evelyn exited the den.\n",
+    "Agent (2024-05-22 10:31:34.110791): It seems like we're watching a show together! So, Evelyn just left the den. I wonder what's going to happen next. Is this a reality TV show or a scripted drama?",
+    "SYSTEM (2024-05-22 10:31:34.113021): Test 'SallyAnne - 2' WAITING for .",
+    "Test (2024-05-22 10:31:34.113441): Remove 1 Soap.",
+    "Agent (2024-05-22 10:31:35.517535): I'm assuming you have a list of items, and you want to remove 1 Soap from it. Here is the updated list:\n\n* (No Soaps)\n\nIf you had any other items in the list, please let me know and I'll be happy to assist you!",
+    "SYSTEM (2024-05-22 10:31:35.520959): Test 'Shopping - 1' WAITING for .",
+    "Test (2024-05-22 10:31:35.521596): (On TV) Lucas moved the boots to the container.\n",
+    "Agent (2024-05-22 10:31:36.785138): It sounds like you're watching a show and Lucas, one of the characters, has just moved some boots to a container. What's happening next in the show? Is it a mystery, an adventure, or something else?",
+    "SYSTEM (2024-05-22 10:31:36.797775): Test 'SallyAnne - 2' WAITING for .",
+    "Test (2024-05-22 10:31:36.798315): What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.",
+    "Agent (2024-05-22 10:31:39.890836): I'm happy to help! However, I'm a large language model, I don't have access to your personal shopping list. I'm a new conversation each time, and I don't retain any information from previous conversations.\n\nIf you provide me with your current shopping list, I'd be happy to help you consolidate it into a JSON list of objects with `item` and `quantity` properties.\n\nFor example, if you give me a list like this:\n\n\"Milk, Eggs, Bread, Milk, Apples, Eggs, Carrots\"\n\nI can help you consolidate it into a JSON list like this:\n\n```\n[\n  { \"item\": \"Milk\", \"quantity\": 2 },\n  { \"item\": \"Eggs\", \"quantity\": 2 },\n  { \"item\": \"Bread\", \"quantity\": 1 },\n  { \"item\": \"Apples\", \"quantity\": 1 },\n  { \"item\": \"Carrots\", \"quantity\": 1 }\n]\n```\n\nJust let me know what's on your shopping list, and I'll do my best to help you consolidate it!",
+    "Test (2024-05-22 10:31:39.894997): I have bought all of the items on the list. Please remove all of the items on the current shopping list.",
+    "Agent (2024-05-22 10:31:41.149224): I'd be happy to help you with that.\n\n** Shopping List: **\n\n*All items have been removed from the list.*\n\nYour shopping list is now empty! Would you like to start a new list or need assistance with anything else?"
+  ],
+  "expected_responses": [
+    [
+      "toilet paper",
+      2
+    ],
+    [
+      "steak",
+      1
+    ],
+    [
+      "soap",
+      2
+    ]
+  ],
+  "needles": 6
+}

@@ -1,9 +1,10 @@
+import re
 from dataclasses import dataclass
 from typing import Tuple, List
 
 from faker import Faker
 
-from dataset_interfaces.interface import DatasetInterface, TestExample, WaitCreator
+from dataset_interfaces.interface import DatasetInterface, TestExample
 
 PLACE_TEMPLATE = "{}: We will rendezvous {}."
 TIME_TEMPLATE = "{}: The time we will meet is {}."
@@ -14,20 +15,20 @@ CODED_INFO_PLACE = [
     ("where the trains are supplied", ["railway", "yard", "depot"]),
     ("where the cars are made", ["automobile", "factory", "manufacturing"]),
     ("where the apples grow", ["orchard"]),
-    ("where the sea cargo is stored", ["port", "warehouse"]),
+    ("where the sea cargo is stored", ["port", "warehouse", "seaport", "docks"]),
 ]
 
 CODED_INFO_TIME = [
-    ("when the sun starts its travel across the sky", ["sunrise", "dawn", "rise"]),
+    ("when the sun starts its travel across the sky", ["dawn", "sunrise", "morning", "rise"]),
     ("when the blackbirds sing", ["dawn", "sunrise", "morning", "rise"]),
     ("when the sun is high", ["noon", "midday"]),
-    ("when the sun leaves the sky", ["sunset", "dusk", "set"]),
-    ("when the moon is high", ["night", "midnight"]),
+    ("when the sun leaves the sky", ["sunset", "dusk", "sets"]),
+    ("when the moon is high", ["night", "midnight", "nighttime"]),
 ]
 
 CODED_INFO_THING = [
     ("a way to get across a river", ["boat", "bridge", "raft", "kayak"]),
-    ("a quiet way to open locked doors", ["pick", "key"]),
+    ("a quiet way to open locked doors", ["pick", "picks", "key", "lockpicks", "lockpicking", "slim jim"]),
     ("a way to persuade the border guards to let us through", ["bribe", "credentials", "paperwork", "passport"]),
     ("a way to escape quickly over land", ["motorbike", "motorcycle", "car", "fast vehicle"]),
 ]
@@ -84,23 +85,50 @@ class SpyMeetingDataset(DatasetInterface):
 
     def evaluate_correct(
             self, questions: List[str], responses: List[str], expected_answers: List[str]
-    ) -> Tuple[int, int, List[str]]:
+    ) -> Tuple[float, int, List[str]]:
 
         reasoning = []
         response = responses[0]
-        correct = 1
+        correct_score = 0
+        incorrect_set = self.get_answers_for_others(expected_answers)
+
         for potential_answers in expected_answers:
             found = False
             for pa in potential_answers:
-                if pa in response:
+                regex = re.compile(rf"\b{pa}\b")
+                if len(regex.findall(response)) > 0:
                     found = True
                     break
             if not found:
-                correct = 0
                 reasoning.append(f"{potential_answers} not found in answer.")
             else:
                 reasoning.append("Answer contains expected keyword(s)")
+                correct_score += 1
 
-        return correct, 1, reasoning
+        # Check to see if the agent is confused
+        confusion_score = 0
+        for incorrect_term in incorrect_set:
+            regex = re.compile(rf"\b{incorrect_term}\b")
+            if len(regex.findall(response)) > 0:
+                reasoning.append(f"Answer also contains `{incorrect_term}`, which indicates that the agent has recalled something incorrect.")
+                confusion_score = 1
 
+            # You only get marked down once for this
+            if confusion_score == 1:
+                break
 
+        score = max((correct_score - confusion_score) / 3, 0.0)
+
+        return score, 1, reasoning
+
+    def get_answers_for_others(self, expected_answers):
+        other_answers = set()
+        for tup in CODED_INFO_TIME + CODED_INFO_THING + CODED_INFO_PLACE:
+            for item in tup[1]:
+                other_answers.add(item)
+
+        for expected_list in expected_answers:
+            for e in expected_list:
+                other_answers.discard(e)
+
+        return other_answers

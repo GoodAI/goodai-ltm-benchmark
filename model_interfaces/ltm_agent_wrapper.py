@@ -5,6 +5,9 @@ import threading
 from typing import Optional
 
 import litellm
+
+from utils.llm import count_tokens_for_model
+
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 from goodai.ltm.agent import LTMAgent, LTMAgentVariant
 from model_interfaces.interface import ChatSession
@@ -14,14 +17,17 @@ _log_prompts = os.environ.get("LTM_BENCH_PROMPT_LOGGING", "False").lower() in ["
 
 class LTMAgentWrapper(ChatSession):
     def __init__(self, model: str, max_prompt_size: int,
-                 variant: LTMAgentVariant, run_name: str = ""):
+                 variant: LTMAgentVariant, run_name: str = "", is_local: bool = False):
         super().__init__(run_name=run_name)
         self.model = model
         self.max_prompt_size = max_prompt_size
         self.variant = variant
         self.log_lock = threading.RLock()
         self.log_count = 0
-        self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=max_prompt_size,
+        internal_max_context = max_prompt_size
+        if "claude" in model or "llama" in model:
+            internal_max_context = int(0.9 * max_prompt_size)
+        self.agent = LTMAgent(variant=variant, model=model, max_prompt_size=internal_max_context,
                               prompt_callback=self._prompt_callback)
         self.costs_usd = 0
 
@@ -42,7 +48,8 @@ class LTMAgentWrapper(ChatSession):
 
     @property
     def name(self):
-        return f"{super().name} - {self.model} - {self.max_prompt_size} - {self.variant.name}"
+        model = self.model.replace("/", "-")
+        return f"{super().name} - {model} - {self.max_prompt_size} - {self.variant.name}"
 
     def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
         def _cost_fn(amount: float):
@@ -65,4 +72,4 @@ class LTMAgentWrapper(ChatSession):
         self.agent.from_state_text(state_text)
 
     def token_len(self, text: str) -> int:
-        return litellm.token_counter(self.model, text=text)
+        return count_tokens_for_model(model=self.model, text=text)

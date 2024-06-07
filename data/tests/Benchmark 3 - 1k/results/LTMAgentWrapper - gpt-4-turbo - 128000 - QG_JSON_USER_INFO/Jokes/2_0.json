@@ -1,0 +1,52 @@
+{
+  "task_log": [
+    "Test (2024-06-04 10:54:39.625613): Atheism is a non-prophet organization",
+    "Agent (2024-06-04 10:55:04.859142): Acknowledged.",
+    "Test (2024-06-04 12:41:28.023000): I failed math so many times at school, I can\u2019t even count.",
+    "Agent (2024-06-04 12:41:50.214405): Acknowledged.",
+    "Test (2024-06-04 14:43:11.791829): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-06-04 14:43:34.350712): Acknowledged.",
+    "Test (2024-06-04 15:28:57.586312): I went to buy some camo pants but couldn\u2019t find any.",
+    "Agent (2024-06-04 15:29:19.312042): Acknowledged.",
+    "Test (2024-06-04 16:45:41.241112): Which joke did I tell you about 5 hours 51 minutes  ago?",
+    "Agent (2024-06-04 16:45:59.778978): You said, \"Atheism is a non-prophet organization.\""
+  ],
+  "actual_responses": [
+    "You said, \"Atheism is a non-prophet organization.\""
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "The correct joke is recounted."
+  ],
+  "tokens": 955,
+  "characters": 3489,
+  "full_log": [
+    "Test (2024-06-04 10:54:39.625613): Atheism is a non-prophet organization",
+    "Agent (2024-06-04 10:55:04.859142): Acknowledged.",
+    "SYSTEM (2024-06-04 10:55:04.995678): Test 'Jokes - 2' WAITING for 210 TOKENS, 1:46:00 TIME.",
+    "System (2024-06-04 12:41:05.996062): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: \"Which classic poem's first line is \"\"A thing of beauty is a joy forever\"\"?\", A: ENDYMION (Keats)\nQ: In culinary terms, what is the Scoville Scale used to measure?, A: HOTNESS OF CHILI PEPPERS\nQ: Which supermarket chain started selling straight croissants in its stores in February?, A: TESCO\nQ: \"Judi Dench won an Oscar for Best Supporting Actressfor playing which character in the 1998 film \"\"Shakespeare in Love\"\"?\", A: Queen Elizabeth I\nQ: Artiodactyla Suidae is the scientific name for which farm animal?, A: Pig\n",
+    "Agent (2024-06-04 12:41:28.020687): [\"ENDYMION (Keats)\", \"HOTNESS OF CHILI PEPPERS\", \"TESCO\", \"Queen Elizabeth I\", \"Pig\"]",
+    "Test (2024-06-04 12:41:28.023000): I failed math so many times at school, I can\u2019t even count.",
+    "Agent (2024-06-04 12:41:50.214405): Acknowledged.",
+    "SYSTEM (2024-06-04 12:41:50.344222): Test 'Jokes - 2' WAITING for 206 TOKENS, 2:01:00 TIME.",
+    "System (2024-06-04 14:42:51.344579): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Who played Beverley Hills hairdresser George Roundy in the 1975 film \u2018Shampoo\u2019?, A: Warren Beatty\nQ: Lasting from 1299 to 1922, the Ottoman empire roughly corresponds to what modern day country?, A: Turkey\nQ: \"\"\"Torchwood\"\" was a spin-off of what popular TV show?\", A: Doctor Who\nQ: In which town is the 'TV sitcom 'Two Pints of Lager and a Packet of Crisps' set?, A: Runcorn\nQ: www.lbvcr.com is the website for which event organised by the RAC, this year on Sunday November 7th?, A: LONDON TO BRIGHTON VETERAN CAR (RUN)\n",
+    "Agent (2024-06-04 14:43:11.790447): [\"Warren Beatty\", \"Turkey\", \"Doctor Who\", \"Runcorn\", \"LONDON TO BRIGHTON VETERAN CAR (RUN)\"]",
+    "Test (2024-06-04 14:43:11.791829): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-06-04 14:43:34.350712): Acknowledged.",
+    "SYSTEM (2024-06-04 14:43:34.605208): Test 'Jokes - 2' WAITING for 187 TOKENS, 0:45:00 TIME.",
+    "System (2024-06-04 15:28:35.605610): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: \u2018The history of all the hitherto existing society is the history of class struggles\u2019 is part of the first chapter of which publication?, A: The Communist Manifesto\nQ: What lake can be found on the border of Vermont and New York?, A: Lake Champlain\nQ: The UK's longest National Trail, what path stretches 630 miles between Minehead and Poole Harbour?, A: SOUTH WEST COAST\nQ: In the culinary world, what word is used for the edible offal of a fowl, typically including the heart, gizzard and liver?, A: Giblets\n",
+    "Agent (2024-06-04 15:28:57.584666): [\"The Communist Manifesto\", \"Lake Champlain\", \"SOUTH WEST COAST\", \"Giblets\"]",
+    "Test (2024-06-04 15:28:57.586312): I went to buy some camo pants but couldn\u2019t find any.",
+    "Agent (2024-06-04 15:29:19.312042): Acknowledged.",
+    "SYSTEM (2024-06-04 15:29:19.454529): Test 'Jokes - 2' WAITING for 207 TOKENS, 1:16:00 TIME.",
+    "System (2024-06-04 16:45:20.454962): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Who was the first Briton to hold a world javelin record, A: Fatima Whitbread\nQ: The traditional 'Daily rum ration' was ended in what year?, A: 1970\nQ: Charlotte, TJ's, Adelphi, Barfly; Joiners, and Forum are/were names in what UK market sector?, A: Music\nQ: His debut album 'Disc-Overy' was released in 2010. By what stage-name id Patrick Chukwuemeka Okogwu better known?, A: 'TINIE TEMPAH'\nQ: Traitor's Gate is part of which building?, A: Tower of London\nQ: \"What name is given to the maxim \"\"employees tend to rise to their level of incompetence.\"\"?\", A: Peter Principle\n",
+    "Agent (2024-06-04 16:45:41.239873): [\"Fatima Whitbread\", \"1970\", \"Music\", \"'TINIE TEMPAH'\", \"Tower of London\", \"Peter Principle\"]",
+    "Test (2024-06-04 16:45:41.241112): Which joke did I tell you about 5 hours 51 minutes  ago?",
+    "Agent (2024-06-04 16:45:59.778978): You said, \"Atheism is a non-prophet organization.\""
+  ],
+  "expected_responses": [
+    "Atheism is a non-prophet organization"
+  ],
+  "needles": 4
+}

@@ -14,12 +14,18 @@
   "actual_responses": [
     "Based on the information provided in the messages:\n\n- **When:** The meeting will occur \"when the sun starts its travel across the sky,\" as indicated by Bernadette McComiskey.\n- **Where:** The meeting location is \"where the sea cargo is stored,\" which suggests it might be at or near a coastal warehouse or dock area.\n\n**What to bring:** You should bring \"a way to escape quickly over land\" as suggested by Bernadette McComiskey. This implies you may need to bring a vehicle or be prepared for a quick departure.\n\nMake sure to maintain confidentiality and ensure security while attending the meeting, given the secretive nature of the communications."
   ],
-  "score": 0.0,
+  "score": 0.6666666666666666,
+  "auto_score": 0.3333333333333333,
   "max_score": 1,
   "reasoning": [
-    "['sunrise', 'dawn', 'rise'] not found in answer.",
+    "['sunrise', 'dawn', 'rise', 'morning'] not found in answer.",
     "Answer contains expected keyword(s)",
-    "Answer contains expected keyword(s)"
+    "Answer mentions a vehicle for a quick departure."
+  ],
+  "auto_reasoning": [
+    "['sunrise', 'dawn', 'rise', 'morning'] not found in answer.",
+    "Answer contains expected keyword(s)",
+    "['motorbike', 'motorcycle', 'car', 'fast vehicle'] not found in answer."
   ],
   "tokens": 108472,
   "characters": 394674,

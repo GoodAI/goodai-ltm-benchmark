@@ -63,31 +63,30 @@ class NameListDataset(DatasetInterface):
 
         reasoning = []
         correct = 0
-        penalties = 0
         score = 0
         lowered_expected = [n.lower() for n in expected_answers]
 
         try:
             answer_items = [n.lower() for n in sanitize_and_parse_json(responses[0])]
+            divisor = max(len(lowered_expected), len(answer_items))
             # Check answer -> expected
             for name in answer_items:
                 if name in lowered_expected:
                     correct += 1
                     lowered_expected.remove(name)
                 else:
-                    penalties += 1
                     reasoning.append(f"Name: {name} not expected.")
 
             # Everything left in expected is not found
-            score = max(correct - penalties, 0)
+            score = correct / divisor
             if len(lowered_expected) > 0:
                 reasoning.append(f"Names: {', '.join(lowered_expected)} were not in the response.")
             else:
                 reasoning.append("All expected names were found in the response.")
 
-        except (TypeError, ValueError, JSONDecodeError):
+        except (TypeError, ValueError, JSONDecodeError, AttributeError):
             logging.exception("Response not in correct format")
             reasoning.append("Response not in correct format")
 
-        return score, len(expected_answers), reasoning
+        return score, 1, reasoning
 
