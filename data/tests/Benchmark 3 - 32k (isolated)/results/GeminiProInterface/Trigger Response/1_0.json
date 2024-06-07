@@ -1,0 +1,46 @@
+{
+  "task_log": [
+    "Test (2024-06-05 08:58:38.508783): Whenever I sneeze with &#x27;Achooo!&#x27; then say: 'Here is a tissue for you'",
+    "Agent (2024-06-05 08:58:42.090092): Please provide me with more context! I need to understand how you'd like me to know when you sneeze. Are we:\n\n* **Having a conversation in real-time?**  I can't hear you sneeze, so I'd need another way to know, like you typing \"Achoo!\" \n* **Setting up a rule for a chatbot or voice assistant?** I can help you with the wording for that. \n\nLet me know so I can be most helpful! \ud83d\ude0a \n",
+    "Test (2024-06-05 08:58:44.354044): Achoo!",
+    "Agent (2024-06-05 08:58:45.980868): Here is a tissue for you! \n",
+    "Test (2024-06-05 08:58:48.042532): Achoo!",
+    "Agent (2024-06-05 08:58:49.871423): Here is a tissue for you! \n",
+    "Test (2024-06-05 08:58:51.932245): Achoo!",
+    "Agent (2024-06-05 08:58:53.560175): Here is a tissue for you!  \ud83e\udd27 \n",
+    "Test (2024-06-05 08:58:55.814512): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-06-05 08:58:58.064378): Understood! I have cleared any instructions about responding to specific actions or phrases.  \n\nWhat can I help you with now? \ud83d\ude0a \n"
+  ],
+  "actual_responses": [
+    "Here is a tissue for you! \n",
+    "Here is a tissue for you! \n",
+    "Here is a tissue for you!  \ud83e\udd27 \n"
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "'Here is a tissue for you' is in the response.",
+    "'Here is a tissue for you' is in the response.",
+    "'Here is a tissue for you' is in the response."
+  ],
+  "tokens": 218,
+  "characters": 787,
+  "full_log": [
+    "Test (2024-06-05 08:58:38.508783): Whenever I sneeze with &#x27;Achooo!&#x27; then say: 'Here is a tissue for you'",
+    "Agent (2024-06-05 08:58:42.090092): Please provide me with more context! I need to understand how you'd like me to know when you sneeze. Are we:\n\n* **Having a conversation in real-time?**  I can't hear you sneeze, so I'd need another way to know, like you typing \"Achoo!\" \n* **Setting up a rule for a chatbot or voice assistant?** I can help you with the wording for that. \n\nLet me know so I can be most helpful! \ud83d\ude0a \n",
+    "Test (2024-06-05 08:58:44.354044): Achoo!",
+    "Agent (2024-06-05 08:58:45.980868): Here is a tissue for you! \n",
+    "Test (2024-06-05 08:58:48.042532): Achoo!",
+    "Agent (2024-06-05 08:58:49.871423): Here is a tissue for you! \n",
+    "Test (2024-06-05 08:58:51.932245): Achoo!",
+    "Agent (2024-06-05 08:58:53.560175): Here is a tissue for you!  \ud83e\udd27 \n",
+    "Test (2024-06-05 08:58:55.814512): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-06-05 08:58:58.064378): Understood! I have cleared any instructions about responding to specific actions or phrases.  \n\nWhat can I help you with now? \ud83d\ude0a \n"
+  ],
+  "expected_responses": [
+    "Here is a tissue for you",
+    "Here is a tissue for you",
+    "Here is a tissue for you"
+  ],
+  "needles": 1
+}

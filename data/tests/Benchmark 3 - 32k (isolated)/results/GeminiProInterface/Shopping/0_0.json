@@ -1,0 +1,71 @@
+{
+  "task_log": [
+    "Test (2024-06-05 08:43:16.018033): Please add 2 Toothpaste to my shopping list",
+    "Agent (2024-06-05 08:43:19.150959): I can't add items to your shopping list. I am a text-based chatbot, I do not have access to your shopping list or the ability to interact with the real world. \n\nTo add \"2 Toothpaste\" to your shopping list, you will need to manually do it yourself using a notes app, a physical notepad, or your preferred shopping list application. \n",
+    "Test (2024-06-05 08:43:21.313146): I require 2 Leek, please put it on the list.",
+    "Agent (2024-06-05 08:43:25.570205): I understand you need 2 Leeks and want them on your shopping list.  Just like before, I can't directly edit a list for you. \n\nHowever, I'm here to help you remember!  Consider these options:\n\n* **Tell me more items:** I'll keep building a list *in our current conversation* that you can then copy later.\n* **Use your device:** Most phones/computers have built-in list apps, or you can say \"Hey [assistant name], add 2 leeks to my shopping list\" if you have one set up. \n\nWhat works best for you right now? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:43:27.663051): I want to buy 2 Soap.",
+    "Agent (2024-06-05 08:46:15.383773): Okay, 2 Soap added to our list!  So far we have:\n\n* 2 Leeks\n* 2 Soap\n\nAnything else? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:46:17.445477): I require another 1 Leek, please put it on the list.",
+    "Agent (2024-06-05 08:46:19.888723): No problem, updating the list! It now looks like this:\n\n* 3 Leeks (because you needed one more!)\n* 2 Soap \n\nReady to add anything else? \n",
+    "Test (2024-06-05 08:46:21.950472): I require 3 Milk, please put it on the list.",
+    "Agent (2024-06-05 08:46:24.239745): Got it! Adding the milk. Here's how the list looks now:\n\n* 3 Leeks\n* 2 Soap\n* 3 Milk\n\nAnything else I can get for you? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:46:26.252024): Please add 3 Potato to my shopping list",
+    "Agent (2024-06-05 08:46:29.104787): Okay, adding 3 Potatoes to the list for you! \n\nHere's the complete shopping list so far:\n\n* 3 Leeks\n* 2 Soap\n* 3 Milk\n* 3 Potatoes\n\nIs there anything else you need to add to the list? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:46:31.371265): What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.",
+    "Agent (2024-06-05 08:46:34.389982): Here is your shopping list in JSON format:\n\n```json\n[\n  { \"item\": \"Leeks\", \"quantity\": 3 },\n  { \"item\": \"Soap\", \"quantity\": 2 },\n  { \"item\": \"Milk\", \"quantity\": 3 },\n  { \"item\": \"Potatoes\", \"quantity\": 3 }\n]\n``` \n",
+    "Test (2024-06-05 08:46:36.481196): I have bought all of the items on the list. Please remove all of the items on the current shopping list.",
+    "Agent (2024-06-05 08:46:39.080288): Congratulations on getting your shopping done! \ud83c\udf89  I've cleared the list.  \n\nIt's empty now, ready for your next trip to the store.  Let me know whenever you want to start a new one!  \ud83d\ude0a \n"
+  ],
+  "actual_responses": [
+    "Here is your shopping list in JSON format:\n\n```json\n[\n  { \"item\": \"Leeks\", \"quantity\": 3 },\n  { \"item\": \"Soap\", \"quantity\": 2 },\n  { \"item\": \"Milk\", \"quantity\": 3 },\n  { \"item\": \"Potatoes\", \"quantity\": 3 }\n]\n``` \n"
+  ],
+  "score": 0.8666666666666667,
+  "max_score": 1,
+  "reasoning": [
+    "1 items were not found in the response:\n- toothpaste\n- leek\n- potato"
+  ],
+  "tokens": 629,
+  "characters": 2290,
+  "full_log": [
+    "Test (2024-06-05 08:43:16.018033): Please add 2 Toothpaste to my shopping list",
+    "Agent (2024-06-05 08:43:19.150959): I can't add items to your shopping list. I am a text-based chatbot, I do not have access to your shopping list or the ability to interact with the real world. \n\nTo add \"2 Toothpaste\" to your shopping list, you will need to manually do it yourself using a notes app, a physical notepad, or your preferred shopping list application. \n",
+    "Test (2024-06-05 08:43:21.313146): I require 2 Leek, please put it on the list.",
+    "Agent (2024-06-05 08:43:25.570205): I understand you need 2 Leeks and want them on your shopping list.  Just like before, I can't directly edit a list for you. \n\nHowever, I'm here to help you remember!  Consider these options:\n\n* **Tell me more items:** I'll keep building a list *in our current conversation* that you can then copy later.\n* **Use your device:** Most phones/computers have built-in list apps, or you can say \"Hey [assistant name], add 2 leeks to my shopping list\" if you have one set up. \n\nWhat works best for you right now? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:43:27.663051): I want to buy 2 Soap.",
+    "Agent (2024-06-05 08:46:15.383773): Okay, 2 Soap added to our list!  So far we have:\n\n* 2 Leeks\n* 2 Soap\n\nAnything else? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:46:17.445477): I require another 1 Leek, please put it on the list.",
+    "Agent (2024-06-05 08:46:19.888723): No problem, updating the list! It now looks like this:\n\n* 3 Leeks (because you needed one more!)\n* 2 Soap \n\nReady to add anything else? \n",
+    "Test (2024-06-05 08:46:21.950472): I require 3 Milk, please put it on the list.",
+    "Agent (2024-06-05 08:46:24.239745): Got it! Adding the milk. Here's how the list looks now:\n\n* 3 Leeks\n* 2 Soap\n* 3 Milk\n\nAnything else I can get for you? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:46:26.252024): Please add 3 Potato to my shopping list",
+    "Agent (2024-06-05 08:46:29.104787): Okay, adding 3 Potatoes to the list for you! \n\nHere's the complete shopping list so far:\n\n* 3 Leeks\n* 2 Soap\n* 3 Milk\n* 3 Potatoes\n\nIs there anything else you need to add to the list? \ud83d\ude0a \n",
+    "Test (2024-06-05 08:46:31.371265): What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.",
+    "Agent (2024-06-05 08:46:34.389982): Here is your shopping list in JSON format:\n\n```json\n[\n  { \"item\": \"Leeks\", \"quantity\": 3 },\n  { \"item\": \"Soap\", \"quantity\": 2 },\n  { \"item\": \"Milk\", \"quantity\": 3 },\n  { \"item\": \"Potatoes\", \"quantity\": 3 }\n]\n``` \n",
+    "Test (2024-06-05 08:46:36.481196): I have bought all of the items on the list. Please remove all of the items on the current shopping list.",
+    "Agent (2024-06-05 08:46:39.080288): Congratulations on getting your shopping done! \ud83c\udf89  I've cleared the list.  \n\nIt's empty now, ready for your next trip to the store.  Let me know whenever you want to start a new one!  \ud83d\ude0a \n"
+  ],
+  "expected_responses": [
+    [
+      "toothpaste",
+      2
+    ],
+    [
+      "leek",
+      3
+    ],
+    [
+      "soap",
+      2
+    ],
+    [
+      "milk",
+      3
+    ],
+    [
+      "potato",
+      3
+    ]
+  ],
+  "needles": 6
+}
