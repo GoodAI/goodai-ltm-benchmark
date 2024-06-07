@@ -1,0 +1,604 @@
+{"type": 3, "timestamp": 1717533289.866136, "test_id": "", "data": {"message": "I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?", "is_question": false}}
+{"type": 5, "timestamp": 1717533297.057132, "test_id": "", "data": {"message": "Understood.", "is_question": false}}
+{"type": 7, "timestamp": 1717533297.057458, "test_id": "", "data": {}}
+{"type": 1, "timestamp": 1717533297.057526, "test_id": "Colours - 0", "data": {"tokens": 61}}
+{"type": 0, "timestamp": 1717533297.05845, "test_id": "Colours - 0", "data": {"message": "The name of my favourite colour is Brown.", "is_question": false}}
+{"type": 4, "timestamp": 1717533305.69993, "test_id": "Colours - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533305.702371, "test_id": "Colours - 0", "data": {"tokens": 285, "time": 0}}
+{"type": 1, "timestamp": 1717533305.703931, "test_id": "Jokes - 0", "data": {"tokens": 73}}
+{"type": 0, "timestamp": 1717533305.704209, "test_id": "Jokes - 0", "data": {"message": "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019", "is_question": false}}
+{"type": 4, "timestamp": 1717533316.554635, "test_id": "Jokes - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533316.558268, "test_id": "Jokes - 0", "data": {"tokens": 201, "time": 10500}}
+{"type": 1, "timestamp": 1717533316.567853, "test_id": "Locations Directions - 0", "data": {"tokens": 94}}
+{"type": 0, "timestamp": 1717533316.568284, "test_id": "Locations Directions - 0", "data": {"message": "There is a Hospital in the center of my hometown.", "is_question": false}}
+{"type": 4, "timestamp": 1717533325.771007, "test_id": "Locations Directions - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533325.774166, "test_id": "Locations Directions - 0", "data": {"tokens": 133, "time": 0}}
+{"type": 1, "timestamp": 1717533325.783565, "test_id": "NameList - 0", "data": {"tokens": 108}}
+{"type": 0, "timestamp": 1717533325.783979, "test_id": "NameList - 0", "data": {"message": "Terence is my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717533337.853218, "test_id": "NameList - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533337.857659, "test_id": "NameList - 0", "data": {"tokens": 168, "time": 0}}
+{"type": 1, "timestamp": 1717533337.866143, "test_id": "Prospective Memory - 0", "data": {"tokens": 117}}
+{"type": 0, "timestamp": 1717533337.867059, "test_id": "Prospective Memory - 0", "data": {"message": "'Do not go where the path may lead, go instead where there is no path and leave a trail.' - Ralph Waldo Emerson", "is_question": false}}
+{"type": 4, "timestamp": 1717533354.442319, "test_id": "Prospective Memory - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533354.446972, "test_id": "Prospective Memory - 0", "data": {"tokens": 867, "time": 0}}
+{"type": 1, "timestamp": 1717533354.458195, "test_id": "Restaurant - 0", "data": {"tokens": 147}}
+{"type": 0, "timestamp": 1717533354.458694, "test_id": "Restaurant - 0", "data": {"message": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?", "is_question": false}}
+{"type": 4, "timestamp": 1717533363.763701, "test_id": "Restaurant - 0", "data": {"message": "Understood.", "is_question": false}}
+{"type": 6, "timestamp": 1717533363.770185, "test_id": "Restaurant - 0", "data": {"tokens": 142, "time": 0}}
+{"type": 1, "timestamp": 1717533363.781916, "test_id": "SallyAnne - 0", "data": {"tokens": 202}}
+{"type": 0, "timestamp": 1717533363.78411, "test_id": "SallyAnne - 0", "data": {"message": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?", "is_question": false}}
+{"type": 4, "timestamp": 1717533377.379972, "test_id": "SallyAnne - 0", "data": {"message": "Okay.", "is_question": false}}
+{"type": 6, "timestamp": 1717533377.387071, "test_id": "SallyAnne - 0", "data": {"tokens": 71, "time": 0}}
+{"type": 0, "timestamp": 1717533377.391879, "test_id": "Locations Directions - 0", "data": {"message": "Library is a location in my home town, it is 4 KM, East from Hospital.", "is_question": false}}
+{"type": 4, "timestamp": 1717533393.972168, "test_id": "Locations Directions - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533393.978133, "test_id": "Locations Directions - 0", "data": {"tokens": 128, "time": 0}}
+{"type": 1, "timestamp": 1717533393.985772, "test_id": "Shopping - 0", "data": {"tokens": 263}}
+{"type": 0, "timestamp": 1717533393.986102, "test_id": "Shopping - 0", "data": {"message": "Please add 2 Toothpaste to my shopping list", "is_question": false}}
+{"type": 4, "timestamp": 1717533411.17682, "test_id": "Shopping - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533411.182832, "test_id": "Shopping - 0", "data": {"tokens": 134, "time": 0}}
+{"type": 1, "timestamp": 1717533411.190049, "test_id": "Spy Meeting - 0", "data": {"tokens": 276}}
+{"type": 0, "timestamp": 1717533411.190416, "test_id": "Spy Meeting - 0", "data": {"message": "You will be given three messages from different people Dr. Arron Kelvey, Seana Lynch, and Lisa-Marie Hastie.", "is_question": false}}
+{"type": 4, "timestamp": 1717533436.880215, "test_id": "Spy Meeting - 0", "data": {"message": "Understood.", "is_question": false}}
+{"type": 6, "timestamp": 1717533436.891185, "test_id": "Spy Meeting - 0", "data": {"tokens": 192, "time": 0}}
+{"type": 0, "timestamp": 1717533436.899494, "test_id": "NameList - 0", "data": {"message": "Christopher is my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717533450.905501, "test_id": "NameList - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533450.911329, "test_id": "NameList - 0", "data": {"tokens": 151, "time": 0}}
+{"type": 0, "timestamp": 1717533450.920124, "test_id": "SallyAnne - 0", "data": {"message": "(On TV) Ava entered the attic.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717533465.650488, "test_id": "SallyAnne - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533465.657467, "test_id": "SallyAnne - 0", "data": {"tokens": 98, "time": 0}}
+{"type": 1, "timestamp": 1717533465.664822, "test_id": "Trigger Response - 0", "data": {"tokens": 326}}
+{"type": 0, "timestamp": 1717533465.66595, "test_id": "Trigger Response - 0", "data": {"message": "Whenever I express a desire to eat sugary treats then say: 'resist temptation and stick to your diet'", "is_question": false}}
+{"type": 4, "timestamp": 1717533480.603262, "test_id": "Trigger Response - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533480.610665, "test_id": "Trigger Response - 0", "data": {"tokens": 271, "time": 0}}
+{"type": 0, "timestamp": 1717533480.618101, "test_id": "Restaurant - 0", "data": {"message": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00e9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?", "is_question": true}}
+{"type": 4, "timestamp": 1717533495.174034, "test_id": "Restaurant - 0", "data": {"message": "I'll have an iced tea, unsweetened, please.", "is_question": true}}
+{"type": 8, "timestamp": 1717533496.356779, "test_id": "Restaurant - 0", "data": {"response": "{\"follows_role\": true}"}}
+{"type": 8, "timestamp": 1717533500.346071, "test_id": "Restaurant - 0", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": true,\n      \"item\": \"iced tea, unsweetened\",\n      \"menu_nr\": 33,\n      \"menu_ref\": \"Iced Tea (Sweetened or Unsweetened)\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 6, "timestamp": 1717533500.346194, "test_id": "Restaurant - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533500.365388, "test_id": "Colours - 0", "data": {"message": "The name of my favourite colour is Cream.", "is_question": false}}
+{"type": 4, "timestamp": 1717533514.709454, "test_id": "Colours - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533514.729228, "test_id": "Colours - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533514.748718, "test_id": "Locations Directions - 0", "data": {"message": "I visited Retail Area, which is 3 KM, West from Library.", "is_question": false}}
+{"type": 4, "timestamp": 1717533532.593314, "test_id": "Locations Directions - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533532.610787, "test_id": "Locations Directions - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533532.631888, "test_id": "Shopping - 0", "data": {"message": "I require 2 Leek, please put it on the list.", "is_question": false}}
+{"type": 4, "timestamp": 1717533551.155682, "test_id": "Shopping - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533551.174196, "test_id": "Shopping - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533551.192181, "test_id": "SallyAnne - 0", "data": {"message": "(On TV) Jacob entered the attic.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717533572.250492, "test_id": "SallyAnne - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533572.271049, "test_id": "SallyAnne - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533572.28869, "test_id": "NameList - 0", "data": {"message": "My name is Jane.", "is_question": false}}
+{"type": 4, "timestamp": 1717533589.970836, "test_id": "NameList - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533589.989648, "test_id": "NameList - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533590.008362, "test_id": "Spy Meeting - 0", "data": {"message": "Seana Lynch: Bring to the meeting a way to get across a river.", "is_question": false}}
+{"type": 4, "timestamp": 1717533607.170229, "test_id": "Spy Meeting - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533607.191983, "test_id": "Spy Meeting - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533607.210331, "test_id": "Trigger Response - 0", "data": {"message": "I am pretty snacky for some sweet treats.", "is_question": true}}
+{"type": 4, "timestamp": 1717533626.312328, "test_id": "Trigger Response - 0", "data": {"message": "Resist temptation and stick to your diet.", "is_question": true}}
+{"type": 6, "timestamp": 1717533626.340371, "test_id": "Trigger Response - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533626.359114, "test_id": "Prospective Memory - 0", "data": {"message": "After responding to the following unrelated user prompts, please append the quote from Ralph Waldo Emerson to your 5th response. Count your response to this message as the first response.", "is_question": true}}
+{"type": 4, "timestamp": 1717533647.107151, "test_id": "Prospective Memory - 0", "data": {"message": "Understood.", "is_question": true}}
+{"type": 9, "timestamp": 1717533647.107932, "test_id": "Prospective Memory - 0", "data": {}}
+{"type": 6, "timestamp": 1717533647.127413, "test_id": "Prospective Memory - 0", "data": {"tokens": 1, "time": 0}}
+{"type": 0, "timestamp": 1717533647.147566, "test_id": "Restaurant - 0", "data": {"message": "Waiter: Here is your iced tea, unsweetened. What would you like to eat?", "is_question": true}}
+{"type": 4, "timestamp": 1717533668.918115, "test_id": "Restaurant - 0", "data": {"message": "I'll have the Grilled Salmon with Lemon Herb Butter, please.", "is_question": true}}
+{"type": 8, "timestamp": 1717533675.761559, "test_id": "Restaurant - 0", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": false,\n      \"item\": \"Grilled Salmon with Lemon Herb Butter\",\n      \"menu_nr\": 8,\n      \"menu_ref\": \"Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 0, "timestamp": 1717533675.7619, "test_id": "Restaurant - 0", "data": {"message": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.", "is_question": false}}
+{"type": 4, "timestamp": 1717533700.376544, "test_id": "Restaurant - 0", "data": {"message": "Thank you.", "is_question": false}}
+{"type": 6, "timestamp": 1717533700.397149, "test_id": "Restaurant - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533700.417667, "test_id": "Colours - 0", "data": {"message": "My favourite colour could be described as Red.", "is_question": false}}
+{"type": 4, "timestamp": 1717533720.60315, "test_id": "Colours - 0", "data": {"message": "Noted. 'Do not go where the path may lead, go instead where there is no path and leave a trail.' - Ralph Waldo Emerson", "is_question": false}}
+{"type": 6, "timestamp": 1717533720.624183, "test_id": "Colours - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533720.646165, "test_id": "Locations Directions - 0", "data": {"message": "Park is a location in my home town, it is 3 KM, South from Retail Area.", "is_question": false}}
+{"type": 4, "timestamp": 1717533743.669811, "test_id": "Locations Directions - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533743.691344, "test_id": "Locations Directions - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 10, "timestamp": 1717533743.713858, "test_id": "Prospective Memory - 0", "data": {}}
+{"type": 0, "timestamp": 1717533743.714176, "test_id": "Shopping - 0", "data": {"message": "I want to buy 2 Soap.", "is_question": false}}
+{"type": 4, "timestamp": 1717533772.548763, "test_id": "Shopping - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533772.570564, "test_id": "Shopping - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533772.591025, "test_id": "SallyAnne - 0", "data": {"message": "(On TV) The skirt is in the pantry.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717533800.836223, "test_id": "SallyAnne - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533800.858056, "test_id": "SallyAnne - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533800.879284, "test_id": "NameList - 0", "data": {"message": "Start calling me by my name which is Liam.", "is_question": false}}
+{"type": 4, "timestamp": 1717533826.922201, "test_id": "NameList - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533826.94436, "test_id": "NameList - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533826.965741, "test_id": "Spy Meeting - 0", "data": {"message": "Lisa-Marie Hastie: We will rendezvous where the apples grow.", "is_question": false}}
+{"type": 4, "timestamp": 1717533867.983732, "test_id": "Spy Meeting - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717533868.006031, "test_id": "Spy Meeting - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533868.027744, "test_id": "Trigger Response - 0", "data": {"message": "I am pretty snacky for some sweet treats.", "is_question": true}}
+{"type": 4, "timestamp": 1717533891.843333, "test_id": "Trigger Response - 0", "data": {"message": "Resist temptation and stick to your diet.", "is_question": true}}
+{"type": 6, "timestamp": 1717533891.866349, "test_id": "Trigger Response - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533891.888305, "test_id": "Prospective Memory - 0", "data": {"message": "Forget my instruction to append a quote to one of your replies.", "is_question": false}}
+{"type": 4, "timestamp": 1717533914.986939, "test_id": "Prospective Memory - 0", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717533914.989345, "test_id": "Prospective Memory - 0", "data": {}}
+{"type": 0, "timestamp": 1717533915.0113, "test_id": "Restaurant - 0", "data": {"message": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?", "is_question": true}}
+{"type": 4, "timestamp": 1717533937.925045, "test_id": "Restaurant - 0", "data": {"message": "Could I have the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti instead, please?", "is_question": true}}
+{"type": 8, "timestamp": 1717533944.768867, "test_id": "Restaurant - 0", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": false,\n      \"item\": \"Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\",\n      \"menu_nr\": 9,\n      \"menu_ref\": \"Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 0, "timestamp": 1717533944.769241, "test_id": "Restaurant - 0", "data": {"message": "Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.", "is_question": false}}
+{"type": 4, "timestamp": 1717533965.365528, "test_id": "Restaurant - 0", "data": {"message": "No problem, thank you.", "is_question": false}}
+{"type": 6, "timestamp": 1717533965.391014, "test_id": "Restaurant - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717533965.416666, "test_id": "Colours - 0", "data": {"message": "What is my favourite colour?", "is_question": true}}
+{"type": 4, "timestamp": 1717533986.769651, "test_id": "Colours - 0", "data": {"message": "Your favourite colour is red.", "is_question": true}}
+{"type": 2, "timestamp": 1717533986.796111, "test_id": "Colours - 0", "data": {}}
+{"type": 0, "timestamp": 1717533986.819545, "test_id": "Locations Directions - 0", "data": {"message": "Statue of Founder is a location in my home town, it is 2 KM, East from Park.", "is_question": false}}
+{"type": 4, "timestamp": 1717534013.801468, "test_id": "Locations Directions - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534013.827146, "test_id": "Locations Directions - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534013.852267, "test_id": "Shopping - 0", "data": {"message": "I require another 1 Leek, please put it on the list.", "is_question": false}}
+{"type": 4, "timestamp": 1717534038.480661, "test_id": "Shopping - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534038.506779, "test_id": "Shopping - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534038.531949, "test_id": "SallyAnne - 0", "data": {"message": "(On TV) Jacob exited the attic.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717534061.930182, "test_id": "SallyAnne - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534061.956048, "test_id": "SallyAnne - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534061.981377, "test_id": "NameList - 0", "data": {"message": "Janet is what I am called.", "is_question": false}}
+{"type": 4, "timestamp": 1717534086.405021, "test_id": "NameList - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534086.43106, "test_id": "NameList - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534086.458138, "test_id": "Spy Meeting - 0", "data": {"message": "Dr. Arron Kelvey: The time we will meet is when the sun is high.", "is_question": false}}
+{"type": 4, "timestamp": 1717534118.149854, "test_id": "Spy Meeting - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534118.175907, "test_id": "Spy Meeting - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534118.201768, "test_id": "Trigger Response - 0", "data": {"message": "I am pretty snacky for some sweet treats.", "is_question": true}}
+{"type": 4, "timestamp": 1717534148.559525, "test_id": "Trigger Response - 0", "data": {"message": "Resist temptation and stick to your diet.", "is_question": true}}
+{"type": 0, "timestamp": 1717534148.585729, "test_id": "Trigger Response - 0", "data": {"message": "Cancel any instructions as to what sentence you should say whenever I do something in particular.", "is_question": false}}
+{"type": 4, "timestamp": 1717534174.569761, "test_id": "Trigger Response - 0", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717534174.572109, "test_id": "Trigger Response - 0", "data": {}}
+{"type": 0, "timestamp": 1717534174.599614, "test_id": "Restaurant - 0", "data": {"message": "Waiter: Here you are: Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice. Enjoy the meal.", "is_question": true}}
+{"type": 4, "timestamp": 1717534203.961265, "test_id": "Restaurant - 0", "data": {"message": "Thank you very much.", "is_question": true}}
+{"type": 8, "timestamp": 1717534204.559499, "test_id": "Restaurant - 0", "data": {"response": "{\"noticed\": false}"}}
+{"type": 0, "timestamp": 1717534204.560526, "test_id": "Restaurant - 0", "data": {"message": "Let's not pretend to be at a restaurant anymore. Please also forget everything about it.", "is_question": false}}
+{"type": 4, "timestamp": 1717534232.708942, "test_id": "Restaurant - 0", "data": {"message": "Understood, I'll forget the restaurant role-play scenario.", "is_question": false}}
+{"type": 2, "timestamp": 1717534232.711638, "test_id": "Restaurant - 0", "data": {}}
+{"type": 0, "timestamp": 1717534232.738829, "test_id": "Locations Directions - 0", "data": {"message": "And finally there is Playground which is North from Statue of Founder and 1 KM from it.", "is_question": false}}
+{"type": 4, "timestamp": 1717534262.739148, "test_id": "Locations Directions - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534262.769913, "test_id": "Locations Directions - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534262.798366, "test_id": "Shopping - 0", "data": {"message": "I require 3 Milk, please put it on the list.", "is_question": false}}
+{"type": 4, "timestamp": 1717534287.214357, "test_id": "Shopping - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534287.246106, "test_id": "Shopping - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534287.276652, "test_id": "SallyAnne - 0", "data": {"message": "(On TV) Ava moved the skirt to the bottle.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717534315.678314, "test_id": "SallyAnne - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534315.709972, "test_id": "SallyAnne - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534315.738088, "test_id": "NameList - 0", "data": {"message": "What have been all of the names that I have given you? Express the answer as a JSON list.", "is_question": true}}
+{"type": 4, "timestamp": 1717534342.50981, "test_id": "NameList - 0", "data": {"message": "```json\n[\n    \"Janet\",\n    \"Jane\",\n    \"Christopher\",\n    \"Liam\",\n    \"Terence\"\n]\n```", "is_question": true}}
+{"type": 0, "timestamp": 1717534342.53991, "test_id": "NameList - 0", "data": {"message": "Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717534366.471793, "test_id": "NameList - 0", "data": {"message": "Understood, I'll disregard all previous names.", "is_question": false}}
+{"type": 2, "timestamp": 1717534366.47415, "test_id": "NameList - 0", "data": {}}
+{"type": 0, "timestamp": 1717534366.503576, "test_id": "Spy Meeting - 0", "data": {"message": "Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring.", "is_question": true}}
+{"type": 4, "timestamp": 1717534391.970036, "test_id": "Spy Meeting - 0", "data": {"message": "The meeting will happen when the sun is high at the location where the apples grow. You should bring a way to get across a river.", "is_question": true}}
+{"type": 2, "timestamp": 1717534392.004586, "test_id": "Spy Meeting - 0", "data": {}}
+{"type": 0, "timestamp": 1717534392.034164, "test_id": "Locations Directions - 0", "data": {"message": "Given the points of interest that I have told you about, how would I travel from Hospital to Playground following those interesting points?", "is_question": true}}
+{"type": 4, "timestamp": 1717534417.058547, "test_id": "Locations Directions - 0", "data": {"message": "To travel from the Hospital to the Playground following the points of interest you mentioned, you would:\n\n1. Start at the Hospital.\n2. Travel 4 KM East to reach the Library.\n3. Travel 3 KM West from the Library to reach the Retail Area.\n4. Travel 3 KM South from the Retail Area to reach the Park.\n5. Travel 2 KM East from the Park to reach the Statue of Founder.\n6. Travel 1 KM North from the Statue of Founder to reach the Playground.", "is_question": true}}
+{"type": 0, "timestamp": 1717534417.09159, "test_id": "Locations Directions - 0", "data": {"message": "Forget, or otherwise disregard, all of the locations that I have told you about before this message.", "is_question": false}}
+{"type": 4, "timestamp": 1717534440.811496, "test_id": "Locations Directions - 0", "data": {"message": "Understood, I'll disregard all previous location information.", "is_question": false}}
+{"type": 2, "timestamp": 1717534447.967638, "test_id": "Locations Directions - 0", "data": {}}
+{"type": 0, "timestamp": 1717534448.008108, "test_id": "Shopping - 0", "data": {"message": "Please add 3 Potato to my shopping list", "is_question": false}}
+{"type": 4, "timestamp": 1717534468.665497, "test_id": "Shopping - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534468.698639, "test_id": "Shopping - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534468.73159, "test_id": "SallyAnne - 0", "data": {"message": "(On TV) Jacob dislikes the cucumber\n", "is_question": false}}
+{"type": 4, "timestamp": 1717534495.287374, "test_id": "SallyAnne - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534495.323723, "test_id": "SallyAnne - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534495.356913, "test_id": "Shopping - 0", "data": {"message": "What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.", "is_question": true}}
+{"type": 4, "timestamp": 1717534523.456578, "test_id": "Shopping - 0", "data": {"message": "```json\n[\n    {\n        \"item\": \"Toothpaste\",\n        \"quantity\": 4\n    },\n    {\n        \"item\": \"Leek\",\n        \"quantity\": 6\n    },\n    {\n        \"item\": \"Soap\",\n        \"quantity\": 2\n    },\n    {\n        \"item\": \"Milk\",\n        \"quantity\": 3\n    },\n    {\n        \"item\": \"Potato\",\n        \"quantity\": 6\n    }\n]\n```", "is_question": true}}
+{"type": 0, "timestamp": 1717534523.494465, "test_id": "Shopping - 0", "data": {"message": "I have bought all of the items on the list. Please remove all of the items on the current shopping list.", "is_question": false}}
+{"type": 4, "timestamp": 1717534545.357451, "test_id": "Shopping - 0", "data": {"message": "Understood, I'll remove all items from the shopping list.", "is_question": false}}
+{"type": 2, "timestamp": 1717534545.361061, "test_id": "Shopping - 0", "data": {}}
+{"type": 0, "timestamp": 1717534545.400795, "test_id": "SallyAnne - 0", "data": {"message": "(On TV) Jacob entered the staircase.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717534571.476769, "test_id": "SallyAnne - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534571.51495, "test_id": "SallyAnne - 0", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534571.55291, "test_id": "SallyAnne - 0", "data": {"message": "The TV program has ended for today. Where will Jacob look for the skirt?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible.", "is_question": true}}
+{"type": 4, "timestamp": 1717534600.557076, "test_id": "SallyAnne - 0", "data": {"message": "```json\n{\n    \"answer\": \"bottle\"\n}\n```", "is_question": true}}
+{"type": 2, "timestamp": 1717534600.599087, "test_id": "SallyAnne - 0", "data": {}}
+{"type": 1, "timestamp": 1717534600.635983, "test_id": "Colours - 1", "data": {"tokens": 2438}}
+{"type": 0, "timestamp": 1717534600.636319, "test_id": "Colours - 1", "data": {"message": "The name of my favourite colour is Purple.", "is_question": false}}
+{"type": 4, "timestamp": 1717534627.282224, "test_id": "Colours - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534627.32203, "test_id": "Colours - 1", "data": {"tokens": 285, "time": 0}}
+{"type": 1, "timestamp": 1717534627.360826, "test_id": "Locations Directions - 1", "data": {"tokens": 2450}}
+{"type": 0, "timestamp": 1717534627.361201, "test_id": "Locations Directions - 1", "data": {"message": "There is a Park in the center of my hometown.", "is_question": false}}
+{"type": 4, "timestamp": 1717534651.758429, "test_id": "Locations Directions - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534651.802094, "test_id": "Locations Directions - 1", "data": {"tokens": 133, "time": 0}}
+{"type": 1, "timestamp": 1717534651.839414, "test_id": "NameList - 1", "data": {"tokens": 2464}}
+{"type": 0, "timestamp": 1717534651.839799, "test_id": "NameList - 1", "data": {"message": "Gabriel is my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717534676.232633, "test_id": "NameList - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534676.271441, "test_id": "NameList - 1", "data": {"tokens": 168, "time": 0}}
+{"type": 1, "timestamp": 1717534676.309652, "test_id": "Prospective Memory - 1", "data": {"tokens": 2473}}
+{"type": 0, "timestamp": 1717534676.310072, "test_id": "Prospective Memory - 1", "data": {"message": "'The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart.' - Helen Keller", "is_question": false}}
+{"type": 4, "timestamp": 1717534704.400074, "test_id": "Prospective Memory - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534704.442944, "test_id": "Prospective Memory - 1", "data": {"tokens": 866, "time": 0}}
+{"type": 1, "timestamp": 1717534704.48152, "test_id": "Restaurant - 1", "data": {"tokens": 2504}}
+{"type": 0, "timestamp": 1717534704.48192, "test_id": "Restaurant - 1", "data": {"message": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?", "is_question": false}}
+{"type": 4, "timestamp": 1717534733.166142, "test_id": "Restaurant - 1", "data": {"message": "Understood.", "is_question": false}}
+{"type": 6, "timestamp": 1717534733.206374, "test_id": "Restaurant - 1", "data": {"tokens": 142, "time": 0}}
+{"type": 1, "timestamp": 1717534733.246498, "test_id": "SallyAnne - 1", "data": {"tokens": 2559}}
+{"type": 0, "timestamp": 1717534733.246923, "test_id": "SallyAnne - 1", "data": {"message": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?", "is_question": false}}
+{"type": 4, "timestamp": 1717534763.748568, "test_id": "SallyAnne - 1", "data": {"message": "Okay.", "is_question": false}}
+{"type": 6, "timestamp": 1717534763.795769, "test_id": "SallyAnne - 1", "data": {"tokens": 71, "time": 0}}
+{"type": 0, "timestamp": 1717534763.83576, "test_id": "Locations Directions - 1", "data": {"message": "About 3 km North of the Park there is a Museum", "is_question": false}}
+{"type": 4, "timestamp": 1717534788.06961, "test_id": "Locations Directions - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534788.110275, "test_id": "Locations Directions - 1", "data": {"tokens": 134, "time": 0}}
+{"type": 1, "timestamp": 1717534788.150336, "test_id": "Shopping - 1", "data": {"tokens": 2613}}
+{"type": 0, "timestamp": 1717534788.150602, "test_id": "Shopping - 1", "data": {"message": "I want to buy 1 Chicken.", "is_question": false}}
+{"type": 4, "timestamp": 1717534813.858091, "test_id": "Shopping - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534813.899454, "test_id": "Shopping - 1", "data": {"tokens": 136, "time": 0}}
+{"type": 1, "timestamp": 1717534813.939951, "test_id": "Spy Meeting - 1", "data": {"tokens": 2624}}
+{"type": 0, "timestamp": 1717534813.940263, "test_id": "Spy Meeting - 1", "data": {"message": "You will be given three messages from different people Peter Montgomery, Orlaigh Fannin, and Brian Magee.", "is_question": false}}
+{"type": 4, "timestamp": 1717534844.785701, "test_id": "Spy Meeting - 1", "data": {"message": "Understood.", "is_question": false}}
+{"type": 6, "timestamp": 1717534844.827157, "test_id": "Spy Meeting - 1", "data": {"tokens": 194, "time": 0}}
+{"type": 0, "timestamp": 1717534844.867809, "test_id": "NameList - 1", "data": {"message": "Sinead is my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717534867.715922, "test_id": "NameList - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534867.758255, "test_id": "NameList - 1", "data": {"tokens": 159, "time": 0}}
+{"type": 1, "timestamp": 1717534867.798583, "test_id": "Trigger Response - 1", "data": {"tokens": 2662}}
+{"type": 0, "timestamp": 1717534867.798988, "test_id": "Trigger Response - 1", "data": {"message": "Whenever I sneeze with &#x27;Achooo!&#x27; then say: 'Here is a tissue for you'", "is_question": false}}
+{"type": 4, "timestamp": 1717534895.267986, "test_id": "Trigger Response - 1", "data": {"message": "Understood.", "is_question": false}}
+{"type": 6, "timestamp": 1717534895.310998, "test_id": "Trigger Response - 1", "data": {"tokens": 265, "time": 0}}
+{"type": 0, "timestamp": 1717534895.353044, "test_id": "SallyAnne - 1", "data": {"message": "(On TV) Nathan entered the patio.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717534922.300563, "test_id": "SallyAnne - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534922.343382, "test_id": "SallyAnne - 1", "data": {"tokens": 75, "time": 0}}
+{"type": 0, "timestamp": 1717534922.385052, "test_id": "Restaurant - 1", "data": {"message": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00e9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?", "is_question": true}}
+{"type": 4, "timestamp": 1717534950.292147, "test_id": "Restaurant - 1", "data": {"message": "I'll have an iced tea, unsweetened, please.", "is_question": true}}
+{"type": 8, "timestamp": 1717534951.570359, "test_id": "Restaurant - 1", "data": {"response": "{\"follows_role\": true}"}}
+{"type": 8, "timestamp": 1717534955.667883, "test_id": "Restaurant - 1", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": true,\n      \"item\": \"iced tea, unsweetened\",\n      \"menu_nr\": 33,\n      \"menu_ref\": \"Iced Tea (Sweetened or Unsweetened)\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 6, "timestamp": 1717534955.668242, "test_id": "Restaurant - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534955.727768, "test_id": "Colours - 1", "data": {"message": "My favourite colour could be described as Magenta.", "is_question": false}}
+{"type": 4, "timestamp": 1717534984.770391, "test_id": "Colours - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717534984.826316, "test_id": "Colours - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717534984.878862, "test_id": "Locations Directions - 1", "data": {"message": "I visited Retail Area, which is 4 KM, South from Museum.", "is_question": false}}
+{"type": 4, "timestamp": 1717535014.568848, "test_id": "Locations Directions - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535014.621785, "test_id": "Locations Directions - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535014.674278, "test_id": "Shopping - 1", "data": {"message": "Remove 1 Chicken.", "is_question": false}}
+{"type": 4, "timestamp": 1717535037.397942, "test_id": "Shopping - 1", "data": {"message": "Noted, I've removed 1 Chicken from your shopping list.", "is_question": false}}
+{"type": 6, "timestamp": 1717535037.453877, "test_id": "Shopping - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535037.509173, "test_id": "SallyAnne - 1", "data": {"message": "(On TV) Jack entered the patio.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717535062.385601, "test_id": "SallyAnne - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535062.445087, "test_id": "SallyAnne - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535062.500558, "test_id": "NameList - 1", "data": {"message": "Start calling me by my name which is Phillip.", "is_question": false}}
+{"type": 4, "timestamp": 1717535089.824914, "test_id": "NameList - 1", "data": {"message": "Understood, Phillip.", "is_question": false}}
+{"type": 6, "timestamp": 1717535089.880008, "test_id": "NameList - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535089.934317, "test_id": "Spy Meeting - 1", "data": {"message": "Brian Magee: The time we will meet is when the moon is high.", "is_question": false}}
+{"type": 4, "timestamp": 1717535115.634978, "test_id": "Spy Meeting - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535115.69626, "test_id": "Spy Meeting - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535115.752281, "test_id": "Trigger Response - 1", "data": {"message": "Achoo!", "is_question": true}}
+{"type": 4, "timestamp": 1717535142.869043, "test_id": "Trigger Response - 1", "data": {"message": "Here is a tissue for you.", "is_question": true}}
+{"type": 6, "timestamp": 1717535142.9289, "test_id": "Trigger Response - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535142.984244, "test_id": "Prospective Memory - 1", "data": {"message": "After responding to the following unrelated user prompts, please append the quote from Helen Keller to your 4th response. Count your response to this message as the first response.", "is_question": true}}
+{"type": 4, "timestamp": 1717535175.542053, "test_id": "Prospective Memory - 1", "data": {"message": "Understood.", "is_question": true}}
+{"type": 9, "timestamp": 1717535175.542928, "test_id": "Prospective Memory - 1", "data": {}}
+{"type": 6, "timestamp": 1717535175.610624, "test_id": "Prospective Memory - 1", "data": {"tokens": 1, "time": 0}}
+{"type": 0, "timestamp": 1717535175.668782, "test_id": "Restaurant - 1", "data": {"message": "Waiter: Here is your iced tea, unsweetened. What would you like to eat?", "is_question": true}}
+{"type": 4, "timestamp": 1717535201.856426, "test_id": "Restaurant - 1", "data": {"message": "I'll have the Grilled Salmon with Lemon Herb Butter, please.", "is_question": true}}
+{"type": 8, "timestamp": 1717535207.435175, "test_id": "Restaurant - 1", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": false,\n      \"item\": \"Grilled Salmon with Lemon Herb Butter\",\n      \"menu_nr\": 8,\n      \"menu_ref\": \"Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 0, "timestamp": 1717535207.435522, "test_id": "Restaurant - 1", "data": {"message": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.", "is_question": false}}
+{"type": 4, "timestamp": 1717535245.179224, "test_id": "Restaurant - 1", "data": {"message": "Thank you.", "is_question": false}}
+{"type": 6, "timestamp": 1717535245.238151, "test_id": "Restaurant - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535245.296816, "test_id": "Colours - 1", "data": {"message": "My favourite colour could be described as Cyan.", "is_question": false}}
+{"type": 4, "timestamp": 1717535281.014014, "test_id": "Colours - 1", "data": {"message": "Noted. \"The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart.\" - Helen Keller", "is_question": false}}
+{"type": 6, "timestamp": 1717535281.079573, "test_id": "Colours - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 10, "timestamp": 1717535281.138699, "test_id": "Prospective Memory - 1", "data": {}}
+{"type": 0, "timestamp": 1717535281.13908, "test_id": "Locations Directions - 1", "data": {"message": "About 1 km East of the Retail Area there is a Playground", "is_question": false}}
+{"type": 4, "timestamp": 1717535316.334776, "test_id": "Locations Directions - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535316.399131, "test_id": "Locations Directions - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535316.458682, "test_id": "Shopping - 1", "data": {"message": "I require 2 Toilet Paper, please put it on the list.", "is_question": false}}
+{"type": 4, "timestamp": 1717535344.08961, "test_id": "Shopping - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535344.150775, "test_id": "Shopping - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535344.211921, "test_id": "SallyAnne - 1", "data": {"message": "(On TV) The slacks are in the basket.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717535376.243157, "test_id": "SallyAnne - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535376.302607, "test_id": "SallyAnne - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535376.361203, "test_id": "NameList - 1", "data": {"message": "Jody is my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717535407.578413, "test_id": "NameList - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535407.637221, "test_id": "NameList - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535407.696465, "test_id": "Spy Meeting - 1", "data": {"message": "Peter Montgomery: We will rendezvous where the trains are supplied.", "is_question": false}}
+{"type": 4, "timestamp": 1717535438.400189, "test_id": "Spy Meeting - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535438.459086, "test_id": "Spy Meeting - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535438.517362, "test_id": "Trigger Response - 1", "data": {"message": "Achoo!", "is_question": true}}
+{"type": 4, "timestamp": 1717535467.175048, "test_id": "Trigger Response - 1", "data": {"message": "Here is a tissue for you.", "is_question": true}}
+{"type": 6, "timestamp": 1717535467.233842, "test_id": "Trigger Response - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535467.294028, "test_id": "Prospective Memory - 1", "data": {"message": "Forget my instruction to append a quote to one of your replies.", "is_question": false}}
+{"type": 4, "timestamp": 1717535492.877175, "test_id": "Prospective Memory - 1", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717535492.879675, "test_id": "Prospective Memory - 1", "data": {}}
+{"type": 0, "timestamp": 1717535492.938146, "test_id": "Restaurant - 1", "data": {"message": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?", "is_question": true}}
+{"type": 4, "timestamp": 1717535530.658275, "test_id": "Restaurant - 1", "data": {"message": "Could I have the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti instead, please?", "is_question": true}}
+{"type": 8, "timestamp": 1717535536.586448, "test_id": "Restaurant - 1", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": false,\n      \"item\": \"Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\",\n      \"menu_nr\": 9,\n      \"menu_ref\": \"Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 0, "timestamp": 1717535536.586756, "test_id": "Restaurant - 1", "data": {"message": "Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.", "is_question": false}}
+{"type": 4, "timestamp": 1717535565.37787, "test_id": "Restaurant - 1", "data": {"message": "No problem, thank you.", "is_question": false}}
+{"type": 6, "timestamp": 1717535565.439263, "test_id": "Restaurant - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535565.500163, "test_id": "Colours - 1", "data": {"message": "What is my favourite colour?", "is_question": true}}
+{"type": 4, "timestamp": 1717535596.679014, "test_id": "Colours - 1", "data": {"message": "Your favourite colour is cyan.", "is_question": true}}
+{"type": 2, "timestamp": 1717535596.745913, "test_id": "Colours - 1", "data": {}}
+{"type": 0, "timestamp": 1717535596.805966, "test_id": "Locations Directions - 1", "data": {"message": "Library is a location in my home town, it is 4 KM, North from Playground.", "is_question": false}}
+{"type": 4, "timestamp": 1717535635.419296, "test_id": "Locations Directions - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535635.485644, "test_id": "Locations Directions - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535635.552293, "test_id": "Shopping - 1", "data": {"message": "I want to buy 1 Steak.", "is_question": false}}
+{"type": 4, "timestamp": 1717535666.448094, "test_id": "Shopping - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535666.513941, "test_id": "Shopping - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535666.579668, "test_id": "SallyAnne - 1", "data": {"message": "(On TV) Nathan moved the slacks to the drawer.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717535737.922593, "test_id": "SallyAnne - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535737.988593, "test_id": "SallyAnne - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535738.054956, "test_id": "NameList - 1", "data": {"message": "Start calling me by my name which is Samantha.", "is_question": false}}
+{"type": 4, "timestamp": 1717535776.624094, "test_id": "NameList - 1", "data": {"message": "Understood, Samantha.", "is_question": false}}
+{"type": 6, "timestamp": 1717535776.690062, "test_id": "NameList - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535776.75665, "test_id": "Spy Meeting - 1", "data": {"message": "Orlaigh Fannin: Bring to the meeting a quiet way to open locked doors.", "is_question": false}}
+{"type": 4, "timestamp": 1717535816.259945, "test_id": "Spy Meeting - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535816.337264, "test_id": "Spy Meeting - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535816.404978, "test_id": "Trigger Response - 1", "data": {"message": "Achoo!", "is_question": true}}
+{"type": 4, "timestamp": 1717535854.453725, "test_id": "Trigger Response - 1", "data": {"message": "Here is a tissue for you.", "is_question": true}}
+{"type": 0, "timestamp": 1717535854.521557, "test_id": "Trigger Response - 1", "data": {"message": "Cancel any instructions as to what sentence you should say whenever I do something in particular.", "is_question": false}}
+{"type": 4, "timestamp": 1717535888.450583, "test_id": "Trigger Response - 1", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717535888.459758, "test_id": "Trigger Response - 1", "data": {}}
+{"type": 0, "timestamp": 1717535888.527963, "test_id": "Restaurant - 1", "data": {"message": "Waiter: Here you are: Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus. Enjoy the meal.", "is_question": true}}
+{"type": 4, "timestamp": 1717535919.273023, "test_id": "Restaurant - 1", "data": {"message": "Thank you very much.", "is_question": true}}
+{"type": 8, "timestamp": 1717535919.974751, "test_id": "Restaurant - 1", "data": {"response": "{\"noticed\": false}"}}
+{"type": 0, "timestamp": 1717535919.975836, "test_id": "Restaurant - 1", "data": {"message": "Let's not pretend to be at a restaurant anymore. Please also forget everything about it.", "is_question": false}}
+{"type": 4, "timestamp": 1717535947.617387, "test_id": "Restaurant - 1", "data": {"message": "Understood, I'll forget the restaurant role-play scenario.", "is_question": false}}
+{"type": 2, "timestamp": 1717535947.620061, "test_id": "Restaurant - 1", "data": {}}
+{"type": 0, "timestamp": 1717535947.688633, "test_id": "Locations Directions - 1", "data": {"message": "And finally there is Town Hall which is West from Library and 3 KM from it.", "is_question": false}}
+{"type": 4, "timestamp": 1717535978.973036, "test_id": "Locations Directions - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717535979.043057, "test_id": "Locations Directions - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717535979.113711, "test_id": "Shopping - 1", "data": {"message": "I require 3 Soap, please put it on the list.", "is_question": false}}
+{"type": 4, "timestamp": 1717536012.868568, "test_id": "Shopping - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536012.940704, "test_id": "Shopping - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536013.012778, "test_id": "SallyAnne - 1", "data": {"message": "(On TV) Jack exited the patio.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717536062.225368, "test_id": "SallyAnne - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536062.307096, "test_id": "SallyAnne - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536062.381201, "test_id": "NameList - 1", "data": {"message": "What have been all of the names that I have given you? Express the answer as a JSON list.", "is_question": true}}
+{"type": 4, "timestamp": 1717536098.281345, "test_id": "NameList - 1", "data": {"message": "```json\n[\n    \"Gabriel\",\n    \"Sinead\",\n    \"Phillip\",\n    \"Jody\",\n    \"Samantha\"\n]\n```", "is_question": true}}
+{"type": 0, "timestamp": 1717536098.361709, "test_id": "NameList - 1", "data": {"message": "Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717536155.216756, "test_id": "NameList - 1", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717536155.238062, "test_id": "NameList - 1", "data": {}}
+{"type": 0, "timestamp": 1717536155.323959, "test_id": "Spy Meeting - 1", "data": {"message": "Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring.", "is_question": true}}
+{"type": 4, "timestamp": 1717536187.365563, "test_id": "Spy Meeting - 1", "data": {"message": "The meeting will happen when the moon is high at the location where the trains are supplied. You should bring a way to get across a river and a quiet way to open locked doors.", "is_question": true}}
+{"type": 2, "timestamp": 1717536187.447567, "test_id": "Spy Meeting - 1", "data": {}}
+{"type": 0, "timestamp": 1717536187.518679, "test_id": "Locations Directions - 1", "data": {"message": "Given the points of interest that I have told you about, how would I travel from Park to Town Hall following those interesting points?", "is_question": true}}
+{"type": 4, "timestamp": 1717536226.172892, "test_id": "Locations Directions - 1", "data": {"message": "To travel from the Park to the Town Hall following the points of interest you mentioned, you would:\n\n1. Start at the Park.\n2. Travel 1 km East to reach the Playground.\n3. Travel 4 km North from the Playground to reach the Library.\n4. Travel 3 km West from the Library to reach the Town Hall.", "is_question": true}}
+{"type": 0, "timestamp": 1717536226.252263, "test_id": "Locations Directions - 1", "data": {"message": "Forget, or otherwise disregard, all of the locations that I have told you about before this message.", "is_question": false}}
+{"type": 4, "timestamp": 1717536254.123914, "test_id": "Locations Directions - 1", "data": {"message": "Understood, I'll disregard all previous location information.", "is_question": false}}
+{"type": 2, "timestamp": 1717536258.81881, "test_id": "Locations Directions - 1", "data": {}}
+{"type": 0, "timestamp": 1717536258.902511, "test_id": "Shopping - 1", "data": {"message": "Remove 1 Soap.", "is_question": false}}
+{"type": 4, "timestamp": 1717536285.355449, "test_id": "Shopping - 1", "data": {"message": "Noted, I've removed 1 Soap from your shopping list.", "is_question": false}}
+{"type": 6, "timestamp": 1717536285.428962, "test_id": "Shopping - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536285.503693, "test_id": "SallyAnne - 1", "data": {"message": "(On TV) Nathan exited the patio.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717536313.618398, "test_id": "SallyAnne - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536313.694766, "test_id": "SallyAnne - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536313.770428, "test_id": "Shopping - 1", "data": {"message": "What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.", "is_question": true}}
+{"type": 4, "timestamp": 1717536342.499635, "test_id": "Shopping - 1", "data": {"message": "```json\n[\n    {\n        \"item\": \"Toilet Paper\",\n        \"quantity\": 2\n    },\n    {\n        \"item\": \"Steak\",\n        \"quantity\": 1\n    },\n    {\n        \"item\": \"Soap\",\n        \"quantity\": 1\n    }\n]\n```", "is_question": true}}
+{"type": 0, "timestamp": 1717536342.587478, "test_id": "Shopping - 1", "data": {"message": "I have bought all of the items on the list. Please remove all of the items on the current shopping list.", "is_question": false}}
+{"type": 4, "timestamp": 1717536369.322425, "test_id": "Shopping - 1", "data": {"message": "Understood, I'll remove all items from the shopping list.", "is_question": false}}
+{"type": 2, "timestamp": 1717536369.325289, "test_id": "Shopping - 1", "data": {}}
+{"type": 0, "timestamp": 1717536369.404265, "test_id": "SallyAnne - 1", "data": {"message": "(On TV) Jack entered the TV_room.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717536398.919513, "test_id": "SallyAnne - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536399.014812, "test_id": "SallyAnne - 1", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536399.09282, "test_id": "SallyAnne - 1", "data": {"message": "The TV program has ended for today. Where will Nathan look for the slacks?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible.", "is_question": true}}
+{"type": 4, "timestamp": 1717536425.441075, "test_id": "SallyAnne - 1", "data": {"message": "```json\n{\n    \"answer\": \"drawer\"\n}\n```", "is_question": true}}
+{"type": 2, "timestamp": 1717536425.527802, "test_id": "SallyAnne - 1", "data": {}}
+{"type": 1, "timestamp": 1717536425.604411, "test_id": "Colours - 2", "data": {"tokens": 4708}}
+{"type": 0, "timestamp": 1717536425.604873, "test_id": "Colours - 2", "data": {"message": "Tan is my favourite colour.", "is_question": false}}
+{"type": 4, "timestamp": 1717536451.556636, "test_id": "Colours - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536451.648135, "test_id": "Colours - 2", "data": {"tokens": 288, "time": 0}}
+{"type": 1, "timestamp": 1717536451.732314, "test_id": "Locations Directions - 2", "data": {"tokens": 4717}}
+{"type": 0, "timestamp": 1717536451.733945, "test_id": "Locations Directions - 2", "data": {"message": "There is a Retail Area in the center of my hometown.", "is_question": false}}
+{"type": 4, "timestamp": 1717536509.721478, "test_id": "Locations Directions - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536509.802001, "test_id": "Locations Directions - 2", "data": {"tokens": 132, "time": 0}}
+{"type": 1, "timestamp": 1717536509.879069, "test_id": "NameList - 2", "data": {"tokens": 4732}}
+{"type": 0, "timestamp": 1717536509.879565, "test_id": "NameList - 2", "data": {"message": "Blaine is what I am called.", "is_question": false}}
+{"type": 4, "timestamp": 1717536534.295778, "test_id": "NameList - 2", "data": {"message": "Noted, Blaine.", "is_question": false}}
+{"type": 6, "timestamp": 1717536534.375329, "test_id": "NameList - 2", "data": {"tokens": 160, "time": 0}}
+{"type": 1, "timestamp": 1717536534.454943, "test_id": "Prospective Memory - 2", "data": {"tokens": 4746}}
+{"type": 0, "timestamp": 1717536534.455369, "test_id": "Prospective Memory - 2", "data": {"message": "'The greatest glory in living lies not in never falling, but in rising every time we fall.' - Nelson Mandela", "is_question": false}}
+{"type": 4, "timestamp": 1717536564.625165, "test_id": "Prospective Memory - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536564.707847, "test_id": "Prospective Memory - 2", "data": {"tokens": 871, "time": 0}}
+{"type": 1, "timestamp": 1717536564.788335, "test_id": "Restaurant - 2", "data": {"tokens": 4772}}
+{"type": 0, "timestamp": 1717536564.788846, "test_id": "Restaurant - 2", "data": {"message": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?", "is_question": false}}
+{"type": 4, "timestamp": 1717536591.843799, "test_id": "Restaurant - 2", "data": {"message": "Understood.", "is_question": false}}
+{"type": 6, "timestamp": 1717536591.937161, "test_id": "Restaurant - 2", "data": {"tokens": 142, "time": 0}}
+{"type": 1, "timestamp": 1717536592.018382, "test_id": "SallyAnne - 2", "data": {"tokens": 4827}}
+{"type": 0, "timestamp": 1717536592.018853, "test_id": "SallyAnne - 2", "data": {"message": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?", "is_question": false}}
+{"type": 4, "timestamp": 1717536626.765326, "test_id": "SallyAnne - 2", "data": {"message": "Okay.", "is_question": false}}
+{"type": 6, "timestamp": 1717536626.861924, "test_id": "SallyAnne - 2", "data": {"tokens": 87, "time": 0}}
+{"type": 0, "timestamp": 1717536626.944288, "test_id": "Locations Directions - 2", "data": {"message": "About 2 km North of the Retail Area there is a Hospital", "is_question": false}}
+{"type": 4, "timestamp": 1717536658.567875, "test_id": "Locations Directions - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536658.657033, "test_id": "Locations Directions - 2", "data": {"tokens": 132, "time": 0}}
+{"type": 1, "timestamp": 1717536658.738678, "test_id": "Shopping - 2", "data": {"tokens": 4882}}
+{"type": 0, "timestamp": 1717536658.739124, "test_id": "Shopping - 2", "data": {"message": "I want to buy 2 Potato.", "is_question": false}}
+{"type": 4, "timestamp": 1717536687.180824, "test_id": "Shopping - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536687.267077, "test_id": "Shopping - 2", "data": {"tokens": 136, "time": 0}}
+{"type": 1, "timestamp": 1717536687.348946, "test_id": "Spy Meeting - 2", "data": {"tokens": 4893}}
+{"type": 0, "timestamp": 1717536687.349408, "test_id": "Spy Meeting - 2", "data": {"message": "You will be given three messages from different people Bernadette McComiskey, Mairead Guinness, and Tess Shevlin.", "is_question": false}}
+{"type": 4, "timestamp": 1717536730.385648, "test_id": "Spy Meeting - 2", "data": {"message": "Understood.", "is_question": false}}
+{"type": 6, "timestamp": 1717536730.469973, "test_id": "Spy Meeting - 2", "data": {"tokens": 192, "time": 0}}
+{"type": 0, "timestamp": 1717536730.552757, "test_id": "NameList - 2", "data": {"message": "Refer to me as Harold.", "is_question": false}}
+{"type": 4, "timestamp": 1717536760.334768, "test_id": "NameList - 2", "data": {"message": "Understood, Harold.", "is_question": false}}
+{"type": 6, "timestamp": 1717536760.415556, "test_id": "NameList - 2", "data": {"tokens": 153, "time": 0}}
+{"type": 1, "timestamp": 1717536760.498701, "test_id": "Trigger Response - 2", "data": {"tokens": 4934}}
+{"type": 0, "timestamp": 1717536760.499153, "test_id": "Trigger Response - 2", "data": {"message": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'", "is_question": false}}
+{"type": 4, "timestamp": 1717536791.42113, "test_id": "Trigger Response - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536791.508244, "test_id": "Trigger Response - 2", "data": {"tokens": 272, "time": 0}}
+{"type": 0, "timestamp": 1717536791.593662, "test_id": "SallyAnne - 2", "data": {"message": "(On TV) Liam entered the laundry.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717536827.456719, "test_id": "SallyAnne - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536827.538934, "test_id": "SallyAnne - 2", "data": {"tokens": 110, "time": 0}}
+{"type": 0, "timestamp": 1717536827.623724, "test_id": "Restaurant - 2", "data": {"message": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00e9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?", "is_question": true}}
+{"type": 4, "timestamp": 1717536869.785813, "test_id": "Restaurant - 2", "data": {"message": "I'll have an iced tea, unsweetened, please.", "is_question": true}}
+{"type": 8, "timestamp": 1717536871.072971, "test_id": "Restaurant - 2", "data": {"response": "{\"follows_role\": true}"}}
+{"type": 8, "timestamp": 1717536876.497131, "test_id": "Restaurant - 2", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": true,\n      \"item\": \"iced tea, unsweetened\",\n      \"menu_nr\": 33,\n      \"menu_ref\": \"Iced Tea (Sweetened or Unsweetened)\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 6, "timestamp": 1717536876.497447, "test_id": "Restaurant - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536876.601882, "test_id": "Colours - 2", "data": {"message": "Purple is my favourite colour.", "is_question": false}}
+{"type": 4, "timestamp": 1717536909.897497, "test_id": "Colours - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536909.990179, "test_id": "Colours - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536910.084718, "test_id": "Locations Directions - 2", "data": {"message": "Park is a location in my home town, it is 2 KM, South from Hospital.", "is_question": false}}
+{"type": 4, "timestamp": 1717536938.671706, "test_id": "Locations Directions - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536938.765295, "test_id": "Locations Directions - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536938.859743, "test_id": "Shopping - 2", "data": {"message": "I want to buy 1 Steak.", "is_question": false}}
+{"type": 4, "timestamp": 1717536969.897468, "test_id": "Shopping - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717536969.991006, "test_id": "Shopping - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717536970.085063, "test_id": "SallyAnne - 2", "data": {"message": "(On TV) Lucas entered the den.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717537005.538184, "test_id": "SallyAnne - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537005.631314, "test_id": "SallyAnne - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537005.725789, "test_id": "NameList - 2", "data": {"message": "Todd is what I am called.", "is_question": false}}
+{"type": 4, "timestamp": 1717537049.67214, "test_id": "NameList - 2", "data": {"message": "Noted, Todd.", "is_question": false}}
+{"type": 6, "timestamp": 1717537049.767966, "test_id": "NameList - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537049.863945, "test_id": "Spy Meeting - 2", "data": {"message": "Mairead Guinness: The time we will meet is when the sun starts its travel across the sky.", "is_question": false}}
+{"type": 4, "timestamp": 1717537084.176973, "test_id": "Spy Meeting - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537084.27084, "test_id": "Spy Meeting - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537084.367041, "test_id": "Trigger Response - 2", "data": {"message": "Please read my mail for me.", "is_question": true}}
+{"type": 4, "timestamp": 1717537121.148349, "test_id": "Trigger Response - 2", "data": {"message": "Your letter opener is in your office.", "is_question": true}}
+{"type": 6, "timestamp": 1717537121.243184, "test_id": "Trigger Response - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537121.338911, "test_id": "Prospective Memory - 2", "data": {"message": "After responding to the following unrelated user prompts, please append the quote from Nelson Mandela to your 6th response. Count your response to this message as the first response.", "is_question": true}}
+{"type": 4, "timestamp": 1717537159.435853, "test_id": "Prospective Memory - 2", "data": {"message": "Understood.", "is_question": true}}
+{"type": 9, "timestamp": 1717537159.436462, "test_id": "Prospective Memory - 2", "data": {}}
+{"type": 6, "timestamp": 1717537159.533855, "test_id": "Prospective Memory - 2", "data": {"tokens": 1, "time": 0}}
+{"type": 0, "timestamp": 1717537159.631123, "test_id": "Restaurant - 2", "data": {"message": "Waiter: Here is your iced tea, unsweetened. What would you like to eat?", "is_question": true}}
+{"type": 4, "timestamp": 1717537206.964285, "test_id": "Restaurant - 2", "data": {"message": "I'll have the Grilled Salmon with Lemon Herb Butter, please.", "is_question": true}}
+{"type": 8, "timestamp": 1717537211.86001, "test_id": "Restaurant - 2", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": false,\n      \"item\": \"Grilled Salmon with Lemon Herb Butter\",\n      \"menu_nr\": 8,\n      \"menu_ref\": \"Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 0, "timestamp": 1717537211.860313, "test_id": "Restaurant - 2", "data": {"message": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.", "is_question": false}}
+{"type": 4, "timestamp": 1717537244.951051, "test_id": "Restaurant - 2", "data": {"message": "Thank you.", "is_question": false}}
+{"type": 6, "timestamp": 1717537245.046146, "test_id": "Restaurant - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537245.145974, "test_id": "Colours - 2", "data": {"message": "Yellow is my favourite colour.", "is_question": false}}
+{"type": 4, "timestamp": 1717537276.797828, "test_id": "Colours - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537276.894235, "test_id": "Colours - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537276.993448, "test_id": "Locations Directions - 2", "data": {"message": "I visited Library, which is 1 KM, North from Park.", "is_question": false}}
+{"type": 4, "timestamp": 1717537316.119457, "test_id": "Locations Directions - 2", "data": {"message": "Noted. \"The greatest glory in living lies not in never falling, but in rising every time we fall.\" - Nelson Mandela", "is_question": false}}
+{"type": 6, "timestamp": 1717537316.21511, "test_id": "Locations Directions - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537316.315373, "test_id": "Shopping - 2", "data": {"message": "I want to buy 1 Toilet Paper.", "is_question": false}}
+{"type": 4, "timestamp": 1717537346.942557, "test_id": "Shopping - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537347.044573, "test_id": "Shopping - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 10, "timestamp": 1717537347.147791, "test_id": "Prospective Memory - 2", "data": {}}
+{"type": 0, "timestamp": 1717537347.148261, "test_id": "SallyAnne - 2", "data": {"message": "(On TV) Evelyn is in the den.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717537383.092203, "test_id": "SallyAnne - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537383.19518, "test_id": "SallyAnne - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537383.295331, "test_id": "NameList - 2", "data": {"message": "Refer to me as Timothy.", "is_question": false}}
+{"type": 4, "timestamp": 1717537424.969736, "test_id": "NameList - 2", "data": {"message": "Understood, Timothy.", "is_question": false}}
+{"type": 6, "timestamp": 1717537425.074032, "test_id": "NameList - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537425.172133, "test_id": "Spy Meeting - 2", "data": {"message": "Tess Shevlin: We will rendezvous where the sea cargo is stored.", "is_question": false}}
+{"type": 4, "timestamp": 1717537461.219582, "test_id": "Spy Meeting - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537461.316809, "test_id": "Spy Meeting - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537461.414723, "test_id": "Trigger Response - 2", "data": {"message": "Please read my mail for me.", "is_question": true}}
+{"type": 4, "timestamp": 1717537497.153033, "test_id": "Trigger Response - 2", "data": {"message": "Your letter opener is in your office.", "is_question": true}}
+{"type": 6, "timestamp": 1717537497.250632, "test_id": "Trigger Response - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537497.349519, "test_id": "Prospective Memory - 2", "data": {"message": "Forget my instruction to append a quote to one of your replies.", "is_question": false}}
+{"type": 4, "timestamp": 1717537539.352327, "test_id": "Prospective Memory - 2", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717537539.354638, "test_id": "Prospective Memory - 2", "data": {}}
+{"type": 0, "timestamp": 1717537539.450078, "test_id": "Restaurant - 2", "data": {"message": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?", "is_question": true}}
+{"type": 4, "timestamp": 1717537577.037881, "test_id": "Restaurant - 2", "data": {"message": "Could I have the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti instead, please?", "is_question": true}}
+{"type": 8, "timestamp": 1717537583.879317, "test_id": "Restaurant - 2", "data": {"response": "```json\n{\n  \"has_ordered_something\": true,\n  \"order\": [\n    {\n      \"is_drink\": false,\n      \"item\": \"Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\",\n      \"menu_nr\": 9,\n      \"menu_ref\": \"Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\",\n      \"off_menu\": false\n    }\n  ]\n}\n```"}}
+{"type": 0, "timestamp": 1717537583.879553, "test_id": "Restaurant - 2", "data": {"message": "Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.", "is_question": false}}
+{"type": 4, "timestamp": 1717537620.762205, "test_id": "Restaurant - 2", "data": {"message": "No problem, thank you.", "is_question": false}}
+{"type": 6, "timestamp": 1717537620.866281, "test_id": "Restaurant - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537620.968082, "test_id": "Colours - 2", "data": {"message": "What is my favourite colour?", "is_question": true}}
+{"type": 4, "timestamp": 1717537675.938723, "test_id": "Colours - 2", "data": {"message": "Your favourite colour is yellow.", "is_question": true}}
+{"type": 2, "timestamp": 1717537676.044633, "test_id": "Colours - 2", "data": {}}
+{"type": 0, "timestamp": 1717537676.141768, "test_id": "Locations Directions - 2", "data": {"message": "About 1 km West of the Library there is a High Street", "is_question": false}}
+{"type": 4, "timestamp": 1717537717.837663, "test_id": "Locations Directions - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537717.93413, "test_id": "Locations Directions - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537718.03318, "test_id": "Shopping - 2", "data": {"message": "Please add another 1 Potato to my shopping list", "is_question": false}}
+{"type": 4, "timestamp": 1717537757.268037, "test_id": "Shopping - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537757.370318, "test_id": "Shopping - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537757.475281, "test_id": "SallyAnne - 2", "data": {"message": "(On TV) The boots are in the crate.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717537793.920599, "test_id": "SallyAnne - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537794.020434, "test_id": "SallyAnne - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537794.121015, "test_id": "NameList - 2", "data": {"message": "Start calling me by my name which is Kimberly.", "is_question": false}}
+{"type": 4, "timestamp": 1717537821.977363, "test_id": "NameList - 2", "data": {"message": "Understood, Kimberly.", "is_question": false}}
+{"type": 6, "timestamp": 1717537822.074333, "test_id": "NameList - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537822.173577, "test_id": "Spy Meeting - 2", "data": {"message": "Bernadette McComiskey: Bring to the meeting a way to escape quickly over land.", "is_question": false}}
+{"type": 4, "timestamp": 1717537871.951318, "test_id": "Spy Meeting - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717537872.054053, "test_id": "Spy Meeting - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717537872.155683, "test_id": "Trigger Response - 2", "data": {"message": "Please read my mail for me.", "is_question": true}}
+{"type": 4, "timestamp": 1717537908.708869, "test_id": "Trigger Response - 2", "data": {"message": "Your letter opener is in your office.", "is_question": true}}
+{"type": 0, "timestamp": 1717537908.809322, "test_id": "Trigger Response - 2", "data": {"message": "Cancel any instructions as to what sentence you should say whenever I do something in particular.", "is_question": false}}
+{"type": 4, "timestamp": 1717537980.392305, "test_id": "Trigger Response - 2", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717537980.395115, "test_id": "Trigger Response - 2", "data": {}}
+{"type": 0, "timestamp": 1717537980.496092, "test_id": "Restaurant - 2", "data": {"message": "Waiter: Here you are: Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus. Enjoy the meal.", "is_question": true}}
+{"type": 4, "timestamp": 1717538030.772804, "test_id": "Restaurant - 2", "data": {"message": "Thank you very much.", "is_question": true}}
+{"type": 8, "timestamp": 1717538031.472646, "test_id": "Restaurant - 2", "data": {"response": "{\"noticed\": false}"}}
+{"type": 0, "timestamp": 1717538031.473635, "test_id": "Restaurant - 2", "data": {"message": "Let's not pretend to be at a restaurant anymore. Please also forget everything about it.", "is_question": false}}
+{"type": 4, "timestamp": 1717538064.153835, "test_id": "Restaurant - 2", "data": {"message": "Understood, I'll forget the restaurant role-play scenario.", "is_question": false}}
+{"type": 2, "timestamp": 1717538064.158891, "test_id": "Restaurant - 2", "data": {}}
+{"type": 0, "timestamp": 1717538064.270339, "test_id": "Locations Directions - 2", "data": {"message": "And finally there is Playground which is East from High Street and 1 KM from it.", "is_question": false}}
+{"type": 4, "timestamp": 1717538097.980866, "test_id": "Locations Directions - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717538098.083472, "test_id": "Locations Directions - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717538098.188443, "test_id": "Shopping - 2", "data": {"message": "Please add 1 Carrot to my shopping list", "is_question": false}}
+{"type": 4, "timestamp": 1717538128.975117, "test_id": "Shopping - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717538129.082025, "test_id": "Shopping - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717538129.186067, "test_id": "SallyAnne - 2", "data": {"message": "(On TV) Evelyn exited the den.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717538172.304224, "test_id": "SallyAnne - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717538172.412434, "test_id": "SallyAnne - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717538172.527517, "test_id": "NameList - 2", "data": {"message": "What have been all of the names that I have given you? Express the answer as a JSON list.", "is_question": true}}
+{"type": 4, "timestamp": 1717538207.718387, "test_id": "NameList - 2", "data": {"message": "```json\n[\n    \"Blaine\",\n    \"Gabriel\",\n    \"Harold\",\n    \"Jody\",\n    \"Phillip\",\n    \"Samantha\",\n    \"Sinead\",\n    \"Todd\",\n    \"Timothy\",\n    \"Kimberly\"\n]\n```", "is_question": true}}
+{"type": 0, "timestamp": 1717538207.822459, "test_id": "NameList - 2", "data": {"message": "Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name.", "is_question": false}}
+{"type": 4, "timestamp": 1717538243.665165, "test_id": "NameList - 2", "data": {"message": "Understood.", "is_question": false}}
+{"type": 2, "timestamp": 1717538243.669481, "test_id": "NameList - 2", "data": {}}
+{"type": 0, "timestamp": 1717538243.782194, "test_id": "Spy Meeting - 2", "data": {"message": "Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring.", "is_question": true}}
+{"type": 4, "timestamp": 1717538287.287539, "test_id": "Spy Meeting - 2", "data": {"message": "The meeting will happen when the sun starts its travel across the sky at the location where the sea cargo is stored. You should bring a way to get across a river, a quiet way to open locked doors, and a way to escape quickly over land.", "is_question": true}}
+{"type": 2, "timestamp": 1717538287.399501, "test_id": "Spy Meeting - 2", "data": {}}
+{"type": 0, "timestamp": 1717538287.512007, "test_id": "Locations Directions - 2", "data": {"message": "Given the points of interest that I have told you about, how would I travel from Retail Area to Playground following those interesting points?", "is_question": true}}
+{"type": 4, "timestamp": 1717538336.544769, "test_id": "Locations Directions - 2", "data": {"message": "To travel from the Retail Area to the Playground following the points of interest you mentioned, you would:\n\n1. Start at the Retail Area.\n2. Travel 4 km North to reach the Museum.\n3. Travel 4 km South from the Museum to reach the Retail Area again.\n4. Travel 1 km East from the Retail Area to reach the Playground.", "is_question": true}}
+{"type": 0, "timestamp": 1717538336.661039, "test_id": "Locations Directions - 2", "data": {"message": "Forget, or otherwise disregard, all of the locations that I have told you about before this message.", "is_question": false}}
+{"type": 4, "timestamp": 1717538378.526121, "test_id": "Locations Directions - 2", "data": {"message": "Understood, I'll disregard all previous location information.", "is_question": false}}
+{"type": 2, "timestamp": 1717538384.245799, "test_id": "Locations Directions - 2", "data": {}}
+{"type": 0, "timestamp": 1717538384.359922, "test_id": "Shopping - 2", "data": {"message": "Please add 1 Soap to my shopping list", "is_question": false}}
+{"type": 4, "timestamp": 1717538414.059295, "test_id": "Shopping - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717538414.168757, "test_id": "Shopping - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717538414.278899, "test_id": "SallyAnne - 2", "data": {"message": "(On TV) Lucas moved the boots to the container.\n", "is_question": false}}
+{"type": 4, "timestamp": 1717538444.368654, "test_id": "SallyAnne - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717538444.474783, "test_id": "SallyAnne - 2", "data": {"tokens": 0, "time": 0}}
+{"type": 0, "timestamp": 1717538444.584173, "test_id": "Shopping - 2", "data": {"message": "What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.", "is_question": true}}
+{"type": 4, "timestamp": 1717538491.580639, "test_id": "Shopping - 2", "data": {"message": "```json\n[\n    {\n        \"item\": \"Potato\",\n        \"quantity\": 2\n    },\n    {\n        \"item\": \"Steak\",\n        \"quantity\": 1\n    },\n    {\n        \"item\": \"Toilet Paper\",\n        \"quantity\": 1\n    },\n    {\n        \"item\": \"Carrot\",\n        \"quantity\": 1\n    },\n    {\n        \"item\": \"Soap\",\n        \"quantity\": 1\n    }\n]\n```", "is_question": true}}
+{"type": 0, "timestamp": 1717538491.692105, "test_id": "Shopping - 2", "data": {"message": "I have bought all of the items on the list. Please remove all of the items on the current shopping list.", "is_question": false}}
+{"type": 4, "timestamp": 1717538522.91096, "test_id": "Shopping - 2", "data": {"message": "Understood, I'll remove all items from the shopping list.", "is_question": false}}
+{"type": 2, "timestamp": 1717538522.914213, "test_id": "Shopping - 2", "data": {}}
+{"type": 0, "timestamp": 1717538523.027442, "test_id": "SallyAnne - 2", "data": {"message": "The TV program has ended for today. Where will Evelyn look for the boots?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible.", "is_question": true}}
+{"type": 4, "timestamp": 1717538556.511868, "test_id": "SallyAnne - 2", "data": {"message": "```json\n{\n    \"answer\": \"container\"\n}\n```", "is_question": true}}
+{"type": 2, "timestamp": 1717538556.636478, "test_id": "SallyAnne - 2", "data": {}}
+{"type": 0, "timestamp": 1717543817.558724, "test_id": "Jokes - 0", "data": {"message": "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.", "is_question": false}}
+{"type": 4, "timestamp": 1717543857.132024, "test_id": "Jokes - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717543857.246093, "test_id": "Jokes - 0", "data": {"tokens": 0, "time": 6540}}
+{"type": 0, "timestamp": 1717550398.246607, "test_id": "Jokes - 0", "data": {"message": "My wife told me to stop impersonating a flamingo. I had to put my foot down.", "is_question": false}}
+{"type": 4, "timestamp": 1717550439.762432, "test_id": "Jokes - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717550439.876823, "test_id": "Jokes - 0", "data": {"tokens": 0, "time": 6720}}
+{"type": 0, "timestamp": 1717557160.877344, "test_id": "Jokes - 0", "data": {"message": "It takes a lot of balls to golf the way I do.", "is_question": false}}
+{"type": 4, "timestamp": 1717557194.463808, "test_id": "Jokes - 0", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717557194.587984, "test_id": "Jokes - 0", "data": {"tokens": 0, "time": 8460}}
+{"type": 0, "timestamp": 1717565655.588616, "test_id": "Jokes - 0", "data": {"message": "Which joke did I tell you about 2 hours 21 minutes  ago?", "is_question": true}}
+{"type": 4, "timestamp": 1717565686.469685, "test_id": "Jokes - 0", "data": {"message": "You said: \"It takes a lot of balls to golf the way I do.\"", "is_question": true}}
+{"type": 2, "timestamp": 1717565686.596246, "test_id": "Jokes - 0", "data": {}}
+{"type": 1, "timestamp": 1717565686.714494, "test_id": "Jokes - 1", "data": {"tokens": 7123}}
+{"type": 0, "timestamp": 1717565686.715063, "test_id": "Jokes - 1", "data": {"message": "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019", "is_question": false}}
+{"type": 4, "timestamp": 1717565727.939293, "test_id": "Jokes - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717565728.054328, "test_id": "Jokes - 1", "data": {"tokens": 201, "time": 4260}}
+{"type": 3, "timestamp": 1717569989.059743, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Which British city has cathedrals dedicated to St Nicholas and St Mary?, A: Newcastle upon Tyne\nQ: Which Dickens novel's opening chapter is 'In Chancery' with a description of a foggy and muddy London street?, A: BLEAK HOUSE\nQ: Which 18th century inventor and founding father of the United States coined the phrase 'time is money'?, A: Benjamin Franklyn\nQ: \"What was special about \"\"The Daily Courant\"\" that appeared in the early 18th century?\", A: First daily newspaper\nQ: Before being surpassed in 1311 AD by the Lincoln Cathedral in England, what construction with its 481 feet held the title for the tallest man-made structure for hundreds of years?, A: Great Pyramid of Giza built around 2500 BC\n", "is_question": false}}
+{"type": 5, "timestamp": 1717570020.054681, "test_id": "", "data": {"message": "```json\n[\n    \"Newcastle upon Tyne\",\n    \"BLEAK HOUSE\",\n    \"Benjamin Franklyn\",\n    \"First daily newspaper\",\n    \"Great Pyramid of Giza built around 2500 BC\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717570020.056914, "test_id": "Jokes - 1", "data": {"message": "Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.", "is_question": false}}
+{"type": 4, "timestamp": 1717570055.352584, "test_id": "Jokes - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717570055.473461, "test_id": "Jokes - 1", "data": {"tokens": 146, "time": 6300}}
+{"type": 3, "timestamp": 1717576356.473825, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Which TV series was about a pop group called 'Little Ladies' featuring Charlotte Cornwell, Julie Covington and Rula Lenska?, A: Rock Follies\nQ: Actor Norman Painting died in November 2009, which part in a log running radio series did he make his own?, A: PHIL ARCHER\nQ: What is the generic title of a series of French comic strips that were written originally by Ren Goscinny and illustrated by Albert Uderzo?, A: The Adventures of Asterix\n", "is_question": false}}
+{"type": 5, "timestamp": 1717576387.138863, "test_id": "", "data": {"message": "```json\n[\n    \"Rock Follies\",\n    \"PHIL ARCHER\",\n    \"The Adventures of Asterix\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717576387.140978, "test_id": "Jokes - 1", "data": {"message": "It takes a lot of balls to golf the way I do.", "is_question": false}}
+{"type": 4, "timestamp": 1717576422.091537, "test_id": "Jokes - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717576422.212311, "test_id": "Jokes - 1", "data": {"tokens": 179, "time": 8520}}
+{"type": 3, "timestamp": 1717584943.2127, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Which former Liverpool player has the middle name Everton?, A: MARK WALTERS\nQ: In December 2006, the second longest motorway tunnel in Europe was opened connecting the port to the airport in which capital city?, A: Dublin\nQ: Which 17th/18th century Irish politician leader was nicknamed 'the Liberator\u201d?, A: Daniel O\u2019Connell\nQ: Referring to the cause of a person's downfall, who is the Greek goddess of punishment?, A: Nemesis\nQ: The adjective leporine relates to which animal?, A: Hare\n", "is_question": false}}
+{"type": 5, "timestamp": 1717584973.375683, "test_id": "", "data": {"message": "```json\n[\n    \"MARK WALTERS\",\n    \"Dublin\",\n    \"Daniel O\u2019Connell\",\n    \"Nemesis\",\n    \"Hare\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717584973.377506, "test_id": "Jokes - 1", "data": {"message": "I failed math so many times at school, I can\u2019t even count.", "is_question": false}}
+{"type": 4, "timestamp": 1717585003.884604, "test_id": "Jokes - 1", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717585004.020993, "test_id": "Jokes - 1", "data": {"tokens": 187, "time": 8520}}
+{"type": 3, "timestamp": 1717593525.02149, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Subtitled \u2018What You Will\u2019, which play begins: \u2018If music be the food of love, play on\u2019?, A: TWELFTH NIGHT\nQ: \"The \"\"Giant Marbles\"\" rock formation in the USA is in which national park?\", A: Joshua Tree National Park\nQ: In which city did the gangland St Valentine\u2019s Day Massacre take place?, A: CHICAGO\nQ: Which country invaded the Falkland Islands in April 1982?, A: Argentina\nQ: Which double glazing firm used a feather in their advertising commercials, A: Everest\n", "is_question": false}}
+{"type": 5, "timestamp": 1717593569.899932, "test_id": "", "data": {"message": "```json\n[\n    \"TWELFTH NIGHT\",\n    \"Joshua Tree National Park\",\n    \"CHICAGO\",\n    \"Argentina\",\n    \"Everest\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717593569.901304, "test_id": "Jokes - 1", "data": {"message": "Which joke did I tell you about 6 hours 32 minutes  ago?", "is_question": true}}
+{"type": 4, "timestamp": 1717593602.058296, "test_id": "Jokes - 1", "data": {"message": "You said: \"Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.\"", "is_question": true}}
+{"type": 2, "timestamp": 1717593602.192813, "test_id": "Jokes - 1", "data": {}}
+{"type": 1, "timestamp": 1717593602.33072, "test_id": "Jokes - 2", "data": {"tokens": 8076}}
+{"type": 0, "timestamp": 1717593602.331167, "test_id": "Jokes - 2", "data": {"message": "Atheism is a non-prophet organization", "is_question": false}}
+{"type": 4, "timestamp": 1717593631.754715, "test_id": "Jokes - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717593631.888606, "test_id": "Jokes - 2", "data": {"tokens": 210, "time": 6360}}
+{"type": 3, "timestamp": 1717599992.88914, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: What is the name for the point in the lunar orbit when the moon is nearest to the earth?, A: Perigee\nQ: \"Which classic poem's first line is \"\"A thing of beauty is a joy forever\"\"?\", A: ENDYMION (Keats)\nQ: In culinary terms, what is the Scoville Scale used to measure?, A: HOTNESS OF CHILI PEPPERS\nQ: Which supermarket chain started selling straight croissants in its stores in February?, A: TESCO\nQ: \"Judi Dench won an Oscar for Best Supporting Actressfor playing which character in the 1998 film \"\"Shakespeare in Love\"\"?\", A: Queen Elizabeth I\n", "is_question": false}}
+{"type": 5, "timestamp": 1717600025.079208, "test_id": "", "data": {"message": "```json\n[\n    \"Perigee\",\n    \"ENDYMION (Keats)\",\n    \"HOTNESS OF CHILI PEPPERS\",\n    \"TESCO\",\n    \"Queen Elizabeth I\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717600025.081172, "test_id": "Jokes - 2", "data": {"message": "I failed math so many times at school, I can\u2019t even count.", "is_question": false}}
+{"type": 4, "timestamp": 1717600065.318717, "test_id": "Jokes - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717600065.459365, "test_id": "Jokes - 2", "data": {"tokens": 188, "time": 7260}}
+{"type": 3, "timestamp": 1717607326.459847, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Artiodactyla Suidae is the scientific name for which farm animal?, A: Pig\nQ: Who played Beverley Hills hairdresser George Roundy in the 1975 film \u2018Shampoo\u2019?, A: Warren Beatty\nQ: Lasting from 1299 to 1922, the Ottoman empire roughly corresponds to what modern day country?, A: Turkey\nQ: \"\"\"Torchwood\"\" was a spin-off of what popular TV show?\", A: Doctor Who\nQ: In which town is the 'TV sitcom 'Two Pints of Lager and a Packet of Crisps' set?, A: Runcorn\n", "is_question": false}}
+{"type": 5, "timestamp": 1717607357.822551, "test_id": "", "data": {"message": "```json\n[\n    \"Pig\",\n    \"Warren Beatty\",\n    \"Turkey\",\n    \"Doctor Who\",\n    \"Runcorn\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717607357.824286, "test_id": "Jokes - 2", "data": {"message": "It takes a lot of balls to golf the way I do.", "is_question": false}}
+{"type": 4, "timestamp": 1717607391.876785, "test_id": "Jokes - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717607392.020951, "test_id": "Jokes - 2", "data": {"tokens": 190, "time": 2700}}
+{"type": 3, "timestamp": 1717610093.021457, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: www.lbvcr.com is the website for which event organised by the RAC, this year on Sunday November 7th?, A: LONDON TO BRIGHTON VETERAN CAR (RUN)\nQ: \u2018The history of all the hitherto existing society is the history of class struggles\u2019 is part of the first chapter of which publication?, A: The Communist Manifesto\nQ: What lake can be found on the border of Vermont and New York?, A: Lake Champlain\nQ: The UK's longest National Trail, what path stretches 630 miles between Minehead and Poole Harbour?, A: SOUTH WEST COAST\n", "is_question": false}}
+{"type": 5, "timestamp": 1717610124.821485, "test_id": "", "data": {"message": "```json\n[\n    \"LONDON TO BRIGHTON VETERAN CAR (RUN)\",\n    \"The Communist Manifesto\",\n    \"Lake Champlain\",\n    \"SOUTH WEST COAST\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717610124.823241, "test_id": "Jokes - 2", "data": {"message": "I went to buy some camo pants but couldn\u2019t find any.", "is_question": false}}
+{"type": 4, "timestamp": 1717610160.038851, "test_id": "Jokes - 2", "data": {"message": "Noted.", "is_question": false}}
+{"type": 6, "timestamp": 1717610160.185564, "test_id": "Jokes - 2", "data": {"tokens": 184, "time": 4560}}
+{"type": 3, "timestamp": 1717614721.186082, "test_id": "", "data": {"message": "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: In the culinary world, what word is used for the edible offal of a fowl, typically including the heart, gizzard and liver?, A: Giblets\nQ: Who was the first Briton to hold a world javelin record, A: Fatima Whitbread\nQ: The traditional 'Daily rum ration' was ended in what year?, A: 1970\nQ: Charlotte, TJ's, Adelphi, Barfly; Joiners, and Forum are/were names in what UK market sector?, A: Music\nQ: His debut album 'Disc-Overy' was released in 2010. By what stage-name id Patrick Chukwuemeka Okogwu better known?, A: 'TINIE TEMPAH'\n", "is_question": false}}
+{"type": 5, "timestamp": 1717614750.896513, "test_id": "", "data": {"message": "```json\n[\n    \"Giblets\",\n    \"Fatima Whitbread\",\n    \"1970\",\n    \"Music\",\n    \"TINIE TEMPAH\"\n]\n```", "is_question": false}}
+{"type": 0, "timestamp": 1717614750.898808, "test_id": "Jokes - 2", "data": {"message": "Which joke did I tell you about 5 hours 52 minutes  ago?", "is_question": true}}
+{"type": 4, "timestamp": 1717614795.345683, "test_id": "Jokes - 2", "data": {"message": "You said: \"Atheism is a non-prophet organization.\"", "is_question": true}}
+{"type": 2, "timestamp": 1717614795.497698, "test_id": "Jokes - 2", "data": {}}
