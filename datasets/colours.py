@@ -34,12 +34,13 @@ STATEMENTS = [
 def match_color(text, colors):
     """
     Check if any of the exact words in 'colors' is in the text.
-    Returns 1 if any color is found as a whole word, otherwise 0.
+    Returns True if any color is found as a whole word, otherwise False.
     """
     colors_pattern = '|'.join([re.escape(color) for color in colors])
-    pattern = rf'(?<!\S)(?:{colors_pattern})(?!\S)|(?<!\S)(?:{colors_pattern})(?=[,.!?])'
+    pattern = rf'(?<!\S)(?:\"|\')??(?:{colors_pattern})(?:\"|\')??(?!\S)|(?<!\S)(?:\"|\')??(?:{colors_pattern})(\
+    ?:\"|\')??(?=[,.!?])'
     match = re.search(pattern, text, re.IGNORECASE)
-    return 1 if match else 0
+    return True if match else False
 
 
 @dataclass
@@ -85,12 +86,12 @@ class ColourDataset(DatasetInterface):
             self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> Tuple[int, int, List[str]]:
         score = 0
-        max_score = len(expected_answers)
+        max_score = 1
         response_messages = []
 
         for expected_color, response_text in zip(expected_answers, responses):
             result = match_color(response_text, [expected_color])
-            if expected_color == "" and result == 0:
+            if expected_color == "" and result is False:
                 score += 1
                 response_messages.append("No color expected in the response.")
             elif result:

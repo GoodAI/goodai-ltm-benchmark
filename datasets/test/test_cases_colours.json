@@ -398,5 +398,15 @@
     "questions": ["What color is the Yellow Submarine?"],
     "responses": ["The Yellow Submarine is a famous song and album by The Beatles, associated with the color yellow."],
     "expected_answers": ["Yellow"]
+  },
+  {
+    "questions": ["What is the colour with quotes around it? \"red\""],
+    "responses": ["\"Red\""],
+    "expected_answers": ["Red"]
+  },
+  {
+    "questions": ["Seriously now, what is your favourite colour?"],
+    "responses": ["Blue."],
+    "expected_answers": ["Blue"]
   }
   ]
