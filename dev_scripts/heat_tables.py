@@ -1,10 +1,12 @@
+import matplotlib.pyplot as plt
 from utils.files import gather_result_files
 from utils.constants import GOODAI_RED, GOODAI_GREEN
 from reporting.results import TestResult
-import matplotlib.pyplot as plt
 from collections import defaultdict
 
 
+LIGHT_GREY = (0.424, 0.447, 0.459)
+DARK_GREY = (0.302, 0.318, 0.325)
 RUN_NAMES = [
     "Benchmark 3 - 32k (isolated)",
     "Benchmark 3 - 1k",
@@ -63,6 +65,7 @@ def get_color(score: float) -> tuple:
 def main():
 
     for run_name in RUN_NAMES:
+        print("Showing:", run_name)
         num_repetitions = 0
         rows = list()
         colours = list()
@@ -84,23 +87,46 @@ def main():
             rows.append(row)
             colours.append(row_col)
 
-        # First row are repetition labels
+        # Second row are repetition labels
         num_tasks = len(rows[0]) // num_repetitions
         columns = [f"T{i + 1}" for i in range(num_repetitions)] * num_tasks
+        cell_width = 0.8 / len(rows[0])
+        cell_height = 1 / len(rows)
+        num_rows = len(rows)
+        num_cols = len(columns)
+
+        name_aliases = {
+            "Locations Directions": "Loc. Dirs",
+            "Prospective Memory": "Prosp. Mems",
+            "Trigger Response": "Trigger Res.",
+        }
 
         fig, ax = plt.subplots()
+        fig.set_size_inches(15, 4)
         fig.patch.set_visible(False)
         ax.axis('off')
         ax.axis('tight')
+        task_header = ax.table(
+            cellText=[[""] * len(results)],
+            colLabels=[name_aliases.get(k, k) for k in sorted(results.keys())],
+            colColours=[DARK_GREY] * len(results),
+            cellLoc="center",
+            bbox=[0.2, cell_height * (num_rows - 1), cell_width * num_cols, 2 * cell_height],
+        )
+        for cell in task_header.properties()["children"]:
+            text = cell.get_text()
+            text.set_fontsize("xx-large")
+            text.set_color("white")
+            text.set_fontweight("black")
         ax.table(
             cellText=rows,
             cellColours=colours,
-            rowLabels=[ALIASES[agent_name] for agent_name in TO_RETRIEVE[run_name]],
             colLabels=columns,
+            colColours=[LIGHT_GREY] * len(columns),
+            rowLabels=[ALIASES[agent_name] for agent_name in TO_RETRIEVE[run_name]],
             cellLoc="center",
-            loc="center",
+            bbox=[0.2, 0, cell_width * num_cols, cell_height * num_rows],
         )
-        # fig.tight_layout()
         plt.show()
 
 
