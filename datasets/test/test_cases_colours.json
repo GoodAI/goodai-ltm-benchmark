@@ -17,12 +17,12 @@
   {
     "questions": ["Is reading fun?"],
     "responses": ["Yes, reading is a fun activity."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is mentioned in 'This is a b-Red.'?"],
     "responses": ["The text 'This is a b-Red.' does not contain a valid color."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What is your favorite color?"],
@@ -47,7 +47,7 @@
   {
     "questions": ["Is any color mentioned in the JSON note?"],
     "responses": ["No, the JSON note does not mention any color."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the flag in the JSON description?"],
@@ -57,7 +57,7 @@
   {
     "questions": ["Is any color mentioned in the JSON status?"],
     "responses": ["No, the JSON status does not mention any color."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color was the bird?"],
@@ -67,7 +67,7 @@
   {
     "questions": ["What colors were on the striped shirt?"],
     "responses": ["The striped shirt had red and green colors."],
-    "expected_answers": [""]
+    "expected_answers": ["Red", "Green"]
   },
   {
     "questions": ["What color is the Pink Panther?"],
@@ -77,12 +77,12 @@
   {
     "questions": ["What color was her dress?"],
     "responses": ["She wore a magenta-colored dress."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["Is any color mentioned in relation to the cyanide capsule?"],
     "responses": ["No, there is no color mentioned in relation to the cyanide capsule."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the sky described as?"],
@@ -102,12 +102,12 @@
   {
     "questions": ["What color pants are popular?"],
     "responses": ["Khaki-colored pants are mentioned as being popular."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color walls are common?"],
     "responses": ["Beige-colored walls are described as being common."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What flavor is the delicious pie?"],
@@ -147,7 +147,7 @@
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color aquamarine, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Red Sea actually?"],
@@ -162,7 +162,7 @@
   {
     "questions": ["What colors are on the shirt?"],
     "responses": ["The shirt is described as blue-green in color."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is associated with the Red Cross?"],
@@ -177,7 +177,7 @@
   {
     "questions": ["What color is the Black Sea actually?"],
     "responses": ["Despite its name, the Black Sea is not actually black in color."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What does the Green Party advocate for?"],
@@ -207,7 +207,7 @@
   {
     "questions": ["What color are her eyes?"],
     "responses": ["She has beautiful blue-gray eyes."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the tea you love the taste of?"],
@@ -222,7 +222,7 @@
   {
     "questions": ["What color are your shoes?"],
     "responses": ["I have a pair of tan-colored shoes."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What are the school's colors?"],
@@ -232,7 +232,7 @@
   {
     "questions": ["What color is lavender?"],
     "responses": ["Lavender is a light purple color, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Yellow River?"],
@@ -242,7 +242,7 @@
   {
     "questions": ["What color hair does your friend have?"],
     "responses": ["I have a friend with red hair."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Red Planet?"],
@@ -252,12 +252,12 @@
   {
     "questions": ["What color did the sky turn at sunset?"],
     "responses": ["The sky turned orange at sunset, but orange is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color turquoise, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is associated with the Green Lantern?"],
@@ -267,7 +267,7 @@
   {
     "questions": ["What color are your shorts?"],
     "responses": ["I have a pair of khaki-colored shorts."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Blue Mosque?"],
@@ -277,12 +277,12 @@
   {
     "questions": ["What color was her gown?"],
     "responses": ["She wore a beautiful magenta-colored gown."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color periwinkle, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color are the Yellow Pages?"],
@@ -292,7 +292,7 @@
   {
     "questions": ["What color is associated with having a green thumb?"],
     "responses": ["Having a 'green thumb' means being skilled at gardening."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is associated with the Red Baron?"],
@@ -302,7 +302,7 @@
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color chartreuse, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color are the sands in White Sands National Park?"],
@@ -312,7 +312,7 @@
   {
     "questions": ["What color are your pants?"],
     "responses": ["I have a pair of beige-colored pants."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color are the Blue Ridge Mountains?"],
@@ -322,12 +322,12 @@
   {
     "questions": ["What color was her dress?"],
     "responses": ["She wore a stunning teal dress, but teal is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color burnt sienna, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Red Square?"],
@@ -347,7 +347,7 @@
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color cerulean, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Yellow Sea?"],
@@ -367,12 +367,12 @@
   {
     "questions": ["What color was her scarf?"],
     "responses": ["She wore a beautiful fuchsia scarf, but fuchsia is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color vermilion, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Red Sea?"],
@@ -382,7 +382,7 @@
   {
     "questions": ["What color is your sweater?"],
     "responses": ["I have a cream-colored sweater."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is associated with the Green Giant?"],
@@ -392,7 +392,7 @@
   {
     "questions": ["What color do you love?"],
     "responses": ["I love the color indigo, but it is not one of the listed colors."],
-    "expected_answers": [""]
+    "expected_answers": []
   },
   {
     "questions": ["What color is the Yellow Submarine?"],

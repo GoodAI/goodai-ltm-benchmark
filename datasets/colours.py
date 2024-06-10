@@ -82,24 +82,50 @@ class ColourDataset(DatasetInterface):
 
         return examples
 
+    # def evaluate_correct(
+    #         self, questions: List[str], responses: List[str], expected_answers: List[str]
+    # ) -> tuple[float, int, list[str]]:
+    #     score = 0
+    #     max_score = 1
+    #     response_messages = []
+    #
+    #     for expected_color, response_text in zip(expected_answers, responses):
+    #         result = match_color(response_text, [expected_color])
+    #         if expected_color == "" and result is False:
+    #             score += 1
+    #             response_messages.append("No color expected in the response.")
+    #         elif result:
+    #             score += 1
+    #             response_messages.append(f'"{expected_color}" is in the response.')
+    #         else:
+    #             response_messages.append(f'"{expected_color}" is NOT in the response.')
+    #
+    #     score = score / len(expected_answers)
+    #
+    #     return score, max_score, response_messages
+
     def evaluate_correct(
             self, questions: List[str], responses: List[str], expected_answers: List[str]
     ) -> tuple[float, int, list[str]]:
+        if not expected_answers:
+            if all(not match_color(response_text, COLOURS) for response_text in responses):
+                return 0.0, 0, ["No colors expected, and no colors found in the responses."]
+            else:
+                return 0.0, 0, ["No colors expected, but colors found in the responses."]
+
+        max_score = len(expected_answers)
         score = 0
-        max_score = 1
         response_messages = []
 
-        for expected_color, response_text in zip(expected_answers, responses):
-            result = match_color(response_text, [expected_color])
-            if expected_color == "" and result is False:
-                score += 1
-                response_messages.append("No color expected in the response.")
-            elif result:
-                score += 1
-                response_messages.append(f'"{expected_color}" is in the response.')
-            else:
-                response_messages.append(f'"{expected_color}" is NOT in the response.')
+        for response_text in responses:
+            colors_found = [color for color in expected_answers if match_color(response_text, [color])]
+            colors_missing = [color for color in expected_answers if color not in colors_found]
 
-        score = score / len(expected_answers)
+            score += len(colors_found)
+            response_messages.append(f'Found colors: {colors_found}')
+            if colors_missing:
+                response_messages.append(f'Missing colors: {colors_missing}')
 
-        return score, max_score, response_messages
+        score_ratio = score / max_score
+
+        return score_ratio, 1, response_messages
