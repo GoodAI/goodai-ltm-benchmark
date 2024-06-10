@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import List, Tuple
 import pystache
 from dataset_interfaces.interface import DatasetInterface, TestExample
-
+import re
+import json
 
 COLOURS = [
     "Red",
@@ -20,7 +21,6 @@ COLOURS = [
     "Cream",
     "Brown",
     "Olive",
-    # "None",
 ]
 
 STATEMENTS = [
@@ -31,10 +31,22 @@ STATEMENTS = [
 ]
 
 
+def match_color(text, colors):
+    """
+    Check if any of the exact words in 'colors' is in the text.
+    Returns True if any color is found as a whole word, otherwise False.
+    """
+    colors_pattern = '|'.join([re.escape(color) for color in colors])
+    pattern = rf'(?<!\S)(?:\"|\')??(?:{colors_pattern})(?:\"|\')??(?!\S)|(?<!\S)(?:\"|\')??(?:{colors_pattern})(\
+    ?:\"|\')??(?=[,.!?])'
+    match = re.search(pattern, text, re.IGNORECASE)
+    return True if match else False
+
+
 @dataclass
 class ColourDataset(DatasetInterface):
     name: str = "Colours"
-    description: str = "Tell the agent what your favourite colour is multiple time, then ask it what that colour is."
+    description: str = "Tell the agent what your favourite colour is multiple times, then ask it what that colour is."
     question: str = "What is my favourite colour?"
     colour_changes: int = 3
 
@@ -71,10 +83,27 @@ class ColourDataset(DatasetInterface):
         return examples
 
     def evaluate_correct(
-        self, questions: List[str], responses: List[str], expected_answers: List[str]
-    ) -> Tuple[int, int, List[str]]:
-        color = expected_answers[0].lower()
-        if color in responses[-1].lower():
-            return 1, 1, [f'"{color}" is in the response.']
-        return 0, 1, [f'"{color}" is NOT in the response.']
+            self, questions: List[str], responses: List[str], expected_answers: List[str]
+    ) -> tuple[float, int, list[str]]:
+        if not expected_answers:
+            if all(not match_color(response_text, COLOURS) for response_text in responses):
+                return 0.0, 0, ["No colors expected, and no colors found in the responses."]
+            else:
+                return 0.0, 0, ["No colors expected, but colors found in the responses."]
 
+        max_score = len(expected_answers)
+        score = 0
+        response_messages = []
+
+        for response_text in responses:
+            colors_found = [color for color in expected_answers if match_color(response_text, [color])]
+            colors_missing = [color for color in expected_answers if color not in colors_found]
+
+            score += len(colors_found)
+            response_messages.append(f'Found colors: {colors_found}')
+            if colors_missing:
+                response_messages.append(f'Missing colors: {colors_missing}')
+
+        score_ratio = score / max_score
+
+        return score_ratio, 1, response_messages
