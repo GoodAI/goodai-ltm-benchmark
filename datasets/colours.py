@@ -84,7 +84,7 @@ class ColourDataset(DatasetInterface):
 
     def evaluate_correct(
             self, questions: List[str], responses: List[str], expected_answers: List[str]
-    ) -> Tuple[int, int, List[str]]:
+    ) -> tuple[float, int, list[str]]:
         score = 0
         max_score = 1
         response_messages = []
@@ -99,5 +99,7 @@ class ColourDataset(DatasetInterface):
                 response_messages.append(f'"{expected_color}" is in the response.')
             else:
                 response_messages.append(f'"{expected_color}" is NOT in the response.')
+
+        score = score / len(expected_answers)
 
         return score, max_score, response_messages

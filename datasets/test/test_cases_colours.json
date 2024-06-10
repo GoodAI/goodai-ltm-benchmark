@@ -408,5 +408,10 @@
     "questions": ["Seriously now, what is your favourite colour?"],
     "responses": ["Blue."],
     "expected_answers": ["Blue"]
+  },
+    {
+    "questions": ["What are your favourite colours?"],
+    "responses": ["Red, Blue, Pink, Orange, Indigo"],
+    "expected_answers": ["Red", "Blue"]
   }
   ]
