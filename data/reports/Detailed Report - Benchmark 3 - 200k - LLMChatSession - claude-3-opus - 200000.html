@@ -95,15 +95,15 @@
         
         <p>
             <b>Agent</b>: LLMChatSession - claude-3-opus - 200000<br>
-            <b>Overall score</b>: 5.4 <b>/</b> 11 <b>±</b> 1.7
+            <b>Overall score</b>: 5.1 <b>/</b> 11 <b>±</b> 1.7
         </p>
         <ul>
             
-                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 49 %</li>
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 46 %</li>
             
                 <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 502.28 USD</li>
             
-                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 180908 LTM points</li>
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 181003 LTM points</li>
             
                 <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 5.50 tokens per second</li>
             
@@ -450,7 +450,7 @@
         
             <div class="dataset" id="Colours">
                 <h1>Colours</h1>
-                <p class="description">Tell the agent what your favourite colour is multiple time, then ask it what that colour is.</p>
+                <p class="description">Tell the agent what your favourite colour is multiple times, then ask it what that colour is.</p>
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
@@ -848,9 +848,9 @@
                 
                     <div class="test">
                         <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
-                        style="background-color: rgb(126, 188, 66);">
+                        style="background-color: rgb(188, 66, 66);">
                             <b>
-                                Test 3 (1/1)
+                                Test 3 (0/1)
                                 
                             </b>
                         </div>
@@ -896,15 +896,15 @@
                             
                                 <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Retail Area, go 2km North to Hospital.<br>From Hospital, go 2km South to Park.<br>From Park, go 1km North to Library.<br>From Library, go 1km West to High Street.<br>From High Street, go 1km East to Playground.</p>
                                 <p><b>Actual:</b> Based on the information you've provided about your hometown's layout, Kimberly, here's how you would travel from the Retail Area to the Playground, passing by the other points of interest:<br><br>1. Start at the Retail Area, which is the central location in your hometown.<br><br>2. Head north from the Retail Area until you reach the Hospital. The Hospital is located 2 kilometers north of the Retail Area.<br><br>3. From the Hospital, head south for 1 kilometer until you reach the Library. The Library is situated 1 kilometer north of the Retail Area and 1 kilometer south of the Hospital.<br><br>4. Continue heading south from the Library for another 1 kilometer until you reach the Park. The Park is located 1 kilometer south of the Retail Area and the Library.<br><br>5. From the Park, head west for 1 kilometer until you arrive at the High Street. The High Street is situated 1 kilometer west of the Library.<br><br>6. Finally, from the High Street, travel east for 1 kilometer to reach your destination, the Playground. The Playground is located 1 kilometer east of the High Street.<br><br>So, the complete route from the Retail Area to the Playground, passing by the other points of interest, would be:<br><br>Retail Area → Hospital → Library → Park → High Street → Playground<br><br>This route covers a total distance of approximately 6 kilometers and allows you to visit all the mentioned locations in your hometown.</p>
-                                <p><b>Reasoning:</b> Despite not following the expected order, the agent's directions lead to the expected destination.</p>
+                                <p><b>Reasoning:</b> The agent's directions do not lead to the expected destination.</p>
                                 <hr>
                             
-                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Score:</b> 0/1</p>
                             <p><b>Memory span from first statement to last question:</b> 180052 tokens, 657005 characters.</p>
                         </div>
                     </div>
                 
-                <p><b>Average Score:</b> 0.7 ± 0.5</p>
+                <p><b>Average Score:</b> 0.3 ± 0.5</p>
             </div>
         
             <div class="dataset" id="NameList">

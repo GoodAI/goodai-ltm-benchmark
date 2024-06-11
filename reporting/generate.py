@@ -52,6 +52,8 @@ def arrange_data(results: List[TestResult]):
     memory_spans = list()
     data = dict()
 
+    results = sorted(results, key=(lambda x: x.example_id))
+
     for res in results:
         assert res.run_name == run_name, "Can't create a detailed report of multiple runs."
         assert res.agent_name == agent_name, "Can't create a detailed report of multiple agents."
