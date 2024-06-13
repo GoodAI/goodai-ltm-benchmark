@@ -1,4 +1,5 @@
 import sqlite3
+from typing import List, Tuple
 
 class MemoryManager:
     def __init__(self, db_path: str):

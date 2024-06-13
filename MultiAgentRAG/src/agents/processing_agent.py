@@ -1,5 +1,7 @@
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
+from langchain.schema import Document
+from typing import List
 
 class ProcessingAgent:
     def __init__(self, model_name: str):

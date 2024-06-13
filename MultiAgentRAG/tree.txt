@@ -1,0 +1,301 @@
+    README.md
+    requirements.txt
+      processing_agent.py
+      response_agent.py
+      retrieval_agent.py
+      __init__.py
+     app.py
+     controller.py
+      memory_manager.py
+      __init__.py
+      data_utils.py
+      __init__.py
+     __init__.py
+     __init__.py
+
+File Contents:
+
+-e 
+File: ./README.md
+
+# Multi-Agent RAG System with Continual Learning
+
+This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities using LangChain, LangGraph, and LLM API calls.
+
+## Setup
+
+1. Install the required dependencies: "pip install -r .\MultiAgentRAG\requirements.txt"
+2. Set up your OpenAI API key: "export OPENAI_API_KEY=your_api_key"
+3. Prepare your data:
+- Place your raw data files in the `data/raw` directory.
+- The system will process the data and store the embeddings in the `data/embeddings` directory.
+
+## Usage
+
+Run the `app.py` file to start the interactive multi-agent RAG system: "python .\MultiAgentRAG\src\app.py"
+
+Enter your queries and the system will retrieve relevant documents, process the query, generate a response, and store the query-response pair in memory for continual learning.
+
+Type 'quit' to exit the program.
+
+## Project Structure
+
+- `data/`: Contains the raw, processed, and embeddings data.
+- `notebooks/`: Jupyter notebooks for experimentation and analysis.
+- `src/`: Source code for the multi-agent RAG system.
+  - `agents/`: Implementations of individual agents (retrieval, processing, response).
+  - `memory/`: Memory management for continual learning.
+  - `utils/`: Utility functions for data processing.
+  - `controller.py`: Central controller for orchestrating the agents and memory.
+  - `app.py`: Main application entry point.
+- `tests/`: Unit tests for the system (not implemented in this vertical slice).
+- `requirements.txt`: Lists the required Python dependencies.
+- `README.md`: Project documentation.-e 
+File: ./requirements.txt
+
+langchain
+openai
+faiss-cpu
+qdrant-client
+pymupdf
+tiktoken
+-e 
+File: ./src/agents/processing_agent.py
+
+from langchain_community.chat_models import ChatOpenAI
+from langchain.schema import AIMessage, HumanMessage
+from langchain.schema import Document
+from typing import List
+
+class ProcessingAgent:
+    def __init__(self, model_name: str):
+        self.chat_model = ChatOpenAI(model_name=model_name)
+
+    def process(self, query: str, context_documents: List[Document]) -> str:
+        context = "\n\n".join([doc.page_content for doc in context_documents])
+        messages = [
+            HumanMessage(content=f"Given the following context:\n{context}\n\nAnswer the question: {query}")
+        ]
+        response = self.chat_model(messages)
+        return response.content-e 
+File: ./src/agents/response_agent.py
+
+from langchain_community.chat_models import ChatOpenAI
+from langchain.schema import AIMessage, HumanMessage
+
+class ResponseAgent:
+    def __init__(self, model_name: str):
+        self.chat_model = ChatOpenAI(model_name=model_name)
+
+    def generate_response(self, query: str, result: str) -> str:
+        messages = [
+            HumanMessage(content=f"Given the following query:\n{query}\n\nAnd the following result:\n{result}\n\nGenerate a final response.")
+        ]
+        response = self.chat_model(messages)
+        return response.content-e 
+File: ./src/agents/retrieval_agent.py
+
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain.schema import Document
+from typing import List
+
+class RetrievalAgent:
+    def __init__(self, vectorstore: FAISS):
+        self.vectorstore = vectorstore
+
+    def retrieve(self, query: str) -> List[Document]:
+        return self.vectorstore.similarity_search(query)-e 
+File: ./src/agents/__init__.py
+
+-e 
+File: ./src/app.py
+
+# src/app.py
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+import logging
+from controller import Controller
+from utils.data_utils import load_and_process_data
+import os
+logging.basicConfig(level=logging.INFO)
+
+def main(): 
+    try:   
+        if not os.getenv("GOODAI_OPENAI_API_KEY"):
+            os.environ["OPENAI_API_KEY"] = input("Enter your OpenAI API Key: ")
+        if not os.getenv("TAVILY_API_KEY"):
+            os.environ["TAVILY_API_KEY"] = input("Enter your Tavily API Key: ")
+
+        # Load and process data
+        raw_documents = load_and_process_data("data/raw")
+
+        # Create vectorstore
+        embeddings = OpenAIEmbeddings()
+        vectorstore = FAISS.from_documents(raw_documents, embeddings)
+
+        # Initialize controller
+        controller = Controller(vectorstore, "gpt-3.5-turbo", "memory.db")
+
+        while True:
+            query = input("Enter your query (or 'quit' to exit): ")
+            if query.lower() == "quit":
+                break
+
+            response = controller.execute_query(query)
+            print(f"Response: {response}\n")
+
+            memories = controller.get_memories(5)
+            print("Recent Memories:")
+            for memory in memories:
+                print(f"Query: {memory[0]}")
+                print(f"Result: {memory[1]}\n")
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    main()
+-e 
+File: ./src/controller.py
+
+# src/controller.py
+
+from typing import List, Tuple
+from langchain.schema import Document
+from langchain_community.vectorstores import FAISS
+from agents.retrieval_agent import RetrievalAgent
+from agents.processing_agent import ProcessingAgent
+from agents.response_agent import ResponseAgent
+from memory.memory_manager import MemoryManager
+
+class Controller:
+    def __init__(self, vectorstore: FAISS, model_name: str, memory_db_path: str):
+        self.retrieval_agent = RetrievalAgent(vectorstore)
+        self.processing_agent = ProcessingAgent(model_name)
+        self.response_agent = ResponseAgent(model_name)
+        self.memory_manager = MemoryManager(memory_db_path)
+
+    def execute_query(self, query: str) -> str:
+        # Retrieve relevant documents
+        context_documents = self.retrieval_agent.retrieve(query)
+        print(f"Retrieved documents: {context_documents}")  # Debugging statement
+        print(f"Number of documents retrieved: {len(context_documents)}")  # Debugging statement
+        
+        if not context_documents:
+            raise ValueError("No documents retrieved")
+
+        # Process query with context
+        result = self.processing_agent.process(query, context_documents)
+        print(f"Processing result: {result}")  # Debugging statement
+
+        # Generate final response
+        response = self.response_agent.generate_response(query, result)
+        print(f"Generated response: {response}")  # Debugging statement
+
+        # Save memory
+        self.memory_manager.save_memory(query, response)
+
+        return response
+
+    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
+        memories = self.memory_manager.get_memories(limit)
+        print(f"Memories retrieved: {memories}")  # Debugging statement
+        return memories
+-e 
+File: ./src/memory/memory_manager.py
+
+import sqlite3
+from typing import List, Tuple
+
+class MemoryManager:
+    def __init__(self, db_path: str):
+        self.conn = sqlite3.connect(db_path)
+        self.create_tables()
+
+    def create_tables(self):
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS memories (
+                id INTEGER PRIMARY KEY,
+                query TEXT,
+                result TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+    def save_memory(self, query: str, result: str):
+        self.conn.execute("""
+            INSERT INTO memories (query, result) VALUES (?, ?)
+        """, (query, result))
+        self.conn.commit()
+
+    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
+        cursor = self.conn.execute("""
+            SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
+        """, (limit,))
+        return cursor.fetchall()-e 
+File: ./src/memory/__init__.py
+
+-e 
+File: ./src/utils/data_utils.py
+
+# src/utils/data_utils.py
+
+import os
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import tiktoken
+
+def tiktoken_len(text):
+    tokens = tiktoken.encoding_for_model("gpt-3.5-turbo").encode(text)
+    return len(tokens)
+
+def load_and_process_data(directory_path: str):
+    all_docs = []
+    for filename in os.listdir(directory_path):
+        if filename.endswith(".pdf"):
+            print(f"Processing file: {filename}")  # Debugging statement
+            loader = PyMuPDFLoader(os.path.join(directory_path, filename))
+            docs = loader.load()
+            print(f"Loaded documents: {docs}")  # Debugging statement
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=300,
+                chunk_overlap=0,
+                length_function=tiktoken_len,
+            )
+            split_chunks = text_splitter.split_documents(docs)
+            print(f"Split documents: {split_chunks}")  # Debugging statement
+            all_docs.extend(split_chunks)
+    print(f"Total documents processed: {len(all_docs)}")  # Debugging statement
+    return all_docs
+-e 
+File: ./src/utils/__init__.py
+
+-e 
+File: ./src/__init__.py
+
+-e 
+File: ./tests/__init__.py
+
+import unittest
+from src.utils.data_utils import load_and_process_data
+from src.memory.memory_manager import MemoryManager
+
+class TestDataUtils(unittest.TestCase):
+    def test_load_and_process_data(self):
+        # Assuming there's a test PDF in data/raw for testing
+        docs = load_and_process_data("data/raw")
+        self.assertTrue(len(docs) > 0, "Should load and split documents")
+
+class TestMemoryManager(unittest.TestCase):
+    def setUp(self):
+        self.memory_manager = MemoryManager(":memory:")  # Use in-memory database for testing
+
+    def test_save_and_get_memories(self):
+        self.memory_manager.save_memory("test_query", "test_result")
+        memories = self.memory_manager.get_memories()
+        self.assertEqual(len(memories), 1)
+        self.assertEqual(memories[0][0], "test_query")
+        self.assertEqual(memories[0][1], "test_result")
+
+if __name__ == "__main__":
+    unittest.main()
