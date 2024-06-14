@@ -1,3 +1,8 @@
+# Useful commands:
+python3.12 ./src/app.py
+./generate_tree.sh
+source rag-venv/bin/activate
+
 # Multi-Agent RAG System with Continual Learning
 
 This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities using LangChain, LangGraph, and LLM API calls.

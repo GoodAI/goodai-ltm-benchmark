@@ -1,5 +1,9 @@
+      fantasy_info.pdf
+     app.log
+    memory.db
     README.md
     requirements.txt
+     reset_logs.sh
       processing_agent.py
       response_agent.py
       retrieval_agent.py
@@ -16,7 +20,14 @@
 File Contents:
 
 -e 
-File: ./README.md
+File: ./memory.db
+
+./README.md
+
+# Useful commands:
+python3.12 ./src/app.py
+./generate_tree.sh
+source rag-venv/bin/activate
 
 # Multi-Agent RAG System with Continual Learning
 
@@ -53,18 +64,98 @@ Type 'quit' to exit the program.
 - `README.md`: Project documentation.-e 
 File: ./requirements.txt
 
-langchain
-openai
-faiss-cpu
-qdrant-client
-pymupdf
-tiktoken
+aiohttp==3.9.5
+aiosignal==1.3.1
+annotated-types==0.7.0
+anyio==4.4.0
+attrs==23.2.0
+certifi==2024.6.2
+charset-normalizer==3.3.2
+dataclasses-json==0.6.7
+distro==1.9.0
+faiss-cpu==1.8.0
+frozenlist==1.4.1
+greenlet==3.0.3
+grpcio==1.64.1
+grpcio-tools==1.64.1
+h11==0.14.0
+h2==4.1.0
+hpack==4.0.0
+httpcore==1.0.5
+httpx==0.27.0
+hyperframe==6.0.1
+idna==3.7
+jsonpatch==1.33
+jsonpointer==3.0.0
+langchain==0.2.3
+langchain-community==0.2.4
+langchain-core==0.2.5
+langchain-openai==0.1.8
+langchain-text-splitters==0.2.1
+langsmith==0.1.77
+marshmallow==3.21.3
+multidict==6.0.5
+mypy-extensions==1.0.0
+numpy==1.26.4
+openai==1.34.0
+orjson==3.10.4
+packaging==23.2
+portalocker==2.8.2
+protobuf==5.27.1
+pydantic==2.7.4
+pydantic_core==2.18.4
+PyMuPDF==1.24.5
+PyMuPDFb==1.24.3
+PyYAML==6.0.1
+qdrant-client==1.9.1
+regex==2024.5.15
+requests==2.32.3
+setuptools==70.0.0
+sniffio==1.3.1
+SQLAlchemy==2.0.30
+tenacity==8.3.0
+tiktoken==0.7.0
+tqdm==4.66.4
+typing-inspect==0.9.0
+typing_extensions==4.12.2
+urllib3==2.2.1
+yarl==1.9.4
+python-dotenv==1.0.1
+-e 
+File: ./scripts/reset_logs.sh
+
+#!/bin/bash
+# reset_logs.sh
+# This script resets all log files in the specified directory.
+
+# Directory containing the log files
+LOG_DIR="./logs"
+
+# Check if the directory exists
+if [ ! -d "$LOG_DIR" ]; then
+    echo "Directory $LOG_DIR does not exist."
+    exit 1
+fi
+
+# Iterate over all log files in the directory
+for log_file in "$LOG_DIR"/*.log; 
+do
+    # Check if the file exists
+    if [ -f "$log_file" ]; then
+        # Truncate the file to zero length
+        > "$log_file"
+        echo "Reset $log_file"
+    else
+        echo "No log files found in $LOG_DIR"
+    fi
+done
+
+echo "All log files have been reset."
 -e 
 File: ./src/agents/processing_agent.py
 
 from langchain_community.chat_models import ChatOpenAI
-from langchain.schema import AIMessage, HumanMessage
-from langchain.schema import Document
+from langchain.schema import HumanMessage, AIMessage, Document
 from typing import List
 
 class ProcessingAgent:
@@ -77,8 +168,11 @@ class ProcessingAgent:
             HumanMessage(content=f"Given the following context:\n{context}\n\nAnswer the question: {query}")
         ]
         response = self.chat_model(messages)
-        return response.content-e 
+        return response.content
+-e 
 File: ./src/agents/response_agent.py
+
+# src/agents/response_agent.py
 
 from langchain_community.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
@@ -89,10 +183,13 @@ class ResponseAgent:
 
     def generate_response(self, query: str, result: str) -> str:
         messages = [
-            HumanMessage(content=f"Given the following query:\n{query}\n\nAnd the following result:\n{result}\n\nGenerate a final response.")
+            HumanMessage(content=f"User Query:\n{query}"),
+            AIMessage(content=f"Assistant Response:\n{result}"),
+            HumanMessage(content="Generate a final response based on the above interaction.")
         ]
         response = self.chat_model(messages)
-        return response.content-e 
+        return response.content
+-e 
 File: ./src/agents/retrieval_agent.py
 
 from langchain_community.embeddings import OpenAIEmbeddings
@@ -112,46 +209,78 @@ File: ./src/agents/__init__.py
 File: ./src/app.py
 
 # src/app.py
+import os
+import logging
+from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-import logging
 from controller import Controller
 from utils.data_utils import load_and_process_data
-import os
-logging.basicConfig(level=logging.INFO)
 
-def main(): 
-    try:   
-        if not os.getenv("GOODAI_OPENAI_API_KEY"):
-            os.environ["OPENAI_API_KEY"] = input("Enter your OpenAI API Key: ")
-        if not os.getenv("TAVILY_API_KEY"):
-            os.environ["TAVILY_API_KEY"] = input("Enter your Tavily API Key: ")
+# Setup logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler("logs/app.log"),
+        logging.StreamHandler()
+    ]
+)
+
+def main():
+    try:
+        logging.info("Starting the Multi-Agent RAG System")
+
+        # Load environment variables from .env file
+        logging.debug("Loading environment variables from .env file")
+        load_dotenv()
+
+        openai_api_key = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
+        tavily_api_key = os.getenv("TAVILY_API_KEY")
+
+        if not openai_api_key or not tavily_api_key:
+            logging.error("API keys not found in environment variables")
+            raise EnvironmentError("API keys not found in environment variables")
+
+        logging.info("API keys successfully loaded")
+
+        # Set the environment variable for OpenAI API key
+        os.environ["OPENAI_API_KEY"] = openai_api_key
 
         # Load and process data
+        logging.debug("Loading and processing data from 'data/raw'")
         raw_documents = load_and_process_data("data/raw")
+        logging.info(f"Total documents processed: {len(raw_documents)}")
 
         # Create vectorstore
-        embeddings = OpenAIEmbeddings()
+        logging.debug("Creating vectorstore with OpenAIEmbeddings")
+        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         vectorstore = FAISS.from_documents(raw_documents, embeddings)
+        logging.info("Vectorstore created successfully")
 
         # Initialize controller
+        logging.debug("Initializing controller")
         controller = Controller(vectorstore, "gpt-3.5-turbo", "memory.db")
 
         while True:
             query = input("Enter your query (or 'quit' to exit): ")
             if query.lower() == "quit":
+                logging.info("Exiting the program")
                 break
 
-            response = controller.execute_query(query)
-            print(f"Response: {response}\n")
+            try:
+                logging.info(f"Executing query: {query}")
+                response = controller.execute_query(query)
+                logging.info(f"Response: {response}")
 
-            memories = controller.get_memories(5)
-            print("Recent Memories:")
-            for memory in memories:
-                print(f"Query: {memory[0]}")
-                print(f"Result: {memory[1]}\n")
+                memories = controller.get_memories(5)
+                logging.info("Recent Memories:")
+                for memory in memories:
+                    logging.info(f"Query: {memory[0]}, Result: {memory[1]}")
+            except Exception as e:
+                logging.error(f"An error occurred while processing the query: {e}", exc_info=True)
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logging.error(f"An error occurred in the main program: {e}", exc_info=True)
 
 if __name__ == "__main__":
     main()
@@ -243,7 +372,9 @@ File: ./src/utils/data_utils.py
 import os
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.schema import Document
 import tiktoken
+import logging
 
 def tiktoken_len(text):
     tokens = tiktoken.encoding_for_model("gpt-3.5-turbo").encode(text)
@@ -251,21 +382,48 @@ def tiktoken_len(text):
 
 def load_and_process_data(directory_path: str):
     all_docs = []
+    if not os.path.exists(directory_path):
+        logging.error(f"Directory {directory_path} does not exist.")
+        return all_docs
+
+    if not os.listdir(directory_path):
+        logging.warning(f"Directory {directory_path} is empty. Using default document.")
+        default_content = "This is a default document. Add PDF files to the data/raw directory for processing."
+        default_doc = Document(page_content=default_content)
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=300,
+            chunk_overlap=0,
+            length_function=tiktoken_len,
+        )
+        split_chunks = text_splitter.split_documents([default_doc])
+        all_docs.extend(split_chunks)
+        return all_docs
+
     for filename in os.listdir(directory_path):
+        file_path = os.path.join(directory_path, filename)
+        logging.debug(f"Found file: {file_path}")
         if filename.endswith(".pdf"):
-            print(f"Processing file: {filename}")  # Debugging statement
-            loader = PyMuPDFLoader(os.path.join(directory_path, filename))
-            docs = loader.load()
-            print(f"Loaded documents: {docs}")  # Debugging statement
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=300,
-                chunk_overlap=0,
-                length_function=tiktoken_len,
-            )
-            split_chunks = text_splitter.split_documents(docs)
-            print(f"Split documents: {split_chunks}")  # Debugging statement
-            all_docs.extend(split_chunks)
-    print(f"Total documents processed: {len(all_docs)}")  # Debugging statement
+            logging.debug(f"Processing file: {filename}")
+            try:
+                loader = PyMuPDFLoader(file_path)
+                docs = loader.load()
+                logging.debug(f"Loaded documents from {filename}: {docs}")
+
+                text_splitter = RecursiveCharacterTextSplitter(
+                    chunk_size=300,
+                    chunk_overlap=0,
+                    length_function=tiktoken_len,
+                )
+                split_chunks = text_splitter.split_documents(docs)
+                logging.debug(f"Split documents from {filename}: {split_chunks}")
+
+                all_docs.extend(split_chunks)
+            except Exception as e:
+                logging.error(f"Error processing file {filename}: {e}", exc_info=True)
+        else:
+            logging.debug(f"Skipping non-PDF file: {filename}")
+
+    logging.info(f"Total documents processed: {len(all_docs)}")
     return all_docs
 -e 
 File: ./src/utils/__init__.py

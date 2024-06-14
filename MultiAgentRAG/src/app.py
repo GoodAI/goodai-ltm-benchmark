@@ -1,51 +1,98 @@
-# src/app.py
+import os
+import logging
+from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-import logging
 from controller import Controller
 from utils.data_utils import load_and_process_data
-import os
 
-logging.basicConfig(level=logging.INFO)
+# Setup logging
+master_logger = logging.getLogger('master')
+master_logger.setLevel(logging.DEBUG)
+master_file_handler = logging.FileHandler("logs/master.log")
+master_file_handler.setLevel(logging.DEBUG)
+master_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+master_logger.addHandler(master_file_handler)
+
+# Create console handler for query and response logs
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(message)s'))
+master_logger.addHandler(console_handler)
+
+# Chat Logger
+chat_logger = logging.getLogger('chat')
+chat_logger.setLevel(logging.DEBUG)
+chat_file_handler = logging.FileHandler('logs/chat.log')
+chat_file_handler.setLevel(logging.DEBUG)
+chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+chat_logger.addHandler(chat_file_handler)
+
+# Memory Logger
+memory_logger = logging.getLogger('memory')
+memory_logger.setLevel(logging.DEBUG)
+memory_file_handler = logging.FileHandler('logs/memory.log')
+memory_file_handler.setLevel(logging.DEBUG)
+memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+memory_logger.addHandler(memory_file_handler)
 
 def main():
     try:
-        # Directly use the saved user variables
-        openai_api_key = os.getenv("GOODAI_OPENAI_API_KEY")
+        master_logger.info("Starting the Multi-Agent RAG System")
+
+        # Load environment variables from .env file
+        master_logger.debug("Loading environment variables from .env file")
+        load_dotenv()
+
+        openai_api_key = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
         tavily_api_key = os.getenv("TAVILY_API_KEY")
 
         if not openai_api_key or not tavily_api_key:
+            master_logger.error("API keys not found in environment variables")
             raise EnvironmentError("API keys not found in environment variables")
 
-        # Set the environment variables for the session
+        master_logger.info("API keys successfully loaded")
+
+        # Set the environment variable for OpenAI API key
         os.environ["OPENAI_API_KEY"] = openai_api_key
-        os.environ["TAVILY_API_KEY"] = tavily_api_key
 
         # Load and process data
+        master_logger.debug("Loading and processing data from 'data/raw'")
         raw_documents = load_and_process_data("data/raw")
+        master_logger.info(f"Total documents processed: {len(raw_documents)}")
 
         # Create vectorstore
-        embeddings = OpenAIEmbeddings()
+        master_logger.debug("Creating vectorstore with OpenAIEmbeddings")
+        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         vectorstore = FAISS.from_documents(raw_documents, embeddings)
+        master_logger.info("Vectorstore created successfully")
 
         # Initialize controller
+        master_logger.debug("Initializing controller")
         controller = Controller(vectorstore, "gpt-3.5-turbo", "memory.db")
 
         while True:
             query = input("Enter your query (or 'quit' to exit): ")
             if query.lower() == "quit":
+                master_logger.info("Exiting the program")
                 break
 
-            response = controller.execute_query(query)
-            print(f"Response: {response}\n")
+            try:
+                master_logger.info(f"Executing query: {query}")
+                chat_logger.info(f"Query: {query}")
+                response = controller.execute_query(query)
+                chat_logger.info(f"Response: {response}")
+                console_handler.setLevel(logging.INFO)
+                master_logger.info(f"Response: {response}")
 
-            memories = controller.get_memories(5)
-            print("Recent Memories:")
-            for memory in memories:
-                print(f"Query: {memory[0]}")
-                print(f"Result: {memory[1]}\n")
+                memories = controller.get_memories(5)
+                memory_logger.info("Recent Memories:")
+                for memory in memories:
+                    memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
+            except Exception as e:
+                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
 
 if __name__ == "__main__":
     main()

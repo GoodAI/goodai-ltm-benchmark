@@ -1,5 +1,6 @@
 # src/controller.py
 
+import logging
 from typing import List, Tuple
 from langchain.schema import Document
 from langchain_community.vectorstores import FAISS
@@ -14,23 +15,24 @@ class Controller:
         self.processing_agent = ProcessingAgent(model_name)
         self.response_agent = ResponseAgent(model_name)
         self.memory_manager = MemoryManager(memory_db_path)
+        self.logger = logging.getLogger('master')
 
     def execute_query(self, query: str) -> str:
         # Retrieve relevant documents
         context_documents = self.retrieval_agent.retrieve(query)
-        print(f"Retrieved documents: {context_documents}")  # Debugging statement
-        print(f"Number of documents retrieved: {len(context_documents)}")  # Debugging statement
+        self.logger.debug(f"Retrieved documents: {context_documents}")
+        self.logger.debug(f"Number of documents retrieved: {len(context_documents)}")
         
         if not context_documents:
             raise ValueError("No documents retrieved")
 
         # Process query with context
         result = self.processing_agent.process(query, context_documents)
-        print(f"Processing result: {result}")  # Debugging statement
+        self.logger.debug(f"Processing result: {result}")
 
         # Generate final response
         response = self.response_agent.generate_response(query, result)
-        print(f"Generated response: {response}")  # Debugging statement
+        self.logger.debug(f"Generated response: {response}")
 
         # Save memory
         self.memory_manager.save_memory(query, response)
@@ -39,5 +41,5 @@ class Controller:
 
     def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
         memories = self.memory_manager.get_memories(limit)
-        print(f"Memories retrieved: {memories}")  # Debugging statement
+        self.logger.debug(f"Memories retrieved: {memories}")
         return memories
