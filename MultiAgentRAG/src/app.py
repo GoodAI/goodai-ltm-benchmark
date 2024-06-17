@@ -3,27 +3,25 @@ import logging
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-
 from utils.data_utils import load_and_process_data, structure_memories
-# from src.utils.pdf_generator import generate_pdf
 from utils.json_utils import save_memory_to_json
 from controller import Controller
 
 # Setup logging
 master_logger = logging.getLogger('master')
 master_logger.setLevel(logging.DEBUG)
-master_file_handler = logging.FileHandler("logs/master.log")
-master_file_handler.setLevel(logging.DEBUG)
-master_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-master_logger.addHandler(master_file_handler)
+file_handler = logging.FileHandler("logs/master.log")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+master_logger.addHandler(file_handler)
 
-# Create console handler for query and response logs
+# Console handler for query and response logs
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(logging.Formatter('%(message)s'))
 master_logger.addHandler(console_handler)
 
-# Chat Logger
+# Separate loggers for different types of logs
 chat_logger = logging.getLogger('chat')
 chat_logger.setLevel(logging.DEBUG)
 chat_file_handler = logging.FileHandler('logs/chat.log')
@@ -31,7 +29,6 @@ chat_file_handler.setLevel(logging.DEBUG)
 chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 chat_logger.addHandler(chat_file_handler)
 
-# Memory Logger
 memory_logger = logging.getLogger('memory')
 memory_logger.setLevel(logging.DEBUG)
 memory_file_handler = logging.FileHandler('logs/memory.log')
@@ -42,11 +39,7 @@ memory_logger.addHandler(memory_file_handler)
 def main():
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
-
-        # Load environment variables from .env file
-        master_logger.debug("Loading environment variables from .env file")
         load_dotenv()
-
         openai_api_key = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
         tavily_api_key = os.getenv("TAVILY_API_KEY")
 
@@ -55,22 +48,17 @@ def main():
             raise EnvironmentError("API keys not found in environment variables")
 
         master_logger.info("API keys successfully loaded")
-
-        # Set the environment variable for OpenAI API key
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
-        # Load and process data
         master_logger.debug("Loading and processing data from 'data/raw'")
         raw_documents = load_and_process_data("data/raw")
         master_logger.info(f"Total documents processed: {len(raw_documents)}")
 
-        # Create vectorstore
         master_logger.debug("Creating vectorstore with OpenAIEmbeddings")
         embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         vectorstore = FAISS.from_documents(raw_documents, embeddings)
         master_logger.info("Vectorstore created successfully")
 
-        # Initialize controller
         master_logger.debug("Initializing controller")
         controller = Controller(vectorstore, "gpt-3.5-turbo", "memory.db")
 
@@ -93,7 +81,6 @@ def main():
                 for memory in memories:
                     memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
 
-                # Structure memories and save as JSON
                 structured_memories = structure_memories(memories)
                 for memory in structured_memories:
                     save_memory_to_json(memory, output_dir='json_output')

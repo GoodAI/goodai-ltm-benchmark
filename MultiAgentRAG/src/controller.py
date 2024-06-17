@@ -31,10 +31,14 @@ class Controller:
         self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
         
         # Combine context documents and relevant memories
-        context = context_documents + [Document(page_content=memory[0] + "\n" + memory[1]) for memory in relevant_memories]
+        unique_context = {doc.page_content for doc in context_documents}
+        unique_memories = {f"{memory[0]}\n{memory[1]}" for memory in relevant_memories}
+
+        combined_context = list(unique_context.union(unique_memories))
+        context_documents = [Document(page_content=content) for content in combined_context[:3]]
         
         # Process query with context
-        result = self.processing_agent.process(query, context)
+        result = self.processing_agent.process(query, context_documents)
         self.logger.debug(f"Processing result: {result}")
 
         # Generate final response
@@ -50,3 +54,4 @@ class Controller:
         memories = self.memory_manager.get_memories(limit)
         self.logger.debug(f"Memories retrieved: {memories}")
         return memories
+

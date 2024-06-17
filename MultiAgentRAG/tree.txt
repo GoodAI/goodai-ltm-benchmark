@@ -1,28 +1,73 @@
-      fantasy_info.pdf
-     Memory_1.json
-     Memory_2.json
-     Memory_3.json
-     Memory_4.json
-     Memory_5.json
-    memory.db
-    README.md
-    requirements.txt
-      processing_agent.py
-      response_agent.py
-      retrieval_agent.py
-      __init__.py
-     app.py
-     controller.py
-      memory_manager.py
-      __init__.py
-      data_utils.py
-      file_manager.py
-      json_utils.py
-      pdf_generator.py
-      pdf_to_json.py
-      __init__.py
-     __init__.py
-     __init__.py
+(rag-venv) goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
+.
+├── README.md
+├── data
+│   ├── embeddings
+│   ├── processed
+│   └── raw
+├── json_output
+│   ├── Memory_1.json
+│   ├── Memory_2.json
+│   ├── Memory_3.json
+│   ├── Memory_4.json
+│   └── Memory_5.json
+├── logs
+│   ├── app.log
+│   ├── chat.log
+│   ├── master.log
+│   └── memory.log
+├── memory.db
+├── notebooks
+│   └── Multi_Agent_RAG_LangGraph.ipynb
+├── requirements.txt
+├── scripts
+│   ├── generate_tree.sh
+│   ├── logs_to_docs.sh
+│   └── reset_logs.sh
+├── src
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── controller.cpython-310.pyc
+│   │   └── controller.cpython-312.pyc
+│   ├── agents
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── processing_agent.cpython-312.pyc
+│   │   │   ├── response_agent.cpython-312.pyc
+│   │   │   ├── retrieval_agent.cpython-310.pyc
+│   │   │   └── retrieval_agent.cpython-312.pyc
+│   │   ├── processing_agent.py
+│   │   ├── response_agent.py
+│   │   └── retrieval_agent.py
+│   ├── app.py
+│   ├── controller.py
+│   ├── memory
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   └── memory_manager.cpython-312.pyc
+│   │   └── memory_manager.py
+│   └── utils
+│       ├── __init__.py
+│       ├── __pycache__
+│       │   ├── __init__.cpython-312.pyc
+│       │   ├── data_utils.cpython-312.pyc
+│       │   └── json_utils.cpython-312.pyc
+│       ├── data_utils.py
+│       ├── file_manager.py
+│       ├── json_utils.py
+│       ├── pdf_generator.py
+│       └── pdf_to_json.py
+├── tests
+│   └── __init__.py
+├── text_docs
+│   ├── app.txt
+│   ├── chat.txt
+│   ├── master.txt
+│   └── memory.txt
+└── tree.txt
 
 File Contents:
 

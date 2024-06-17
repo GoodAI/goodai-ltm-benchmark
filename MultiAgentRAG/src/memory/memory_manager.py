@@ -1,9 +1,6 @@
-# src/memory/memory_manager.py
-
 import logging
 import sqlite3
 from typing import List, Tuple
-# from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
 import glob
@@ -62,17 +59,21 @@ class MemoryManager:
         
         query_embedding = self.embeddings.embed_query(query)
         relevant_memories = []
+        memory_texts = set()
         
         for memory in all_memories:
             memory_query = memory[0]
+            memory_result = memory[1]
+            memory_text = f"{memory_query}\n{memory_result}"
+            if memory_text in memory_texts:
+                continue
+            
             memory_embedding = self.embeddings.embed_query(memory_query)
             similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
             
             if similarity >= threshold:
                 relevant_memories.append((memory, similarity))
+                memory_texts.add(memory_text)
         
-        relevant_memories.sort(key=lambda x: x[1], reverse=True)  # Sort by similarity score in descending order
-        return [memory[0] for memory in relevant_memories]  # Return the memory content instead of similarity scores
-
-
-
+        relevant_memories.sort(key=lambda x: x[1], reverse=True)
+        return [memory[0] for memory in relevant_memories]

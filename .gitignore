@@ -40,4 +40,9 @@ not_for_github/auto_scorer/sheet_to_local/*
 rag-venv
 venv-rag
 .vscode
+# Ignore memory.db file
+MultiAgentRAG/memory.db
+
+# Ignore json_output directory
+MultiAgentRAG/json_output/
 
