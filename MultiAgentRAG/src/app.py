@@ -3,8 +3,11 @@ import logging
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+
+from utils.data_utils import load_and_process_data, structure_memories
+# from src.utils.pdf_generator import generate_pdf
+from utils.json_utils import save_memory_to_json
 from controller import Controller
-from utils.data_utils import load_and_process_data
 
 # Setup logging
 master_logger = logging.getLogger('master')
@@ -89,6 +92,12 @@ def main():
                 memory_logger.info("Recent Memories:")
                 for memory in memories:
                     memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
+
+                # Structure memories and save as JSON
+                structured_memories = structure_memories(memories)
+                for memory in structured_memories:
+                    save_memory_to_json(memory, output_dir='json_output')
+
             except Exception as e:
                 master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
     except Exception as e:

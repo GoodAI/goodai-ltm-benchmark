@@ -25,9 +25,16 @@ class Controller:
         
         if not context_documents:
             raise ValueError("No documents retrieved")
-
+        
+        # Retrieve relevant memories
+        relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
+        self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
+        
+        # Combine context documents and relevant memories
+        context = context_documents + [Document(page_content=memory[0] + "\n" + memory[1]) for memory in relevant_memories]
+        
         # Process query with context
-        result = self.processing_agent.process(query, context_documents)
+        result = self.processing_agent.process(query, context)
         self.logger.debug(f"Processing result: {result}")
 
         # Generate final response

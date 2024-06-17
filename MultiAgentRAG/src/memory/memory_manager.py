@@ -3,6 +3,11 @@
 import logging
 import sqlite3
 from typing import List, Tuple
+# from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
+import numpy as np
+import glob
+import json
 
 logger = logging.getLogger('memory')
 
@@ -10,7 +15,8 @@ class MemoryManager:
     def __init__(self, db_path: str):
         self.conn = sqlite3.connect(db_path)
         self.create_tables()
-        logger.debug(f"Connected to SQLite database at {db_path}")
+        self.embeddings = OpenAIEmbeddings()
+        self.load_memories()
 
     def create_tables(self):
         self.conn.execute("""
@@ -30,6 +36,18 @@ class MemoryManager:
         self.conn.commit()
         logger.debug(f"Saved memory for query: {query} with result: {result}")
 
+    def load_memories(self):
+        json_files = glob.glob("json_output/*.json")
+        
+        for file_path in json_files:
+            with open(file_path, 'r') as json_file:
+                memory_data = json.load(json_file)
+                query = memory_data['query']
+                result = memory_data['result']
+                self.save_memory(query, result)
+        
+        logger.debug(f"Loaded {len(json_files)} memories from JSON files")
+
     def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
         cursor = self.conn.execute("""
             SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
@@ -37,3 +55,24 @@ class MemoryManager:
         memories = cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
+
+    def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
+        cursor = self.conn.execute("SELECT query, result FROM memories")
+        all_memories = cursor.fetchall()
+        
+        query_embedding = self.embeddings.embed_query(query)
+        relevant_memories = []
+        
+        for memory in all_memories:
+            memory_query = memory[0]
+            memory_embedding = self.embeddings.embed_query(memory_query)
+            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+            
+            if similarity >= threshold:
+                relevant_memories.append((memory, similarity))
+        
+        relevant_memories.sort(key=lambda x: x[1], reverse=True)  # Sort by similarity score in descending order
+        return [memory[0] for memory in relevant_memories]  # Return the memory content instead of similarity scores
+
+
+

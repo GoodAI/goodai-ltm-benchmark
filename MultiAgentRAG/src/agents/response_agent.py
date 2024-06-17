@@ -1,7 +1,8 @@
 # src/agents/response_agent.py
 
 import logging
-from langchain_community.chat_models import ChatOpenAI
+# from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
 
 logger = logging.getLogger('master')
