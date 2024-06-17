@@ -45,7 +45,7 @@ class MemoryManager:
         
         logger.debug(f"Loaded {len(json_files)} memories from JSON files")
 
-    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
+    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]: #? is this used? 
         cursor = self.conn.execute("""
             SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
         """, (limit,))
@@ -54,6 +54,8 @@ class MemoryManager:
         return memories
 
     def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
+        #! This is as of yet not scalable as the entire database is returned. 
+        # To address this we will need to sort the sematic title search. Potentially use this as a hierarchy structure or temporal structure instead. 
         cursor = self.conn.execute("SELECT query, result FROM memories")
         all_memories = cursor.fetchall()
         
