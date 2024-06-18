@@ -1,21 +1,15 @@
 # src/agents/retrieval_agent.py
 
 import logging
-# from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain.schema import Document
-from typing import List
+from typing import List, Tuple
 
 logger = logging.getLogger('master')
 
 class RetrievalAgent:
-    def __init__(self, vectorstore: FAISS):
-        self.vectorstore = vectorstore
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
 
-    def retrieve(self, query: str) -> List[Document]:
-        results = self.vectorstore.similarity_search(query)
-        # Rank documents based on relevance score
-        ranked_results = sorted(results, key=lambda doc: doc.metadata.get('relevance_score', 0), reverse=True)
-        logger.debug(f"Retrieved and ranked documents for query: {query}")
-        return ranked_results
+    def retrieve(self, query: str) -> List[Tuple[str, str]]:
+        relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
+        logger.debug(f"Retrieved and ranked relevant memories for query: {query}")
+        return relevant_memories

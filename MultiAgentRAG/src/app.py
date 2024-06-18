@@ -1,9 +1,11 @@
+# src/app.py
+
 import os
 import logging
 from dotenv import load_dotenv
+from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
-from controller import Controller
 
 # Setup logging
 master_logger = logging.getLogger('master')
@@ -24,14 +26,14 @@ chat_logger = logging.getLogger('chat')
 chat_logger.setLevel(logging.DEBUG)
 chat_file_handler = logging.FileHandler('logs/chat.log')
 chat_file_handler.setLevel(logging.DEBUG)
-chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))  # Corrected here
 chat_logger.addHandler(chat_file_handler)
 
 memory_logger = logging.getLogger('memory')
 memory_logger.setLevel(logging.DEBUG)
 memory_file_handler = logging.FileHandler('logs/memory.log')
 memory_file_handler.setLevel(logging.DEBUG)
-memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))  # Corrected here
 memory_logger.addHandler(memory_file_handler)
 
 def main():
@@ -49,7 +51,7 @@ def main():
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
         master_logger.debug("Initializing controller")
-        controller = Controller("gpt-3.5-turbo", "memory.db")
+        controller = Controller("gpt-3.5-turbo", "memory.db", openai_api_key)
 
         while True:
             query = input("Enter your query (or 'quit' to exit): ")

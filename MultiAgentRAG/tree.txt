@@ -1,11 +1,10 @@
-(rag-venv) goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
 .
 ├── README.md     
 ├── data
 │   ├── embeddings
-│   ├── processed    
-│   └── raw
-├── json_output      
+│   ├── processed 
+│   └── raw       
+├── json_output   
 │   ├── Memory_1.json
 │   ├── Memory_2.json
 │   ├── Memory_3.json
@@ -57,7 +56,8 @@
 │       │   └── json_utils.cpython-312.pyc
 │       ├── data_utils.py
 │       ├── file_manager.py
-│       └── json_utils.py
+│       ├── json_utils.py
+│       └── reset_database.py
 ├── text_docs
 └── tree.txt
 
@@ -68,40 +68,40 @@ File: ./json_output/Memory_1.json
 
 {
     "title": "Memory_1",
-    "query": "What is my profession?",
-    "result": "I apologize for any confusion, but without knowing your profession, I am unable to provide you with that information. If you would like to share your profession with me, I would be happy to assist you further.",
+    "query": "What day is today?",
+    "result": "Today is June 18th, a Tuesday.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_2.json
 
 {
     "title": "Memory_2",
-    "query": "List all the things I like to do? ",
-    "result": "It appears that you enjoy watching movies and playing video games as your primary activities. If there are any other hobbies or interests you have, please share them so I can provide a more detailed list of things you like to do. Feel free to provide more information for a personalized response.",
+    "query": "What is my height?",
+    "result": "I am 110cm tall.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_3.json
 
 {
     "title": "Memory_3",
-    "query": "What do I like to do?",
-    "result": "It seems like you enjoy watching movies and playing video games as your preferred activities. If you have any specific preferences or interests in these areas, feel free to share more details for a more personalized response.",
+    "query": "What are the names I have gone by? ",
+    "result": "Certainly! Here is a final response based on the interaction:\n\n\"I have gone by the names Bob and Fin.\"",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_4.json
 
 {
     "title": "Memory_4",
-    "query": "What do I like to do? ",
-    "result": "It appears that you enjoy watching movies and playing video games. These activities may bring you entertainment and relaxation. Keep exploring new movies and games to continue enjoying your hobbies.",
+    "query": "Today is June 18th, it is a Tuesday and it is overcast and muggy. ",
+    "result": "Today is June 18th, a Tuesday, and the weather is overcast and muggy.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_5.json
 
 {
     "title": "Memory_5",
-    "query": "7",
-    "result": "I apologize for the confusion. It seems there was a misunderstanding. If you have any specific questions or need assistance with anything else, please let me know and I'll do my best to help.",
+    "query": "My name is Bob.",
+    "result": "Certainly! Here is a final response based on our interaction:\n\n\"Hello Bob! It's nice to meet you. How can I assist you today? Feel free to let me know if you have any questions or need help with anything.\"",
     "tags": "retrieved, processed"
 }-e 
 File: ./README.md
@@ -258,36 +258,32 @@ File: ./src/agents/retrieval_agent.py
 # src/agents/retrieval_agent.py
 
 import logging
-# from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain.schema import Document
-from typing import List
+from typing import List, Tuple
 
 logger = logging.getLogger('master')
 
 class RetrievalAgent:
-    def __init__(self, vectorstore: FAISS):
-        self.vectorstore = vectorstore
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
 
-    def retrieve(self, query: str) -> List[Document]:
-        results = self.vectorstore.similarity_search(query)
-        # Rank documents based on relevance score
-        ranked_results = sorted(results, key=lambda doc: doc.metadata.get('relevance_score', 0), reverse=True)
-        logger.debug(f"Retrieved and ranked documents for query: {query}")
-        return ranked_results
+    def retrieve(self, query: str) -> List[Tuple[str, str]]:
+        relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
+        logger.debug(f"Retrieved and ranked relevant memories for query: {query}")
+        return relevant_memories
 -e 
 File: ./src/agents/__init__.py
 
 -e 
 File: ./src/app.py
 
+# src/app.py
+
 import os
 import logging
 from dotenv import load_dotenv
+from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
-from controller import Controller
 
 # Setup logging
 master_logger = logging.getLogger('master')
@@ -308,14 +304,14 @@ chat_logger = logging.getLogger('chat')
 chat_logger.setLevel(logging.DEBUG)
 chat_file_handler = logging.FileHandler('logs/chat.log')
 chat_file_handler.setLevel(logging.DEBUG)
-chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))  # Corrected here
 chat_logger.addHandler(chat_file_handler)
 
 memory_logger = logging.getLogger('memory')
 memory_logger.setLevel(logging.DEBUG)
 memory_file_handler = logging.FileHandler('logs/memory.log')
 memory_file_handler.setLevel(logging.DEBUG)
-memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))  # Corrected here
 memory_logger.addHandler(memory_file_handler)
 
 def main():
@@ -333,7 +329,7 @@ def main():
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
         master_logger.debug("Initializing controller")
-        controller = Controller("gpt-3.5-turbo", "memory.db")
+        controller = Controller("gpt-3.5-turbo", "memory.db", openai_api_key)
 
         while True:
             query = input("Enter your query (or 'quit' to exit): ")
@@ -373,34 +369,31 @@ File: ./src/controller.py
 import logging
 from typing import List, Tuple
 from langchain.schema import Document
+from agents.retrieval_agent import RetrievalAgent
 from agents.processing_agent import ProcessingAgent
 from agents.response_agent import ResponseAgent
 from memory.memory_manager import MemoryManager
 
 class Controller:
-    def __init__(self, model_name: str, memory_db_path: str):
+    def __init__(self, model_name: str, memory_db_path: str, api_key: str):
+        self.memory_manager = MemoryManager(memory_db_path, api_key)
+        self.retrieval_agent = RetrievalAgent(self.memory_manager)
         self.processing_agent = ProcessingAgent(model_name)
         self.response_agent = ResponseAgent(model_name)
-        self.memory_manager = MemoryManager(memory_db_path)
         self.logger = logging.getLogger('master')
 
     def execute_query(self, query: str) -> str:
-        # Retrieve relevant memories
-        relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
+        relevant_memories = self.retrieval_agent.retrieve(query)
         self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
         
-        # Convert relevant memories to Document objects
         context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
         
-        # Process query with context
         result = self.processing_agent.process(query, context_documents)
         self.logger.debug(f"Processing result: {result}")
 
-        # Generate final response
         response = self.response_agent.generate_response(query, result)
         self.logger.debug(f"Generated response: {response}")
 
-        # Save memory
         self.memory_manager.save_memory(query, response)
 
         return response
@@ -412,22 +405,23 @@ class Controller:
 -e 
 File: ./src/memory/memory_manager.py
 
+# src/memory/memory_manager.py
+
 import logging
 import sqlite3
 from typing import List, Tuple
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
-import glob
-import json
+import os
 
 logger = logging.getLogger('memory')
 
 class MemoryManager:
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, api_key: str):
+        self.db_path = db_path
         self.conn = sqlite3.connect(db_path)
+        self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.create_tables()
-        self.embeddings = OpenAIEmbeddings()
-        self.load_memories()
 
     def create_tables(self):
         self.conn.execute("""
@@ -435,31 +429,31 @@ class MemoryManager:
                 id INTEGER PRIMARY KEY,
                 query TEXT,
                 result TEXT,
+                embedding BLOB,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
         logger.debug("Ensured memories table exists")
 
     def save_memory(self, query: str, result: str):
+        embedding = np.array(self.embeddings.embed_query(query)).tobytes()  # Ensure embedding is a numpy array
         self.conn.execute("""
-            INSERT INTO memories (query, result) VALUES (?, ?)
-        """, (query, result))
+            INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
+        """, (query, result, embedding))
         self.conn.commit()
         logger.debug(f"Saved memory for query: {query} with result: {result}")
 
-    def load_memories(self):
-        json_files = glob.glob("json_output/*.json")
-        
-        for file_path in json_files:
-            with open(file_path, 'r') as json_file:
-                memory_data = json.load(json_file)
-                query = memory_data['query']
-                result = memory_data['result']
-                self.save_memory(query, result)
-        
-        logger.debug(f"Loaded {len(json_files)} memories from JSON files")
+    def load_precomputed_embeddings(self):
+        # Load precomputed embeddings from the database if needed
+        pass
 
-    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]: #? is this used? 
+    def get_all_memories(self) -> List[Tuple[str, str, bytes]]:
+        cursor = self.conn.execute("SELECT query, result, embedding FROM memories")
+        memories = cursor.fetchall()
+        logger.debug(f"Retrieved {len(memories)} memories")
+        return memories
+
+    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
         cursor = self.conn.execute("""
             SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
         """, (limit,))
@@ -468,31 +462,26 @@ class MemoryManager:
         return memories
 
     def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
-        #! This is as of yet not scalable as the entire database is returned. 
-        # To address this we will need to sort the sematic title search. Potentially use this as a hierarchy structure or temporal structure instead. 
-        cursor = self.conn.execute("SELECT query, result FROM memories")
-        all_memories = cursor.fetchall()
-        
-        query_embedding = self.embeddings.embed_query(query)
+        query_embedding = np.array(self.embeddings.embed_query(query))  # Ensure embedding is a numpy array
+        all_memories = self.get_all_memories()
         relevant_memories = []
-        memory_texts = set()
-        
+
         for memory in all_memories:
-            memory_query = memory[0]
-            memory_result = memory[1]
-            memory_text = f"{memory_query}\n{memory_result}"
-            if memory_text in memory_texts:
-                continue
-            
-            memory_embedding = self.embeddings.embed_query(memory_query)
+            memory_query, memory_result, memory_embedding = memory
+            memory_embedding = np.frombuffer(memory_embedding)  # Convert back from bytes to numpy array
             similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-            
             if similarity >= threshold:
-                relevant_memories.append((memory, similarity))
-                memory_texts.add(memory_text)
-        
-        relevant_memories.sort(key=lambda x: x[1], reverse=True)
-        return [memory[0] for memory in relevant_memories]
+                relevant_memories.append((memory_query, memory_result, similarity))
+
+        relevant_memories.sort(key=lambda x: x[2], reverse=True)
+        return [(memory[0], memory[1]) for memory in relevant_memories[:3]]  # Return top 3 relevant memories
+
+    def reset_database(self):
+        self.conn.close()
+        os.remove(self.db_path)
+        self.conn = sqlite3.connect(self.db_path)
+        self.create_tables()
+        logger.debug("Database reset and tables recreated")
 -e 
 File: ./src/memory/__init__.py
 
@@ -620,6 +609,23 @@ def save_memory_to_json(memory_data: Dict[str, str], output_dir: str = 'json_out
         logger.info(f"Generated JSON: {output_path}")
     except Exception as e:
         logger.error(f"Error saving JSON file {memory_data['title']}: {e}")
+-e 
+File: ./src/utils/reset_database.py
+
+# src/utils/reset_database.py
+
+import sys
+import os
+
+# Add the src directory to the PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
+
+from memory.memory_manager import MemoryManager
+
+if __name__ == "__main__":
+    memory_manager = MemoryManager("memory.db", "your_api_key_here")
+    memory_manager.reset_database()
+    print("Database has been reset.")
 -e 
 File: ./src/utils/__init__.py
 
