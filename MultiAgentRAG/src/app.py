@@ -1,11 +1,13 @@
-# src/app.py
-
 import os
 import logging
 from dotenv import load_dotenv
 from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
+
+# Ensure logs directory exists
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
 # Setup logging
 master_logger = logging.getLogger('master')
@@ -26,14 +28,14 @@ chat_logger = logging.getLogger('chat')
 chat_logger.setLevel(logging.DEBUG)
 chat_file_handler = logging.FileHandler('logs/chat.log')
 chat_file_handler.setLevel(logging.DEBUG)
-chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))  # Corrected here
+chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 chat_logger.addHandler(chat_file_handler)
 
 memory_logger = logging.getLogger('memory')
 memory_logger.setLevel(logging.DEBUG)
 memory_file_handler = logging.FileHandler('logs/memory.log')
 memory_file_handler.setLevel(logging.DEBUG)
-memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))  # Corrected here
+memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 memory_logger.addHandler(memory_file_handler)
 
 def main():
@@ -54,12 +56,12 @@ def main():
         controller = Controller("gpt-3.5-turbo", "memory.db", openai_api_key)
 
         while True:
-            query = input("Enter your query (or 'quit' to exit): ")
-            if query.lower() == "quit":
-                master_logger.info("Exiting the program")
-                break
-
             try:
+                query = input("Enter your query (or 'quit' to exit): ")
+                if query.lower() == "quit":
+                    master_logger.info("Exiting the program")
+                    break
+
                 master_logger.info(f"Executing query: {query}")
                 chat_logger.info(f"Query: {query}")
                 response = controller.execute_query(query)
@@ -76,6 +78,9 @@ def main():
                 for memory in structured_memories:
                     save_memory_to_json(memory, output_dir='json_output')
 
+            except EOFError:
+                master_logger.info("Received EOF, exiting the program")
+                break
             except Exception as e:
                 master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
     except Exception as e:

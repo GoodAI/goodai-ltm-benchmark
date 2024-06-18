@@ -61,5 +61,5 @@ Build the Docker image:
   `docker build -t multi-agent-rag .`
 Run the Docker container:
 
-`docker run -e OPENAI_API_KEY=your_openai_api_key -p 8000:8000 multi-agent-rag`
+`sudo docker run -it -e OPENAI_API_KEY=GOODAI_OPENAI_API_KEY_LTM01 -p 8000:8000 multi-agent-rag`
 Access the interactive multi-agent RAG system by connecting to the container.
