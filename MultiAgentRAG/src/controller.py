@@ -3,39 +3,24 @@
 import logging
 from typing import List, Tuple
 from langchain.schema import Document
-from langchain_community.vectorstores import FAISS
-from agents.retrieval_agent import RetrievalAgent
 from agents.processing_agent import ProcessingAgent
 from agents.response_agent import ResponseAgent
 from memory.memory_manager import MemoryManager
 
 class Controller:
-    def __init__(self, vectorstore: FAISS, model_name: str, memory_db_path: str):
-        self.retrieval_agent = RetrievalAgent(vectorstore)
+    def __init__(self, model_name: str, memory_db_path: str):
         self.processing_agent = ProcessingAgent(model_name)
         self.response_agent = ResponseAgent(model_name)
         self.memory_manager = MemoryManager(memory_db_path)
         self.logger = logging.getLogger('master')
 
     def execute_query(self, query: str) -> str:
-        # Retrieve relevant documents
-        context_documents = self.retrieval_agent.retrieve(query)
-        self.logger.debug(f"Retrieved documents: {context_documents}")
-        self.logger.debug(f"Number of documents retrieved: {len(context_documents)}")
-        
-        if not context_documents:
-            raise ValueError("No documents retrieved")
-        
         # Retrieve relevant memories
         relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
         self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
         
-        # Combine context documents and relevant memories
-        unique_context = {doc.page_content for doc in context_documents}
-        unique_memories = {f"{memory[0]}\n{memory[1]}" for memory in relevant_memories}
-
-        combined_context = list(unique_context.union(unique_memories))
-        context_documents = [Document(page_content=content) for content in combined_context[:3]]
+        # Convert relevant memories to Document objects
+        context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
         
         # Process query with context
         result = self.processing_agent.process(query, context_documents)
@@ -54,4 +39,3 @@ class Controller:
         memories = self.memory_manager.get_memories(limit)
         self.logger.debug(f"Memories retrieved: {memories}")
         return memories
-

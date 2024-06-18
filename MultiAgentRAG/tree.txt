@@ -1,11 +1,11 @@
 (rag-venv) goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
 .
-├── README.md
+├── README.md     
 ├── data
 │   ├── embeddings
-│   ├── processed
+│   ├── processed    
 │   └── raw
-├── json_output
+├── json_output      
 │   ├── Memory_1.json
 │   ├── Memory_2.json
 │   ├── Memory_3.json
@@ -57,16 +57,8 @@
 │       │   └── json_utils.cpython-312.pyc
 │       ├── data_utils.py
 │       ├── file_manager.py
-│       ├── json_utils.py
-│       ├── pdf_generator.py
-│       └── pdf_to_json.py
-├── tests
-│   └── __init__.py
+│       └── json_utils.py
 ├── text_docs
-│   ├── app.txt
-│   ├── chat.txt
-│   ├── master.txt
-│   └── memory.txt
 └── tree.txt
 
 File Contents:
@@ -76,40 +68,40 @@ File: ./json_output/Memory_1.json
 
 {
     "title": "Memory_1",
-    "query": "What is my name? ",
-    "result": "I apologize for any confusion, but without additional information, I am unable to determine your name. If you would like to share your name with me, I would be happy to address you by it in our future interactions. Thank you.",
+    "query": "What is my profession?",
+    "result": "I apologize for any confusion, but without knowing your profession, I am unable to provide you with that information. If you would like to share your profession with me, I would be happy to assist you further.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_2.json
 
 {
     "title": "Memory_2",
-    "query": "My name is Fin, I like to ride bikes. I run a company called \"HEE9\", I am 6'5\"",
-    "result": "It seems there was a misunderstanding in my previous response. As an AI language model, I don't have the ability to count or identify repeated numbers in text. How can I assist you further with your query about your interests and company?",
+    "query": "List all the things I like to do? ",
+    "result": "It appears that you enjoy watching movies and playing video games as your primary activities. If there are any other hobbies or interests you have, please share them so I can provide a more detailed list of things you like to do. Feel free to provide more information for a personalized response.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_3.json
 
 {
     "title": "Memory_3",
-    "query": "What is my occupation? ",
-    "result": "Of course! I apologize for not being able to recall your occupation. If you would like to share it with me again, I would be happy to assist you further. Please let me know how I can help you today.",
+    "query": "What do I like to do?",
+    "result": "It seems like you enjoy watching movies and playing video games as your preferred activities. If you have any specific preferences or interests in these areas, feel free to share more details for a more personalized response.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_4.json
 
 {
     "title": "Memory_4",
-    "query": "My occupation is BUS DRIVER",
-    "result": "Thank you for sharing your occupation as a bus driver. It's clear that you play a crucial role in ensuring the safe transportation of passengers. If you have any questions or need assistance related to your job as a bus driver, feel free to ask. Your dedication to your profession is commendable!",
+    "query": "What do I like to do? ",
+    "result": "It appears that you enjoy watching movies and playing video games. These activities may bring you entertainment and relaxation. Keep exploring new movies and games to continue enjoying your hobbies.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_5.json
 
 {
     "title": "Memory_5",
-    "query": "My name is Fin",
-    "result": "Hello Fin! It's nice to meet you. How can I assist you today? Feel free to ask me any questions or let me know how I can help you.",
+    "query": "7",
+    "result": "I apologize for the confusion. It seems there was a misunderstanding. If you have any specific questions or need assistance with anything else, please let me know and I'll do my best to help.",
     "tags": "retrieved, processed"
 }-e 
 File: ./README.md
@@ -217,7 +209,6 @@ File: ./src/agents/processing_agent.py
 # src/agents/processing_agent.py
 
 import logging
-# from langchain_community.chat_models import ChatOpenAI
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, Document
 from typing import List
@@ -229,20 +220,20 @@ class ProcessingAgent:
         self.chat_model = ChatOpenAI(model_name=model_name)
 
     def process(self, query: str, context_documents: List[Document]) -> str:
-        context = "\n\n".join([doc.page_content for doc in context_documents[:3]])  # Use only top 3 documents for context
+        context = "\n\n".join([doc.page_content for doc in context_documents[:3]])
         messages = [
             HumanMessage(content=f"Given the following context:\n{context}\n\nAnswer the question: {query}")
         ]
-        response = self.chat_model(messages)
+        response = self.chat_model.invoke(messages)
         logger.debug(f"Processed query: {query} with context: {context}")
         return response.content
+
 -e 
 File: ./src/agents/response_agent.py
 
 # src/agents/response_agent.py
 
 import logging
-# from langchain_community.chat_models import ChatOpenAI
 from langchain_openai import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
 
@@ -258,7 +249,7 @@ class ResponseAgent:
             AIMessage(content=f"Assistant Response:\n{result}"),
             HumanMessage(content="Generate a final response based on the above interaction.")
         ]
-        response = self.chat_model(messages)
+        response = self.chat_model.invoke(messages)
         logger.debug(f"Generated final response for query: {query} with result: {result}")
         return response.content
 -e 
@@ -294,29 +285,25 @@ File: ./src/app.py
 import os
 import logging
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
-
-from utils.data_utils import load_and_process_data, structure_memories
-# from src.utils.pdf_generator import generate_pdf
+from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
 from controller import Controller
 
 # Setup logging
 master_logger = logging.getLogger('master')
 master_logger.setLevel(logging.DEBUG)
-master_file_handler = logging.FileHandler("logs/master.log")
-master_file_handler.setLevel(logging.DEBUG)
-master_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-master_logger.addHandler(master_file_handler)
+file_handler = logging.FileHandler("logs/master.log")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+master_logger.addHandler(file_handler)
 
-# Create console handler for query and response logs
+# Console handler for query and response logs
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(logging.Formatter('%(message)s'))
 master_logger.addHandler(console_handler)
 
-# Chat Logger
+# Separate loggers for different types of logs
 chat_logger = logging.getLogger('chat')
 chat_logger.setLevel(logging.DEBUG)
 chat_file_handler = logging.FileHandler('logs/chat.log')
@@ -324,7 +311,6 @@ chat_file_handler.setLevel(logging.DEBUG)
 chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 chat_logger.addHandler(chat_file_handler)
 
-# Memory Logger
 memory_logger = logging.getLogger('memory')
 memory_logger.setLevel(logging.DEBUG)
 memory_file_handler = logging.FileHandler('logs/memory.log')
@@ -335,11 +321,7 @@ memory_logger.addHandler(memory_file_handler)
 def main():
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
-
-        # Load environment variables from .env file
-        master_logger.debug("Loading environment variables from .env file")
         load_dotenv()
-
         openai_api_key = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
         tavily_api_key = os.getenv("TAVILY_API_KEY")
 
@@ -348,24 +330,10 @@ def main():
             raise EnvironmentError("API keys not found in environment variables")
 
         master_logger.info("API keys successfully loaded")
-
-        # Set the environment variable for OpenAI API key
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
-        # Load and process data
-        master_logger.debug("Loading and processing data from 'data/raw'")
-        raw_documents = load_and_process_data("data/raw")
-        master_logger.info(f"Total documents processed: {len(raw_documents)}")
-
-        # Create vectorstore
-        master_logger.debug("Creating vectorstore with OpenAIEmbeddings")
-        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-        vectorstore = FAISS.from_documents(raw_documents, embeddings)
-        master_logger.info("Vectorstore created successfully")
-
-        # Initialize controller
         master_logger.debug("Initializing controller")
-        controller = Controller(vectorstore, "gpt-3.5-turbo", "memory.db")
+        controller = Controller("gpt-3.5-turbo", "memory.db")
 
         while True:
             query = input("Enter your query (or 'quit' to exit): ")
@@ -386,7 +354,6 @@ def main():
                 for memory in memories:
                     memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
 
-                # Structure memories and save as JSON
                 structured_memories = structure_memories(memories)
                 for memory in structured_memories:
                     save_memory_to_json(memory, output_dir='json_output')
@@ -406,38 +373,27 @@ File: ./src/controller.py
 import logging
 from typing import List, Tuple
 from langchain.schema import Document
-from langchain_community.vectorstores import FAISS
-from agents.retrieval_agent import RetrievalAgent
 from agents.processing_agent import ProcessingAgent
 from agents.response_agent import ResponseAgent
 from memory.memory_manager import MemoryManager
 
 class Controller:
-    def __init__(self, vectorstore: FAISS, model_name: str, memory_db_path: str):
-        self.retrieval_agent = RetrievalAgent(vectorstore)
+    def __init__(self, model_name: str, memory_db_path: str):
         self.processing_agent = ProcessingAgent(model_name)
         self.response_agent = ResponseAgent(model_name)
         self.memory_manager = MemoryManager(memory_db_path)
         self.logger = logging.getLogger('master')
 
     def execute_query(self, query: str) -> str:
-        # Retrieve relevant documents
-        context_documents = self.retrieval_agent.retrieve(query)
-        self.logger.debug(f"Retrieved documents: {context_documents}")
-        self.logger.debug(f"Number of documents retrieved: {len(context_documents)}")
-        
-        if not context_documents:
-            raise ValueError("No documents retrieved")
-        
         # Retrieve relevant memories
         relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
         self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
         
-        # Combine context documents and relevant memories
-        context = context_documents + [Document(page_content=memory[0] + "\n" + memory[1]) for memory in relevant_memories]
+        # Convert relevant memories to Document objects
+        context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
         
         # Process query with context
-        result = self.processing_agent.process(query, context)
+        result = self.processing_agent.process(query, context_documents)
         self.logger.debug(f"Processing result: {result}")
 
         # Generate final response
@@ -456,12 +412,9 @@ class Controller:
 -e 
 File: ./src/memory/memory_manager.py
 
-# src/memory/memory_manager.py
-
 import logging
 import sqlite3
 from typing import List, Tuple
-# from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
 import glob
@@ -506,7 +459,7 @@ class MemoryManager:
         
         logger.debug(f"Loaded {len(json_files)} memories from JSON files")
 
-    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
+    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]: #? is this used? 
         cursor = self.conn.execute("""
             SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
         """, (limit,))
@@ -515,25 +468,31 @@ class MemoryManager:
         return memories
 
     def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
+        #! This is as of yet not scalable as the entire database is returned. 
+        # To address this we will need to sort the sematic title search. Potentially use this as a hierarchy structure or temporal structure instead. 
         cursor = self.conn.execute("SELECT query, result FROM memories")
         all_memories = cursor.fetchall()
         
         query_embedding = self.embeddings.embed_query(query)
         relevant_memories = []
+        memory_texts = set()
         
         for memory in all_memories:
             memory_query = memory[0]
+            memory_result = memory[1]
+            memory_text = f"{memory_query}\n{memory_result}"
+            if memory_text in memory_texts:
+                continue
+            
             memory_embedding = self.embeddings.embed_query(memory_query)
             similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
             
             if similarity >= threshold:
                 relevant_memories.append((memory, similarity))
+                memory_texts.add(memory_text)
         
-        relevant_memories.sort(key=lambda x: x[1], reverse=True)  # Sort by similarity score in descending order
-        return [memory[0] for memory in relevant_memories]  # Return the memory content instead of similarity scores
-
-
-
+        relevant_memories.sort(key=lambda x: x[1], reverse=True)
+        return [memory[0] for memory in relevant_memories]
 -e 
 File: ./src/memory/__init__.py
 
@@ -542,65 +501,10 @@ File: ./src/utils/data_utils.py
 
 # src/utils/data_utils.py
 
-import os
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
-import tiktoken
 import logging
 from typing import List, Dict, Tuple
 
 logger = logging.getLogger('master')
-
-def tiktoken_len(text):
-    tokens = tiktoken.encoding_for_model("gpt-3.5-turbo").encode(text)
-    return len(tokens)
-
-def load_and_process_data(directory_path: str):
-    all_docs = []
-    if not os.path.exists(directory_path):
-        logger.error(f"Directory {directory_path} does not exist.")
-        return all_docs
-
-    if not os.listdir(directory_path):
-        logger.warning(f"Directory {directory_path} is empty. Using default document.")
-        default_content = "This is a default document. Add PDF files to the data/raw directory for processing."
-        default_doc = Document(page_content=default_content)
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=300,
-            chunk_overlap=0,
-            length_function=tiktoken_len,
-        )
-        split_chunks = text_splitter.split_documents([default_doc])
-        all_docs.extend(split_chunks)
-        return all_docs
-
-    for filename in os.listdir(directory_path):
-        file_path = os.path.join(directory_path, filename)
-        logger.debug(f"Found file: {file_path}")
-        if filename.endswith(".pdf"):
-            logger.debug(f"Processing file: {filename}")
-            try:
-                loader = PyMuPDFLoader(file_path)
-                docs = loader.load()
-                logger.debug(f"Loaded documents from {filename}")
-
-                text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=300,
-                    chunk_overlap=0,
-                    length_function=tiktoken_len,
-                )
-                split_chunks = text_splitter.split_documents(docs)
-                logger.debug(f"Split documents from {filename}")
-
-                all_docs.extend(split_chunks)
-            except Exception as e:
-                logger.error(f"Error processing file {filename}: {e}", exc_info=True)
-        else:
-            logger.debug(f"Skipping non-PDF file: {filename}")
-
-    logger.info(f"Total documents processed: {len(all_docs)}")
-    return all_docs
 
 def structure_memories(memories: List[Tuple[str, str]]) -> List[Dict[str, str]]:
     """
@@ -717,125 +621,8 @@ def save_memory_to_json(memory_data: Dict[str, str], output_dir: str = 'json_out
     except Exception as e:
         logger.error(f"Error saving JSON file {memory_data['title']}: {e}")
 -e 
-File: ./src/utils/pdf_generator.py
-
-# src/utils/pdf_generator.py
-
-from fpdf import FPDF
-from typing import Dict
-import os
-
-class PDF(FPDF):
-    def header(self):
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'Memory Document', 0, 1, 'C')
-
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-def generate_pdf(memory_data: Dict[str, str], output_dir: str = 'output'):
-    """
-    Generates a PDF document from the provided memory data.
-    
-    Args:
-        memory_data (Dict[str, str]): Dictionary containing the structured memory data.
-        output_dir (str): Directory to save the generated PDF documents.
-    
-    Returns:
-        None
-    """
-    pdf = PDF()
-    pdf.add_page()
-    
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=memory_data['title'], ln=True, align='C')
-
-    pdf.set_font("Arial", size=10)
-    pdf.multi_cell(0, 10, txt=f"Query: {memory_data['query']}")
-    pdf.multi_cell(0, 10, txt=f"Result: {memory_data['result']}")
-    pdf.multi_cell(0, 10, txt=f"Tags: {memory_data['tags']}")
-
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    output_path = os.path.join(output_dir, f"{memory_data['title']}.pdf")
-    pdf.output(output_path)
-    print(f"Generated PDF: {output_path}")
--e 
-File: ./src/utils/pdf_to_json.py
-
-# src/utils/pdf_to_json.py
-
-import os
-import PyPDF2
-import json
-
-def pdf_to_json(pdf_path: str, output_dir: str = 'json_output'):
-    """
-    Converts a PDF file to a JSON file.
-    
-    Args:
-        pdf_path (str): Path to the PDF file.
-        output_dir (str): Directory to save the JSON files.
-    
-    Returns:
-        None
-    """
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    with open(pdf_path, 'rb') as pdf_file:
-        reader = PyPDF2.PdfFileReader(pdf_file)
-        text = ""
-        for page_num in range(reader.numPages):
-            page = reader.getPage(page_num)
-            text += page.extractText()
-    
-    # Assume the PDF filename follows the format 'Memory_X.pdf'
-    base_name = os.path.basename(pdf_path)
-    title = os.path.splitext(base_name)[0]
-    memory_data = {
-        "title": title,
-        "content": text,
-        "tags": "converted"
-    }
-    
-    output_path = os.path.join(output_dir, f"{title}.json")
-    
-    with open(output_path, 'w') as json_file:
-        json.dump(memory_data, json_file, indent=4)
-    
-    print(f"Converted PDF to JSON: {output_path}")-e 
 File: ./src/utils/__init__.py
 
 -e 
 File: ./src/__init__.py
 
--e 
-File: ./tests/__init__.py
-
-import unittest
-from src.utils.data_utils import load_and_process_data
-from src.memory.memory_manager import MemoryManager
-
-class TestDataUtils(unittest.TestCase):
-    def test_load_and_process_data(self):
-        # Assuming there's a test PDF in data/raw for testing
-        docs = load_and_process_data("data/raw")
-        self.assertTrue(len(docs) > 0, "Should load and split documents")
-
-class TestMemoryManager(unittest.TestCase):
-    def setUp(self):
-        self.memory_manager = MemoryManager(":memory:")  # Use in-memory database for testing
-
-    def test_save_and_get_memories(self):
-        self.memory_manager.save_memory("test_query", "test_result")
-        memories = self.memory_manager.get_memories()
-        self.assertEqual(len(memories), 1)
-        self.assertEqual(memories[0][0], "test_query")
-        self.assertEqual(memories[0][1], "test_result")
-
-if __name__ == "__main__":
-    unittest.main()

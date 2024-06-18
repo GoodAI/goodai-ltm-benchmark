@@ -1,7 +1,6 @@
 # src/agents/response_agent.py
 
 import logging
-# from langchain_community.chat_models import ChatOpenAI
 from langchain_openai import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
 
@@ -17,6 +16,6 @@ class ResponseAgent:
             AIMessage(content=f"Assistant Response:\n{result}"),
             HumanMessage(content="Generate a final response based on the above interaction.")
         ]
-        response = self.chat_model(messages)
+        response = self.chat_model.invoke(messages)
         logger.debug(f"Generated final response for query: {query} with result: {result}")
         return response.content

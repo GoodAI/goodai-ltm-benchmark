@@ -1,9 +1,7 @@
 import os
 import logging
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
-from utils.data_utils import load_and_process_data, structure_memories
+from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
 from controller import Controller
 
@@ -50,17 +48,8 @@ def main():
         master_logger.info("API keys successfully loaded")
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
-        master_logger.debug("Loading and processing data from 'data/raw'")
-        raw_documents = load_and_process_data("data/raw")
-        master_logger.info(f"Total documents processed: {len(raw_documents)}")
-
-        master_logger.debug("Creating vectorstore with OpenAIEmbeddings")
-        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-        vectorstore = FAISS.from_documents(raw_documents, embeddings)
-        master_logger.info("Vectorstore created successfully")
-
         master_logger.debug("Initializing controller")
-        controller = Controller(vectorstore, "gpt-3.5-turbo", "memory.db")
+        controller = Controller("gpt-3.5-turbo", "memory.db")
 
         while True:
             query = input("Enter your query (or 'quit' to exit): ")
