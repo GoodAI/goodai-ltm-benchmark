@@ -59,7 +59,7 @@ class LTMAgent:
     prompt_callback: Callable[[str, str, list[dict], str], Any] = None
     user_info: dict = field(default_factory=dict)
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
-    debug_level: int = 0
+    debug_level: int = 1
     llm_call_idx: int = None
 
     @property
@@ -233,12 +233,6 @@ class LTMAgent:
     def _prepare_mem_info(self, message_history: list[Message], user_content: str,
                           cost_callback: Callable[[float], Any]) -> tuple[list[str], Union[dict, str, None]]:
         prompt_messages = [make_system_message(_user_info_system_message)]
-        for m in reversed(message_history):
-            if m.role == "assistant":
-                if len(message_history) > 2:
-                    prompt_messages.append(make_system_message("Prior conversation context omitted."))
-                prompt_messages.append(m.as_llm_dict())
-                break
         return self._complete_prepare_user_info(prompt_messages, user_content, cost_callback)
 
     def get_mem_excerpts(self, convo_memories: list[RetrievedMemory], token_limit: int) -> str:
