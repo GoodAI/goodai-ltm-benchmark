@@ -417,7 +417,6 @@ class TestRunner:
             if example.finished:
                 finished += 1
                 result = self.in_progress_results[example.unique_id]
-                self.progress_dialog.notify_result(result)
 
                 if not skip:
                     if example.reset_message != "":
@@ -433,6 +432,7 @@ class TestRunner:
                     self.agent.save()
 
                 self.finished_results.append(result)
+                self.progress_dialog.notify_result(result)
                 print(result)
                 colour_print("green", f"{finished} of {len(self.tests)} tests finished.")
 
