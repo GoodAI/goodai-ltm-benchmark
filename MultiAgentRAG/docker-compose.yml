@@ -11,5 +11,6 @@ services:
       - .env
     volumes:
       - ./memory.db:/app/memory.db  # Mount the local memory.db file
+      - ./logs/docker_agents:/app/logs  # Central log directory for all containers
     stdin_open: true  # Equivalent to -i
     tty: true         # Equivalent to -t

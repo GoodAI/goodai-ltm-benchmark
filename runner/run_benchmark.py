@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Add the project directory to the sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import logging
 import os.path
 import os
@@ -21,6 +27,7 @@ from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from model_interfaces.huggingface_interface import HFChatSession
 from model_interfaces.gemini_interface import GeminiProInterface
+from model_interfaces.multi_agent_interface import MultiAgentRAGInterface
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
@@ -28,6 +35,9 @@ from utils.files import gather_testdef_files, gather_result_files, make_run_path
     gather_persistence_files
 from utils.llm import GPT_4_TURBO_BEST
 from utils.constants import MAIN_DIR, TESTS_DIR
+
+import sys
+print("Python executable being used:", sys.executable)
 
 
 def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, is_local=False) -> ChatSession:
@@ -65,6 +75,8 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
     if name.startswith("huggingface/"):
         kwargs.pop("is_local")
         return HFChatSession(model=name, **kwargs)
+    if name == "fin_prototype":
+        return MultiAgentRAGInterface(api_url="http://localhost:8000")
 
     try:
         if name.startswith("ts-"):

@@ -1,24 +1,28 @@
+(rag-venv) goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
 .
 ├── Dockerfile    
 ├── README.md     
 ├── data
 │   ├── embeddings
 │   ├── processed 
-│   └── raw
+│   └── raw       
 ├── docker-compose.yml
-├── get-docker.sh     
-├── json_output       
-│   ├── Memory_1.json 
-│   ├── Memory_2.json 
-│   ├── Memory_3.json 
-│   ├── Memory_4.json 
-│   └── Memory_5.json 
+├── get-docker.sh
+├── json_output
+│   ├── Memory_1.json
+│   ├── Memory_2.json
+│   ├── Memory_3.json
+│   ├── Memory_4.json
+│   └── Memory_5.json
 ├── logs
-│   ├── app.log       
-│   ├── chat.log      
-│   ├── docker_agents 
-│   ├── master.log    
-│   └── memory.log    
+│   └── docker_agents
+│       ├── chat.log
+│       ├── local
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── master.log
+│       └── memory.log
 ├── memory.db
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
@@ -45,6 +49,7 @@
 │   │   ├── processing_agent.py
 │   │   ├── response_agent.py
 │   │   └── retrieval_agent.py
+│   ├── api.py
 │   ├── app.py
 │   ├── controller.py
 │   ├── memory
@@ -65,6 +70,8 @@
 │       └── reset_database.py
 ├── text_docs
 └── tree.txt
+
+19 directories, 51 files
 
 File Contents:
 
@@ -110,34 +117,28 @@ services:
       - .env
     volumes:
       - ./memory.db:/app/memory.db  # Mount the local memory.db file
+      - ./logs/docker_agents:/app/logs  # Central log directory for all containers
     stdin_open: true  # Equivalent to -i
     tty: true         # Equivalent to -t
 -e 
 File: ./Dockerfile
 
-# Use an official Python runtime as a parent image
 FROM python:3.12
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
 COPY . /app
 
-# Create necessary directories
 RUN mkdir -p /app/logs
 
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements_lite.txt
+RUN pip install fastapi uvicorn
 
-# Make port 8000 available to the world outside this container (if needed)
 EXPOSE 8000
 
-# Define environment variable
 ENV NAME Multi-Agent-RAG
 
-# Run app.py when the container launches
-CMD ["python", "src/app.py"]
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
 -e 
 File: ./get-docker.sh
 
@@ -887,40 +888,40 @@ File: ./json_output/Memory_1.json
 
 {
     "title": "Memory_1",
-    "query": "I love to eat Swiss chess and chocolate. ",
-    "result": "I'm glad to hear that you enjoy Swiss cheese and chocolate! They are both such tasty treats. If you ever want any recommendations for recipes or other foods to try, feel free to ask. Enjoy your delicious snacks!",
+    "query": "Today is Wednesday, June 19th.",
+    "result": "I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_2.json
 
 {
     "title": "Memory_2",
-    "query": "What is my name? ",
-    "result": "I'm sorry, but I do not have access to personal information such as your name. If there is anything else I can assist you with, please feel free to let me know.",
+    "query": "What is the day today? ",
+    "result": "Today is Tuesday, June 18th.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_3.json
 
 {
     "title": "Memory_3",
-    "query": "Where do I live?",
-    "result": "I apologize for any confusion, but I am unable to determine where you live based on the information provided. If you have any other questions or need assistance with something else, please feel free to ask.",
+    "query": "This is a test. Respond with how tall I am. ",
+    "result": "I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_4.json
 
 {
     "title": "Memory_4",
-    "query": "My name is Nathan, I am work as a cat groomer. I live in Timbuktu.",
-    "result": "Hello Nathan! It's wonderful to connect with a fellow cat groomer. If you ever have any questions or need assistance with anything related to cat grooming or any other topic, feel free to reach out. Have a great day in Timbuktu!",
+    "query": "What is my name? Use your context.",
+    "result": "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.",
     "tags": "retrieved, processed"
 }-e 
 File: ./json_output/Memory_5.json
 
 {
     "title": "Memory_5",
-    "query": "What day is today?",
-    "result": "Today is June 18th, a Tuesday.",
+    "query": "What is my name? ",
+    "result": "I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.",
     "tags": "retrieved, processed"
 }-e 
 File: ./README.md
@@ -1135,47 +1136,74 @@ class RetrievalAgent:
 File: ./src/agents/__init__.py
 
 -e 
+File: ./src/api.py
+
+# src/api.py
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from controller import Controller
+import os
+
+class QueryRequest(BaseModel):
+    query: str
+
+class QueryResponse(BaseModel):
+    response: str
+
+app = FastAPI()
+
+memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
+controller = Controller("gpt-3.5-turbo", memory_db_path, os.getenv("GOODAI_OPENAI_API_KEY_LTM01"))
+
+@app.post("/query", response_model=QueryResponse)
+async def query_endpoint(request: QueryRequest):
+    try:
+        response = controller.execute_query(request.query)
+        return QueryResponse(response=response)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+-e 
 File: ./src/app.py
 
 import os
 import logging
+import socket
 from dotenv import load_dotenv
 from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
 
-# Ensure logs directory exists
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+def setup_logging(container_id: str):
+    log_directory = f'logs/docker_agents/{container_id}'
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
 
-# Setup logging
-master_logger = logging.getLogger('master')
-master_logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler("logs/master.log")
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-master_logger.addHandler(file_handler)
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-# Console handler for query and response logs
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(message)s'))
-master_logger.addHandler(console_handler)
+    master_logger = logging.getLogger('master')
+    master_logger.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
+    file_handler.setFormatter(log_formatter)
+    master_logger.addHandler(file_handler)
 
-# Separate loggers for different types of logs
-chat_logger = logging.getLogger('chat')
-chat_logger.setLevel(logging.DEBUG)
-chat_file_handler = logging.FileHandler('logs/chat.log')
-chat_file_handler.setLevel(logging.DEBUG)
-chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-chat_logger.addHandler(chat_file_handler)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter('%(message)s'))
+    master_logger.addHandler(console_handler)
 
-memory_logger = logging.getLogger('memory')
-memory_logger.setLevel(logging.DEBUG)
-memory_file_handler = logging.FileHandler('logs/memory.log')
-memory_file_handler.setLevel(logging.DEBUG)
-memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-memory_logger.addHandler(memory_file_handler)
+    chat_logger = logging.getLogger('chat')
+    chat_logger.setLevel(logging.DEBUG)
+    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
+    chat_file_handler.setFormatter(log_formatter)
+    chat_logger.addHandler(chat_file_handler)
+
+    memory_logger = logging.getLogger('memory')
+    memory_logger.setLevel(logging.DEBUG)
+    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
+    memory_file_handler.setFormatter(log_formatter)
+    memory_logger.addHandler(memory_file_handler)
+
+    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
+    return master_logger, chat_logger, memory_logger
 
 def is_running_in_docker() -> bool:
     """Check if the code is running inside a Docker container."""
@@ -1186,6 +1214,9 @@ def is_running_in_docker() -> bool:
         return False
 
 def main():
+    container_id = socket.gethostname() if is_running_in_docker() else 'local'
+    master_logger, chat_logger, memory_logger = setup_logging(container_id)
+
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
         load_dotenv()
@@ -1199,7 +1230,6 @@ def main():
         master_logger.info("API keys successfully loaded")
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
-        # Determine the correct path for the memory database
         memory_db_path = "/app/memory.db" if is_running_in_docker() else "memory.db"
         master_logger.info(f"Using memory database path: {memory_db_path}")
 
@@ -1217,7 +1247,6 @@ def main():
                 chat_logger.info(f"Query: {query}")
                 response = controller.execute_query(query)
                 chat_logger.info(f"Response: {response}")
-                console_handler.setLevel(logging.INFO)
                 master_logger.info(f"Response: {response}")
 
                 memories = controller.get_memories(5)

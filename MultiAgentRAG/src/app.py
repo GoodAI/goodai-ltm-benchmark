@@ -1,42 +1,42 @@
 import os
 import logging
+import socket
 from dotenv import load_dotenv
 from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
 
-# Ensure logs directory exists
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+def setup_logging(container_id: str):
+    log_directory = f'logs/docker_agents/{container_id}'
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
 
-# Setup logging
-master_logger = logging.getLogger('master')
-master_logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler("logs/master.log")
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-master_logger.addHandler(file_handler)
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-# Console handler for query and response logs
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(message)s'))
-master_logger.addHandler(console_handler)
+    master_logger = logging.getLogger('master')
+    master_logger.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
+    file_handler.setFormatter(log_formatter)
+    master_logger.addHandler(file_handler)
 
-# Separate loggers for different types of logs
-chat_logger = logging.getLogger('chat')
-chat_logger.setLevel(logging.DEBUG)
-chat_file_handler = logging.FileHandler('logs/chat.log')
-chat_file_handler.setLevel(logging.DEBUG)
-chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-chat_logger.addHandler(chat_file_handler)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter('%(message)s'))
+    master_logger.addHandler(console_handler)
 
-memory_logger = logging.getLogger('memory')
-memory_logger.setLevel(logging.DEBUG)
-memory_file_handler = logging.FileHandler('logs/memory.log')
-memory_file_handler.setLevel(logging.DEBUG)
-memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-memory_logger.addHandler(memory_file_handler)
+    chat_logger = logging.getLogger('chat')
+    chat_logger.setLevel(logging.DEBUG)
+    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
+    chat_file_handler.setFormatter(log_formatter)
+    chat_logger.addHandler(chat_file_handler)
+
+    memory_logger = logging.getLogger('memory')
+    memory_logger.setLevel(logging.DEBUG)
+    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
+    memory_file_handler.setFormatter(log_formatter)
+    memory_logger.addHandler(memory_file_handler)
+
+    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
+    return master_logger, chat_logger, memory_logger
 
 def is_running_in_docker() -> bool:
     """Check if the code is running inside a Docker container."""
@@ -47,6 +47,9 @@ def is_running_in_docker() -> bool:
         return False
 
 def main():
+    container_id = socket.gethostname() if is_running_in_docker() else 'local'
+    master_logger, chat_logger, memory_logger = setup_logging(container_id)
+
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
         load_dotenv()
@@ -60,7 +63,6 @@ def main():
         master_logger.info("API keys successfully loaded")
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
-        # Determine the correct path for the memory database
         memory_db_path = "/app/memory.db" if is_running_in_docker() else "memory.db"
         master_logger.info(f"Using memory database path: {memory_db_path}")
 
@@ -78,7 +80,6 @@ def main():
                 chat_logger.info(f"Query: {query}")
                 response = controller.execute_query(query)
                 chat_logger.info(f"Response: {response}")
-                console_handler.setLevel(logging.INFO)
                 master_logger.info(f"Response: {response}")
 
                 memories = controller.get_memories(5)

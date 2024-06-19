@@ -3,10 +3,10 @@
 import logging
 from typing import List, Tuple
 from langchain.schema import Document
-from agents.retrieval_agent import RetrievalAgent
-from agents.processing_agent import ProcessingAgent
-from agents.response_agent import ResponseAgent
-from memory.memory_manager import MemoryManager
+from src.agents.retrieval_agent import RetrievalAgent
+from src.agents.processing_agent import ProcessingAgent
+from src.agents.response_agent import ResponseAgent
+from src.memory.memory_manager import MemoryManager
 
 class Controller:
     def __init__(self, model_name: str, memory_db_path: str, api_key: str):
