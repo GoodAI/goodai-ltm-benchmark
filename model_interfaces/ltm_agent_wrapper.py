@@ -12,7 +12,6 @@ from model_interfaces.interface import ChatSession
 class LTMAgentWrapper(ChatSession):
     model: str = None
     max_prompt_size: int = None
-    max_message_size: int | None = None
 
     def __post_init__(self):
         self.agent = LTMAgent(

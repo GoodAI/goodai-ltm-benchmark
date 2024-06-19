@@ -59,7 +59,7 @@ class LTMAgent:
     prompt_callback: Callable[[str, str, list[dict], str], Any] = None
     user_info: dict = field(default_factory=dict)
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
-    debug_level: int = 1
+    debug_level: int = 0
     llm_call_idx: int = None
 
     @property
@@ -230,15 +230,33 @@ class LTMAgent:
             user_info,
         )
 
-    def _prepare_mem_info(self, message_history: list[Message], user_content: str,
-                          cost_callback: Callable[[float], Any]) -> tuple[list[str], Union[dict, str, None]]:
+    def _prepare_mem_info(
+            self, message_history: list[Message], user_content: str, cost_callback: Callable[[float], Any],
+    ) -> tuple[list[str], Union[dict, str, None]]:
         prompt_messages = [make_system_message(_user_info_system_message)]
+        messages_prefix = (
+            "\n\nFor context, the assistant and the user have previously exchanged these messages:\n"
+            "(prior conversation context omitted)\n\n"
+        )
+        token_count = token_counter(model=self.model, messages=prompt_messages)
+        token_count += token_counter(model=self.model, text=messages_prefix)
+        messages = list()
+        token_limit = int(0.8 * self.max_prompt_size)
+        for m in reversed(message_history[-10:]):
+            msg = f"{m.role.upper()}: {m.content}"
+            new_token_count = token_count + token_counter(model=self.model, text=msg)
+            if new_token_count > token_limit:
+                break
+            token_count = new_token_count
+            messages.append(msg)
+        if len(messages) > 0:
+            prompt_messages[0]["content"] += messages_prefix + "\n\n".join(reversed(messages))
         return self._complete_prepare_user_info(prompt_messages, user_content, cost_callback)
 
     def get_mem_excerpts(self, convo_memories: list[RetrievedMemory], token_limit: int) -> str:
         token_count = token_counter(model=self.model, text=_convo_excerpts_prefix)
         convo_excerpts: list[tuple[float, str]] = []
-        for m in sorted(convo_memories, key=lambda _t: _t[1].relevance, reverse=True):
+        for m in sorted(convo_memories, key=lambda _t: _t.relevance, reverse=True):
             ts = datetime.datetime.fromtimestamp(m.timestamp)
             ts_descriptor = f"{td_format(self.now - ts)} ({str(ts)[:-7]})"
             excerpt = f"# Excerpt from {ts_descriptor}\n{m.passage.strip()}\n\n"
