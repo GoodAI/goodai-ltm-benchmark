@@ -1,0 +1,15 @@
+version: '3.1'
+
+services:
+  multi-agent-rag:
+    image: multi-agent-rag
+    ports:
+      - "8000:8000"
+    environment:
+      - GOODAI_OPENAI_API_KEY_LTM01
+    env_file:
+      - .env
+    volumes:
+      - ./memory.db:/app/memory.db  # Mount the local memory.db file
+    stdin_open: true  # Equivalent to -i
+    tty: true         # Equivalent to -t

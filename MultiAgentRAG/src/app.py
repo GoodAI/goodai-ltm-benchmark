@@ -38,6 +38,14 @@ memory_file_handler.setLevel(logging.DEBUG)
 memory_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 memory_logger.addHandler(memory_file_handler)
 
+def is_running_in_docker() -> bool:
+    """Check if the code is running inside a Docker container."""
+    try:
+        with open('/proc/1/cgroup', 'rt') as f:
+            return 'docker' in f.read()
+    except Exception:
+        return False
+
 def main():
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
@@ -52,8 +60,12 @@ def main():
         master_logger.info("API keys successfully loaded")
         os.environ["OPENAI_API_KEY"] = openai_api_key
 
+        # Determine the correct path for the memory database
+        memory_db_path = "/app/memory.db" if is_running_in_docker() else "memory.db"
+        master_logger.info(f"Using memory database path: {memory_db_path}")
+
         master_logger.debug("Initializing controller")
-        controller = Controller("gpt-3.5-turbo", "memory.db", openai_api_key)
+        controller = Controller("gpt-3.5-turbo", memory_db_path, openai_api_key)
 
         while True:
             try:
