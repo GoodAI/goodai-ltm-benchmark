@@ -1,29 +1,36 @@
 goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
 .
-├── Dockerfile        
-├── Dockerfile_stable 
+├── Dockerfile
+├── Dockerfile_stable
 ├── README.md
 ├── data
-│   ├── embeddings    
-│   ├── processed     
+│   ├── embeddings
+│   ├── old logs
+│   │   ├── chat.log
+│   │   ├── local
+│   │   │   ├── chat.log
+│   │   │   ├── master.log
+│   │   │   └── memory.log
+│   │   ├── master.log
+│   │   └── memory.log
+│   ├── processed
 │   └── raw
 ├── docker-compose.yml
-├── get-docker.sh     
-├── json_output       
-│   ├── Memory_1.json 
-│   ├── Memory_2.json 
-│   ├── Memory_3.json 
-│   ├── Memory_4.json 
-│   └── Memory_5.json 
+├── get-docker.sh
+├── json_output
+│   ├── Memory_1.json
+│   ├── Memory_2.json
+│   ├── Memory_3.json
+│   ├── Memory_4.json
+│   └── Memory_5.json
+├── logging_setup.py
 ├── logs
 │   └── docker_agents
-│       ├── chat.log
-│       ├── local
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── master.log
-│       └── memory.log
+│       └── docker_agents
+│           └── 6827a2b9887f
+│               ├── chat.log
+│               ├── master.log
+│               └── memory.log
 ├── memory.db
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
@@ -72,7 +79,7 @@ goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark
 ├── text_docs
 └── tree.txt
 
-19 directories, 52 files
+22 directories, 56 files
 
 File Contents:
 
@@ -102,6 +109,141 @@ data/raw/*
 text_docs/*
 .DS_Store
 .vscode
+-e 
+File: ./data/old logs/chat.log
+
+2024-06-19 14:15:19,947 - chat - INFO - Query: What is the day today? 
+2024-06-19 14:15:38,908 - chat - INFO - Response: Today is Tuesday, June 18th.
+2024-06-19 14:17:24,876 - chat - INFO - Query: What is the day today?
+2024-06-19 14:17:38,783 - chat - INFO - Response: Today is Tuesday, June 18th.
+-e 
+File: ./data/old logs/local/chat.log
+
+2024-06-19 15:16:33,091 - chat - INFO - Query: Today is Wednesday, June 19th.
+2024-06-19 15:16:36,042 - chat - INFO - Response: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
+-e 
+File: ./data/old logs/local/master.log
+
+2024-06-19 15:16:14,876 - master - INFO - Logging setup complete. Log directory: logs/docker_agents/local
+2024-06-19 15:16:14,876 - master - INFO - Starting the Multi-Agent RAG System
+2024-06-19 15:16:14,880 - master - INFO - API keys successfully loaded
+2024-06-19 15:16:14,880 - master - INFO - Using memory database path: memory.db
+2024-06-19 15:16:14,880 - master - DEBUG - Initializing controller
+2024-06-19 15:16:33,090 - master - INFO - Executing query: Today is Wednesday, June 19th.
+2024-06-19 15:16:33,751 - master - DEBUG - Retrieved and ranked relevant memories for query: Today is Wednesday, June 19th.
+2024-06-19 15:16:33,751 - master - DEBUG - Retrieved relevant memories: [('Today is June 18th, it is a Tuesday and it is overcast and muggy. ', 'Today is June 18th, a Tuesday, and the weather is overcast and muggy.'), ('What is the day today? ', 'Today is Tuesday, June 18th.'), ('What day is today?', 'Today is June 18th, a Tuesday.')]
+2024-06-19 15:16:34,549 - master - DEBUG - Processed query: Today is Wednesday, June 19th. with context: Today is June 18th, it is a Tuesday and it is overcast and muggy. 
+Today is June 18th, a Tuesday, and the weather is overcast and muggy.
+
+What is the day today? 
+Today is Tuesday, June 18th.
+
+What day is today?
+Today is June 18th, a Tuesday.
+2024-06-19 15:16:34,549 - master - DEBUG - Processing result: That is incorrect. Today is Tuesday, June 18th.
+2024-06-19 15:16:35,691 - master - DEBUG - Generated final response for query: Today is Wednesday, June 19th. with result: That is incorrect. Today is Tuesday, June 18th.
+2024-06-19 15:16:35,691 - master - DEBUG - Generated response: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
+2024-06-19 15:16:36,042 - master - INFO - Response: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
+2024-06-19 15:16:36,043 - master - DEBUG - Memories retrieved: [('Today is Wednesday, June 19th.', 'I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.'), ('What is the day today? ', 'Today is Tuesday, June 18th.'), ('This is a test. Respond with how tall I am. ', 'I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!'), ('What is my name? Use your context.', "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further."), ('What is my name? ', 'I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.')]
+2024-06-19 15:17:13,384 - master - INFO - Exiting the program
+-e 
+File: ./data/old logs/local/memory.log
+
+2024-06-19 15:16:14,953 - memory - DEBUG - Ensured memories table exists
+2024-06-19 15:16:33,750 - memory - DEBUG - Retrieved 17 memories
+2024-06-19 15:16:36,042 - memory - DEBUG - Saved memory for query: Today is Wednesday, June 19th. with result: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
+2024-06-19 15:16:36,043 - memory - DEBUG - Retrieved 5 memories
+2024-06-19 15:16:36,043 - memory - INFO - Recent Memories:
+2024-06-19 15:16:36,043 - memory - INFO - Query: Today is Wednesday, June 19th., Result: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
+2024-06-19 15:16:36,044 - memory - INFO - Query: What is the day today? , Result: Today is Tuesday, June 18th.
+2024-06-19 15:16:36,044 - memory - INFO - Query: This is a test. Respond with how tall I am. , Result: I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!
+2024-06-19 15:16:36,044 - memory - INFO - Query: What is my name? Use your context., Result: I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.
+2024-06-19 15:16:36,044 - memory - INFO - Query: What is my name? , Result: I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.
+-e 
+File: ./data/old logs/master.log
+
+2024-06-19 14:14:57,851 - master - INFO - Starting the Multi-Agent RAG System
+2024-06-19 14:14:57,852 - master - INFO - API keys successfully loaded
+2024-06-19 14:14:57,852 - master - DEBUG - Initializing controller
+2024-06-19 14:15:19,946 - master - INFO - Executing query: What is the day today? 
+2024-06-19 14:15:37,078 - master - DEBUG - Retrieved and ranked relevant memories for query: What is the day today? 
+2024-06-19 14:15:37,078 - master - DEBUG - Retrieved relevant memories: [('What day is today?', 'Today is June 18th, a Tuesday.'), ('Today is June 18th, it is a Tuesday and it is overcast and muggy. ', 'Today is June 18th, a Tuesday, and the weather is overcast and muggy.'), ('What is my name? ', "I'm sorry, but I do not have access to personal information such as your name. If there is anything else I can assist you with, please feel free to let me know.")]
+2024-06-19 14:15:37,822 - master - DEBUG - Processed query: What is the day today?  with context: What day is today?
+Today is June 18th, a Tuesday.
+
+Today is June 18th, it is a Tuesday and it is overcast and muggy. 
+Today is June 18th, a Tuesday, and the weather is overcast and muggy.
+
+What is my name? 
+I'm sorry, but I do not have access to personal information such as your name. If there is anything else I can assist you with, please feel free to let me know.
+2024-06-19 14:15:37,822 - master - DEBUG - Processing result: Today is June 18th, a Tuesday.
+2024-06-19 14:15:38,653 - master - DEBUG - Generated final response for query: What is the day today?  with result: Today is June 18th, a Tuesday.
+2024-06-19 14:15:38,653 - master - DEBUG - Generated response: Today is Tuesday, June 18th.
+2024-06-19 14:15:38,908 - master - INFO - Response: Today is Tuesday, June 18th.
+2024-06-19 14:15:38,909 - master - DEBUG - Memories retrieved: [('What is the day today? ', 'Today is Tuesday, June 18th.'), ('This is a test. Respond with how tall I am. ', 'I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!'), ('What is my name? Use your context.', "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further."), ('What is my name? ', 'I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.'), ('My name is now Romeo. What other names have I gone by - in order.', 'It seems like your name journey has taken you from Bob to Fin and now to Romeo. Each name likely holds a special significance or meaning. Embrace your current name as Romeo and continue to write your unique story.')]
+2024-06-19 14:16:02,955 - master - INFO - Exiting the program
+2024-06-19 14:17:19,409 - master - INFO - Starting the Multi-Agent RAG System
+2024-06-19 14:17:19,410 - master - INFO - API keys successfully loaded
+2024-06-19 14:17:19,410 - master - DEBUG - Initializing controller
+2024-06-19 14:17:24,875 - master - INFO - Executing query: What is the day today?
+2024-06-19 14:17:37,348 - master - DEBUG - Retrieved and ranked relevant memories for query: What is the day today?
+2024-06-19 14:17:37,348 - master - DEBUG - Retrieved relevant memories: [('What is the day today? ', 'Today is Tuesday, June 18th.'), ('What day is today?', 'Today is June 18th, a Tuesday.'), ('Today is Wednesday, June 19th.', 'I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.')]
+2024-06-19 14:17:37,972 - master - DEBUG - Processed query: What is the day today? with context: What is the day today? 
+Today is Tuesday, June 18th.
+
+What day is today?
+Today is June 18th, a Tuesday.
+
+Today is Wednesday, June 19th.
+I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
+2024-06-19 14:17:37,972 - master - DEBUG - Processing result: Today is Tuesday, June 18th.
+2024-06-19 14:17:38,595 - master - DEBUG - Generated final response for query: What is the day today? with result: Today is Tuesday, June 18th.
+2024-06-19 14:17:38,596 - master - DEBUG - Generated response: Today is Tuesday, June 18th.
+2024-06-19 14:17:38,783 - master - INFO - Response: Today is Tuesday, June 18th.
+2024-06-19 14:17:38,784 - master - DEBUG - Memories retrieved: [('What is the day today?', 'Today is Tuesday, June 18th.'), ('Today is Wednesday, June 19th.', 'I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.'), ('What is the day today? ', 'Today is Tuesday, June 18th.'), ('This is a test. Respond with how tall I am. ', 'I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!'), ('What is my name? Use your context.', "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.")]
+2024-06-19 14:17:57,473 - master - INFO - Exiting the program
+2024-06-19 16:53:57,221 - master - INFO - Starting the Multi-Agent RAG System
+2024-06-19 16:53:57,222 - master - INFO - API keys successfully loaded
+2024-06-19 16:53:57,222 - master - DEBUG - Initializing controller
+2024-06-19 16:56:00,089 - master - INFO - Exiting the program
+2024-06-20 08:47:01,631 - master - INFO - Starting the Multi-Agent RAG System
+2024-06-20 08:47:01,633 - master - INFO - API keys successfully loaded
+2024-06-20 08:47:01,633 - master - DEBUG - Initializing controller
+2024-06-20 08:48:03,997 - master - INFO - Starting the Multi-Agent RAG System
+2024-06-20 08:48:03,998 - master - INFO - API keys successfully loaded
+2024-06-20 08:48:03,998 - master - DEBUG - Initializing controller
+2024-06-20 08:48:06,951 - master - INFO - Exiting the program
+2024-06-20 08:48:31,729 - master - INFO - Starting the Multi-Agent RAG System
+2024-06-20 08:48:31,730 - master - INFO - API keys successfully loaded
+2024-06-20 08:48:31,730 - master - DEBUG - Initializing controller
+2024-06-20 08:50:11,933 - master - INFO - Exiting the program
+-e 
+File: ./data/old logs/memory.log
+
+2024-06-19 14:14:57,901 - memory - DEBUG - Ensured memories table exists
+2024-06-19 14:15:37,077 - memory - DEBUG - Retrieved 16 memories
+2024-06-19 14:15:38,907 - memory - DEBUG - Saved memory for query: What is the day today?  with result: Today is Tuesday, June 18th.
+2024-06-19 14:15:38,909 - memory - DEBUG - Retrieved 5 memories
+2024-06-19 14:15:38,909 - memory - INFO - Recent Memories:
+2024-06-19 14:15:38,909 - memory - INFO - Query: What is the day today? , Result: Today is Tuesday, June 18th.
+2024-06-19 14:15:38,909 - memory - INFO - Query: This is a test. Respond with how tall I am. , Result: I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!
+2024-06-19 14:15:38,909 - memory - INFO - Query: What is my name? Use your context., Result: I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.
+2024-06-19 14:15:38,909 - memory - INFO - Query: What is my name? , Result: I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.
+2024-06-19 14:15:38,910 - memory - INFO - Query: My name is now Romeo. What other names have I gone by - in order., Result: It seems like your name journey has taken you from Bob to Fin and now to Romeo. Each name likely holds a special significance or meaning. Embrace your current name as Romeo and continue to write your unique story.
+2024-06-19 14:17:19,464 - memory - DEBUG - Ensured memories table exists
+2024-06-19 14:17:37,347 - memory - DEBUG - Retrieved 18 memories
+2024-06-19 14:17:38,783 - memory - DEBUG - Saved memory for query: What is the day today? with result: Today is Tuesday, June 18th.
+2024-06-19 14:17:38,784 - memory - DEBUG - Retrieved 5 memories
+2024-06-19 14:17:38,785 - memory - INFO - Recent Memories:
+2024-06-19 14:17:38,785 - memory - INFO - Query: What is the day today?, Result: Today is Tuesday, June 18th.
+2024-06-19 14:17:38,785 - memory - INFO - Query: Today is Wednesday, June 19th., Result: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
+2024-06-19 14:17:38,785 - memory - INFO - Query: What is the day today? , Result: Today is Tuesday, June 18th.
+2024-06-19 14:17:38,785 - memory - INFO - Query: This is a test. Respond with how tall I am. , Result: I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!
+2024-06-19 14:17:38,785 - memory - INFO - Query: What is my name? Use your context., Result: I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.
+2024-06-19 16:53:57,267 - memory - DEBUG - Ensured memories table exists
+2024-06-20 08:47:01,675 - memory - DEBUG - Ensured memories table exists
+2024-06-20 08:48:04,043 - memory - DEBUG - Ensured memories table exists
+2024-06-20 08:48:31,774 - memory - DEBUG - Ensured memories table exists
 -e 
 File: ./docker-compose.yml
 
@@ -968,6 +1110,55 @@ File: ./json_output/Memory_5.json
     "result": "I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.",
     "tags": "retrieved, processed"
 }-e 
+File: ./logging_setup.py
+
+# logging_setup.py
+
+import logging
+import os
+import socket
+
+def setup_logging():
+    container_id = socket.gethostname() if is_running_in_docker() else 'local'
+    log_directory = f'logs/docker_agents/{container_id}'
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
+
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    master_logger = logging.getLogger('master')
+    master_logger.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
+    file_handler.setFormatter(log_formatter)
+    master_logger.addHandler(file_handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter('%(message)s'))
+    master_logger.addHandler(console_handler)
+
+    chat_logger = logging.getLogger('chat')
+    chat_logger.setLevel(logging.DEBUG)
+    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
+    chat_file_handler.setFormatter(log_formatter)
+    chat_logger.addHandler(chat_file_handler)
+
+    memory_logger = logging.getLogger('memory')
+    memory_logger.setLevel(logging.DEBUG)
+    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
+    memory_file_handler.setFormatter(log_formatter)
+    memory_logger.addHandler(memory_file_handler)
+
+    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
+    return master_logger, chat_logger, memory_logger
+
+def is_running_in_docker() -> bool:
+    """Check if the code is running inside a Docker container."""
+    try:
+        with open('/proc/1/cgroup', 'rt') as f:
+            return 'docker' in f.read()
+    except Exception:
+        return False
+-e 
 File: ./README.md
 
 # Multi-Agent RAG System with Continual Learning
@@ -1183,11 +1374,12 @@ File: ./src/agents/__init__.py
 File: ./src/api.py
 
 # src/api.py
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from src.controller import Controller  # Update this line
+from src.controller import Controller
 import os
-import logging
+from logging_setup import setup_logging  # Import logging setup
 
 class QueryRequest(BaseModel):
     query: str
@@ -1195,11 +1387,10 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     response: str
 
-app = FastAPI()
+# Initialize logging
+master_logger, chat_logger, memory_logger = setup_logging()
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+app = FastAPI()
 
 memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
 controller = Controller("gpt-3.5-turbo", memory_db_path, os.getenv("GOODAI_OPENAI_API_KEY_LTM01"))
@@ -1210,62 +1401,20 @@ async def query_endpoint(request: QueryRequest):
         response = controller.execute_query(request.query)
         return QueryResponse(response=response)
     except Exception as e:
-        logger.error(f"Error processing query: {str(e)}", exc_info=True)
+        master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 -e 
 File: ./src/app.py
 
 import os
-import logging
-import socket
 from dotenv import load_dotenv
 from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
-
-def setup_logging(container_id: str):
-    log_directory = f'logs/docker_agents/{container_id}'
-    if not os.path.exists(log_directory):
-        os.makedirs(log_directory)
-
-    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-    master_logger = logging.getLogger('master')
-    master_logger.setLevel(logging.DEBUG)
-    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
-    file_handler.setFormatter(log_formatter)
-    master_logger.addHandler(file_handler)
-
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(message)s'))
-    master_logger.addHandler(console_handler)
-
-    chat_logger = logging.getLogger('chat')
-    chat_logger.setLevel(logging.DEBUG)
-    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
-    chat_file_handler.setFormatter(log_formatter)
-    chat_logger.addHandler(chat_file_handler)
-
-    memory_logger = logging.getLogger('memory')
-    memory_logger.setLevel(logging.DEBUG)
-    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
-    memory_file_handler.setFormatter(log_formatter)
-    memory_logger.addHandler(memory_file_handler)
-
-    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
-    return master_logger, chat_logger, memory_logger
-
-def is_running_in_docker() -> bool:
-    """Check if the code is running inside a Docker container."""
-    try:
-        with open('/proc/1/cgroup', 'rt') as f:
-            return 'docker' in f.read()
-    except Exception:
-        return False
+from logging_setup import setup_logging, is_running_in_docker  # Import logging setup
 
 def main():
-    container_id = socket.gethostname() if is_running_in_docker() else 'local'
-    master_logger, chat_logger, memory_logger = setup_logging(container_id)
+    master_logger, chat_logger, memory_logger = setup_logging()
 
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
