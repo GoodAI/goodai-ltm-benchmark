@@ -76,7 +76,7 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         kwargs.pop("is_local")
         return HFChatSession(model=name, **kwargs)
     if name == "fin_prototype":
-        return MultiAgentRAGInterface(api_url="http://localhost:8000")
+        return MultiAgentRAGInterface(api_url="http://localhost:8080")
 
     try:
         if name.startswith("ts-"):

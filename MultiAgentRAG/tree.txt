@@ -1,19 +1,20 @@
-(rag-venv) goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
+goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
 .
-├── Dockerfile    
-├── README.md     
+├── Dockerfile        
+├── Dockerfile_stable 
+├── README.md
 ├── data
-│   ├── embeddings
-│   ├── processed 
-│   └── raw       
+│   ├── embeddings    
+│   ├── processed     
+│   └── raw
 ├── docker-compose.yml
-├── get-docker.sh
-├── json_output
-│   ├── Memory_1.json
-│   ├── Memory_2.json
-│   ├── Memory_3.json
-│   ├── Memory_4.json
-│   └── Memory_5.json
+├── get-docker.sh     
+├── json_output       
+│   ├── Memory_1.json 
+│   ├── Memory_2.json 
+│   ├── Memory_3.json 
+│   ├── Memory_4.json 
+│   └── Memory_5.json 
 ├── logs
 │   └── docker_agents
 │       ├── chat.log
@@ -71,7 +72,7 @@
 ├── text_docs
 └── tree.txt
 
-19 directories, 51 files
+19 directories, 52 files
 
 File Contents:
 
@@ -108,37 +109,80 @@ version: '3.1'
 
 services:
   multi-agent-rag:
-    image: multi-agent-rag
+    build: .
     ports:
-      - "8000:8000"
+      - "8080:8000"  # Ensure this is correctly mapped
     environment:
-      - GOODAI_OPENAI_API_KEY_LTM01
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     env_file:
       - .env
     volumes:
-      - ./memory.db:/app/memory.db  # Mount the local memory.db file
-      - ./logs/docker_agents:/app/logs  # Central log directory for all containers
-    stdin_open: true  # Equivalent to -i
-    tty: true         # Equivalent to -t
+      - ./memory.db:/app/memory.db
+      - ./logs/docker_agents:/app/logs
+    stdin_open: true
+    tty: true
 -e 
 File: ./Dockerfile
 
+# Use an official Python runtime as a parent image
 FROM python:3.12
 
+# Set the working directory in the container
 WORKDIR /app
 
+# Copy the current directory contents into the container at /app
 COPY . /app
 
+# Create necessary directories
 RUN mkdir -p /app/logs
 
+# Install necessary tools
+RUN apt-get update && apt-get install -y dos2unix
+
+# Ensure .env file uses Unix line endings
+RUN dos2unix /app/.env
+
+# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements_lite.txt
 RUN pip install fastapi uvicorn
 
+# Make port 8000 available to the world outside this container (if needed)
 EXPOSE 8000
 
+# Copy the .env file into the container
+COPY .env /app/.env
+
+# Define environment variable
 ENV NAME Multi-Agent-RAG
 
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Print environment variables to verify they are loaded correctly
+CMD ["sh", "-c", "printenv && uvicorn src.api:app --host 0.0.0.0 --port 8000"]
+-e 
+File: ./Dockerfile_stable
+
+# Use an official Python runtime as a parent image
+FROM python:3.12
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Create necessary directories
+RUN mkdir -p /app/logs
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements_lite.txt
+
+# Make port 8000 available to the world outside this container (if needed)
+EXPOSE 8000
+
+# Define environment variable
+ENV NAME Multi-Agent-RAG
+
+# Run app.py when the container launches
+CMD ["python", "src/app.py"]
 -e 
 File: ./get-docker.sh
 
@@ -1141,8 +1185,9 @@ File: ./src/api.py
 # src/api.py
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from controller import Controller
+from src.controller import Controller  # Update this line
 import os
+import logging
 
 class QueryRequest(BaseModel):
     query: str
@@ -1151,6 +1196,10 @@ class QueryResponse(BaseModel):
     response: str
 
 app = FastAPI()
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
 controller = Controller("gpt-3.5-turbo", memory_db_path, os.getenv("GOODAI_OPENAI_API_KEY_LTM01"))
@@ -1161,6 +1210,7 @@ async def query_endpoint(request: QueryRequest):
         response = controller.execute_query(request.query)
         return QueryResponse(response=response)
     except Exception as e:
+        logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 -e 
 File: ./src/app.py
@@ -1276,10 +1326,10 @@ File: ./src/controller.py
 import logging
 from typing import List, Tuple
 from langchain.schema import Document
-from agents.retrieval_agent import RetrievalAgent
-from agents.processing_agent import ProcessingAgent
-from agents.response_agent import ResponseAgent
-from memory.memory_manager import MemoryManager
+from src.agents.retrieval_agent import RetrievalAgent
+from src.agents.processing_agent import ProcessingAgent
+from src.agents.response_agent import ResponseAgent
+from src.memory.memory_manager import MemoryManager
 
 class Controller:
     def __init__(self, model_name: str, memory_db_path: str, api_key: str):

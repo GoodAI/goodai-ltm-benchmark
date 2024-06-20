@@ -1,9 +1,10 @@
 # src/api.py
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from src.controller import Controller  # Update this line
+from src.controller import Controller
 import os
-import logging
+from logging_setup import setup_logging  # Import logging setup
 
 class QueryRequest(BaseModel):
     query: str
@@ -11,11 +12,10 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     response: str
 
-app = FastAPI()
+# Initialize logging
+master_logger, chat_logger, memory_logger = setup_logging()
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+app = FastAPI()
 
 memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
 controller = Controller("gpt-3.5-turbo", memory_db_path, os.getenv("GOODAI_OPENAI_API_KEY_LTM01"))
@@ -26,5 +26,5 @@ async def query_endpoint(request: QueryRequest):
         response = controller.execute_query(request.query)
         return QueryResponse(response=response)
     except Exception as e:
-        logger.error(f"Error processing query: {str(e)}", exc_info=True)
+        master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
