@@ -4,9 +4,11 @@ services:
   multi-agent-rag:
     build: .
     ports:
-      - "8080:8000"  # Ensure this is correctly mapped
+      - "8080:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL}
     env_file:
       - .env
     volumes:

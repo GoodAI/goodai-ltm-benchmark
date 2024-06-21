@@ -25,7 +25,8 @@ def main():
         master_logger.info(f"Using memory database path: {memory_db_path}")
 
         master_logger.debug("Initializing controller")
-        controller = Controller("gpt-3.5-turbo", memory_db_path, openai_api_key)
+        controller = Controller()
+
 
         while True:
             try:

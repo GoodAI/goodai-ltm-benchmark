@@ -1,24 +1,25 @@
 goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
 .
 ├── Dockerfile
-├── Dockerfile_stable
+├── Dockerfile_stable     
 ├── README.md
+├── config.py
 ├── data
-│   ├── embeddings
+│   ├── embeddings        
 │   ├── old logs
-│   │   ├── chat.log
+│   │   ├── chat.log      
 │   │   ├── local
-│   │   │   ├── chat.log
+│   │   │   ├── chat.log  
 │   │   │   ├── master.log
 │   │   │   └── memory.log
-│   │   ├── master.log
-│   │   └── memory.log
+│   │   ├── master.log    
+│   │   └── memory.log    
 │   ├── processed
 │   └── raw
 ├── docker-compose.yml
-├── get-docker.sh
-├── json_output
-│   ├── Memory_1.json
+├── get-docker.sh     
+├── json_output       
+│   ├── Memory_1.json 
 │   ├── Memory_2.json
 │   ├── Memory_3.json
 │   ├── Memory_4.json
@@ -27,7 +28,15 @@ goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark
 ├── logs
 │   └── docker_agents
 │       └── docker_agents
-│           └── 6827a2b9887f
+│           ├── 35106f6dd21b
+│           │   ├── chat.log
+│           │   ├── master.log
+│           │   └── memory.log
+│           ├── 6827a2b9887f
+│           │   ├── chat.log
+│           │   ├── master.log
+│           │   └── memory.log
+│           └── 81cd64a6cb95
 │               ├── chat.log
 │               ├── master.log
 │               └── memory.log
@@ -79,7 +88,7 @@ goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark
 ├── text_docs
 └── tree.txt
 
-22 directories, 56 files
+24 directories, 63 files
 
 File Contents:
 
@@ -109,6 +118,28 @@ data/raw/*
 text_docs/*
 .DS_Store
 .vscode
+-e 
+File: ./config.py
+
+# config.py
+
+import os
+
+class Config:
+    # General settings
+    MODEL_NAME = "gpt-3.5-turbo"
+    
+    # Database settings
+    MEMORY_DB_PATH = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
+    
+    # API Keys
+    OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
+    TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+    
+    # Other settings
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
+    
+# You can add more configurations as needed
 -e 
 File: ./data/old logs/chat.log
 
@@ -253,9 +284,11 @@ services:
   multi-agent-rag:
     build: .
     ports:
-      - "8080:8000"  # Ensure this is correctly mapped
+      - "8080:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL}
     env_file:
       - .env
     volumes:
@@ -266,38 +299,27 @@ services:
 -e 
 File: ./Dockerfile
 
-# Use an official Python runtime as a parent image
+# Dockerfile
+
 FROM python:3.12
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
 COPY . /app
 
-# Create necessary directories
 RUN mkdir -p /app/logs
 
-# Install necessary tools
 RUN apt-get update && apt-get install -y dos2unix
 
-# Ensure .env file uses Unix line endings
 RUN dos2unix /app/.env
 
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements_lite.txt
 RUN pip install fastapi uvicorn
 
-# Make port 8000 available to the world outside this container (if needed)
 EXPOSE 8000
 
-# Copy the .env file into the container
 COPY .env /app/.env
 
-# Define environment variable
-ENV NAME Multi-Agent-RAG
-
-# Print environment variables to verify they are loaded correctly
 CMD ["sh", "-c", "printenv && uvicorn src.api:app --host 0.0.0.0 --port 8000"]
 -e 
 File: ./Dockerfile_stable
@@ -1319,7 +1341,7 @@ class ProcessingAgent:
     def process(self, query: str, context_documents: List[Document]) -> str:
         context = "\n\n".join([doc.page_content for doc in context_documents[:3]])
         messages = [
-            HumanMessage(content=f"Given the following context:\n{context}\n\nAnswer the question: {query}")
+            HumanMessage(content=f"You are 'PROCESSING_AGENT' a specialist in distilling information. Based on the this retrieved information from our database: \"\"\"{context}\"\"\" formulate a response to: \"{query}\"")
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Processed query: {query} with context: {context}")
@@ -1342,9 +1364,9 @@ class ResponseAgent:
 
     def generate_response(self, query: str, result: str) -> str:
         messages = [
-            HumanMessage(content=f"User Query:\n{query}"),
-            AIMessage(content=f"Assistant Response:\n{result}"),
-            HumanMessage(content="Generate a final response based on the above interaction.")
+            HumanMessage(content=f"ORIGINAL_USER_QUERY = \n{query}"),
+            AIMessage(content=f"PROCESSING_AGENT_RESPONSE = \n{result}"),
+            HumanMessage(content="You are the 'RESPONSE_AGENT' in a multi tiered system. Utilize the information from 'PROCESSING_AGENT' to best respond to ORIGINAL_USER_QUERY")
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Generated final response for query: {query} with result: {result}")
@@ -1479,35 +1501,46 @@ from src.agents.retrieval_agent import RetrievalAgent
 from src.agents.processing_agent import ProcessingAgent
 from src.agents.response_agent import ResponseAgent
 from src.memory.memory_manager import MemoryManager
+from config import Config
 
 class Controller:
-    def __init__(self, model_name: str, memory_db_path: str, api_key: str):
-        self.memory_manager = MemoryManager(memory_db_path, api_key)
+    def __init__(self):
+        self.memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
         self.retrieval_agent = RetrievalAgent(self.memory_manager)
-        self.processing_agent = ProcessingAgent(model_name)
-        self.response_agent = ResponseAgent(model_name)
+        self.processing_agent = ProcessingAgent(Config.MODEL_NAME)
+        self.response_agent = ResponseAgent(Config.MODEL_NAME)
         self.logger = logging.getLogger('master')
 
     def execute_query(self, query: str) -> str:
-        relevant_memories = self.retrieval_agent.retrieve(query)
-        self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
-        
-        context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
-        
-        result = self.processing_agent.process(query, context_documents)
-        self.logger.debug(f"Processing result: {result}")
+        """Execute the query by retrieving, processing, and generating a response."""
+        try:
+            relevant_memories = self.retrieval_agent.retrieve(query)
+            self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
 
-        response = self.response_agent.generate_response(query, result)
-        self.logger.debug(f"Generated response: {response}")
+            context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
 
-        self.memory_manager.save_memory(query, response)
+            result = self.processing_agent.process(query, context_documents)
+            self.logger.debug(f"Processing result: {result}")
 
-        return response
+            response = self.response_agent.generate_response(query, result)
+            self.logger.debug(f"Generated response: {response}")
+
+            self.memory_manager.save_memory(query, response)
+
+            return response
+        except Exception as e:
+            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
+            raise
 
     def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
-        memories = self.memory_manager.get_memories(limit)
-        self.logger.debug(f"Memories retrieved: {memories}")
-        return memories
+        """Retrieve a list of memories up to the specified limit."""
+        try:
+            memories = self.memory_manager.get_memories(limit)
+            self.logger.debug(f"Memories retrieved: {memories}")
+            return memories
+        except Exception as e:
+            self.logger.error(f"Error retrieving memories: {str(e)}", exc_info=True)
+            raise
 -e 
 File: ./src/memory/memory_manager.py
 
@@ -1530,6 +1563,7 @@ class MemoryManager:
         self.create_tables()
 
     def create_tables(self):
+        """Create the necessary tables if they don't already exist."""
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY,
@@ -1542,12 +1576,44 @@ class MemoryManager:
         logger.debug("Ensured memories table exists")
 
     def save_memory(self, query: str, result: str):
-        embedding = np.array(self.embeddings.embed_query(query)).tobytes()  # Ensure embedding is a numpy array
-        self.conn.execute("""
-            INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
-        """, (query, result, embedding))
-        self.conn.commit()
-        logger.debug(f"Saved memory for query: {query} with result: {result}")
+        """Save a memory to the database."""
+        try:
+            embedding = np.array(self.embeddings.embed_query(query)).tobytes()
+            self.conn.execute("""
+                INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
+            """, (query, result, embedding))
+            self.conn.commit()
+            logger.debug(f"Saved memory for query: {query} with result: {result}")
+        except Exception as e:
+            logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
+            raise
+
+    def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
+        """Retrieve memories relevant to the query based on a similarity threshold."""
+        try:
+            query_embedding = np.array(self.embeddings.embed_query(query))
+            all_memories = self.get_all_memories()
+            relevant_memories = []
+
+            for memory in all_memories:
+                memory_query, memory_result, memory_embedding = memory
+                memory_embedding = np.frombuffer(memory_embedding)
+                similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+                if similarity >= threshold:
+                    relevant_memories.append((memory_query, memory_result, similarity))
+
+            relevant_memories.sort(key=lambda x: x[2], reverse=True)
+            return [(memory[0], memory[1]) for memory in relevant_memories[:3]]
+        except Exception as e:
+            logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
+            raise
+
+    def reset_database(self):
+        self.conn.close()
+        os.remove(self.db_path)
+        self.conn = sqlite3.connect(self.db_path)
+        self.create_tables()
+        logger.debug("Database reset and tables recreated")
 
     def load_precomputed_embeddings(self):
         # Load precomputed embeddings from the database if needed
@@ -1566,28 +1632,6 @@ class MemoryManager:
         memories = cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
-
-    def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
-        query_embedding = np.array(self.embeddings.embed_query(query))  # Ensure embedding is a numpy array
-        all_memories = self.get_all_memories()
-        relevant_memories = []
-
-        for memory in all_memories:
-            memory_query, memory_result, memory_embedding = memory
-            memory_embedding = np.frombuffer(memory_embedding)  # Convert back from bytes to numpy array
-            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-            if similarity >= threshold:
-                relevant_memories.append((memory_query, memory_result, similarity))
-
-        relevant_memories.sort(key=lambda x: x[2], reverse=True)
-        return [(memory[0], memory[1]) for memory in relevant_memories[:3]]  # Return top 3 relevant memories
-
-    def reset_database(self):
-        self.conn.close()
-        os.remove(self.db_path)
-        self.conn = sqlite3.connect(self.db_path)
-        self.create_tables()
-        logger.debug("Database reset and tables recreated")
 -e 
 File: ./src/memory/__init__.py
 

@@ -14,7 +14,7 @@ class ProcessingAgent:
     def process(self, query: str, context_documents: List[Document]) -> str:
         context = "\n\n".join([doc.page_content for doc in context_documents[:3]])
         messages = [
-            HumanMessage(content=f"Given the following context:\n{context}\n\nAnswer the question: {query}")
+            HumanMessage(content=f"You are 'PROCESSING_AGENT' a specialist in distilling information. Based on the this retrieved information from our database: \"\"\"{context}\"\"\" formulate a response to: \"{query}\"")
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Processed query: {query} with context: {context}")

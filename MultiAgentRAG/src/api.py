@@ -18,7 +18,7 @@ master_logger, chat_logger, memory_logger = setup_logging()
 app = FastAPI()
 
 memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
-controller = Controller("gpt-3.5-turbo", memory_db_path, os.getenv("GOODAI_OPENAI_API_KEY_LTM01"))
+controller = Controller()
 
 @app.post("/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):

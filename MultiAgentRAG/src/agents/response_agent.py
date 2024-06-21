@@ -12,9 +12,9 @@ class ResponseAgent:
 
     def generate_response(self, query: str, result: str) -> str:
         messages = [
-            HumanMessage(content=f"User Query:\n{query}"),
-            AIMessage(content=f"Assistant Response:\n{result}"),
-            HumanMessage(content="Generate a final response based on the above interaction.")
+            HumanMessage(content=f"ORIGINAL_USER_QUERY = \n{query}"),
+            AIMessage(content=f"PROCESSING_AGENT_RESPONSE = \n{result}"),
+            HumanMessage(content="You are the 'RESPONSE_AGENT' in a multi tiered system. Utilize the information from 'PROCESSING_AGENT' to best respond to ORIGINAL_USER_QUERY")
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Generated final response for query: {query} with result: {result}")

@@ -17,6 +17,7 @@ class MemoryManager:
         self.create_tables()
 
     def create_tables(self):
+        """Create the necessary tables if they don't already exist."""
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY,
@@ -29,19 +30,66 @@ class MemoryManager:
         logger.debug("Ensured memories table exists")
 
     def save_memory(self, query: str, result: str):
-        embedding = np.array(self.embeddings.embed_query(query)).tobytes()  # Ensure embedding is a numpy array
-        self.conn.execute("""
-            INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
-        """, (query, result, embedding))
-        self.conn.commit()
-        logger.debug(f"Saved memory for query: {query} with result: {result}")
+        """Save a memory to the database."""
+        try:
+            embedding = np.array(self.embeddings.embed_query(query)).tobytes()
+            self.conn.execute("""
+                INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
+            """, (query, result, embedding))
+            self.conn.commit()
+            logger.debug(f"Saved memory for query: {query} with result: {result}")
+        except Exception as e:
+            logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
+            raise
+
+    def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
+        """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
+        try:
+            query_embedding = np.array(self.embeddings.embed_query(query))
+            all_memories = self.get_all_memories()
+            relevant_memories = []
+
+            for memory in all_memories:
+                memory_query, memory_result, memory_embedding, timestamp = memory
+                memory_embedding = np.frombuffer(memory_embedding)
+                similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+                if similarity >= threshold:
+                    relevant_memories.append((memory_query, memory_result, similarity, timestamp))
+
+            if not relevant_memories:
+                return []
+
+            # Sort by similarity in descending order to find the most relevant one
+            relevant_memories.sort(key=lambda x: x[2], reverse=True)
+            most_relevant_memory = relevant_memories[0]
+
+            # Filter memories above the threshold and sort by timestamp in descending order
+            filtered_memories = [mem for mem in relevant_memories if mem[2] >= threshold]
+            filtered_memories.sort(key=lambda x: x[3], reverse=True)
+
+            # Include the most relevant memory if not already in the filtered list
+            if most_relevant_memory not in filtered_memories:
+                filtered_memories.append(most_relevant_memory)
+
+            # Return the relevant memories without similarity and timestamp
+            return [(memory[0], memory[1]) for memory in filtered_memories]
+        except Exception as e:
+            logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
+            raise
+
+    def reset_database(self):
+        self.conn.close()
+        os.remove(self.db_path)
+        self.conn = sqlite3.connect(self.db_path)
+        self.create_tables()
+        logger.debug("Database reset and tables recreated")
 
     def load_precomputed_embeddings(self):
         # Load precomputed embeddings from the database if needed
         pass
 
-    def get_all_memories(self) -> List[Tuple[str, str, bytes]]:
-        cursor = self.conn.execute("SELECT query, result, embedding FROM memories")
+    def get_all_memories(self) -> List[Tuple[str, str, bytes, str]]:
+        cursor = self.conn.execute("SELECT query, result, embedding, timestamp FROM memories")
         memories = cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
@@ -53,25 +101,3 @@ class MemoryManager:
         memories = cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
-
-    def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
-        query_embedding = np.array(self.embeddings.embed_query(query))  # Ensure embedding is a numpy array
-        all_memories = self.get_all_memories()
-        relevant_memories = []
-
-        for memory in all_memories:
-            memory_query, memory_result, memory_embedding = memory
-            memory_embedding = np.frombuffer(memory_embedding)  # Convert back from bytes to numpy array
-            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-            if similarity >= threshold:
-                relevant_memories.append((memory_query, memory_result, similarity))
-
-        relevant_memories.sort(key=lambda x: x[2], reverse=True)
-        return [(memory[0], memory[1]) for memory in relevant_memories[:3]]  # Return top 3 relevant memories
-
-    def reset_database(self):
-        self.conn.close()
-        os.remove(self.db_path)
-        self.conn = sqlite3.connect(self.db_path)
-        self.create_tables()
-        logger.debug("Database reset and tables recreated")
