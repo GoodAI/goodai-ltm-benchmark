@@ -16,4 +16,8 @@ class Config:
     # Other settings
     LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
     
-# You can add more configurations as needed
+    # Processing agent settings
+    PROCESSING_AGENT_MEMORIES_INCLUDED = 3  # Number of memories to include in context
+
+    MEMORY_RETRIEVAL_THRESHOLD = 0.75  # Similarity threshold for memory retrieval
+    MEMORY_RETRIEVAL_LIMIT = 10

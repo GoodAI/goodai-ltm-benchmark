@@ -4,6 +4,7 @@ import logging
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, Document
 from typing import List
+from config import Config
 
 logger = logging.getLogger('master')
 chat_logger = logging.getLogger('chat')
@@ -13,9 +14,9 @@ class ProcessingAgent:
         self.chat_model = ChatOpenAI(model_name=model_name)
 
     def process(self, query: str, context_documents: List[Document]) -> str:
-        context = "\n\n".join([doc.page_content for doc in context_documents[:3]])
+        context = "\n\n".join([doc.page_content for doc in context_documents[:Config.PROCESSING_AGENT_MEMORIES_INCLUDED]])
         messages = [
-            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your context is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE>. You will use these to best respond to the request. 'Best' is defined as the response that will satisfy the sender of the request the most.")
+            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE>. You will use these to best respond to the request. 'Best' is defined as the response that will satisfy the sender of the request the most.")
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Processed query: {query} with context: {context}")

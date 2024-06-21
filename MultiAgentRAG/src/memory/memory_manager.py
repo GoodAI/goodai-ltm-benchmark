@@ -6,6 +6,7 @@ from typing import List, Tuple
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
 import os
+from config import Config
 
 logger = logging.getLogger('memory')
 
@@ -42,7 +43,7 @@ class MemoryManager:
             logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
             raise
 
-    def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
+    def retrieve_relevant_memories(self, query: str, threshold: float = Config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str]]:
         """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
         try:
             query_embedding = np.array(self.embeddings.embed_query(query))
@@ -94,7 +95,7 @@ class MemoryManager:
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
 
-    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
+    def get_memories(self, limit: int = Config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
         cursor = self.conn.execute("""
             SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
         """, (limit,))
