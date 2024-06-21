@@ -1,12 +1,13 @@
-# logging_setup.py
-
 import logging
 import os
 import socket
+from datetime import datetime
 
 def setup_logging():
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     container_id = socket.gethostname() if is_running_in_docker() else 'local'
-    log_directory = f'logs/docker_agents/{container_id}'
+    log_directory = f'logs/{timestamp}_{container_id}'
+
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
 

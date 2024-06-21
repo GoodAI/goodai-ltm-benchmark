@@ -6,11 +6,15 @@ OUTPUT_FILE="tree.txt"
 # Clear the previous contents of the output file
 > "$OUTPUT_FILE"
 
-# Generate tree structure using find and sed, excluding specified files and directories
-find . \( -name '__pycache__' -o -name '.git' -o -name '.env' -o -name 'text_docs' -o -name 'scripts' -o -name 'logs' \) -prune -o -type f ! \( -name 'tree.txt' -o -name 'generate_tree.sh' -o -name 'README' -o -name '*.ipynb' \) -print | sed -e 's|[^/]*/| |g' -e 's|^|   |' >> "$OUTPUT_FILE"
+# Generate tree structure identical to the tree command output
+tree >> "$OUTPUT_FILE"
+
+# Add a note about the exclusions for appended file contents
+echo -e "\nNote: The following list of files and directories are excluded only from the appended file contents section:\n" >> "$OUTPUT_FILE"
+echo -e "__pycache__, .git, .env, text_docs, scripts, logs, tree.txt, generate_tree.sh, README, *.ipynb, *.pdf, *.db\n" >> "$OUTPUT_FILE"
 
 # Append file contents, excluding specified files and directories
-echo -e "\nFile Contents:\n" >> "$OUTPUT_FILE"
+echo -e "File Contents:\n" >> "$OUTPUT_FILE"
 find . \( -name 'tree.txt' -o -name 'generate_tree.sh' -o -name 'README' -o -name '*.ipynb' -o -name '*.pdf' -o -name '*.db' -o -name '.env' -o -path '*/__pycache__/*' -o -path '*/.git/*' -o -path '*/text_docs/*' -o -path '*/scripts/*' -o -path '*/logs/*' \) -prune -o -type f -print0 | xargs -0 -I {} sh -c 'echo -e "\nFile: {}\n"; cat "{}"' >> "$OUTPUT_FILE"
 
 # Copy the output file contents to the clipboard

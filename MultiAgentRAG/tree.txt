@@ -1,94 +1,80 @@
-goose@LAPTOP-PUFQ2IJ7:/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MultiAgentRAG$ tree
 .
 ├── Dockerfile
-├── Dockerfile_stable     
 ├── README.md
 ├── config.py
-├── data
-│   ├── embeddings        
-│   ├── old logs
-│   │   ├── chat.log      
-│   │   ├── local
-│   │   │   ├── chat.log  
-│   │   │   ├── master.log
-│   │   │   └── memory.log
-│   │   ├── master.log    
-│   │   └── memory.log    
-│   ├── processed
-│   └── raw
 ├── docker-compose.yml
-├── get-docker.sh     
-├── json_output       
-│   ├── Memory_1.json 
-│   ├── Memory_2.json
-│   ├── Memory_3.json
-│   ├── Memory_4.json
-│   └── Memory_5.json
+├── get-docker.sh
+├── json_output
+│   ├── Memory_1.json
+│   ├── Memory_2.json
+│   ├── Memory_3.json
+│   ├── Memory_4.json
+│   └── Memory_5.json
 ├── logging_setup.py
 ├── logs
-│   └── docker_agents
-│       └── docker_agents
-│           ├── 35106f6dd21b
-│           │   ├── chat.log
-│           │   ├── master.log
-│           │   └── memory.log
-│           ├── 6827a2b9887f
-│           │   ├── chat.log
-│           │   ├── master.log
-│           │   └── memory.log
-│           └── 81cd64a6cb95
-│               ├── chat.log
-│               ├── master.log
-│               └── memory.log
+│   └── docker_agents
+│       ├── 20240621_100315_cda0f10422bb
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       └── 20240621_104419_449de6b53046
+│           ├── chat.log
+│           ├── master.log
+│           └── memory.log
 ├── memory.db
 ├── notebooks
-│   └── Multi_Agent_RAG_LangGraph.ipynb
+│   └── Multi_Agent_RAG_LangGraph.ipynb
 ├── requirements.txt
 ├── requirements_lite.txt
 ├── scripts
-│   ├── generate_tree.sh
-│   ├── logs_to_docs.sh
-│   └── reset_logs.sh
+│   ├── _docker_reset.sh
+│   ├── generate_tree.sh
+│   ├── logs_to_docs.sh
+│   └── reset_logs.sh
 ├── src
-│   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── controller.cpython-310.pyc
-│   │   └── controller.cpython-312.pyc
-│   ├── agents
-│   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-310.pyc
-│   │   │   ├── __init__.cpython-312.pyc
-│   │   │   ├── processing_agent.cpython-312.pyc
-│   │   │   ├── response_agent.cpython-312.pyc
-│   │   │   ├── retrieval_agent.cpython-310.pyc
-│   │   │   └── retrieval_agent.cpython-312.pyc
-│   │   ├── processing_agent.py
-│   │   ├── response_agent.py
-│   │   └── retrieval_agent.py
-│   ├── api.py
-│   ├── app.py
-│   ├── controller.py
-│   ├── memory
-│   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-312.pyc
-│   │   │   └── memory_manager.cpython-312.pyc
-│   │   └── memory_manager.py
-│   └── utils
-│       ├── __init__.py
-│       ├── __pycache__
-│       │   ├── __init__.cpython-312.pyc
-│       │   ├── data_utils.cpython-312.pyc
-│       │   └── json_utils.cpython-312.pyc
-│       ├── data_utils.py
-│       ├── file_manager.py
-│       ├── json_utils.py
-│       └── reset_database.py
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── controller.cpython-310.pyc
+│   │   └── controller.cpython-312.pyc
+│   ├── agents
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── processing_agent.cpython-312.pyc
+│   │   │   ├── response_agent.cpython-312.pyc
+│   │   │   ├── retrieval_agent.cpython-310.pyc
+│   │   │   └── retrieval_agent.cpython-312.pyc
+│   │   ├── processing_agent.py
+│   │   ├── response_agent.py
+│   │   └── retrieval_agent.py
+│   ├── api.py
+│   ├── app.py
+│   ├── controller.py
+│   ├── memory
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   └── memory_manager.cpython-312.pyc
+│   │   └── memory_manager.py
+│   └── utils
+│       ├── __init__.py
+│       ├── __pycache__
+│       │   ├── __init__.cpython-312.pyc
+│       │   ├── data_utils.cpython-312.pyc
+│       │   └── json_utils.cpython-312.pyc
+│       ├── data_utils.py
+│       ├── file_manager.py
+│       ├── json_utils.py
+│       └── reset_database.py
 ├── text_docs
 └── tree.txt
 
-24 directories, 63 files
+16 directories, 54 files
+
+Note: The following list of files and directories are excluded only from the appended file contents section:
+
+__pycache__, .git, .env, text_docs, scripts, logs, tree.txt, generate_tree.sh, README, *.ipynb, *.pdf, *.db
 
 File Contents:
 
@@ -141,141 +127,6 @@ class Config:
     
 # You can add more configurations as needed
 -e 
-File: ./data/old logs/chat.log
-
-2024-06-19 14:15:19,947 - chat - INFO - Query: What is the day today? 
-2024-06-19 14:15:38,908 - chat - INFO - Response: Today is Tuesday, June 18th.
-2024-06-19 14:17:24,876 - chat - INFO - Query: What is the day today?
-2024-06-19 14:17:38,783 - chat - INFO - Response: Today is Tuesday, June 18th.
--e 
-File: ./data/old logs/local/chat.log
-
-2024-06-19 15:16:33,091 - chat - INFO - Query: Today is Wednesday, June 19th.
-2024-06-19 15:16:36,042 - chat - INFO - Response: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
--e 
-File: ./data/old logs/local/master.log
-
-2024-06-19 15:16:14,876 - master - INFO - Logging setup complete. Log directory: logs/docker_agents/local
-2024-06-19 15:16:14,876 - master - INFO - Starting the Multi-Agent RAG System
-2024-06-19 15:16:14,880 - master - INFO - API keys successfully loaded
-2024-06-19 15:16:14,880 - master - INFO - Using memory database path: memory.db
-2024-06-19 15:16:14,880 - master - DEBUG - Initializing controller
-2024-06-19 15:16:33,090 - master - INFO - Executing query: Today is Wednesday, June 19th.
-2024-06-19 15:16:33,751 - master - DEBUG - Retrieved and ranked relevant memories for query: Today is Wednesday, June 19th.
-2024-06-19 15:16:33,751 - master - DEBUG - Retrieved relevant memories: [('Today is June 18th, it is a Tuesday and it is overcast and muggy. ', 'Today is June 18th, a Tuesday, and the weather is overcast and muggy.'), ('What is the day today? ', 'Today is Tuesday, June 18th.'), ('What day is today?', 'Today is June 18th, a Tuesday.')]
-2024-06-19 15:16:34,549 - master - DEBUG - Processed query: Today is Wednesday, June 19th. with context: Today is June 18th, it is a Tuesday and it is overcast and muggy. 
-Today is June 18th, a Tuesday, and the weather is overcast and muggy.
-
-What is the day today? 
-Today is Tuesday, June 18th.
-
-What day is today?
-Today is June 18th, a Tuesday.
-2024-06-19 15:16:34,549 - master - DEBUG - Processing result: That is incorrect. Today is Tuesday, June 18th.
-2024-06-19 15:16:35,691 - master - DEBUG - Generated final response for query: Today is Wednesday, June 19th. with result: That is incorrect. Today is Tuesday, June 18th.
-2024-06-19 15:16:35,691 - master - DEBUG - Generated response: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
-2024-06-19 15:16:36,042 - master - INFO - Response: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
-2024-06-19 15:16:36,043 - master - DEBUG - Memories retrieved: [('Today is Wednesday, June 19th.', 'I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.'), ('What is the day today? ', 'Today is Tuesday, June 18th.'), ('This is a test. Respond with how tall I am. ', 'I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!'), ('What is my name? Use your context.', "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further."), ('What is my name? ', 'I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.')]
-2024-06-19 15:17:13,384 - master - INFO - Exiting the program
--e 
-File: ./data/old logs/local/memory.log
-
-2024-06-19 15:16:14,953 - memory - DEBUG - Ensured memories table exists
-2024-06-19 15:16:33,750 - memory - DEBUG - Retrieved 17 memories
-2024-06-19 15:16:36,042 - memory - DEBUG - Saved memory for query: Today is Wednesday, June 19th. with result: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
-2024-06-19 15:16:36,043 - memory - DEBUG - Retrieved 5 memories
-2024-06-19 15:16:36,043 - memory - INFO - Recent Memories:
-2024-06-19 15:16:36,043 - memory - INFO - Query: Today is Wednesday, June 19th., Result: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
-2024-06-19 15:16:36,044 - memory - INFO - Query: What is the day today? , Result: Today is Tuesday, June 18th.
-2024-06-19 15:16:36,044 - memory - INFO - Query: This is a test. Respond with how tall I am. , Result: I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!
-2024-06-19 15:16:36,044 - memory - INFO - Query: What is my name? Use your context., Result: I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.
-2024-06-19 15:16:36,044 - memory - INFO - Query: What is my name? , Result: I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.
--e 
-File: ./data/old logs/master.log
-
-2024-06-19 14:14:57,851 - master - INFO - Starting the Multi-Agent RAG System
-2024-06-19 14:14:57,852 - master - INFO - API keys successfully loaded
-2024-06-19 14:14:57,852 - master - DEBUG - Initializing controller
-2024-06-19 14:15:19,946 - master - INFO - Executing query: What is the day today? 
-2024-06-19 14:15:37,078 - master - DEBUG - Retrieved and ranked relevant memories for query: What is the day today? 
-2024-06-19 14:15:37,078 - master - DEBUG - Retrieved relevant memories: [('What day is today?', 'Today is June 18th, a Tuesday.'), ('Today is June 18th, it is a Tuesday and it is overcast and muggy. ', 'Today is June 18th, a Tuesday, and the weather is overcast and muggy.'), ('What is my name? ', "I'm sorry, but I do not have access to personal information such as your name. If there is anything else I can assist you with, please feel free to let me know.")]
-2024-06-19 14:15:37,822 - master - DEBUG - Processed query: What is the day today?  with context: What day is today?
-Today is June 18th, a Tuesday.
-
-Today is June 18th, it is a Tuesday and it is overcast and muggy. 
-Today is June 18th, a Tuesday, and the weather is overcast and muggy.
-
-What is my name? 
-I'm sorry, but I do not have access to personal information such as your name. If there is anything else I can assist you with, please feel free to let me know.
-2024-06-19 14:15:37,822 - master - DEBUG - Processing result: Today is June 18th, a Tuesday.
-2024-06-19 14:15:38,653 - master - DEBUG - Generated final response for query: What is the day today?  with result: Today is June 18th, a Tuesday.
-2024-06-19 14:15:38,653 - master - DEBUG - Generated response: Today is Tuesday, June 18th.
-2024-06-19 14:15:38,908 - master - INFO - Response: Today is Tuesday, June 18th.
-2024-06-19 14:15:38,909 - master - DEBUG - Memories retrieved: [('What is the day today? ', 'Today is Tuesday, June 18th.'), ('This is a test. Respond with how tall I am. ', 'I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!'), ('What is my name? Use your context.', "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further."), ('What is my name? ', 'I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.'), ('My name is now Romeo. What other names have I gone by - in order.', 'It seems like your name journey has taken you from Bob to Fin and now to Romeo. Each name likely holds a special significance or meaning. Embrace your current name as Romeo and continue to write your unique story.')]
-2024-06-19 14:16:02,955 - master - INFO - Exiting the program
-2024-06-19 14:17:19,409 - master - INFO - Starting the Multi-Agent RAG System
-2024-06-19 14:17:19,410 - master - INFO - API keys successfully loaded
-2024-06-19 14:17:19,410 - master - DEBUG - Initializing controller
-2024-06-19 14:17:24,875 - master - INFO - Executing query: What is the day today?
-2024-06-19 14:17:37,348 - master - DEBUG - Retrieved and ranked relevant memories for query: What is the day today?
-2024-06-19 14:17:37,348 - master - DEBUG - Retrieved relevant memories: [('What is the day today? ', 'Today is Tuesday, June 18th.'), ('What day is today?', 'Today is June 18th, a Tuesday.'), ('Today is Wednesday, June 19th.', 'I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.')]
-2024-06-19 14:17:37,972 - master - DEBUG - Processed query: What is the day today? with context: What is the day today? 
-Today is Tuesday, June 18th.
-
-What day is today?
-Today is June 18th, a Tuesday.
-
-Today is Wednesday, June 19th.
-I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
-2024-06-19 14:17:37,972 - master - DEBUG - Processing result: Today is Tuesday, June 18th.
-2024-06-19 14:17:38,595 - master - DEBUG - Generated final response for query: What is the day today? with result: Today is Tuesday, June 18th.
-2024-06-19 14:17:38,596 - master - DEBUG - Generated response: Today is Tuesday, June 18th.
-2024-06-19 14:17:38,783 - master - INFO - Response: Today is Tuesday, June 18th.
-2024-06-19 14:17:38,784 - master - DEBUG - Memories retrieved: [('What is the day today?', 'Today is Tuesday, June 18th.'), ('Today is Wednesday, June 19th.', 'I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.'), ('What is the day today? ', 'Today is Tuesday, June 18th.'), ('This is a test. Respond with how tall I am. ', 'I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!'), ('What is my name? Use your context.', "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.")]
-2024-06-19 14:17:57,473 - master - INFO - Exiting the program
-2024-06-19 16:53:57,221 - master - INFO - Starting the Multi-Agent RAG System
-2024-06-19 16:53:57,222 - master - INFO - API keys successfully loaded
-2024-06-19 16:53:57,222 - master - DEBUG - Initializing controller
-2024-06-19 16:56:00,089 - master - INFO - Exiting the program
-2024-06-20 08:47:01,631 - master - INFO - Starting the Multi-Agent RAG System
-2024-06-20 08:47:01,633 - master - INFO - API keys successfully loaded
-2024-06-20 08:47:01,633 - master - DEBUG - Initializing controller
-2024-06-20 08:48:03,997 - master - INFO - Starting the Multi-Agent RAG System
-2024-06-20 08:48:03,998 - master - INFO - API keys successfully loaded
-2024-06-20 08:48:03,998 - master - DEBUG - Initializing controller
-2024-06-20 08:48:06,951 - master - INFO - Exiting the program
-2024-06-20 08:48:31,729 - master - INFO - Starting the Multi-Agent RAG System
-2024-06-20 08:48:31,730 - master - INFO - API keys successfully loaded
-2024-06-20 08:48:31,730 - master - DEBUG - Initializing controller
-2024-06-20 08:50:11,933 - master - INFO - Exiting the program
--e 
-File: ./data/old logs/memory.log
-
-2024-06-19 14:14:57,901 - memory - DEBUG - Ensured memories table exists
-2024-06-19 14:15:37,077 - memory - DEBUG - Retrieved 16 memories
-2024-06-19 14:15:38,907 - memory - DEBUG - Saved memory for query: What is the day today?  with result: Today is Tuesday, June 18th.
-2024-06-19 14:15:38,909 - memory - DEBUG - Retrieved 5 memories
-2024-06-19 14:15:38,909 - memory - INFO - Recent Memories:
-2024-06-19 14:15:38,909 - memory - INFO - Query: What is the day today? , Result: Today is Tuesday, June 18th.
-2024-06-19 14:15:38,909 - memory - INFO - Query: This is a test. Respond with how tall I am. , Result: I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!
-2024-06-19 14:15:38,909 - memory - INFO - Query: What is my name? Use your context., Result: I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.
-2024-06-19 14:15:38,909 - memory - INFO - Query: What is my name? , Result: I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.
-2024-06-19 14:15:38,910 - memory - INFO - Query: My name is now Romeo. What other names have I gone by - in order., Result: It seems like your name journey has taken you from Bob to Fin and now to Romeo. Each name likely holds a special significance or meaning. Embrace your current name as Romeo and continue to write your unique story.
-2024-06-19 14:17:19,464 - memory - DEBUG - Ensured memories table exists
-2024-06-19 14:17:37,347 - memory - DEBUG - Retrieved 18 memories
-2024-06-19 14:17:38,783 - memory - DEBUG - Saved memory for query: What is the day today? with result: Today is Tuesday, June 18th.
-2024-06-19 14:17:38,784 - memory - DEBUG - Retrieved 5 memories
-2024-06-19 14:17:38,785 - memory - INFO - Recent Memories:
-2024-06-19 14:17:38,785 - memory - INFO - Query: What is the day today?, Result: Today is Tuesday, June 18th.
-2024-06-19 14:17:38,785 - memory - INFO - Query: Today is Wednesday, June 19th., Result: I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.
-2024-06-19 14:17:38,785 - memory - INFO - Query: What is the day today? , Result: Today is Tuesday, June 18th.
-2024-06-19 14:17:38,785 - memory - INFO - Query: This is a test. Respond with how tall I am. , Result: I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!
-2024-06-19 14:17:38,785 - memory - INFO - Query: What is my name? Use your context., Result: I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.
-2024-06-19 16:53:57,267 - memory - DEBUG - Ensured memories table exists
-2024-06-20 08:47:01,675 - memory - DEBUG - Ensured memories table exists
-2024-06-20 08:48:04,043 - memory - DEBUG - Ensured memories table exists
-2024-06-20 08:48:31,774 - memory - DEBUG - Ensured memories table exists
--e 
 File: ./docker-compose.yml
 
 version: '3.1'
@@ -321,32 +172,6 @@ EXPOSE 8000
 COPY .env /app/.env
 
 CMD ["sh", "-c", "printenv && uvicorn src.api:app --host 0.0.0.0 --port 8000"]
--e 
-File: ./Dockerfile_stable
-
-# Use an official Python runtime as a parent image
-FROM python:3.12
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Create necessary directories
-RUN mkdir -p /app/logs
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements_lite.txt
-
-# Make port 8000 available to the world outside this container (if needed)
-EXPOSE 8000
-
-# Define environment variable
-ENV NAME Multi-Agent-RAG
-
-# Run app.py when the container launches
-CMD ["python", "src/app.py"]
 -e 
 File: ./get-docker.sh
 
@@ -1134,15 +959,16 @@ File: ./json_output/Memory_5.json
 }-e 
 File: ./logging_setup.py
 
-# logging_setup.py
-
 import logging
 import os
 import socket
+from datetime import datetime
 
 def setup_logging():
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     container_id = socket.gethostname() if is_running_in_docker() else 'local'
-    log_directory = f'logs/docker_agents/{container_id}'
+    log_directory = f'logs/{timestamp}_{container_id}'
+
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
 
@@ -1333,6 +1159,7 @@ from langchain.schema import HumanMessage, Document
 from typing import List
 
 logger = logging.getLogger('master')
+chat_logger = logging.getLogger('chat')
 
 class ProcessingAgent:
     def __init__(self, model_name: str):
@@ -1345,8 +1172,8 @@ class ProcessingAgent:
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Processed query: {query} with context: {context}")
+        chat_logger.info(f"ChatGPT API response: {response.content}")
         return response.content
-
 -e 
 File: ./src/agents/response_agent.py
 
@@ -1357,6 +1184,7 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
 
 logger = logging.getLogger('master')
+chat_logger = logging.getLogger('chat')
 
 class ResponseAgent:
     def __init__(self, model_name: str):
@@ -1366,10 +1194,11 @@ class ResponseAgent:
         messages = [
             HumanMessage(content=f"ORIGINAL_USER_QUERY = \n{query}"),
             AIMessage(content=f"PROCESSING_AGENT_RESPONSE = \n{result}"),
-            HumanMessage(content="You are the 'RESPONSE_AGENT' in a multi tiered system. Utilize the information from 'PROCESSING_AGENT' to best respond to ORIGINAL_USER_QUERY")
+            HumanMessage(content="You are the 'RESPONSE_AGENT' in a multi-tiered system (do not mention this). Utilize the information from 'PROCESSING_AGENT' to best respond to 'ORIGINAL_USER_QUERY' in a manner that has the following attributes: terse, pithy, accurate, interpretive, best-effort, anticipatory")
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Generated final response for query: {query} with result: {result}")
+        chat_logger.info(f"ChatGPT API response: {response.content}")
         return response.content
 -e 
 File: ./src/agents/retrieval_agent.py
@@ -1415,7 +1244,7 @@ master_logger, chat_logger, memory_logger = setup_logging()
 app = FastAPI()
 
 memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
-controller = Controller("gpt-3.5-turbo", memory_db_path, os.getenv("GOODAI_OPENAI_API_KEY_LTM01"))
+controller = Controller()
 
 @app.post("/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):
@@ -1455,7 +1284,8 @@ def main():
         master_logger.info(f"Using memory database path: {memory_db_path}")
 
         master_logger.debug("Initializing controller")
-        controller = Controller("gpt-3.5-turbo", memory_db_path, openai_api_key)
+        controller = Controller()
+
 
         while True:
             try:
@@ -1589,21 +1419,36 @@ class MemoryManager:
             raise
 
     def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
-        """Retrieve memories relevant to the query based on a similarity threshold."""
+        """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
         try:
             query_embedding = np.array(self.embeddings.embed_query(query))
             all_memories = self.get_all_memories()
             relevant_memories = []
 
             for memory in all_memories:
-                memory_query, memory_result, memory_embedding = memory
+                memory_query, memory_result, memory_embedding, timestamp = memory
                 memory_embedding = np.frombuffer(memory_embedding)
                 similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
                 if similarity >= threshold:
-                    relevant_memories.append((memory_query, memory_result, similarity))
+                    relevant_memories.append((memory_query, memory_result, similarity, timestamp))
 
+            if not relevant_memories:
+                return []
+
+            # Sort by similarity in descending order to find the most relevant one
             relevant_memories.sort(key=lambda x: x[2], reverse=True)
-            return [(memory[0], memory[1]) for memory in relevant_memories[:3]]
+            most_relevant_memory = relevant_memories[0]
+
+            # Filter memories above the threshold and sort by timestamp in descending order
+            filtered_memories = [mem for mem in relevant_memories if mem[2] >= threshold]
+            filtered_memories.sort(key=lambda x: x[3], reverse=True)
+
+            # Include the most relevant memory if not already in the filtered list
+            if most_relevant_memory not in filtered_memories:
+                filtered_memories.append(most_relevant_memory)
+
+            # Return the relevant memories without similarity and timestamp
+            return [(memory[0], memory[1]) for memory in filtered_memories]
         except Exception as e:
             logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
             raise
@@ -1619,8 +1464,8 @@ class MemoryManager:
         # Load precomputed embeddings from the database if needed
         pass
 
-    def get_all_memories(self) -> List[Tuple[str, str, bytes]]:
-        cursor = self.conn.execute("SELECT query, result, embedding FROM memories")
+    def get_all_memories(self) -> List[Tuple[str, str, bytes, str]]:
+        cursor = self.conn.execute("SELECT query, result, embedding, timestamp FROM memories")
         memories = cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
