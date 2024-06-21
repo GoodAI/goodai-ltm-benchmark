@@ -17,7 +17,19 @@
 │       │   ├── chat.log
 │       │   ├── master.log
 │       │   └── memory.log
-│       └── 20240621_104419_449de6b53046
+│       ├── 20240621_104419_449de6b53046
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── 20240621_115820_c170e3a0c7ac
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── 20240621_121335_6f5f5e6d5e72
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       └── 20240621_121904_5028b5d292ce
 │           ├── chat.log
 │           ├── master.log
 │           └── memory.log
@@ -67,10 +79,9 @@
 │       ├── file_manager.py
 │       ├── json_utils.py
 │       └── reset_database.py
-├── text_docs
 └── tree.txt
 
-16 directories, 54 files
+18 directories, 63 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -125,8 +136,11 @@ class Config:
     # Other settings
     LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
     
-# You can add more configurations as needed
--e 
+    # Processing agent settings
+    PROCESSING_AGENT_MEMORIES_INCLUDED = 5  # Number of memories to include in context
+
+    MEMORY_RETRIEVAL_THRESHOLD = 0.75  # Similarity threshold for memory retrieval
+    MEMORY_RETRIEVAL_LIMIT = 10-e 
 File: ./docker-compose.yml
 
 version: '3.1'
@@ -1157,6 +1171,7 @@ import logging
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, Document
 from typing import List
+from config import Config
 
 logger = logging.getLogger('master')
 chat_logger = logging.getLogger('chat')
@@ -1166,9 +1181,9 @@ class ProcessingAgent:
         self.chat_model = ChatOpenAI(model_name=model_name)
 
     def process(self, query: str, context_documents: List[Document]) -> str:
-        context = "\n\n".join([doc.page_content for doc in context_documents[:3]])
+        context = "\n\n".join([doc.page_content for doc in context_documents[:Config.PROCESSING_AGENT_MEMORIES_INCLUDED]])
         messages = [
-            HumanMessage(content=f"You are 'PROCESSING_AGENT' a specialist in distilling information. Based on the this retrieved information from our database: \"\"\"{context}\"\"\" formulate a response to: \"{query}\"")
+            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE>. You will use these to best respond to the request. 'Best' is defined as the response that will satisfy the sender of the request the most.")
         ]
         response = self.chat_model.invoke(messages)
         logger.debug(f"Processed query: {query} with context: {context}")
@@ -1262,7 +1277,7 @@ from dotenv import load_dotenv
 from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
-from logging_setup import setup_logging, is_running_in_docker  # Import logging setup
+from logging_setup import setup_logging, is_running_in_docker
 
 def main():
     master_logger, chat_logger, memory_logger = setup_logging()
@@ -1324,12 +1339,15 @@ File: ./src/controller.py
 
 # src/controller.py
 
+# src/controller.py
+
 import logging
 from typing import List, Tuple
 from langchain.schema import Document
 from src.agents.retrieval_agent import RetrievalAgent
 from src.agents.processing_agent import ProcessingAgent
-from src.agents.response_agent import ResponseAgent
+# Comment out the ResponseAgent import to avoid any unintentional use
+# from src.agents.response_agent import ResponseAgent
 from src.memory.memory_manager import MemoryManager
 from config import Config
 
@@ -1338,21 +1356,24 @@ class Controller:
         self.memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
         self.retrieval_agent = RetrievalAgent(self.memory_manager)
         self.processing_agent = ProcessingAgent(Config.MODEL_NAME)
-        self.response_agent = ResponseAgent(Config.MODEL_NAME)
+        # Comment out the ResponseAgent initialization
+        # self.response_agent = ResponseAgent(Config.MODEL_NAME)
         self.logger = logging.getLogger('master')
 
     def execute_query(self, query: str) -> str:
-        """Execute the query by retrieving, processing, and generating a response."""
+        """Execute the query by retrieving, processing, and directly responding."""
         try:
             relevant_memories = self.retrieval_agent.retrieve(query)
             self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
 
             context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
 
+            # Directly return the result from the ProcessingAgent
             result = self.processing_agent.process(query, context_documents)
             self.logger.debug(f"Processing result: {result}")
 
-            response = self.response_agent.generate_response(query, result)
+            # Bypass the ResponseAgent
+            response = result
             self.logger.debug(f"Generated response: {response}")
 
             self.memory_manager.save_memory(query, response)
@@ -1382,6 +1403,7 @@ from typing import List, Tuple
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
 import os
+from config import Config
 
 logger = logging.getLogger('memory')
 
@@ -1418,7 +1440,7 @@ class MemoryManager:
             logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
             raise
 
-    def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> List[Tuple[str, str]]:
+    def retrieve_relevant_memories(self, query: str, threshold: float = Config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str]]:
         """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
         try:
             query_embedding = np.array(self.embeddings.embed_query(query))
@@ -1470,7 +1492,7 @@ class MemoryManager:
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
 
-    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
+    def get_memories(self, limit: int = Config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
         cursor = self.conn.execute("""
             SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
         """, (limit,))
@@ -1612,13 +1634,14 @@ File: ./src/utils/reset_database.py
 import sys
 import os
 
-# Add the src directory to the PYTHONPATH
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
+# Add the base directory of the project to the PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from memory.memory_manager import MemoryManager
+from config import Config  # Import the config
 
 if __name__ == "__main__":
-    memory_manager = MemoryManager("memory.db", "your_api_key_here")
+    memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
     memory_manager.reset_database()
     print("Database has been reset.")
 -e 

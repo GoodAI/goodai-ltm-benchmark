@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from controller import Controller
 from utils.data_utils import structure_memories
 from utils.json_utils import save_memory_to_json
-from logging_setup import setup_logging, is_running_in_docker  # Import logging setup
+from logging_setup import setup_logging, is_running_in_docker
 
 def main():
     master_logger, chat_logger, memory_logger = setup_logging()
