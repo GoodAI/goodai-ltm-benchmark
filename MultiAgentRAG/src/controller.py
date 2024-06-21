@@ -17,8 +17,6 @@ class Controller:
         self.memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
         self.retrieval_agent = RetrievalAgent(self.memory_manager)
         self.processing_agent = ProcessingAgent(Config.MODEL_NAME)
-        # Comment out the ResponseAgent initialization
-        # self.response_agent = ResponseAgent(Config.MODEL_NAME)
         self.logger = logging.getLogger('master')
 
     def execute_query(self, query: str) -> str:
@@ -27,7 +25,8 @@ class Controller:
             relevant_memories = self.retrieval_agent.retrieve(query)
             self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
 
-            context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
+            # Adjusted to handle the new tuple format including timestamp
+            context_documents = [(memory[0], memory[1], memory[2]) for memory in relevant_memories]
 
             # Directly return the result from the ProcessingAgent
             result = self.processing_agent.process(query, context_documents)
@@ -43,13 +42,4 @@ class Controller:
         except Exception as e:
             self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
             raise
-
-    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
-        """Retrieve a list of memories up to the specified limit."""
-        try:
-            memories = self.memory_manager.get_memories(limit)
-            self.logger.debug(f"Memories retrieved: {memories}")
-            return memories
-        except Exception as e:
-            self.logger.error(f"Error retrieving memories: {str(e)}", exc_info=True)
-            raise
+        

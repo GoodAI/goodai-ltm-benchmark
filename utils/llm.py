@@ -62,11 +62,11 @@ def set_api_key():
 def ensure_context_len(
     context: LLMContext,
     model: str = LEAST_EFFICIENT_TOKENISER,
-    max_len: Optional[int] = None,
+    max_len: Optional[int] = 8000,
     response_len: int = 0,
 ) -> tuple[LLMContext, int]:
     model = model_from_alias(model)
-    max_len = max_len or get_max_prompt_size(model)
+    max_len = 8000
     messages = list()
     if len(context) > 0 and context[0]["role"] == "system":
         sys_prompt = context[:1]

@@ -1,6 +1,8 @@
 .
 ├── Dockerfile
 ├── README.md
+├── __pycache__
+│   └── config.cpython-312.pyc
 ├── config.py
 ├── docker-compose.yml
 ├── get-docker.sh
@@ -13,23 +15,11 @@
 ├── logging_setup.py
 ├── logs
 │   └── docker_agents
-│       ├── 20240621_100315_cda0f10422bb
+│       ├── 20240621_122849_c4871e6f4b4c
 │       │   ├── chat.log
 │       │   ├── master.log
 │       │   └── memory.log
-│       ├── 20240621_104419_449de6b53046
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240621_115820_c170e3a0c7ac
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240621_121335_6f5f5e6d5e72
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       └── 20240621_121904_5028b5d292ce
+│       └── 20240621_131848_0c9335780884
 │           ├── chat.log
 │           ├── master.log
 │           └── memory.log
@@ -46,6 +36,7 @@
 ├── src
 │   ├── __init__.py
 │   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
 │   │   ├── controller.cpython-310.pyc
 │   │   └── controller.cpython-312.pyc
 │   ├── agents
@@ -81,7 +72,7 @@
 │       └── reset_database.py
 └── tree.txt
 
-18 directories, 63 files
+16 directories, 56 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -124,7 +115,7 @@ import os
 
 class Config:
     # General settings
-    MODEL_NAME = "gpt-3.5-turbo"
+    MODEL_NAME = "gpt-4-turbo"
     
     # Database settings
     MEMORY_DB_PATH = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
@@ -1633,11 +1624,16 @@ File: ./src/utils/reset_database.py
 
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add the base directory of the project to the PYTHONPATH
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(base_path)
 
-from memory.memory_manager import MemoryManager
+from src.memory.memory_manager import MemoryManager
 from config import Config  # Import the config
 
 if __name__ == "__main__":

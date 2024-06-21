@@ -7,6 +7,8 @@ from langchain_openai import OpenAIEmbeddings
 import numpy as np
 import os
 from config import Config
+# Add import for datetime
+from datetime import datetime
 
 logger = logging.getLogger('memory')
 
@@ -43,7 +45,12 @@ class MemoryManager:
             logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
             raise
 
-    def retrieve_relevant_memories(self, query: str, threshold: float = Config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str]]:
+# src/memory/memory_manager.py
+
+
+
+# Modify the return statement to include the timestamp
+    def retrieve_relevant_memories(self, query: str, threshold: float = Config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str, str]]:
         """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
         try:
             query_embedding = np.array(self.embeddings.embed_query(query))
@@ -60,23 +67,19 @@ class MemoryManager:
             if not relevant_memories:
                 return []
 
-            # Sort by similarity in descending order to find the most relevant one
+            # Sort by similarity in descending order
             relevant_memories.sort(key=lambda x: x[2], reverse=True)
-            most_relevant_memory = relevant_memories[0]
 
             # Filter memories above the threshold and sort by timestamp in descending order
             filtered_memories = [mem for mem in relevant_memories if mem[2] >= threshold]
             filtered_memories.sort(key=lambda x: x[3], reverse=True)
 
-            # Include the most relevant memory if not already in the filtered list
-            if most_relevant_memory not in filtered_memories:
-                filtered_memories.append(most_relevant_memory)
-
-            # Return the relevant memories without similarity and timestamp
-            return [(memory[0], memory[1]) for memory in filtered_memories]
+            # Return the relevant memories with the timestamp
+            return [(memory[0], memory[1], memory[3]) for memory in filtered_memories]
         except Exception as e:
             logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
             raise
+
 
     def reset_database(self):
         self.conn.close()

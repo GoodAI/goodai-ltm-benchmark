@@ -4,7 +4,7 @@ import os
 
 class Config:
     # General settings
-    MODEL_NAME = "gpt-3.5-turbo"
+    MODEL_NAME = "gpt-4-turbo"
     
     # Database settings
     MEMORY_DB_PATH = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
