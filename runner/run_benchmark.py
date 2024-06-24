@@ -15,7 +15,7 @@ from dataset_interfaces.interface import TestExample
 from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
 from model_interfaces.llm_interface import LLMChatSession, TimestampLLMChatSession
-from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper, LTMAgentVariant
+from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
 from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
@@ -41,20 +41,11 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
     if name == "memgpt":
         return MemGPTChatSession(run_name=run_name)
 
-    if name.startswith("ltm_agent_"):
-        match = re.match(r"^ltm_agent_(?P<variant>\d)(?:\((?P<model>.+)\))?$", name)
+    if name.startswith("ltm_agent"):
+        match = re.match(r"^ltm_agent\((?P<model>.+)\)$", name)
         if match is None:
             raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
-        params = match.groupdict()
-        model = params["model"] or GPT_4_TURBO_BEST
-        variant = {
-            "1": LTMAgentVariant.QG_JSON_USER_INFO,
-            "2": LTMAgentVariant.SEMANTIC_ONLY,
-            "3": LTMAgentVariant.TEXT_SCRATCHPAD,
-        }.get(params["variant"], None)
-        if variant is None:
-            raise ValueError(f"Unrecognized LTM Agent variant {repr(params['variant'])}.")
-        return LTMAgentWrapper(model=model, variant=variant, **kwargs)
+        return LTMAgentWrapper(model=match.groupdict()["model"], **kwargs)
     if name == "length_bias":
         return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
     if name.startswith("cost("):
