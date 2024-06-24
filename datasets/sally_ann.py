@@ -60,8 +60,8 @@ class SallyAnneDataset(DatasetInterface):
         with open(self.data_location) as fd:
             sample_lines = list()
             for line in fd:
-                # Remove index number
-                line = line[line.find(" ") + 1:]
+                # Remove index number and new line
+                line = line[line.find(" ") + 1:].removesuffix("\n")
                 # Add line to the script
                 sample_lines.append(line)
                 # Detect final line and wrap up sample
