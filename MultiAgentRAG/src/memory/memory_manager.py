@@ -6,8 +6,7 @@ from typing import List, Tuple
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
 import os
-from config import Config
-# Add import for datetime
+from config import config
 from datetime import datetime
 
 logger = logging.getLogger('memory')
@@ -50,7 +49,7 @@ class MemoryManager:
 
 
 # Modify the return statement to include the timestamp
-    def retrieve_relevant_memories(self, query: str, threshold: float = Config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str, str]]:
+    def retrieve_relevant_memories(self, query: str, threshold: float = config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str, str]]:
         """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
         try:
             query_embedding = np.array(self.embeddings.embed_query(query))
@@ -98,7 +97,7 @@ class MemoryManager:
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
 
-    def get_memories(self, limit: int = Config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
+    def get_memories(self, limit: int = config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
         cursor = self.conn.execute("""
             SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
         """, (limit,))

@@ -2,9 +2,9 @@
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from src.controller import Controller
-import os
-from logging_setup import setup_logging  # Import logging setup
+from src.utils.controller import Controller
+from src.utils.logging_setup import setup_logging
+from config import config
 
 class QueryRequest(BaseModel):
     query: str
@@ -17,7 +17,6 @@ master_logger, chat_logger, memory_logger = setup_logging()
 
 app = FastAPI()
 
-memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
 controller = Controller()
 
 @app.post("/query", response_model=QueryResponse)

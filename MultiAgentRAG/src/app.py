@@ -1,32 +1,32 @@
-import os
-from dotenv import load_dotenv
-from controller import Controller
-from utils.data_utils import structure_memories
-from utils.json_utils import save_memory_to_json
-from logging_setup import setup_logging, is_running_in_docker
+from config import Config
+from MultiAgentRAG.src.utils.controller import Controller
+from MultiAgentRAG.src.utils.logging_setup import setup_logging
+
+def process_query(controller, query, chat_logger, memory_logger):
+    chat_logger.info(f"Query: {query}")
+    response = controller.execute_query(query)
+    chat_logger.info(f"Response: {response}")
+    
+    memories = controller.get_recent_memories(5)
+    memory_logger.info("Recent Memories:")
+    for memory in memories:
+        memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
 
 def main():
     master_logger, chat_logger, memory_logger = setup_logging()
 
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
-        load_dotenv()
-        openai_api_key = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
-        tavily_api_key = os.getenv("TAVILY_API_KEY")
-
-        if not openai_api_key or not tavily_api_key:
-            master_logger.error("API keys not found in environment variables")
+        config = Config()
+        
+        if not config.validate_api_keys():
             raise EnvironmentError("API keys not found in environment variables")
 
         master_logger.info("API keys successfully loaded")
-        os.environ["OPENAI_API_KEY"] = openai_api_key
-
-        memory_db_path = "/app/memory.db" if is_running_in_docker() else "memory.db"
-        master_logger.info(f"Using memory database path: {memory_db_path}")
+        master_logger.info(f"Using memory database path: {config.MEMORY_DB_PATH}")
 
         master_logger.debug("Initializing controller")
-        controller = Controller()
-
+        controller = Controller(config)
 
         while True:
             try:
@@ -36,19 +36,7 @@ def main():
                     break
 
                 master_logger.info(f"Executing query: {query}")
-                chat_logger.info(f"Query: {query}")
-                response = controller.execute_query(query)
-                chat_logger.info(f"Response: {response}")
-                master_logger.info(f"Response: {response}")
-
-                memories = controller.get_memories(5)
-                memory_logger.info("Recent Memories:")
-                for memory in memories:
-                    memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
-
-                structured_memories = structure_memories(memories)
-                for memory in structured_memories:
-                    save_memory_to_json(memory, output_dir='json_output')
+                process_query(controller, query, chat_logger, memory_logger)
 
             except EOFError:
                 master_logger.info("Received EOF, exiting the program")

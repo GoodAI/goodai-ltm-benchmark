@@ -1,33 +1,31 @@
 .
 ├── Dockerfile
 ├── README.md
-├── __pycache__
-│   └── config.cpython-312.pyc
 ├── config.py
 ├── docker-compose.yml
+├── docker_requirements.txt
 ├── get-docker.sh
-├── json_output
-│   ├── Memory_1.json
-│   ├── Memory_2.json
-│   ├── Memory_3.json
-│   ├── Memory_4.json
-│   └── Memory_5.json
-├── logging_setup.py
 ├── logs
 │   └── docker_agents
-│       ├── 20240621_122849_c4871e6f4b4c
+│       ├── 20240624_114855_d97b26161c54
 │       │   ├── chat.log
 │       │   ├── master.log
 │       │   └── memory.log
-│       └── 20240621_131848_0c9335780884
+│       ├── 20240625_101648_0df6cf6d034c
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── 20240625_102014_2f29d94ee1bc
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       └── 20240625_115037_518d6b26924e
 │           ├── chat.log
 │           ├── master.log
 │           └── memory.log
 ├── memory.db
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
-├── requirements.txt
-├── requirements_lite.txt
 ├── scripts
 │   ├── _docker_reset.sh
 │   ├── generate_tree.sh
@@ -35,44 +33,23 @@
 │   └── reset_logs.sh
 ├── src
 │   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-312.pyc
-│   │   ├── controller.cpython-310.pyc
-│   │   └── controller.cpython-312.pyc
 │   ├── agents
 │   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-310.pyc
-│   │   │   ├── __init__.cpython-312.pyc
-│   │   │   ├── processing_agent.cpython-312.pyc
-│   │   │   ├── response_agent.cpython-312.pyc
-│   │   │   ├── retrieval_agent.cpython-310.pyc
-│   │   │   └── retrieval_agent.cpython-312.pyc
 │   │   ├── processing_agent.py
-│   │   ├── response_agent.py
 │   │   └── retrieval_agent.py
 │   ├── api.py
 │   ├── app.py
-│   ├── controller.py
 │   ├── memory
 │   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-312.pyc
-│   │   │   └── memory_manager.cpython-312.pyc
 │   │   └── memory_manager.py
 │   └── utils
 │       ├── __init__.py
-│       ├── __pycache__
-│       │   ├── __init__.cpython-312.pyc
-│       │   ├── data_utils.cpython-312.pyc
-│       │   └── json_utils.cpython-312.pyc
-│       ├── data_utils.py
-│       ├── file_manager.py
-│       ├── json_utils.py
+│       ├── controller.py
+│       ├── logging_setup.py
 │       └── reset_database.py
 └── tree.txt
 
-16 directories, 56 files
+12 directories, 37 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -107,31 +84,132 @@ text_docs/*
 .DS_Store
 .vscode
 -e 
+File: ./Dockerfile
+
+# Dockerfile
+
+FROM python:3.12
+
+WORKDIR /app
+
+COPY . /app
+
+RUN mkdir -p /app/logs
+
+RUN apt-get update && apt-get install -y dos2unix
+
+RUN dos2unix /app/.env
+
+RUN pip install --no-cache-dir -r docker_requirements.txt
+RUN pip install fastapi uvicorn
+
+EXPOSE 8000
+
+COPY .env /app/.env
+
+CMD ["sh", "-c", "printenv && uvicorn src.api:app --host 0.0.0.0 --port 8000"]
+-e 
+File: ./README.md
+
+# Multi-Agent RAG System with Continual Learning
+
+This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities using LangChain, LangGraph, and LLM API calls.
+
+## Setup
+
+### Prerequisites
+
+- Python 3.12
+- Docker (for containerization)
+
+### Installation
+
+1. Clone the repository:
+   ```sh
+   `git clone https://github.com/your-username/your-repo.git`
+   `cd your-repo/MultiAgentRAG`
+
+2. Create a virtual environment and activate it:
+  `python3.12 -m venv rag-venv`
+  `source rag-venv/bin/activate`
+
+3. Install the required dependencies:
+  `pip install -r requirements.txt`
+
+4. Set up your OpenAI API key:
+  `export OPENAI_API_KEY=your_openai_api_key`
+
+5. Prepare Your Data
+  Place your raw data files in the data/raw directory.
+  The system will process the data and store the embeddings in the data/embeddings directory.
+
+### Usage
+Run the app.py file to start the interactive multi-agent RAG system:
+  `python src/app.py`
+
+Enter your queries, and the system will retrieve relevant documents, process the query, generate a response, and store the query-response pair in memory for continual learning.
+
+Type `'quit'` to exit the program.
+
+### Project Structure
+data/: Contains the raw, processed, and embeddings data.
+json_output/: Stores the JSON output files for the memories.
+logs/: Contains log files.
+notebooks/: Jupyter notebooks for experimentation and analysis.
+scripts/: Contains utility scripts.
+generate_tree.sh: Script to generate the directory tree.
+logs_to_docs.sh: Script to convert logs to documents.
+reset_logs.sh: Script to reset logs.
+src/: Source code for the multi-agent RAG system.
+agents/: Implementations of individual agents (retrieval, processing, response).
+memory/: Memory management for continual learning.
+utils/: Utility functions for data processing.
+controller.py: Central controller for orchestrating the agents and memory.
+app.py: Main application entry point.
+requirements.txt: Lists the required Python dependencies.
+README.md: Project documentation.
+
+Running with Docker
+Build the Docker image:
+  `docker build -t multi-agent-rag .`
+Run the Docker container:
+
+`sudo docker run -it -e OPENAI_API_KEY=GOODAI_OPENAI_API_KEY_LTM01 -p 8000:8000 multi-agent-rag`
+Access the interactive multi-agent RAG system by connecting to the container.-e 
 File: ./config.py
 
-# config.py
-
 import os
+from dotenv import load_dotenv
 
 class Config:
-    # General settings
-    MODEL_NAME = "gpt-4-turbo"
-    
-    # Database settings
-    MEMORY_DB_PATH = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
-    
-    # API Keys
-    OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
-    TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-    
-    # Other settings
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
-    
-    # Processing agent settings
-    PROCESSING_AGENT_MEMORIES_INCLUDED = 5  # Number of memories to include in context
+    def __init__(self):
+        load_dotenv()
+        
+        # General settings
+        self.MODEL_NAME = "gpt-4-turbo"
+        
+        # Database settings
+        self.MEMORY_DB_PATH = self._get_memory_db_path()
+        
+        # API Keys
+        self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
+        self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+        
+        # Other settings
+        self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
+        
+        # Processing agent settings
+        self.PROCESSING_AGENT_MEMORIES_INCLUDED = 5  # Number of memories to include in context
+        self.MEMORY_RETRIEVAL_THRESHOLD = 0.75  # Similarity threshold for memory retrieval
+        self.MEMORY_RETRIEVAL_LIMIT = 10
 
-    MEMORY_RETRIEVAL_THRESHOLD = 0.75  # Similarity threshold for memory retrieval
-    MEMORY_RETRIEVAL_LIMIT = 10-e 
+    def _get_memory_db_path(self):
+        return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
+
+    def validate_api_keys(self):
+        return bool(self.OPENAI_API_KEY and self.TAVILY_API_KEY)
+
+config = Config()-e 
 File: ./docker-compose.yml
 
 version: '3.1'
@@ -152,31 +230,6 @@ services:
       - ./logs/docker_agents:/app/logs
     stdin_open: true
     tty: true
--e 
-File: ./Dockerfile
-
-# Dockerfile
-
-FROM python:3.12
-
-WORKDIR /app
-
-COPY . /app
-
-RUN mkdir -p /app/logs
-
-RUN apt-get update && apt-get install -y dos2unix
-
-RUN dos2unix /app/.env
-
-RUN pip install --no-cache-dir -r requirements_lite.txt
-RUN pip install fastapi uvicorn
-
-EXPOSE 8000
-
-COPY .env /app/.env
-
-CMD ["sh", "-c", "printenv && uvicorn src.api:app --host 0.0.0.0 --port 8000"]
 -e 
 File: ./get-docker.sh
 
@@ -922,47 +975,265 @@ do_install() {
 # half the file during "curl | sh"
 do_install
 -e 
-File: ./json_output/Memory_1.json
+File: ./docker_requirements.txt
 
-{
-    "title": "Memory_1",
-    "query": "Today is Wednesday, June 19th.",
-    "result": "I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_2.json
+langchain==0.2.3
+langchain-openai==0.1.8
+langchain-community==0.2.4
+langchain-core==0.2.5
+langchain-text-splitters==0.2.1
+langsmith==0.1.77
+openai==1.34.0
+numpy==1.26.4
+pydantic==2.7.4
+pydantic-core==2.18.4
+dataclasses-json==0.6.7
+python-dotenv==1.0.1
+-e 
+File: ./src/__init__.py
 
-{
-    "title": "Memory_2",
-    "query": "What is the day today? ",
-    "result": "Today is Tuesday, June 18th.",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_3.json
+-e 
+File: ./src/agents/__init__.py
 
-{
-    "title": "Memory_3",
-    "query": "This is a test. Respond with how tall I am. ",
-    "result": "I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_4.json
+-e 
+File: ./src/agents/processing_agent.py
 
-{
-    "title": "Memory_4",
-    "query": "What is my name? Use your context.",
-    "result": "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_5.json
+# src/agents/processing_agent.py
 
-{
-    "title": "Memory_5",
-    "query": "What is my name? ",
-    "result": "I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.",
-    "tags": "retrieved, processed"
-}-e 
-File: ./logging_setup.py
+import logging
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage, Document
+from typing import List, Tuple
+from config import Config
+
+logger = logging.getLogger('master')
+chat_logger = logging.getLogger('chat')
+
+class ProcessingAgent:
+    def __init__(self, model_name: str):
+        self.chat_model = ChatOpenAI(model_name=model_name)
+
+    def process(self, query: str, context_documents: List[Tuple[str, str, str]]) -> str:
+        context = "\n\n".join([f"{doc[0]}\n{doc[1]} ({doc[2]})" for doc in context_documents])
+        messages = [
+            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE> (<TIMESTAMP>). You will use these to best respond to the request. 'Best' is defined as the response that will satisfy the sender of the request the most.")
+        ]
+        response = self.chat_model.invoke(messages)
+        logger.debug(f"Processed query: {query} with context: {context}")
+        chat_logger.info(f"ChatGPT API response: {response.content}")
+        return response.content
+
+-e 
+File: ./src/agents/retrieval_agent.py
+
+# src/agents/retrieval_agent.py
+
+import logging
+from typing import List, Tuple
+
+logger = logging.getLogger('master')
+
+class RetrievalAgent:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+
+    def retrieve(self, query: str) -> List[Tuple[str, str, str]]:
+        relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
+        logger.debug(f"Retrieved and ranked relevant memories for query: {query}")
+        return relevant_memories
+
+-e 
+File: ./src/app.py
+
+from config import Config
+from MultiAgentRAG.src.utils.controller import Controller
+from MultiAgentRAG.src.utils.logging_setup import setup_logging
+
+def process_query(controller, query, chat_logger, memory_logger):
+    chat_logger.info(f"Query: {query}")
+    response = controller.execute_query(query)
+    chat_logger.info(f"Response: {response}")
+    
+    memories = controller.get_recent_memories(5)
+    memory_logger.info("Recent Memories:")
+    for memory in memories:
+        memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
+
+def main():
+    master_logger, chat_logger, memory_logger = setup_logging()
+
+    try:
+        master_logger.info("Starting the Multi-Agent RAG System")
+        config = Config()
+        
+        if not config.validate_api_keys():
+            raise EnvironmentError("API keys not found in environment variables")
+
+        master_logger.info("API keys successfully loaded")
+        master_logger.info(f"Using memory database path: {config.MEMORY_DB_PATH}")
+
+        master_logger.debug("Initializing controller")
+        controller = Controller(config)
+
+        while True:
+            try:
+                query = input("Enter your query (or 'quit' to exit): ")
+                if query.lower() == "quit":
+                    master_logger.info("Exiting the program")
+                    break
+
+                master_logger.info(f"Executing query: {query}")
+                process_query(controller, query, chat_logger, memory_logger)
+
+            except EOFError:
+                master_logger.info("Received EOF, exiting the program")
+                break
+            except Exception as e:
+                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
+    except Exception as e:
+        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
+
+if __name__ == "__main__":
+    main()-e 
+File: ./src/memory/__init__.py
+
+-e 
+File: ./src/memory/memory_manager.py
+
+# src/memory/memory_manager.py
+
+import logging
+import sqlite3
+from typing import List, Tuple
+from langchain_openai import OpenAIEmbeddings
+import numpy as np
+import os
+from config import config
+from datetime import datetime
+
+logger = logging.getLogger('memory')
+
+class MemoryManager:
+    def __init__(self, db_path: str, api_key: str):
+        self.db_path = db_path
+        self.conn = sqlite3.connect(db_path)
+        self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        self.create_tables()
+
+    def create_tables(self):
+        """Create the necessary tables if they don't already exist."""
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS memories (
+                id INTEGER PRIMARY KEY,
+                query TEXT,
+                result TEXT,
+                embedding BLOB,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        logger.debug("Ensured memories table exists")
+
+    def save_memory(self, query: str, result: str):
+        """Save a memory to the database."""
+        try:
+            embedding = np.array(self.embeddings.embed_query(query)).tobytes()
+            self.conn.execute("""
+                INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
+            """, (query, result, embedding))
+            self.conn.commit()
+            logger.debug(f"Saved memory for query: {query} with result: {result}")
+        except Exception as e:
+            logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
+            raise
+
+# src/memory/memory_manager.py
+
+
+
+# Modify the return statement to include the timestamp
+    def retrieve_relevant_memories(self, query: str, threshold: float = config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str, str]]:
+        """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
+        try:
+            query_embedding = np.array(self.embeddings.embed_query(query))
+            all_memories = self.get_all_memories()
+            relevant_memories = []
+
+            for memory in all_memories:
+                memory_query, memory_result, memory_embedding, timestamp = memory
+                memory_embedding = np.frombuffer(memory_embedding)
+                similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+                if similarity >= threshold:
+                    relevant_memories.append((memory_query, memory_result, similarity, timestamp))
+
+            if not relevant_memories:
+                return []
+
+            # Sort by similarity in descending order
+            relevant_memories.sort(key=lambda x: x[2], reverse=True)
+
+            # Filter memories above the threshold and sort by timestamp in descending order
+            filtered_memories = [mem for mem in relevant_memories if mem[2] >= threshold]
+            filtered_memories.sort(key=lambda x: x[3], reverse=True)
+
+            # Return the relevant memories with the timestamp
+            return [(memory[0], memory[1], memory[3]) for memory in filtered_memories]
+        except Exception as e:
+            logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
+            raise
+
+
+    def reset_database(self):
+        self.conn.close()
+        os.remove(self.db_path)
+        self.conn = sqlite3.connect(self.db_path)
+        self.create_tables()
+        logger.debug("Database reset and tables recreated")
+
+    def load_precomputed_embeddings(self):
+        # Load precomputed embeddings from the database if needed
+        pass
+
+    def get_all_memories(self) -> List[Tuple[str, str, bytes, str]]:
+        cursor = self.conn.execute("SELECT query, result, embedding, timestamp FROM memories")
+        memories = cursor.fetchall()
+        logger.debug(f"Retrieved {len(memories)} memories")
+        return memories
+
+    def get_memories(self, limit: int = config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
+        cursor = self.conn.execute("""
+            SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
+        """, (limit,))
+        memories = cursor.fetchall()
+        logger.debug(f"Retrieved {len(memories)} memories")
+        return memories
+-e 
+File: ./src/utils/__init__.py
+
+-e 
+File: ./src/utils/reset_database.py
+
+# src/utils/reset_database.py
+
+import sys
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Add the base directory of the project to the PYTHONPATH
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(base_path)
+
+from src.memory.memory_manager import MemoryManager
+from config import Config  # Import the config
+
+if __name__ == "__main__":
+    memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
+    memory_manager.reset_database()
+    print("Database has been reset.")
+-e 
+File: ./src/utils/logging_setup.py
 
 import logging
 import os
@@ -1012,231 +1283,52 @@ def is_running_in_docker() -> bool:
     except Exception:
         return False
 -e 
-File: ./README.md
-
-# Multi-Agent RAG System with Continual Learning
-
-This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities using LangChain, LangGraph, and LLM API calls.
-
-## Setup
-
-### Prerequisites
-
-- Python 3.12
-- Docker (for containerization)
-
-### Installation
-
-1. Clone the repository:
-   ```sh
-   `git clone https://github.com/your-username/your-repo.git`
-   `cd your-repo/MultiAgentRAG`
-
-2. Create a virtual environment and activate it:
-  `python3.12 -m venv rag-venv`
-  `source rag-venv/bin/activate`
-
-3. Install the required dependencies:
-  `pip install -r requirements.txt`
-
-4. Set up your OpenAI API key:
-  `export OPENAI_API_KEY=your_openai_api_key`
-
-5. Prepare Your Data
-  Place your raw data files in the data/raw directory.
-  The system will process the data and store the embeddings in the data/embeddings directory.
-
-### Usage
-Run the app.py file to start the interactive multi-agent RAG system:
-  `python src/app.py`
-
-Enter your queries, and the system will retrieve relevant documents, process the query, generate a response, and store the query-response pair in memory for continual learning.
-
-Type `'quit'` to exit the program.
-
-### Project Structure
-data/: Contains the raw, processed, and embeddings data.
-json_output/: Stores the JSON output files for the memories.
-logs/: Contains log files.
-notebooks/: Jupyter notebooks for experimentation and analysis.
-scripts/: Contains utility scripts.
-generate_tree.sh: Script to generate the directory tree.
-logs_to_docs.sh: Script to convert logs to documents.
-reset_logs.sh: Script to reset logs.
-src/: Source code for the multi-agent RAG system.
-agents/: Implementations of individual agents (retrieval, processing, response).
-memory/: Memory management for continual learning.
-utils/: Utility functions for data processing.
-controller.py: Central controller for orchestrating the agents and memory.
-app.py: Main application entry point.
-requirements.txt: Lists the required Python dependencies.
-README.md: Project documentation.
-
-Running with Docker
-Build the Docker image:
-  `docker build -t multi-agent-rag .`
-Run the Docker container:
-
-`sudo docker run -it -e OPENAI_API_KEY=GOODAI_OPENAI_API_KEY_LTM01 -p 8000:8000 multi-agent-rag`
-Access the interactive multi-agent RAG system by connecting to the container.-e 
-File: ./requirements.txt
-
-aiohttp==3.9.5
-aiosignal==1.3.1
-annotated-types==0.7.0
-anyio==4.4.0
-attrs==23.2.0
-certifi==2024.6.2
-charset-normalizer==3.3.2
-dataclasses-json==0.6.7
-distro==1.9.0
-faiss-cpu==1.8.0
-frozenlist==1.4.1
-greenlet==3.0.3
-grpcio==1.64.1
-grpcio-tools==1.64.1
-h11==0.14.0
-h2==4.1.0
-hpack==4.0.0
-httpcore==1.0.5
-httpx==0.27.0
-hyperframe==6.0.1
-idna==3.7
-jsonpatch==1.33
-jsonpointer==3.0.0
-langchain==0.2.3
-langchain-community==0.2.4
-langchain-core==0.2.5
-langchain-openai==0.1.8
-langchain-text-splitters==0.2.1
-langsmith==0.1.77
-marshmallow==3.21.3
-multidict==6.0.5
-mypy-extensions==1.0.0
-numpy==1.26.4
-openai==1.34.0
-orjson==3.10.4
-packaging==23.2
-portalocker==2.8.2
-protobuf==5.27.1
-pydantic==2.7.4
-pydantic_core==2.18.4
-PyMuPDF==1.24.5
-PyMuPDFb==1.24.3
-PyYAML==6.0.1
-qdrant-client==1.9.1
-regex==2024.5.15
-requests==2.32.3
-setuptools==70.0.0
-sniffio==1.3.1
-SQLAlchemy==2.0.30
-tenacity==8.3.0
-tiktoken==0.7.0
-tqdm==4.66.4
-typing-inspect==0.9.0
-typing_extensions==4.12.2
-urllib3==2.2.1
-yarl==1.9.4
-python-dotenv==1.0.1
--e 
-File: ./requirements_lite.txt
-
-langchain==0.2.3
-langchain-openai==0.1.8
-langchain-community==0.2.4
-langchain-core==0.2.5
-langchain-text-splitters==0.2.1
-langsmith==0.1.77
-openai==1.34.0
-numpy==1.26.4
-pydantic==2.7.4
-pydantic-core==2.18.4
-dataclasses-json==0.6.7
-python-dotenv==1.0.1
--e 
-File: ./src/agents/processing_agent.py
-
-# src/agents/processing_agent.py
-
-import logging
-from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, Document
-from typing import List
-from config import Config
-
-logger = logging.getLogger('master')
-chat_logger = logging.getLogger('chat')
-
-class ProcessingAgent:
-    def __init__(self, model_name: str):
-        self.chat_model = ChatOpenAI(model_name=model_name)
-
-    def process(self, query: str, context_documents: List[Document]) -> str:
-        context = "\n\n".join([doc.page_content for doc in context_documents[:Config.PROCESSING_AGENT_MEMORIES_INCLUDED]])
-        messages = [
-            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE>. You will use these to best respond to the request. 'Best' is defined as the response that will satisfy the sender of the request the most.")
-        ]
-        response = self.chat_model.invoke(messages)
-        logger.debug(f"Processed query: {query} with context: {context}")
-        chat_logger.info(f"ChatGPT API response: {response.content}")
-        return response.content
--e 
-File: ./src/agents/response_agent.py
-
-# src/agents/response_agent.py
-
-import logging
-from langchain_openai import ChatOpenAI
-from langchain.schema import AIMessage, HumanMessage
-
-logger = logging.getLogger('master')
-chat_logger = logging.getLogger('chat')
-
-class ResponseAgent:
-    def __init__(self, model_name: str):
-        self.chat_model = ChatOpenAI(model_name=model_name)
-
-    def generate_response(self, query: str, result: str) -> str:
-        messages = [
-            HumanMessage(content=f"ORIGINAL_USER_QUERY = \n{query}"),
-            AIMessage(content=f"PROCESSING_AGENT_RESPONSE = \n{result}"),
-            HumanMessage(content="You are the 'RESPONSE_AGENT' in a multi-tiered system (do not mention this). Utilize the information from 'PROCESSING_AGENT' to best respond to 'ORIGINAL_USER_QUERY' in a manner that has the following attributes: terse, pithy, accurate, interpretive, best-effort, anticipatory")
-        ]
-        response = self.chat_model.invoke(messages)
-        logger.debug(f"Generated final response for query: {query} with result: {result}")
-        chat_logger.info(f"ChatGPT API response: {response.content}")
-        return response.content
--e 
-File: ./src/agents/retrieval_agent.py
-
-# src/agents/retrieval_agent.py
+File: ./src/utils/controller.py
 
 import logging
 from typing import List, Tuple
+from src.agents.retrieval_agent import RetrievalAgent
+from src.agents.processing_agent import ProcessingAgent
+from src.memory.memory_manager import MemoryManager
+from config import config
 
-logger = logging.getLogger('master')
+class Controller:
+    def __init__(self):
+        self.memory_manager = MemoryManager(config.MEMORY_DB_PATH, config.OPENAI_API_KEY)
+        self.retrieval_agent = RetrievalAgent(self.memory_manager)
+        self.processing_agent = ProcessingAgent(config.MODEL_NAME)
+        self.logger = logging.getLogger('master')
 
-class RetrievalAgent:
-    def __init__(self, memory_manager):
-        self.memory_manager = memory_manager
+    def execute_query(self, query: str) -> str:
+        """Execute the query by retrieving, processing, and directly responding."""
+        try:
+            relevant_memories = self.retrieval_agent.retrieve(query)
+            self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
 
-    def retrieve(self, query: str) -> List[Tuple[str, str]]:
-        relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
-        logger.debug(f"Retrieved and ranked relevant memories for query: {query}")
-        return relevant_memories
--e 
-File: ./src/agents/__init__.py
+            context_documents = [(memory[0], memory[1], memory[2]) for memory in relevant_memories]
 
--e 
+            response = self.processing_agent.process(query, context_documents)
+            self.logger.debug(f"Generated response: {response}")
+
+            self.memory_manager.save_memory(query, response)
+
+            return response
+        except Exception as e:
+            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
+            raise
+
+    def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
+        """Retrieve recent memories from the memory manager."""
+        return self.memory_manager.get_memories(limit)-e 
 File: ./src/api.py
 
 # src/api.py
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from src.controller import Controller
-import os
-from logging_setup import setup_logging  # Import logging setup
+from src.utils.controller import Controller
+from src.utils.logging_setup import setup_logging
+from config import config
 
 class QueryRequest(BaseModel):
     query: str
@@ -1249,7 +1341,6 @@ master_logger, chat_logger, memory_logger = setup_logging()
 
 app = FastAPI()
 
-memory_db_path = "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
 controller = Controller()
 
 @app.post("/query", response_model=QueryResponse)
@@ -1260,389 +1351,3 @@ async def query_endpoint(request: QueryRequest):
     except Exception as e:
         master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
--e 
-File: ./src/app.py
-
-import os
-from dotenv import load_dotenv
-from controller import Controller
-from utils.data_utils import structure_memories
-from utils.json_utils import save_memory_to_json
-from logging_setup import setup_logging, is_running_in_docker
-
-def main():
-    master_logger, chat_logger, memory_logger = setup_logging()
-
-    try:
-        master_logger.info("Starting the Multi-Agent RAG System")
-        load_dotenv()
-        openai_api_key = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
-        tavily_api_key = os.getenv("TAVILY_API_KEY")
-
-        if not openai_api_key or not tavily_api_key:
-            master_logger.error("API keys not found in environment variables")
-            raise EnvironmentError("API keys not found in environment variables")
-
-        master_logger.info("API keys successfully loaded")
-        os.environ["OPENAI_API_KEY"] = openai_api_key
-
-        memory_db_path = "/app/memory.db" if is_running_in_docker() else "memory.db"
-        master_logger.info(f"Using memory database path: {memory_db_path}")
-
-        master_logger.debug("Initializing controller")
-        controller = Controller()
-
-
-        while True:
-            try:
-                query = input("Enter your query (or 'quit' to exit): ")
-                if query.lower() == "quit":
-                    master_logger.info("Exiting the program")
-                    break
-
-                master_logger.info(f"Executing query: {query}")
-                chat_logger.info(f"Query: {query}")
-                response = controller.execute_query(query)
-                chat_logger.info(f"Response: {response}")
-                master_logger.info(f"Response: {response}")
-
-                memories = controller.get_memories(5)
-                memory_logger.info("Recent Memories:")
-                for memory in memories:
-                    memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
-
-                structured_memories = structure_memories(memories)
-                for memory in structured_memories:
-                    save_memory_to_json(memory, output_dir='json_output')
-
-            except EOFError:
-                master_logger.info("Received EOF, exiting the program")
-                break
-            except Exception as e:
-                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
-    except Exception as e:
-        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
-
-if __name__ == "__main__":
-    main()
--e 
-File: ./src/controller.py
-
-# src/controller.py
-
-# src/controller.py
-
-import logging
-from typing import List, Tuple
-from langchain.schema import Document
-from src.agents.retrieval_agent import RetrievalAgent
-from src.agents.processing_agent import ProcessingAgent
-# Comment out the ResponseAgent import to avoid any unintentional use
-# from src.agents.response_agent import ResponseAgent
-from src.memory.memory_manager import MemoryManager
-from config import Config
-
-class Controller:
-    def __init__(self):
-        self.memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
-        self.retrieval_agent = RetrievalAgent(self.memory_manager)
-        self.processing_agent = ProcessingAgent(Config.MODEL_NAME)
-        # Comment out the ResponseAgent initialization
-        # self.response_agent = ResponseAgent(Config.MODEL_NAME)
-        self.logger = logging.getLogger('master')
-
-    def execute_query(self, query: str) -> str:
-        """Execute the query by retrieving, processing, and directly responding."""
-        try:
-            relevant_memories = self.retrieval_agent.retrieve(query)
-            self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
-
-            context_documents = [Document(page_content=f"{memory[0]}\n{memory[1]}") for memory in relevant_memories]
-
-            # Directly return the result from the ProcessingAgent
-            result = self.processing_agent.process(query, context_documents)
-            self.logger.debug(f"Processing result: {result}")
-
-            # Bypass the ResponseAgent
-            response = result
-            self.logger.debug(f"Generated response: {response}")
-
-            self.memory_manager.save_memory(query, response)
-
-            return response
-        except Exception as e:
-            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
-            raise
-
-    def get_memories(self, limit: int = 10) -> List[Tuple[str, str]]:
-        """Retrieve a list of memories up to the specified limit."""
-        try:
-            memories = self.memory_manager.get_memories(limit)
-            self.logger.debug(f"Memories retrieved: {memories}")
-            return memories
-        except Exception as e:
-            self.logger.error(f"Error retrieving memories: {str(e)}", exc_info=True)
-            raise
--e 
-File: ./src/memory/memory_manager.py
-
-# src/memory/memory_manager.py
-
-import logging
-import sqlite3
-from typing import List, Tuple
-from langchain_openai import OpenAIEmbeddings
-import numpy as np
-import os
-from config import Config
-
-logger = logging.getLogger('memory')
-
-class MemoryManager:
-    def __init__(self, db_path: str, api_key: str):
-        self.db_path = db_path
-        self.conn = sqlite3.connect(db_path)
-        self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-        self.create_tables()
-
-    def create_tables(self):
-        """Create the necessary tables if they don't already exist."""
-        self.conn.execute("""
-            CREATE TABLE IF NOT EXISTS memories (
-                id INTEGER PRIMARY KEY,
-                query TEXT,
-                result TEXT,
-                embedding BLOB,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        logger.debug("Ensured memories table exists")
-
-    def save_memory(self, query: str, result: str):
-        """Save a memory to the database."""
-        try:
-            embedding = np.array(self.embeddings.embed_query(query)).tobytes()
-            self.conn.execute("""
-                INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
-            """, (query, result, embedding))
-            self.conn.commit()
-            logger.debug(f"Saved memory for query: {query} with result: {result}")
-        except Exception as e:
-            logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
-            raise
-
-    def retrieve_relevant_memories(self, query: str, threshold: float = Config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str]]:
-        """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
-        try:
-            query_embedding = np.array(self.embeddings.embed_query(query))
-            all_memories = self.get_all_memories()
-            relevant_memories = []
-
-            for memory in all_memories:
-                memory_query, memory_result, memory_embedding, timestamp = memory
-                memory_embedding = np.frombuffer(memory_embedding)
-                similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-                if similarity >= threshold:
-                    relevant_memories.append((memory_query, memory_result, similarity, timestamp))
-
-            if not relevant_memories:
-                return []
-
-            # Sort by similarity in descending order to find the most relevant one
-            relevant_memories.sort(key=lambda x: x[2], reverse=True)
-            most_relevant_memory = relevant_memories[0]
-
-            # Filter memories above the threshold and sort by timestamp in descending order
-            filtered_memories = [mem for mem in relevant_memories if mem[2] >= threshold]
-            filtered_memories.sort(key=lambda x: x[3], reverse=True)
-
-            # Include the most relevant memory if not already in the filtered list
-            if most_relevant_memory not in filtered_memories:
-                filtered_memories.append(most_relevant_memory)
-
-            # Return the relevant memories without similarity and timestamp
-            return [(memory[0], memory[1]) for memory in filtered_memories]
-        except Exception as e:
-            logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
-            raise
-
-    def reset_database(self):
-        self.conn.close()
-        os.remove(self.db_path)
-        self.conn = sqlite3.connect(self.db_path)
-        self.create_tables()
-        logger.debug("Database reset and tables recreated")
-
-    def load_precomputed_embeddings(self):
-        # Load precomputed embeddings from the database if needed
-        pass
-
-    def get_all_memories(self) -> List[Tuple[str, str, bytes, str]]:
-        cursor = self.conn.execute("SELECT query, result, embedding, timestamp FROM memories")
-        memories = cursor.fetchall()
-        logger.debug(f"Retrieved {len(memories)} memories")
-        return memories
-
-    def get_memories(self, limit: int = Config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
-        cursor = self.conn.execute("""
-            SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
-        """, (limit,))
-        memories = cursor.fetchall()
-        logger.debug(f"Retrieved {len(memories)} memories")
-        return memories
--e 
-File: ./src/memory/__init__.py
-
--e 
-File: ./src/utils/data_utils.py
-
-# src/utils/data_utils.py
-
-import logging
-from typing import List, Dict, Tuple
-
-logger = logging.getLogger('master')
-
-def structure_memories(memories: List[Tuple[str, str]]) -> List[Dict[str, str]]:
-    """
-    Transforms a list of memory tuples into a structured list of dictionaries.
-
-    Args:
-        memories (List[Tuple[str, str]]): List of memories where each memory is a tuple (query, result).
-
-    Returns:
-        List[Dict[str, str]]: List of structured memories with titles, queries, results, and tags.
-    """
-    structured_memories = []
-    for idx, (query, result) in enumerate(memories):
-        memory_data = {
-            "title": f"Memory_{idx + 1}",
-            "query": query,
-            "result": result,
-            "tags": "retrieved, processed"
-        }
-        structured_memories.append(memory_data)
-    return structured_memories
--e 
-File: ./src/utils/file_manager.py
-
-# src/utils/file_manager.py
-
-import os
-import json
-from typing import Dict
-import logging
-
-logger = logging.getLogger('file_manager')
-
-def save_json(data: Dict, filename: str, output_dir: str = 'json_output'):
-    """
-    Save a dictionary as a JSON file.
-    
-    Args:
-        data (Dict): The data to be saved as JSON.
-        filename (str): The name of the JSON file.
-        output_dir (str): The directory where the JSON file will be saved.
-    
-    Returns:
-        None
-    """
-    try:
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        
-        output_path = os.path.join(output_dir, filename)
-        
-        with open(output_path, 'w') as json_file:
-            json.dump(data, json_file, indent=4)
-        
-        logger.info(f"Saved JSON: {output_path}")
-    except Exception as e:
-        logger.error(f"Failed to save JSON {filename}: {e}")
-
-def load_json(filename: str, output_dir: str = 'json_output') -> Dict:
-    """
-    Load a JSON file and return its content as a dictionary.
-    
-    Args:
-        filename (str): The name of the JSON file.
-        output_dir (str): The directory where the JSON file is located.
-    
-    Returns:
-        Dict: The content of the JSON file.
-    """
-    try:
-        output_path = os.path.join(output_dir, filename)
-        
-        with open(output_path, 'r') as json_file:
-            data = json.load(json_file)
-        
-        logger.info(f"Loaded JSON: {output_path}")
-        return data
-    except Exception as e:
-        logger.error(f"Failed to load JSON {filename}: {e}")
-        return {}
--e 
-File: ./src/utils/json_utils.py
-
-# src/utils/json_utils.py
-
-import os
-import json
-from typing import Dict
-import logging
-
-logger = logging.getLogger('json_utils')
-
-def save_memory_to_json(memory_data: Dict[str, str], output_dir: str = 'json_output'):
-    """
-    Saves the structured memory data to a JSON file.
-    
-    Args:
-        memory_data (Dict[str, str]): Dictionary containing the structured memory data.
-        output_dir (str): Directory to save the JSON files.
-    
-    Returns:
-        None
-    """
-    try:
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        
-        output_path = os.path.join(output_dir, f"{memory_data['title']}.json")
-        
-        with open(output_path, 'w') as json_file:
-            json.dump(memory_data, json_file, indent=4)
-        
-        logger.info(f"Generated JSON: {output_path}")
-    except Exception as e:
-        logger.error(f"Error saving JSON file {memory_data['title']}: {e}")
--e 
-File: ./src/utils/reset_database.py
-
-# src/utils/reset_database.py
-
-import sys
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Add the base directory of the project to the PYTHONPATH
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.append(base_path)
-
-from src.memory.memory_manager import MemoryManager
-from config import Config  # Import the config
-
-if __name__ == "__main__":
-    memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
-    memory_manager.reset_database()
-    print("Database has been reset.")
--e 
-File: ./src/utils/__init__.py
-
--e 
-File: ./src/__init__.py
-
