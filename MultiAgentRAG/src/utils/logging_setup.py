@@ -26,7 +26,7 @@ def setup_logging():
     chat_logger = logging.getLogger('chat')
     chat_logger.setLevel(logging.DEBUG)
     chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
-    chat_file_handler.setFormatter(log_formatter)
+    chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
     chat_logger.addHandler(chat_file_handler)
 
     memory_logger = logging.getLogger('memory')
@@ -39,9 +39,4 @@ def setup_logging():
     return master_logger, chat_logger, memory_logger
 
 def is_running_in_docker() -> bool:
-    """Check if the code is running inside a Docker container."""
-    try:
-        with open('/proc/1/cgroup', 'rt') as f:
-            return 'docker' in f.read()
-    except Exception:
-        return False
+    return os.path.exists('/.dockerenv')
