@@ -6,6 +6,14 @@
 ├── docker_requirements.txt
 ├── get-docker.sh
 ├── logs
+│   ├── 20240625_132650_87ae63632141
+│   │   ├── chat.log
+│   │   ├── master.log
+│   │   └── memory.log
+│   ├── 20240625_133321_340a1eb1c431
+│   │   ├── chat.log
+│   │   ├── master.log
+│   │   └── memory.log
 │   └── docker_agents
 │       ├── 20240624_114855_d97b26161c54
 │       │   ├── chat.log
@@ -35,6 +43,7 @@
 │   ├── __init__.py
 │   ├── agents
 │   │   ├── __init__.py
+│   │   ├── agent.py
 │   │   ├── processing_agent.py
 │   │   └── retrieval_agent.py
 │   ├── api.py
@@ -49,7 +58,7 @@
 │       └── reset_database.py
 └── tree.txt
 
-12 directories, 37 files
+14 directories, 44 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -86,8 +95,6 @@ text_docs/*
 -e 
 File: ./Dockerfile
 
-# Dockerfile
-
 FROM python:3.12
 
 WORKDIR /app
@@ -96,19 +103,15 @@ COPY . /app
 
 RUN mkdir -p /app/logs
 
-RUN apt-get update && apt-get install -y dos2unix
-
-RUN dos2unix /app/.env
-
 RUN pip install --no-cache-dir -r docker_requirements.txt
 RUN pip install fastapi uvicorn
 
 EXPOSE 8000
 
-COPY .env /app/.env
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["sh", "-c", "printenv && uvicorn src.api:app --host 0.0.0.0 --port 8000"]
--e 
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
 File: ./README.md
 
 # Multi-Agent RAG System with Continual Learning
@@ -212,25 +215,21 @@ class Config:
 config = Config()-e 
 File: ./docker-compose.yml
 
-version: '3.1'
+version: '3.8'
 
 services:
   multi-agent-rag:
     build: .
     ports:
-      - "8080:8000"
+      - "8080:8000"  # Map container port 8000 to host port 8080
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
-      - LOG_LEVEL=${LOG_LEVEL}
-    env_file:
-      - .env
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       - ./memory.db:/app/memory.db
-      - ./logs/docker_agents:/app/logs
-    stdin_open: true
-    tty: true
--e 
+      - ./logs:/app/logs
+    command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
 File: ./get-docker.sh
 
 #!/bin/sh
@@ -989,6 +988,7 @@ pydantic==2.7.4
 pydantic-core==2.18.4
 dataclasses-json==0.6.7
 python-dotenv==1.0.1
+aiosqlite
 -e 
 File: ./src/__init__.py
 
@@ -1043,6 +1043,35 @@ class RetrievalAgent:
         return relevant_memories
 
 -e 
+File: ./src/agents/agent.py
+
+import logging
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage
+from typing import List, Tuple
+from config import config
+
+logger = logging.getLogger('master')
+chat_logger = logging.getLogger('chat')
+
+class Agent:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+        self.chat_model = ChatOpenAI(model_name=config.MODEL_NAME)
+
+    async def process_query(self, query: str) -> str:
+        relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
+        context = "\n\n".join([f"{doc[0]}\n{doc[1]} ({doc[2]})" for doc in relevant_memories])
+        
+        messages = [
+            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE> (<TIMESTAMP>). Use these to best respond to the request.")
+        ]
+        
+        response = await self.chat_model.ainvoke(messages)
+        logger.debug(f"Processed query: {query} with context: {context}")
+        chat_logger.info(f"ChatGPT API response: {response.content}")
+        
+        return response.content-e 
 File: ./src/app.py
 
 from config import Config
@@ -1100,62 +1129,51 @@ File: ./src/memory/__init__.py
 -e 
 File: ./src/memory/memory_manager.py
 
-# src/memory/memory_manager.py
-
 import logging
-import sqlite3
+import aiosqlite
 from typing import List, Tuple
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
-import os
 from config import config
-from datetime import datetime
 
 logger = logging.getLogger('memory')
 
 class MemoryManager:
     def __init__(self, db_path: str, api_key: str):
         self.db_path = db_path
-        self.conn = sqlite3.connect(db_path)
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-        self.create_tables()
 
-    def create_tables(self):
-        """Create the necessary tables if they don't already exist."""
-        self.conn.execute("""
-            CREATE TABLE IF NOT EXISTS memories (
-                id INTEGER PRIMARY KEY,
-                query TEXT,
-                result TEXT,
-                embedding BLOB,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
+    async def create_tables(self):
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS memories (
+                    id INTEGER PRIMARY KEY,
+                    query TEXT,
+                    result TEXT,
+                    embedding BLOB,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            await db.commit()
         logger.debug("Ensured memories table exists")
 
-    def save_memory(self, query: str, result: str):
-        """Save a memory to the database."""
+    async def save_memory(self, query: str, result: str):
         try:
-            embedding = np.array(self.embeddings.embed_query(query)).tobytes()
-            self.conn.execute("""
-                INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
-            """, (query, result, embedding))
-            self.conn.commit()
+            embedding = np.array(await self.embeddings.aembed_query(query)).tobytes()
+            async with aiosqlite.connect(self.db_path) as db:
+                await db.execute("""
+                    INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
+                """, (query, result, embedding))
+                await db.commit()
             logger.debug(f"Saved memory for query: {query} with result: {result}")
         except Exception as e:
             logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
             raise
 
-# src/memory/memory_manager.py
-
-
-
-# Modify the return statement to include the timestamp
-    def retrieve_relevant_memories(self, query: str, threshold: float = config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str, str]]:
-        """Retrieve memories relevant to the query based on a similarity threshold, sorted by timestamp."""
+    async def retrieve_relevant_memories(self, query: str, threshold: float = config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str, str]]:
         try:
-            query_embedding = np.array(self.embeddings.embed_query(query))
-            all_memories = self.get_all_memories()
+            query_embedding = np.array(await self.embeddings.aembed_query(query))
+            all_memories = await self.get_all_memories()
             relevant_memories = []
 
             for memory in all_memories:
@@ -1168,45 +1186,27 @@ class MemoryManager:
             if not relevant_memories:
                 return []
 
-            # Sort by similarity in descending order
-            relevant_memories.sort(key=lambda x: x[2], reverse=True)
-
-            # Filter memories above the threshold and sort by timestamp in descending order
-            filtered_memories = [mem for mem in relevant_memories if mem[2] >= threshold]
-            filtered_memories.sort(key=lambda x: x[3], reverse=True)
-
-            # Return the relevant memories with the timestamp
-            return [(memory[0], memory[1], memory[3]) for memory in filtered_memories]
+            relevant_memories.sort(key=lambda x: (x[2], x[3]), reverse=True)
+            return [(memory[0], memory[1], memory[3]) for memory in relevant_memories[:config.MEMORY_RETRIEVAL_LIMIT]]
         except Exception as e:
             logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
             raise
 
-
-    def reset_database(self):
-        self.conn.close()
-        os.remove(self.db_path)
-        self.conn = sqlite3.connect(self.db_path)
-        self.create_tables()
-        logger.debug("Database reset and tables recreated")
-
-    def load_precomputed_embeddings(self):
-        # Load precomputed embeddings from the database if needed
-        pass
-
-    def get_all_memories(self) -> List[Tuple[str, str, bytes, str]]:
-        cursor = self.conn.execute("SELECT query, result, embedding, timestamp FROM memories")
-        memories = cursor.fetchall()
+    async def get_all_memories(self) -> List[Tuple[str, str, bytes, str]]:
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute("SELECT query, result, embedding, timestamp FROM memories") as cursor:
+                memories = await cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
         return memories
 
-    def get_memories(self, limit: int = config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
-        cursor = self.conn.execute("""
-            SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
-        """, (limit,))
-        memories = cursor.fetchall()
+    async def get_memories(self, limit: int = config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute("""
+                SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
+            """, (limit,)) as cursor:
+                memories = await cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
-        return memories
--e 
+        return memories-e 
 File: ./src/utils/__init__.py
 
 -e 
@@ -1263,7 +1263,7 @@ def setup_logging():
     chat_logger = logging.getLogger('chat')
     chat_logger.setLevel(logging.DEBUG)
     chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
-    chat_file_handler.setFormatter(log_formatter)
+    chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
     chat_logger.addHandler(chat_file_handler)
 
     memory_logger = logging.getLogger('memory')
@@ -1276,55 +1276,37 @@ def setup_logging():
     return master_logger, chat_logger, memory_logger
 
 def is_running_in_docker() -> bool:
-    """Check if the code is running inside a Docker container."""
-    try:
-        with open('/proc/1/cgroup', 'rt') as f:
-            return 'docker' in f.read()
-    except Exception:
-        return False
--e 
+    return os.path.exists('/.dockerenv')-e 
 File: ./src/utils/controller.py
 
 import logging
 from typing import List, Tuple
-from src.agents.retrieval_agent import RetrievalAgent
-from src.agents.processing_agent import ProcessingAgent
+from src.agents.agent import Agent
 from src.memory.memory_manager import MemoryManager
 from config import config
 
 class Controller:
     def __init__(self):
         self.memory_manager = MemoryManager(config.MEMORY_DB_PATH, config.OPENAI_API_KEY)
-        self.retrieval_agent = RetrievalAgent(self.memory_manager)
-        self.processing_agent = ProcessingAgent(config.MODEL_NAME)
+        self.agent = Agent(self.memory_manager)
         self.logger = logging.getLogger('master')
 
-    def execute_query(self, query: str) -> str:
-        """Execute the query by retrieving, processing, and directly responding."""
+    async def execute_query(self, query: str) -> str:
         try:
-            relevant_memories = self.retrieval_agent.retrieve(query)
-            self.logger.debug(f"Retrieved relevant memories: {relevant_memories}")
-
-            context_documents = [(memory[0], memory[1], memory[2]) for memory in relevant_memories]
-
-            response = self.processing_agent.process(query, context_documents)
+            response = await self.agent.process_query(query)
             self.logger.debug(f"Generated response: {response}")
-
-            self.memory_manager.save_memory(query, response)
-
+            await self.memory_manager.save_memory(query, response)
             return response
         except Exception as e:
             self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
             raise
 
-    def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
-        """Retrieve recent memories from the memory manager."""
-        return self.memory_manager.get_memories(limit)-e 
+    async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
+        return await self.memory_manager.get_memories(limit)-e 
 File: ./src/api.py
 
-# src/api.py
-
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from src.utils.controller import Controller
 from src.utils.logging_setup import setup_logging
@@ -1346,8 +1328,30 @@ controller = Controller()
 @app.post("/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):
     try:
-        response = controller.execute_query(request.query)
+        response = await controller.execute_query(request.query)
         return QueryResponse(response=response)
     except Exception as e:
         master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    master_logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred. Please try again later."}
+    )
+
+@app.on_event("startup")
+async def startup_event():
+    master_logger.info("Starting up the API server")
+    # Initialize any resources here, if needed
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    master_logger.info("Shutting down the API server")
+    # Clean up any resources here, if needed
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}

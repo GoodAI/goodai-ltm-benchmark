@@ -4,12 +4,25 @@ services:
   multi-agent-rag:
     build: .
     ports:
-      - "8080:8000"  # Map container port 8000 to host port 8080
+      - "8080:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - ./memory.db:/app/memory.db
+      - ./data:/app/data
       - ./logs:/app/logs
     command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  multi-agent-rag-cli:
+    build: .
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["python", "-m", "src.cli"]
+    stdin_open: true
+    tty: true
