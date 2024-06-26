@@ -78,24 +78,29 @@ def ensure_context_len(
     if model.startswith("claude"):
         context_tokens *= claude_adjust_factor
 
+    if context_tokens + response_len < max_len:
+        return sys_prompt + context, context_tokens
+
     reversed_context = list(reversed(context))
 
     # Latest user's message is always added (there should always be one)
     messages.append(reversed_context.pop(0))
+
+    new_context_tokens = count_tokens_for_model(model=model, context=sys_prompt)
 
     # Take messages as pairs and reverse them for the check
     for message_pair in zip(reversed_context[::2], reversed_context[1::2]):
         message_tokens = count_tokens_for_model(model=model, context=list(reversed(message_pair)))
         if model.startswith("claude"):
             message_tokens *= claude_adjust_factor
-        if context_tokens + message_tokens + response_len > max_len:
+        if new_context_tokens + message_tokens + response_len > max_len:
             break
         messages.extend(message_pair)
-        context_tokens += message_tokens
+        new_context_tokens += message_tokens
     messages.reverse()
     context = sys_prompt + messages
     # assert len(context) > 1, f"There are messages missing in the context:\n\n{context}"
-    return context, context_tokens
+    return context, new_context_tokens
 
 
 def ask_llm(
