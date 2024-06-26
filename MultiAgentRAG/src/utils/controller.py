@@ -6,9 +6,15 @@ from config import config
 
 class Controller:
     def __init__(self):
-        self.memory_manager = MemoryManager(config.MEMORY_DB_PATH, config.OPENAI_API_KEY)
-        self.agent = Agent(self.memory_manager)
         self.logger = logging.getLogger('master')
+        self.db_logger = logging.getLogger('database')
+        self.memory_manager = None
+        self.agent = None
+
+    async def initialize(self):
+        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
+        await self.memory_manager.initialize()
+        self.agent = Agent(self.memory_manager)
 
     async def execute_query(self, query: str) -> str:
         try:

@@ -1,19 +1,25 @@
+import asyncio
 from config import Config
 from MultiAgentRAG.src.utils.controller import Controller
 from MultiAgentRAG.src.utils.logging_setup import setup_logging
+import logging
 
-def process_query(controller, query, chat_logger, memory_logger):
+async def process_query(controller, query, chat_logger, memory_logger):
     chat_logger.info(f"Query: {query}")
-    response = controller.execute_query(query)
+    response = await controller.execute_query(query)
     chat_logger.info(f"Response: {response}")
     
-    memories = controller.get_recent_memories(5)
+    memories = await controller.get_recent_memories(5)
     memory_logger.info("Recent Memories:")
     for memory in memories:
         memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
 
-def main():
+async def main():
+    # Initialize logging
     master_logger, chat_logger, memory_logger = setup_logging()
+
+    # Set the log level for the memory logger
+    memory_logger.setLevel(logging.DEBUG)
 
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
@@ -36,7 +42,7 @@ def main():
                     break
 
                 master_logger.info(f"Executing query: {query}")
-                process_query(controller, query, chat_logger, memory_logger)
+                await process_query(controller, query, chat_logger, memory_logger)
 
             except EOFError:
                 master_logger.info("Received EOF, exiting the program")
@@ -47,4 +53,4 @@ def main():
         master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -35,8 +35,14 @@ def setup_logging():
     memory_file_handler.setFormatter(log_formatter)
     memory_logger.addHandler(memory_file_handler)
 
+    database_logger = logging.getLogger('database')
+    database_logger.setLevel(logging.DEBUG)
+    database_file_handler = logging.FileHandler(os.path.join(log_directory, 'database.log'))
+    database_file_handler.setFormatter(log_formatter)
+    database_logger.addHandler(database_file_handler)
+
     master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
-    return master_logger, chat_logger, memory_logger
+    return master_logger, chat_logger, memory_logger, database_logger
 
 def is_running_in_docker() -> bool:
     return os.path.exists('/.dockerenv')

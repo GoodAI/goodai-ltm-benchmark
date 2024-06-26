@@ -6,7 +6,7 @@ class Config:
         load_dotenv()
         
         # General settings
-        self.MODEL_NAME = "gpt-4-turbo"
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4-turbo")
         
         # Database settings
         self.MEMORY_DB_PATH = self._get_memory_db_path()
@@ -19,9 +19,9 @@ class Config:
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
         
         # Processing agent settings
-        self.PROCESSING_AGENT_MEMORIES_INCLUDED = 5  # Number of memories to include in context
-        self.MEMORY_RETRIEVAL_THRESHOLD = 0.75  # Similarity threshold for memory retrieval
-        self.MEMORY_RETRIEVAL_LIMIT = 10
+        self.PROCESSING_AGENT_MEMORIES_INCLUDED = int(os.getenv("PROCESSING_AGENT_MEMORIES_INCLUDED", "5"))
+        self.MEMORY_RETRIEVAL_THRESHOLD = float(os.getenv("MEMORY_RETRIEVAL_THRESHOLD", "0.75"))
+        self.MEMORY_RETRIEVAL_LIMIT = int(os.getenv("MEMORY_RETRIEVAL_LIMIT", "10"))
 
     def _get_memory_db_path(self):
         return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"

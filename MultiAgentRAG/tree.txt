@@ -1,36 +1,15 @@
 .
 ├── Dockerfile
-├── README.md
 ├── config.py
+├── data
+│   └── master.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
+├── docs
+│   ├── README.md
+│   └── database_structure.md
 ├── get-docker.sh
 ├── logs
-│   ├── 20240625_132650_87ae63632141
-│   │   ├── chat.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240625_133321_340a1eb1c431
-│   │   ├── chat.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   └── docker_agents
-│       ├── 20240624_114855_d97b26161c54
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240625_101648_0df6cf6d034c
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240625_102014_2f29d94ee1bc
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       └── 20240625_115037_518d6b26924e
-│           ├── chat.log
-│           ├── master.log
-│           └── memory.log
 ├── memory.db
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
@@ -38,27 +17,34 @@
 │   ├── _docker_reset.sh
 │   ├── generate_tree.sh
 │   ├── logs_to_docs.sh
+│   ├── manage_docker.sh
 │   └── reset_logs.sh
 ├── src
 │   ├── __init__.py
+│   ├── __pycache__
+│   │   └── __init__.cpython-310.pyc
 │   ├── agents
 │   │   ├── __init__.py
-│   │   ├── agent.py
-│   │   ├── processing_agent.py
-│   │   └── retrieval_agent.py
+│   │   └── agent.py
 │   ├── api.py
 │   ├── app.py
+│   ├── cli.py
 │   ├── memory
 │   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   └── memory_manager.cpython-310.pyc
 │   │   └── memory_manager.py
 │   └── utils
 │       ├── __init__.py
 │       ├── controller.py
+│       ├── enhanced_logging.py
 │       ├── logging_setup.py
+│       ├── memory_analysis.py
 │       └── reset_database.py
 └── tree.txt
 
-14 directories, 44 files
+11 directories, 33 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -97,12 +83,24 @@ File: ./Dockerfile
 
 FROM python:3.12
 
+# Create a non-root user
+RUN useradd -m appuser
+
 WORKDIR /app
 
 COPY . /app
 
-RUN mkdir -p /app/logs
+RUN mkdir -p /app/logs /app/data
+RUN chown -R appuser:appuser /app
 
+# Switch to non-root user
+USER appuser
+
+# Create and activate virtual environment
+RUN python -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
+
+# Install dependencies in virtual environment
 RUN pip install --no-cache-dir -r docker_requirements.txt
 RUN pip install fastapi uvicorn
 
@@ -111,74 +109,10 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
-File: ./README.md
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
 
-# Multi-Agent RAG System with Continual Learning
-
-This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities using LangChain, LangGraph, and LLM API calls.
-
-## Setup
-
-### Prerequisites
-
-- Python 3.12
-- Docker (for containerization)
-
-### Installation
-
-1. Clone the repository:
-   ```sh
-   `git clone https://github.com/your-username/your-repo.git`
-   `cd your-repo/MultiAgentRAG`
-
-2. Create a virtual environment and activate it:
-  `python3.12 -m venv rag-venv`
-  `source rag-venv/bin/activate`
-
-3. Install the required dependencies:
-  `pip install -r requirements.txt`
-
-4. Set up your OpenAI API key:
-  `export OPENAI_API_KEY=your_openai_api_key`
-
-5. Prepare Your Data
-  Place your raw data files in the data/raw directory.
-  The system will process the data and store the embeddings in the data/embeddings directory.
-
-### Usage
-Run the app.py file to start the interactive multi-agent RAG system:
-  `python src/app.py`
-
-Enter your queries, and the system will retrieve relevant documents, process the query, generate a response, and store the query-response pair in memory for continual learning.
-
-Type `'quit'` to exit the program.
-
-### Project Structure
-data/: Contains the raw, processed, and embeddings data.
-json_output/: Stores the JSON output files for the memories.
-logs/: Contains log files.
-notebooks/: Jupyter notebooks for experimentation and analysis.
-scripts/: Contains utility scripts.
-generate_tree.sh: Script to generate the directory tree.
-logs_to_docs.sh: Script to convert logs to documents.
-reset_logs.sh: Script to reset logs.
-src/: Source code for the multi-agent RAG system.
-agents/: Implementations of individual agents (retrieval, processing, response).
-memory/: Memory management for continual learning.
-utils/: Utility functions for data processing.
-controller.py: Central controller for orchestrating the agents and memory.
-app.py: Main application entry point.
-requirements.txt: Lists the required Python dependencies.
-README.md: Project documentation.
-
-Running with Docker
-Build the Docker image:
-  `docker build -t multi-agent-rag .`
-Run the Docker container:
-
-`sudo docker run -it -e OPENAI_API_KEY=GOODAI_OPENAI_API_KEY_LTM01 -p 8000:8000 multi-agent-rag`
-Access the interactive multi-agent RAG system by connecting to the container.-e 
+# Add an additional entry point for CLI
+ENTRYPOINT ["python", "-m", "src.cli"]-e 
 File: ./config.py
 
 import os
@@ -189,7 +123,7 @@ class Config:
         load_dotenv()
         
         # General settings
-        self.MODEL_NAME = "gpt-4-turbo"
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4-turbo")
         
         # Database settings
         self.MEMORY_DB_PATH = self._get_memory_db_path()
@@ -202,9 +136,9 @@ class Config:
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
         
         # Processing agent settings
-        self.PROCESSING_AGENT_MEMORIES_INCLUDED = 5  # Number of memories to include in context
-        self.MEMORY_RETRIEVAL_THRESHOLD = 0.75  # Similarity threshold for memory retrieval
-        self.MEMORY_RETRIEVAL_LIMIT = 10
+        self.PROCESSING_AGENT_MEMORIES_INCLUDED = int(os.getenv("PROCESSING_AGENT_MEMORIES_INCLUDED", "5"))
+        self.MEMORY_RETRIEVAL_THRESHOLD = float(os.getenv("MEMORY_RETRIEVAL_THRESHOLD", "0.75"))
+        self.MEMORY_RETRIEVAL_LIMIT = int(os.getenv("MEMORY_RETRIEVAL_LIMIT", "10"))
 
     def _get_memory_db_path(self):
         return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
@@ -217,19 +151,45 @@ File: ./docker-compose.yml
 
 version: '3.8'
 
+x-build-args: &build-args
+  DOCKER_BUILDKIT: 1
+
 services:
   multi-agent-rag:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        <<: *build-args
+    image: multi-agent-rag
     ports:
-      - "8080:8000"  # Map container port 8000 to host port 8080
+      - "8080:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - ./memory.db:/app/memory.db
+      - ./data:/app/data
       - ./logs:/app/logs
-    command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
+    command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  multi-agent-rag-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        <<: *build-args
+    image: multi-agent-rag
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["python", "-m", "src.cli"]
+    stdin_open: true
+    tty: true-e 
 File: ./get-docker.sh
 
 #!/bin/sh
@@ -996,53 +956,6 @@ File: ./src/__init__.py
 File: ./src/agents/__init__.py
 
 -e 
-File: ./src/agents/processing_agent.py
-
-# src/agents/processing_agent.py
-
-import logging
-from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, Document
-from typing import List, Tuple
-from config import Config
-
-logger = logging.getLogger('master')
-chat_logger = logging.getLogger('chat')
-
-class ProcessingAgent:
-    def __init__(self, model_name: str):
-        self.chat_model = ChatOpenAI(model_name=model_name)
-
-    def process(self, query: str, context_documents: List[Tuple[str, str, str]]) -> str:
-        context = "\n\n".join([f"{doc[0]}\n{doc[1]} ({doc[2]})" for doc in context_documents])
-        messages = [
-            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE> (<TIMESTAMP>). You will use these to best respond to the request. 'Best' is defined as the response that will satisfy the sender of the request the most.")
-        ]
-        response = self.chat_model.invoke(messages)
-        logger.debug(f"Processed query: {query} with context: {context}")
-        chat_logger.info(f"ChatGPT API response: {response.content}")
-        return response.content
-
--e 
-File: ./src/agents/retrieval_agent.py
-
-# src/agents/retrieval_agent.py
-
-import logging
-from typing import List, Tuple
-
-logger = logging.getLogger('master')
-
-class RetrievalAgent:
-    def __init__(self, memory_manager):
-        self.memory_manager = memory_manager
-
-    def retrieve(self, query: str) -> List[Tuple[str, str, str]]:
-        relevant_memories = self.memory_manager.retrieve_relevant_memories(query)
-        logger.debug(f"Retrieved and ranked relevant memories for query: {query}")
-        return relevant_memories
-
--e 
 File: ./src/agents/agent.py
 
 import logging
@@ -1074,22 +987,28 @@ class Agent:
         return response.content-e 
 File: ./src/app.py
 
+import asyncio
 from config import Config
 from MultiAgentRAG.src.utils.controller import Controller
 from MultiAgentRAG.src.utils.logging_setup import setup_logging
+import logging
 
-def process_query(controller, query, chat_logger, memory_logger):
+async def process_query(controller, query, chat_logger, memory_logger):
     chat_logger.info(f"Query: {query}")
-    response = controller.execute_query(query)
+    response = await controller.execute_query(query)
     chat_logger.info(f"Response: {response}")
     
-    memories = controller.get_recent_memories(5)
+    memories = await controller.get_recent_memories(5)
     memory_logger.info("Recent Memories:")
     for memory in memories:
         memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
 
-def main():
+async def main():
+    # Initialize logging
     master_logger, chat_logger, memory_logger = setup_logging()
+
+    # Set the log level for the memory logger
+    memory_logger.setLevel(logging.DEBUG)
 
     try:
         master_logger.info("Starting the Multi-Agent RAG System")
@@ -1112,7 +1031,7 @@ def main():
                     break
 
                 master_logger.info(f"Executing query: {query}")
-                process_query(controller, query, chat_logger, memory_logger)
+                await process_query(controller, query, chat_logger, memory_logger)
 
             except EOFError:
                 master_logger.info("Received EOF, exiting the program")
@@ -1123,7 +1042,7 @@ def main():
         master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
 
 if __name__ == "__main__":
-    main()-e 
+    asyncio.run(main())-e 
 File: ./src/memory/__init__.py
 
 -e 
@@ -1131,82 +1050,370 @@ File: ./src/memory/memory_manager.py
 
 import logging
 import aiosqlite
-from typing import List, Tuple
+from typing import List, Tuple, Union, Dict
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
 from config import config
+import os
+import asyncio
+from src.utils.enhanced_logging import log_execution_time, DatabaseLogger
+import json
+import csv
+import io
 
 logger = logging.getLogger('memory')
 
 class MemoryManager:
-    def __init__(self, db_path: str, api_key: str):
-        self.db_path = db_path
+    def __init__(self, api_key: str):
+        self.master_db_path = "/app/data/master.db"
+        self.personal_db_path = self.get_personal_db_path()
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        self.container_id = self.get_container_id()
+        asyncio.run(self.initialize_databases())
+        self.db_logger = DatabaseLogger(logging.getLogger('database')) 
 
-    async def create_tables(self):
-        async with aiosqlite.connect(self.db_path) as db:
+    @log_execution_time(logger)
+    async def inspect_database(self, db_path):
+        async with aiosqlite.connect(db_path) as db:
+            async with db.execute("SELECT * FROM memories") as cursor:
+                columns = [description[0] for description in cursor.description]
+                rows = await cursor.fetchall()
+        return {"columns": columns, "rows": rows}
+
+    @log_execution_time(logger)
+    async def compare_databases(self):
+        personal_db = await self.inspect_database(self.personal_db_path)
+        master_db = await self.inspect_database(self.master_db_path)
+        
+        personal_ids = set(row[0] for row in personal_db['rows'])
+        master_ids = set(row[0] for row in master_db['rows'])
+        
+        only_in_personal = personal_ids - master_ids
+        only_in_master = master_ids - personal_ids
+        in_both = personal_ids.intersection(master_ids)
+        
+        return {
+            "only_in_personal": list(only_in_personal),
+            "only_in_master": list(only_in_master),
+            "in_both": list(in_both)
+        }
+
+    def get_container_id(self):
+        return os.environ.get('HOSTNAME', 'local')
+
+    def get_personal_db_path(self):
+        container_id = self.get_container_id()
+        return f"/app/data/{container_id}.db"
+
+    async def initialize_databases(self):
+        os.makedirs("/app/data", exist_ok=True)
+        await self.create_tables(self.master_db_path)
+        await self.create_tables(self.personal_db_path)
+        await self.create_changelog_table(self.master_db_path)
+        await self.create_changelog_table(self.personal_db_path)
+
+    async def create_tables(self, db_path):
+        async with aiosqlite.connect(db_path) as db:
+            if db_path == self.master_db_path:
+                await db.execute("""
+                    CREATE TABLE IF NOT EXISTS memories (
+                        id INTEGER PRIMARY KEY,
+                        query TEXT,
+                        result TEXT,
+                        embedding BLOB,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        author TEXT
+                    )
+                """)
+            else:
+                await db.execute("""
+                    CREATE TABLE IF NOT EXISTS memories (
+                        id INTEGER PRIMARY KEY,
+                        query TEXT,
+                        result TEXT,
+                        embedding BLOB,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+            await db.commit()
+        logger.debug(f"Ensured memories table exists in {db_path}")
+
+    async def create_changelog_table(self, db_path):
+        async with aiosqlite.connect(db_path) as db:
             await db.execute("""
-                CREATE TABLE IF NOT EXISTS memories (
+                CREATE TABLE IF NOT EXISTS changelog (
                     id INTEGER PRIMARY KEY,
-                    query TEXT,
-                    result TEXT,
-                    embedding BLOB,
+                    operation TEXT,
+                    memory_id INTEGER,
                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             await db.commit()
-        logger.debug("Ensured memories table exists")
 
+    async def log_change(self, db_path, operation, memory_id):
+        async with aiosqlite.connect(db_path) as db:
+            await db.execute("""
+                INSERT INTO changelog (operation, memory_id) VALUES (?, ?)
+            """, (operation, memory_id))
+            await db.commit()
+
+    # Update save_memory method to log changes
     async def save_memory(self, query: str, result: str):
         try:
             embedding = np.array(await self.embeddings.aembed_query(query)).tobytes()
-            async with aiosqlite.connect(self.db_path) as db:
-                await db.execute("""
+            
+            async with aiosqlite.connect(self.personal_db_path) as db:
+                self.db_logger.log_query("INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)")
+                cursor = await db.execute("""
                     INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
                 """, (query, result, embedding))
+                memory_id = cursor.lastrowid
                 await db.commit()
+            self.db_logger.log_access(memory_id)
+            await self.log_change(self.personal_db_path, "INSERT", memory_id)
+            
+            async with aiosqlite.connect(self.master_db_path) as db:
+                self.db_logger.log_query("INSERT INTO memories (query, result, embedding, author) VALUES (?, ?, ?, ?)")
+                cursor = await db.execute("""
+                    INSERT INTO memories (query, result, embedding, author) VALUES (?, ?, ?, ?)
+                """, (query, result, embedding, self.container_id))
+                memory_id = cursor.lastrowid
+                await db.commit()
+            self.db_logger.log_access(memory_id)
+            await self.log_change(self.master_db_path, "INSERT", memory_id)
+            
             logger.debug(f"Saved memory for query: {query} with result: {result}")
         except Exception as e:
             logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
             raise
-
-    async def retrieve_relevant_memories(self, query: str, threshold: float = config.MEMORY_RETRIEVAL_THRESHOLD) -> List[Tuple[str, str, str]]:
+        
+    async def retrieve_relevant_memories(self, query: str, threshold: float = config.MEMORY_RETRIEVAL_THRESHOLD, return_metadata: bool = False) -> Union[List[Tuple[str, str, str]], Dict]:
         try:
             query_embedding = np.array(await self.embeddings.aembed_query(query))
-            all_memories = await self.get_all_memories()
-            relevant_memories = []
-
-            for memory in all_memories:
-                memory_query, memory_result, memory_embedding, timestamp = memory
-                memory_embedding = np.frombuffer(memory_embedding)
-                similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-                if similarity >= threshold:
-                    relevant_memories.append((memory_query, memory_result, similarity, timestamp))
-
-            if not relevant_memories:
-                return []
-
-            relevant_memories.sort(key=lambda x: (x[2], x[3]), reverse=True)
-            return [(memory[0], memory[1], memory[3]) for memory in relevant_memories[:config.MEMORY_RETRIEVAL_LIMIT]]
+            
+            personal_memories = await self._retrieve_from_db(self.personal_db_path, query_embedding, threshold)
+            self.db_logger.log_query("SELECT query, result, embedding, timestamp FROM memories")
+            
+            metadata = {"queried_databases": ["personal"]}
+            
+            if len(personal_memories) < 3:
+                master_memories = await self._retrieve_from_db(self.master_db_path, query_embedding, threshold, exclude_author=self.container_id)
+                combined_memories = personal_memories + master_memories
+                combined_memories.sort(key=lambda x: x[2], reverse=True)
+                relevant_memories = combined_memories[:config.MEMORY_RETRIEVAL_LIMIT]
+                metadata["queried_databases"].append("master")
+            else:
+                relevant_memories = personal_memories[:config.MEMORY_RETRIEVAL_LIMIT]
+            
+            if return_metadata:
+                metadata["similarity_scores"] = [memory[2] for memory in relevant_memories]
+                return {
+                    "memories": [(memory[0], memory[1], memory[3]) for memory in relevant_memories],
+                    "metadata": metadata
+                }
+            else:
+                return [(memory[0], memory[1], memory[3]) for memory in relevant_memories]
         except Exception as e:
             logger.error(f"Error retrieving relevant memories for query '{query}': {str(e)}", exc_info=True)
             raise
 
-    async def get_all_memories(self) -> List[Tuple[str, str, bytes, str]]:
-        async with aiosqlite.connect(self.db_path) as db:
-            async with db.execute("SELECT query, result, embedding, timestamp FROM memories") as cursor:
-                memories = await cursor.fetchall()
-        logger.debug(f"Retrieved {len(memories)} memories")
-        return memories
+    async def _retrieve_from_db(self, db_path: str, query_embedding: np.ndarray, threshold: float, exclude_author: str = None) -> List[Tuple[str, str, float, str]]:
+        async with aiosqlite.connect(db_path) as db:
+            if exclude_author:
+                async with db.execute("SELECT query, result, embedding, timestamp FROM memories WHERE author != ?", (exclude_author,)) as cursor:
+                    memories = await cursor.fetchall()
+            else:
+                async with db.execute("SELECT query, result, embedding, timestamp FROM memories") as cursor:
+                    memories = await cursor.fetchall()
+
+        relevant_memories = []
+        for memory in memories:
+            memory_query, memory_result, memory_embedding, timestamp = memory
+            memory_embedding = np.frombuffer(memory_embedding)
+            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+            if similarity >= threshold:
+                relevant_memories.append((memory_query, memory_result, similarity, timestamp))
+
+        relevant_memories.sort(key=lambda x: x[2], reverse=True)
+        return relevant_memories
 
     async def get_memories(self, limit: int = config.MEMORY_RETRIEVAL_LIMIT) -> List[Tuple[str, str]]:
-        async with aiosqlite.connect(self.db_path) as db:
+        async with aiosqlite.connect(self.personal_db_path) as db:
             async with db.execute("""
                 SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
             """, (limit,)) as cursor:
                 memories = await cursor.fetchall()
         logger.debug(f"Retrieved {len(memories)} memories")
-        return memories-e 
+        return memories
+    
+    async def export_memories(self, db_path, format='json'):
+        async with aiosqlite.connect(db_path) as db:
+            async with db.execute("SELECT * FROM memories") as cursor:
+                rows = await cursor.fetchall()
+                columns = [description[0] for description in cursor.description]
+
+        if format == 'json':
+            data = [dict(zip(columns, row)) for row in rows]
+            return json.dumps(data, default=str)
+        elif format == 'csv':
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(columns)
+            writer.writerows(rows)
+            return output.getvalue()
+        else:
+            raise ValueError("Unsupported format. Use 'json' or 'csv'.")
+        
+    async def import_memories(self, db_path, data, format='json'):
+        if format == 'json':
+            memories = json.loads(data)
+        elif format == 'csv':
+            reader = csv.DictReader(io.StringIO(data))
+            memories = list(reader)
+        else:
+            raise ValueError("Unsupported format. Use 'json' or 'csv'.")
+
+        async with aiosqlite.connect(db_path) as db:
+            for memory in memories:
+                await db.execute("""
+                    INSERT INTO memories (query, result, embedding, timestamp, author)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (memory['query'], memory['result'], memory['embedding'], memory['timestamp'], memory.get('author')))
+            await db.commit()
+
+    async def explain_memory_retrieval(self, query: str, threshold: float = config.MEMORY_RETRIEVAL_THRESHOLD):
+        explanation = []
+        query_embedding = np.array(await self.embeddings.aembed_query(query))
+        
+        explanation.append(f"1. Converted query '{query}' to embedding.")
+        
+        personal_memories = await self._retrieve_from_db(self.personal_db_path, query_embedding, threshold)
+        explanation.append(f"2. Retrieved {len(personal_memories)} memories from personal database.")
+        
+        if len(personal_memories) < 3:
+            explanation.append("3. Less than 3 relevant memories found in personal database. Searching master database.")
+            master_memories = await self._retrieve_from_db(self.master_db_path, query_embedding, threshold, exclude_author=self.container_id)
+            explanation.append(f"4. Retrieved {len(master_memories)} additional memories from master database.")
+            combined_memories = personal_memories + master_memories
+            combined_memories.sort(key=lambda x: x[2], reverse=True)
+            relevant_memories = combined_memories[:config.MEMORY_RETRIEVAL_LIMIT]
+        else:
+            explanation.append("3. Sufficient memories found in personal database. Not searching master database.")
+            relevant_memories = personal_memories[:config.MEMORY_RETRIEVAL_LIMIT]
+        
+        explanation.append(f"5. Selected top {len(relevant_memories)} memories based on similarity.")
+        for i, memory in enumerate(relevant_memories, 1):
+            explanation.append(f"   {i}. Memory ID: {memory[0]}, Similarity: {memory[2]:.4f}")
+        
+        return "\n".join(explanation)
+    
+    async def perform_consistency_check(self):
+        discrepancies = []
+        
+        async with aiosqlite.connect(self.personal_db_path) as personal_db, \
+                   aiosqlite.connect(self.master_db_path) as master_db:
+            async with personal_db.execute("SELECT id, query, result FROM memories") as personal_cursor:
+                personal_memories = await personal_cursor.fetchall()
+
+            for p_id, p_query, p_result in personal_memories:
+                async with master_db.execute("SELECT id, query, result FROM memories WHERE author = ? AND query = ?", 
+                                             (self.container_id, p_query)) as master_cursor:
+                    master_memory = await master_cursor.fetchone()
+
+                if master_memory is None:
+                    discrepancies.append({
+                        "type": "missing_in_master",
+                        "personal_id": p_id,
+                        "query": p_query
+                    })
+                elif master_memory[2] != p_result:
+                    discrepancies.append({
+                        "type": "content_mismatch",
+                        "personal_id": p_id,
+                        "master_id": master_memory[0],
+                        "query": p_query,
+                        "personal_result": p_result,
+                        "master_result": master_memory[2]
+                    })
+
+            # Check for memories in master that are not in personal
+            async with master_db.execute("SELECT id, query FROM memories WHERE author = ?", 
+                                         (self.container_id,)) as master_cursor:
+                master_memories = await master_cursor.fetchall()
+
+            personal_queries = set(memory[1] for memory in personal_memories)
+            for m_id, m_query in master_memories:
+                if m_query not in personal_queries:
+                    discrepancies.append({
+                        "type": "missing_in_personal",
+                        "master_id": m_id,
+                        "query": m_query
+                    })
+
+        return discrepancies
+
+    async def fix_discrepancies(self, discrepancies):
+        for discrepancy in discrepancies:
+            if discrepancy["type"] == "missing_in_master":
+                await self._copy_memory_to_master(discrepancy["personal_id"])
+            elif discrepancy["type"] == "missing_in_personal":
+                await self._copy_memory_to_personal(discrepancy["master_id"])
+            elif discrepancy["type"] == "content_mismatch":
+                await self._resolve_content_mismatch(discrepancy)
+
+    async def _copy_memory_to_master(self, personal_id):
+        async with aiosqlite.connect(self.personal_db_path) as personal_db, \
+                   aiosqlite.connect(self.master_db_path) as master_db:
+            async with personal_db.execute("SELECT query, result, embedding FROM memories WHERE id = ?", 
+                                           (personal_id,)) as cursor:
+                memory = await cursor.fetchone()
+            
+            if memory:
+                await master_db.execute("""
+                    INSERT INTO memories (query, result, embedding, author)
+                    VALUES (?, ?, ?, ?)
+                """, (*memory, self.container_id))
+                await master_db.commit()
+
+    async def _copy_memory_to_personal(self, master_id):
+        async with aiosqlite.connect(self.master_db_path) as master_db, \
+                   aiosqlite.connect(self.personal_db_path) as personal_db:
+            async with master_db.execute("SELECT query, result, embedding FROM memories WHERE id = ?", 
+                                         (master_id,)) as cursor:
+                memory = await cursor.fetchone()
+            
+            if memory:
+                await personal_db.execute("""
+                    INSERT INTO memories (query, result, embedding)
+                    VALUES (?, ?, ?)
+                """, memory)
+                await personal_db.commit()
+
+    async def _resolve_content_mismatch(self, discrepancy):
+        # For this example, we'll always use the master version
+        # In a real-world scenario, you might want a more sophisticated resolution strategy
+        async with aiosqlite.connect(self.master_db_path) as master_db, \
+                   aiosqlite.connect(self.personal_db_path) as personal_db:
+            async with master_db.execute("SELECT result, embedding FROM memories WHERE id = ?", 
+                                         (discrepancy["master_id"],)) as cursor:
+                master_memory = await cursor.fetchone()
+            
+            if master_memory:
+                await personal_db.execute("""
+                    UPDATE memories
+                    SET result = ?, embedding = ?
+                    WHERE id = ?
+                """, (*master_memory, discrepancy["personal_id"]))
+                await personal_db.commit()
+
+    async def run_consistency_check_and_fix(self):
+        discrepancies = await self.perform_consistency_check()
+        if discrepancies:
+            logger.info(f"Found {len(discrepancies)} discrepancies. Fixing...")
+            await self.fix_discrepancies(discrepancies)
+            logger.info("Discrepancies fixed.")
+        else:
+            logger.info("No discrepancies found.")-e 
 File: ./src/utils/__init__.py
 
 -e 
@@ -1272,8 +1479,14 @@ def setup_logging():
     memory_file_handler.setFormatter(log_formatter)
     memory_logger.addHandler(memory_file_handler)
 
+    database_logger = logging.getLogger('database')
+    database_logger.setLevel(logging.DEBUG)
+    database_file_handler = logging.FileHandler(os.path.join(log_directory, 'database.log'))
+    database_file_handler.setFormatter(log_formatter)
+    database_logger.addHandler(database_file_handler)
+
     master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
-    return master_logger, chat_logger, memory_logger
+    return master_logger, chat_logger, memory_logger, database_logger
 
 def is_running_in_docker() -> bool:
     return os.path.exists('/.dockerenv')-e 
@@ -1287,9 +1500,10 @@ from config import config
 
 class Controller:
     def __init__(self):
-        self.memory_manager = MemoryManager(config.MEMORY_DB_PATH, config.OPENAI_API_KEY)
+        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
         self.agent = Agent(self.memory_manager)
         self.logger = logging.getLogger('master')
+        self.db_logger = logging.getLogger('database')
 
     async def execute_query(self, query: str) -> str:
         try:
@@ -1303,6 +1517,75 @@ class Controller:
 
     async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
         return await self.memory_manager.get_memories(limit)-e 
+File: ./src/utils/enhanced_logging.py
+
+import time
+import logging
+from functools import wraps
+
+def log_execution_time(logger):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = await func(*args, **kwargs)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            logger.info(f"{func.__name__} executed in {execution_time:.4f} seconds")
+            return result
+        return wrapper
+    return decorator
+
+class DatabaseLogger:
+    def __init__(self, logger):
+        self.logger = logger
+        file_handler = logging.FileHandler('database.log')
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(file_handler)
+
+    def log_query(self, query, params=None):
+        self.logger.debug(f"Executing query: {query}, Params: {params}")
+
+    def log_memory_size(self, memory_size):
+        self.logger.info(f"Memory size: {memory_size} bytes")
+
+    def log_access(self, memory_id):
+        self.logger.info(f"Accessed memory: {memory_id}")-e 
+File: ./src/utils/memory_analysis.py
+
+from collections import Counter
+import numpy as np
+import aiosqlite
+
+class MemoryAnalyzer:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+
+    async def analyze_distribution(self):
+        async with aiosqlite.connect(self.memory_manager.master_db_path) as db:
+            async with db.execute("SELECT author, COUNT(*) FROM memories GROUP BY author") as cursor:
+                distribution = await cursor.fetchall()
+        return dict(distribution)
+
+    async def find_most_accessed(self, limit=10):
+        # Assuming we've added an 'access_count' column to the memories table
+        async with aiosqlite.connect(self.memory_manager.master_db_path) as db:
+            async with db.execute("SELECT id, query, access_count FROM memories ORDER BY access_count DESC LIMIT ?", (limit,)) as cursor:
+                most_accessed = await cursor.fetchall()
+        return most_accessed
+
+    async def find_most_similar(self, query, limit=10):
+        query_embedding = await self.memory_manager.embeddings.aembed_query(query)
+        all_memories = await self.memory_manager.get_all_memories()
+        
+        similarities = []
+        for memory in all_memories:
+            memory_embedding = np.frombuffer(memory[2])
+            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+            similarities.append((memory[0], memory[1], similarity))
+        
+        similarities.sort(key=lambda x: x[2], reverse=True)
+        return similarities[:limit]-e 
 File: ./src/api.py
 
 from fastapi import FastAPI, HTTPException, Request
@@ -1311,6 +1594,7 @@ from pydantic import BaseModel
 from src.utils.controller import Controller
 from src.utils.logging_setup import setup_logging
 from config import config
+from src.utils.memory_analysis import MemoryAnalyzer
 
 class QueryRequest(BaseModel):
     query: str
@@ -1319,7 +1603,7 @@ class QueryResponse(BaseModel):
     response: str
 
 # Initialize logging
-master_logger, chat_logger, memory_logger = setup_logging()
+master_logger, chat_logger, memory_logger, database_logger = setup_logging()
 
 app = FastAPI()
 
@@ -1332,14 +1616,23 @@ async def query_endpoint(request: QueryRequest):
         return QueryResponse(response=response)
     except Exception as e:
         master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
+
+@app.get("/consistency_check")
+async def consistency_check_endpoint():
+    try:
+        await controller.memory_manager.run_consistency_check_and_fix()
+        return {"message": "Consistency check and fix completed."}
+    except Exception as e:
+        master_logger.error(f"Error during consistency check: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error during consistency check: {str(e)}")
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     master_logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"detail": "An unexpected error occurred. Please try again later."}
+        content={"detail": f"An unexpected error occurred: {str(exc)}"}
     )
 
 @app.on_event("startup")
@@ -1355,3 +1648,270 @@ async def shutdown_event():
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+memory_analyzer = MemoryAnalyzer(controller.memory_manager)
+
+@app.get("/memory_distribution")
+async def memory_distribution_endpoint():
+    try:
+        distribution = await memory_analyzer.analyze_distribution()
+        return {"distribution": distribution}
+    except Exception as e:
+        master_logger.error(f"Error analyzing memory distribution: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error analyzing memory distribution: {str(e)}")-e 
+File: ./src/cli.py
+
+import asyncio
+from src.utils.controller import Controller
+from src.utils.logging_setup import setup_logging
+
+master_logger, chat_logger, memory_logger, database_logger = setup_logging()
+controller = Controller()
+
+async def main():
+    while True:
+        try:
+            command = input("Enter a command (query/memories/consistency/quit): ").strip().lower()
+            
+            if command == 'quit':
+                break
+            elif command == 'query':
+                query = input("Enter your query: ")
+                response = await controller.execute_query(query)
+                print(f"Response: {response}")
+            elif command == 'memories':
+                try:
+                    limit = int(input("Enter the number of memories to retrieve: "))
+                    memories = await controller.get_recent_memories(limit)
+                    for i, (query, result) in enumerate(memories, 1):
+                        print(f"{i}. Query: {query}\n   Result: {result}\n")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+            elif command == 'consistency':
+                await controller.memory_manager.run_consistency_check_and_fix()
+                print("Consistency check and fix completed.")
+            else:
+                print("Invalid command. Please try again.")
+        except Exception as e:
+            master_logger.error(f"An error occurred: {str(e)}", exc_info=True)
+            print(f"An error occurred: {str(e)}. Please try again.")
+
+if __name__ == "__main__":
+    asyncio.run(main())-e 
+File: ./docs/database_structure.md
+
+# Database Structure and Operations
+
+## Overview
+
+The system uses two types of databases:
+1. Personal Database: Stores memories specific to each container.
+2. Master Database: Stores memories from all containers.
+
+## Database Structure
+
+Both personal and master databases have the following table structure:
+
+### Memories Table
+
+| Column    | Type    | Description                            |
+|-----------|---------|----------------------------------------|
+| id        | INTEGER | Primary key                            |
+| query     | TEXT    | The original query                     |
+| result    | TEXT    | The response or result                 |
+| embedding | BLOB    | Vector representation of the query     |
+| timestamp | DATETIME| When the memory was created/updated    |
+| author    | TEXT    | (Master DB only) Container ID          |
+
+## Querying Process
+
+1. When a query is received, it's first converted to an embedding.
+2. The system searches the personal database for similar memories.
+3. If fewer than 3 relevant memories are found, it also searches the master database.
+4. Memories are ranked by similarity and the top results are returned.
+
+## Syncing Mechanism
+
+- New memories are saved to both the personal and master databases.
+- The master database includes an 'author' field to track which container created each memory.
+- There's no automatic sync between personal and master databases after initial creation.
+
+## Versioning and Change Tracking
+
+(To be implemented)-e 
+File: ./docs/README.md
+
+# Multi-Agent RAG System with Continual Learning
+
+## Project Overview
+
+This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities. It uses LangChain, LangGraph, and LLM API calls to create a sophisticated question-answering system that learns from interactions.
+
+## Key Features
+
+- Multi-agent architecture for complex query processing
+- RAG (Retrieval-Augmented Generation) for enhanced responses
+- Continual learning to improve performance over time
+- Distributed memory management with personal and master databases
+- CLI and API interfaces for versatile interaction
+- Comprehensive logging system for debugging and analysis
+- Docker support for easy deployment and scaling
+
+## System Architecture
+
+The system consists of the following main components:
+
+1. **Controller**: Orchestrates the overall flow of query processing.
+2. **Agents**: Specialized modules for retrieval, processing, and response generation.
+3. **Memory Manager**: Handles storage and retrieval of past interactions.
+4. **Logging System**: Provides detailed logs for system operations, including database interactions.
+
+## Directory Structure
+
+```
+.
+├── Dockerfile
+├── README.md
+├── config.py
+├── data/
+├── docker-compose.yml
+├── docs/
+├── logs/
+├── notebooks/
+├── scripts/
+├── src/
+│   ├── agents/
+│   ├── memory/
+│   ├── utils/
+│   ├── api.py
+│   ├── app.py
+│   └── cli.py
+└── tests/
+```
+
+## Setup and Installation
+
+### Prerequisites
+
+- Python 3.12+
+- Docker and Docker Compose
+
+### Local Setup
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-username/multi-agent-rag.git
+   cd multi-agent-rag
+   ```
+
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   ```
+
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables:
+   Create a `.env` file in the root directory with the following content:
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   TAVILY_API_KEY=your_tavily_api_key
+   ```
+
+### Docker Setup
+
+1. Build the Docker image:
+   ```
+   docker-compose build
+   ```
+
+2. Run the container:
+   ```
+   docker-compose up
+   ```
+
+## Usage
+
+### CLI Interface
+
+Run the CLI interface with:
+
+```
+python src/cli.py
+```
+
+Available commands:
+- `query`: Enter a query to process
+- `memories`: Retrieve recent memories
+- `consistency`: Run a consistency check on the databases
+- `quit`: Exit the program
+
+### API Interface
+
+Start the API server with:
+
+```
+uvicorn src.api:app --host 0.0.0.0 --port 8000
+```
+
+API endpoints:
+- POST `/query`: Submit a query for processing
+- GET `/consistency_check`: Run a consistency check on the databases
+- GET `/health`: Check the health status of the API
+- GET `/memory_distribution`: Get the distribution of memories across containers
+
+## Logging
+
+Logs are stored in the `logs/` directory, organized by timestamp and container ID. There are separate log files for:
+
+- Master log (`master.log`)
+- Chat log (`chat.log`)
+- Memory operations log (`memory.log`)
+- Database operations log (`database.log`)
+
+## Testing
+
+Run the test suite with:
+
+```
+pytest tests/
+```
+-e 
+File: ./.pytest_cache/README.md
+
+# pytest cache directory #
+
+This directory contains data from the pytest's cache plugin,
+which provides the `--lf` and `--ff` options, as well as the `cache` fixture.
+
+**Do not** commit this to version control.
+
+See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information.
+-e 
+File: ./.pytest_cache/.gitignore
+
+# Created by pytest automatically.
+*
+-e 
+File: ./.pytest_cache/CACHEDIR.TAG
+
+Signature: 8a477f597d28d172789f06886806bc55
+# This file is a cache directory tag created by pytest.
+# For information about cache directory tags, see:
+#	https://bford.info/cachedir/spec.html
+-e 
+File: ./.pytest_cache/v/cache/nodeids
+
+[]-e 
+File: ./.pytest_cache/v/cache/lastfailed
+
+{
+  "tests/test_memory_manager.py": true
+}-e 
+File: ./.pytest_cache/v/cache/stepwise
+
+[]
