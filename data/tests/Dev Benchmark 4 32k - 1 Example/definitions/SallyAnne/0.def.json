@@ -1,0 +1,67 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Logan is in the living_room.",
+    "(On TV) Emily entered the living_room.",
+    "(On TV) Oliver entered the living_room.",
+    "(On TV) The cap is in the treasure_chest.",
+    "(On TV) Emily exited the living_room.",
+    "(On TV) Logan loves the broccoli",
+    "(On TV) Oliver loves the jeans",
+    "(On TV) Oliver exited the living_room.",
+    "(On TV) Logan moved the cap to the suitcase.",
+    "The TV program has ended for today. Where is the cap really?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 9.0
+    },
+    {
+      "percentage_finished": 18.0
+    },
+    {
+      "percentage_finished": 27.0
+    },
+    {
+      "percentage_finished": 36.0
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 54.0
+    },
+    {
+      "percentage_finished": 63.0
+    },
+    {
+      "percentage_finished": 72.0
+    },
+    {
+      "percentage_finished": 81.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "suitcase"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

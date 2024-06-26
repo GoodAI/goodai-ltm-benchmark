@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Whenever I ask you for the time then say: 'It&#x27;s Party time!'",
+    "What is the current time?",
+    "What is the current time?",
+    "What is the current time?"
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "It's Party time!",
+    "It's Party time!",
+    "It's Party time!"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

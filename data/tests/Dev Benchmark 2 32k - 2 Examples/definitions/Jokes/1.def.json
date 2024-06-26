@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.",
+    "I went to buy some camo pants but couldn\u2019t find any.",
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 13260,
+      "percentage_finished": 30.0
+    },
+    {
+      "time": 14100,
+      "percentage_finished": 60.0
+    },
+    {
+      "time": 11760,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Light travels faster than sound, which is the reason that some people appear bright before you hear them speak."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}

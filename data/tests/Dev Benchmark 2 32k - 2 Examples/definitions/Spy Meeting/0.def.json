@@ -1,0 +1,54 @@
+{
+  "script": [
+    "You will be given three messages from different people Mr. Terence Girvan, Rachelle Cunny-Sheil, and Frederick Ramos.",
+    "Frederick Ramos: Bring to the meeting a quiet way to open locked doors.",
+    "Mr. Terence Girvan: We will rendezvous where the sea cargo is stored.",
+    "Rachelle Cunny-Sheil: The time we will meet is when the sun is high.",
+    "Given the clandestine messages you have received, tell me as specifically as you can, when and where the meeting is going to happen and what you should bring."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "pick",
+      "picks",
+      "key",
+      "lockpicks",
+      "lockpicking",
+      "slim jim"
+    ],
+    [
+      "port",
+      "warehouse",
+      "seaport",
+      "docks"
+    ],
+    [
+      "noon",
+      "midday"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

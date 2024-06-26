@@ -1,0 +1,52 @@
+{
+  "script": [
+    "You will be given three messages from different people Misty Williams, Joseph Davis, and Jill McKnight.",
+    "Jill McKnight: Bring to the meeting a way to get across a river.",
+    "Misty Williams: We will rendezvous where the land meets the sea.",
+    "Joseph Davis: The time we will meet is when the moon is high.",
+    "Given the clandestine messages you have received, tell me as specifically as you can, when and where the meeting is going to happen and what you should bring."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "boat",
+      "bridge",
+      "raft",
+      "kayak"
+    ],
+    [
+      "shore",
+      "beach",
+      "coastline"
+    ],
+    [
+      "night",
+      "midnight",
+      "nighttime"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}
