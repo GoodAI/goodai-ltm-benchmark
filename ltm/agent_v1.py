@@ -24,19 +24,18 @@ def use_tools(functions, tool_use):
     try:
         returned_context = []
         for tool in tool_use:
-            if tool.function.name in functions.keys():
-                fun = functions[tool.function.name]
-                args = json.loads(tool.function.arguments)
+            fun = functions[tool.function.name]
+            args = json.loads(tool.function.arguments)
 
-                print(f"\tCalling '{tool.function.name}' with args {args} and id: {tool.id}")
-                result = fun(**args)
-                print(f"\t\tReturning function '{tool.function.name}' with id: {tool.id}")
-                returned_context.append({
-                    "tool_call_id": tool.id,
-                    "role": "tool",
-                    "name": tool.function.name,
-                    "content": result,
-                })
+            print(f"\tCalling '{tool.function.name}' with args {args} and id: {tool.id}")
+            result = fun(**args)
+            print(f"\t\tReturning function '{tool.function.name}' with id: {tool.id}")
+            returned_context.append({
+                "tool_call_id": tool.id,
+                "role": "tool",
+                "name": tool.function.name,
+                "content": result,
+            })
         return True, returned_context
     except Exception as e:
         print(e)
@@ -193,7 +192,7 @@ Getting memories can be expensive. Do it only if you know that the memories will
             # colour_print("Yellow", f"Attempting Tool call with:")
             # dump_context(context)
             response = litellm.completion(model="gpt-4o", messages=context, tools=self.tool_definitions, tool_choice="required")
-            print(f"LLM call with: {response.choices[0].message.model_extra}")
+            print(f"Inner loop Function Call with: {response.choices[0].message.model_extra}")
             tool_use = response.choices[0].message.tool_calls
             success, new_context = use_tools(self.functions, tool_use)
 
