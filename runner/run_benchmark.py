@@ -12,6 +12,8 @@ import yaml
 from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
+from ltm.agent import LTMAgent
+from ltm.agent_v1 import LTMAgentV1
 from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
 from model_interfaces.llm_interface import LLMChatSession, TimestampLLMChatSession
@@ -45,7 +47,10 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         match = re.match(r"^ltm_agent\((?P<model>.+)\)$", name)
         if match is None:
             raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
-        return LTMAgentWrapper(model=match.groupdict()["model"], **kwargs)
+        return LTMAgentWrapper(cls=LTMAgent, model=match.groupdict()["model"], **kwargs)
+    if name == "ltm_prototype":
+        return LTMAgentV1(**kwargs)
+
     if name == "length_bias":
         return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
     if name.startswith("cost("):
