@@ -414,12 +414,32 @@ Do not ask questions, address the memories and the query.
 
 
 class UpdateScratchpadTool:
-    update_user_info = """{user_info_description}
+
+    should_update = """{user_info_description}
 
 == New user interaction ==
 {user_content}
 ==
 
+Based on prior user information and the above interaction with the user, your task is to decide carefully if you should
+update the scratchpad, and what changes should be made.
+
+Try to answer these questions:
+- Does the interaction contain information that will be useful in future?
+- Is the information unimportant general knowledge, or useful user specific knowledge?
+
+
+Sketch out some general plan for the data you think should be written to the scratchpad.
+
+Write JSON in the following format:
+
+{{
+    "reasoning": string, // Does the user query/statement contain information relating to the user or something they may expect you to keep track of?
+    "verdict": bool // The decision of whether to write something to the scratchpad.  
+}}
+"""
+
+    update_user_info = """
 Based on prior user information and the above interaction with the user, your task is to provide 
 a new user object with updated information provided by the user, such as 
 facts about themselves or information they are expecting you to keep track of.
@@ -434,7 +454,6 @@ deletes or augments existing information. Property names should be descriptive.
 Write JSON in the following format:
 
 {{
-    "reasoning": string, // Your careful reasoning about how the user object should be updated. In particular, does the user query/statement contain information relating to the user or something they may expect you to keep track of?
     "user": {{ ... }}, // An updated user object containing attributes, facts, world models
 }}
 """
@@ -442,22 +461,45 @@ Write JSON in the following format:
     def update_scratchpad(self, scratchpad, interaction):
 
         scratchpad_text = json.dumps(scratchpad, indent=2)
+
         colour_print("lightblue", f"Updating old scratchpad: {scratchpad_text}")
-        context = [make_system_message(self.update_user_info.format(user_info_description=scratchpad_text, user_content=interaction).strip())]
+
+        context = [make_user_message(
+            self.should_update.format(user_info_description=scratchpad_text, user_content=interaction).strip())]
+
         result = litellm.completion(model="gpt-4o", messages=context)
-        scratchpad_json = result.choices[0].message.content
+        decision_json = result.choices[0].message.content
 
+        colour_print("yellow", f"\nDecision to update scratchpad: {json.dumps(decision_json, indent=2)}")
+
+        # Parse out decision whether to update the
         try:
-            pad = sanitize_and_parse_json(scratchpad_json)
+            decision = sanitize_and_parse_json(decision_json)
         except (JSONDecodeError, ValueError):
-            colour_print("RED", f"Unable to parse JSON: {scratchpad_json}")
-            pad = {}
-        if not isinstance(pad, dict):
+            colour_print("RED", f"Unable to parse JSON: {decision_json}")
+            decision = {}
+        if not isinstance(decision, dict):
             colour_print("RED", "Query generation completion was not a dictionary!")
-            pad = {}
+            decision = {}
 
-        scratchpad = pad.get("user", scratchpad)
-        colour_print("lightblue", f"\n\nNEW scratchpad: {json.dumps(scratchpad, indent=2)}")
+        if decision.get("verdict", True):
+
+            context.append(make_assistant_message(decision_json))
+            context.append(make_user_message(self.update_user_info.format(user_info_description=scratchpad_text, user_content=interaction).strip()))
+            result = litellm.completion(model="gpt-4o", messages=context)
+            scratchpad_json = result.choices[0].message.content
+
+            try:
+                pad = sanitize_and_parse_json(scratchpad_json)
+            except (JSONDecodeError, ValueError):
+                colour_print("RED", f"Unable to parse JSON: {scratchpad_json}")
+                pad = {}
+            if not isinstance(pad, dict):
+                colour_print("RED", "Query generation completion was not a dictionary!")
+                pad = {}
+
+            scratchpad = pad.get("user", scratchpad)
+            colour_print("lightblue", f"\n\nNEW scratchpad: {json.dumps(scratchpad, indent=2)}")
 
         return scratchpad
 
