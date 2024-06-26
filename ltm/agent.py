@@ -108,10 +108,7 @@ class LTMAgent:
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
-    @classmethod
-    def from_state_text(
-        cls, state_text: str, prompt_callback: Callable[[str, str, list[dict], str], Any] = None,
-    ) -> 'LTMAgent':
+    def from_state_text(self, state_text: str, prompt_callback: Callable[[str, str, list[dict], str], Any] = None):
         """
         Builds an LTMAgent given a state string previously obtained by
         calling the state_as_text() method.
@@ -120,16 +117,13 @@ class LTMAgent:
         :return:
         """
         state = json.loads(state_text, cls=SimpleJSONDecoder)
-        agent = cls(
-            max_prompt_size=state["max_prompt_size"],
-            max_completion_tokens=state["max_completion_tokens"],
-            model=state["model"],
-            config=state["config"],
-            user_info=state["user_info"],
-            prompt_callback=prompt_callback,
-        )
-        agent.convo_mem.set_state(state["convo_mem"])
-        return agent
+        self.max_prompt_size = state["max_prompt_size"]
+        self.max_completion_tokens = state["max_completion_tokens"]
+        self.model = state["model"]
+        self.config = state["config"]
+        self.user_info = state["user_info"]
+        self.prompt_callback = prompt_callback
+        self.convo_mem.set_state(state["convo_mem"])
 
     def system_prompt(self) -> str:
         return _default_system_message.format(
