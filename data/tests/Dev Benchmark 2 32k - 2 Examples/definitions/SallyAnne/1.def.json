@@ -1,0 +1,57 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Oliver hates the hat",
+    "(On TV) Oliver entered the dining_room.",
+    "(On TV) Sophia entered the dining_room.",
+    "(On TV) The sweatshirt is in the crate.",
+    "(On TV) Oliver exited the dining_room.",
+    "(On TV) Sophia moved the sweatshirt to the bucket.",
+    "(On TV) Sophia likes the persimmon",
+    "The TV program has ended for today. Where does Oliver think that Sophia searches for the sweatshirt?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 11.25
+    },
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 33.75
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 56.25
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 78.75
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "crate"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

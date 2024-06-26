@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.",
+    "It takes a lot of balls to golf the way I do.",
+    "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 12300,
+      "percentage_finished": 30.0
+    },
+    {
+      "time": 5580,
+      "percentage_finished": 60.0
+    },
+    {
+      "time": 4260,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "It takes a lot of balls to golf the way I do."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}
