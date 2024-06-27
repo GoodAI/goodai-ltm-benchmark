@@ -291,7 +291,7 @@ class LTMAgent:
 
     def _completion(self, context: List[dict[str, str]], temperature: float, label: str,
                     cost_callback: Callable[[float], Any]) -> str:
-
+        # TODO: max_tokens is borked: https://github.com/BerriAI/litellm/issues/4439
         response = completion(model=self.model, messages=context, timeout=self.config.timeout,
                               temperature=temperature)
         response_text = response['choices'][0]['message']['content']
