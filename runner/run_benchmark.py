@@ -47,7 +47,7 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         match = re.match(r"^ltm_agent\((?P<model>.+)\)$", name)
         if match is None:
             raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
-        return LTMAgentWrapper(cls=LTMAgent, model=match.groupdict()["model"], **kwargs)
+        return LTMAgentWrapper(model=match.groupdict()["model"], **kwargs)
     if name == "ltm_prototype":
         return LTMAgentV1(**kwargs)
 
