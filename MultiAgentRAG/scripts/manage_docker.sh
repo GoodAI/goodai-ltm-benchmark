@@ -86,9 +86,9 @@ if [ "$REBUILD" = true ]; then
     docker rmi multi-agent-rag_multi-agent-rag
 fi
 
-# Rebuild the image
+# Rebuild the image using BuildKit
 echo "Building Docker image..."
-docker-compose build
+DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker buildx bake -f docker-compose.yml --load
 
 # Start the new container based on the mode
 if [ "$MODE" = "cli" ]; then

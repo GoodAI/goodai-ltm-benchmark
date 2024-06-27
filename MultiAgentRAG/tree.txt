@@ -2,6 +2,11 @@
 ├── Dockerfile
 ├── config.py
 ├── data
+│   ├── 0adeb4a1089f.db
+│   ├── 825f9f7340d2.db
+│   ├── 92a109e802cd.db
+│   ├── aaafb8a77492.db
+│   ├── aac2f4247439.db
 │   └── master.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
@@ -10,6 +15,11 @@
 │   └── database_structure.md
 ├── get-docker.sh
 ├── logs
+│   └── 20240627_114735_aaafb8a77492
+│       ├── chat.log
+│       ├── database.log
+│       ├── master.log
+│       └── memory.log
 ├── memory.db
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
@@ -44,7 +54,7 @@
 │       └── reset_database.py
 └── tree.txt
 
-11 directories, 33 files
+12 directories, 42 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -109,10 +119,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Add an additional entry point for CLI
-ENTRYPOINT ["python", "-m", "src.cli"]-e 
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
 File: ./config.py
 
 import os
@@ -151,16 +158,11 @@ File: ./docker-compose.yml
 
 version: '3.8'
 
-x-build-args: &build-args
-  DOCKER_BUILDKIT: 1
-
 services:
   multi-agent-rag:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        <<: *build-args
     image: multi-agent-rag
     ports:
       - "8080:8000"
@@ -177,8 +179,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        <<: *build-args
     image: multi-agent-rag
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -963,6 +963,7 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
 from typing import List, Tuple
 from config import config
+import json
 
 logger = logging.getLogger('master')
 chat_logger = logging.getLogger('chat')
@@ -980,9 +981,15 @@ class Agent:
             HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE> (<TIMESTAMP>). Use these to best respond to the request.")
         ]
         
+        # Log the full message sent to the API
+        chat_logger.info(f"Full ChatGPT API request: {json.dumps([m.dict() for m in messages], indent=2)}")
+        
         response = await self.chat_model.ainvoke(messages)
+        
+        # Log the full API response
+        chat_logger.info(f"Full ChatGPT API response: {json.dumps(response.dict(), indent=2)}")
+        
         logger.debug(f"Processed query: {query} with context: {context}")
-        chat_logger.info(f"ChatGPT API response: {response.content}")
         
         return response.content-e 
 File: ./src/app.py
@@ -1055,7 +1062,6 @@ from langchain_openai import OpenAIEmbeddings
 import numpy as np
 from config import config
 import os
-import asyncio
 from src.utils.enhanced_logging import log_execution_time, DatabaseLogger
 import json
 import csv
@@ -1069,8 +1075,17 @@ class MemoryManager:
         self.personal_db_path = self.get_personal_db_path()
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.container_id = self.get_container_id()
-        asyncio.run(self.initialize_databases())
-        self.db_logger = DatabaseLogger(logging.getLogger('database')) 
+        self.db_logger = DatabaseLogger(logging.getLogger('database'))
+
+    async def initialize(self):
+        await self.initialize_databases()
+
+    async def initialize_databases(self):
+        os.makedirs("/app/data", exist_ok=True)
+        await self.create_tables(self.master_db_path)
+        await self.create_tables(self.personal_db_path)
+        await self.create_changelog_table(self.master_db_path)
+        await self.create_changelog_table(self.personal_db_path)
 
     @log_execution_time(logger)
     async def inspect_database(self, db_path):
@@ -1104,13 +1119,6 @@ class MemoryManager:
     def get_personal_db_path(self):
         container_id = self.get_container_id()
         return f"/app/data/{container_id}.db"
-
-    async def initialize_databases(self):
-        os.makedirs("/app/data", exist_ok=True)
-        await self.create_tables(self.master_db_path)
-        await self.create_tables(self.personal_db_path)
-        await self.create_changelog_table(self.master_db_path)
-        await self.create_changelog_table(self.personal_db_path)
 
     async def create_tables(self, db_path):
         async with aiosqlite.connect(db_path) as db:
@@ -1157,7 +1165,6 @@ class MemoryManager:
             """, (operation, memory_id))
             await db.commit()
 
-    # Update save_memory method to log changes
     async def save_memory(self, query: str, result: str):
         try:
             embedding = np.array(await self.embeddings.aembed_query(query)).tobytes()
@@ -1500,10 +1507,15 @@ from config import config
 
 class Controller:
     def __init__(self):
-        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
-        self.agent = Agent(self.memory_manager)
         self.logger = logging.getLogger('master')
         self.db_logger = logging.getLogger('database')
+        self.memory_manager = None
+        self.agent = None
+
+    async def initialize(self):
+        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
+        await self.memory_manager.initialize()
+        self.agent = Agent(self.memory_manager)
 
     async def execute_query(self, query: str) -> str:
         try:
@@ -1608,6 +1620,22 @@ master_logger, chat_logger, memory_logger, database_logger = setup_logging()
 app = FastAPI()
 
 controller = Controller()
+memory_analyzer = None
+
+@app.on_event("startup")
+async def startup_event():
+    global memory_analyzer
+    master_logger.info("Starting up the API server")
+    await controller.initialize()
+    memory_analyzer = MemoryAnalyzer(controller.memory_manager)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    master_logger.info("Shutting down the API server")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.post("/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):
@@ -1618,6 +1646,23 @@ async def query_endpoint(request: QueryRequest):
         master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
+@app.get("/memory_distribution")
+async def memory_distribution_endpoint():
+    try:
+        distribution = await memory_analyzer.analyze_distribution()
+        return {"distribution": distribution}
+    except Exception as e:
+        master_logger.error(f"Error analyzing memory distribution: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error analyzing memory distribution: {str(e)}")
+    
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    master_logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"An unexpected error occurred: {str(exc)}"}
+    )
+
 @app.get("/consistency_check")
 async def consistency_check_endpoint():
     try:
@@ -1627,38 +1672,10 @@ async def consistency_check_endpoint():
         master_logger.error(f"Error during consistency check: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error during consistency check: {str(e)}")
 
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    master_logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": f"An unexpected error occurred: {str(exc)}"}
-    )
-
-@app.on_event("startup")
-async def startup_event():
-    master_logger.info("Starting up the API server")
-    # Initialize any resources here, if needed
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    master_logger.info("Shutting down the API server")
-    # Clean up any resources here, if needed
-
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
-memory_analyzer = MemoryAnalyzer(controller.memory_manager)
-
-@app.get("/memory_distribution")
-async def memory_distribution_endpoint():
-    try:
-        distribution = await memory_analyzer.analyze_distribution()
-        return {"distribution": distribution}
-    except Exception as e:
-        master_logger.error(f"Error analyzing memory distribution: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error analyzing memory distribution: {str(e)}")-e 
+if __name__ == "__main__":
+    import uvicorn
+    master_logger.info("Running the API server directly")
+    uvicorn.run(app, host="0.0.0.0", port=8000)-e 
 File: ./src/cli.py
 
 import asyncio
@@ -1668,7 +1685,11 @@ from src.utils.logging_setup import setup_logging
 master_logger, chat_logger, memory_logger, database_logger = setup_logging()
 controller = Controller()
 
+async def initialize():
+    await controller.initialize()
+
 async def main():
+    await initialize()
     while True:
         try:
             command = input("Enter a command (query/memories/consistency/quit): ").strip().lower()
