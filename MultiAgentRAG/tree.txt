@@ -2,25 +2,18 @@
 ├── Dockerfile
 ├── config.py
 ├── data
-│   ├── 0adeb4a1089f.db
-│   ├── 825f9f7340d2.db
-│   ├── 92a109e802cd.db
-│   ├── aaafb8a77492.db
-│   ├── aac2f4247439.db
 │   └── master.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
 ├── docs
-│   ├── README.md
-│   └── database_structure.md
-├── get-docker.sh
+│   └── README.md
 ├── logs
-│   └── 20240627_114735_aaafb8a77492
-│       ├── chat.log
-│       ├── database.log
-│       ├── master.log
-│       └── memory.log
-├── memory.db
+│   ├── 20240628_084543_2ef4d7e8e029
+│   │   ├── chat.log
+│   │   ├── database.log
+│   │   ├── master.log
+│   │   └── memory.log
+│   └── 20240628_095224_ce8d257f5024
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
 ├── scripts
@@ -44,6 +37,7 @@
 │   │   ├── __pycache__
 │   │   │   ├── __init__.cpython-310.pyc
 │   │   │   └── memory_manager.cpython-310.pyc
+│   │   ├── enhanced_memory_manager.py
 │   │   └── memory_manager.py
 │   └── utils
 │       ├── __init__.py
@@ -51,10 +45,11 @@
 │       ├── enhanced_logging.py
 │       ├── logging_setup.py
 │       ├── memory_analysis.py
-│       └── reset_database.py
+│       ├── reset_database.py
+│       └── similarity_analysis.py
 └── tree.txt
 
-12 directories, 42 files
+13 directories, 36 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -110,8 +105,18 @@ USER appuser
 RUN python -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
-# Install dependencies in virtual environment
-RUN pip install --no-cache-dir -r docker_requirements.txt
+# Upgrade pip and install dependencies with increased timeout and using a mirror
+RUN pip install --upgrade pip
+
+# Install numpy and scipy separately with increased timeout
+RUN pip install --no-cache-dir numpy==1.26.4 scipy==1.14.0 --timeout 600
+
+# Install scikit-learn separately with an even longer timeout
+RUN pip install --no-cache-dir scikit-learn==1.4.0 --timeout 900
+
+# Install other dependencies
+RUN pip install --no-cache-dir -r docker_requirements.txt --timeout 600 --index-url https://pypi.org/simple --trusted-host pypi.org
+
 RUN pip install fastapi uvicorn
 
 EXPOSE 8000
@@ -153,10 +158,13 @@ class Config:
     def validate_api_keys(self):
         return bool(self.OPENAI_API_KEY and self.TAVILY_API_KEY)
 
+    L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
+    COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))
+    BM25_THRESHOLD = float(os.getenv("BM25_THRESHOLD", "0.5"))
+    JACCARD_SIMILARITY_THRESHOLD = float(os.getenv("JACCARD_SIMILARITY_THRESHOLD", "0.3"))
+
 config = Config()-e 
 File: ./docker-compose.yml
-
-version: '3.8'
 
 services:
   multi-agent-rag:
@@ -190,750 +198,6 @@ services:
     command: ["python", "-m", "src.cli"]
     stdin_open: true
     tty: true-e 
-File: ./get-docker.sh
-
-#!/bin/sh
-set -e
-# Docker Engine for Linux installation script.
-#
-# This script is intended as a convenient way to configure docker's package
-# repositories and to install Docker Engine, This script is not recommended
-# for production environments. Before running this script, make yourself familiar
-# with potential risks and limitations, and refer to the installation manual
-# at https://docs.docker.com/engine/install/ for alternative installation methods.
-#
-# The script:
-#
-# - Requires `root` or `sudo` privileges to run.
-# - Attempts to detect your Linux distribution and version and configure your
-#   package management system for you.
-# - Doesn't allow you to customize most installation parameters.
-# - Installs dependencies and recommendations without asking for confirmation.
-# - Installs the latest stable release (by default) of Docker CLI, Docker Engine,
-#   Docker Buildx, Docker Compose, containerd, and runc. When using this script
-#   to provision a machine, this may result in unexpected major version upgrades
-#   of these packages. Always test upgrades in a test environment before
-#   deploying to your production systems.
-# - Isn't designed to upgrade an existing Docker installation. When using the
-#   script to update an existing installation, dependencies may not be updated
-#   to the expected version, resulting in outdated versions.
-#
-# Source code is available at https://github.com/docker/docker-install/
-#
-# Usage
-# ==============================================================================
-#
-# To install the latest stable versions of Docker CLI, Docker Engine, and their
-# dependencies:
-#
-# 1. download the script
-#
-#   $ curl -fsSL https://get.docker.com -o install-docker.sh
-#
-# 2. verify the script's content
-#
-#   $ cat install-docker.sh
-#
-# 3. run the script with --dry-run to verify the steps it executes
-#
-#   $ sh install-docker.sh --dry-run
-#
-# 4. run the script either as root, or using sudo to perform the installation.
-#
-#   $ sudo sh install-docker.sh
-#
-# Command-line options
-# ==============================================================================
-#
-# --version <VERSION>
-# Use the --version option to install a specific version, for example:
-#
-#   $ sudo sh install-docker.sh --version 23.0
-#
-# --channel <stable|test>
-#
-# Use the --channel option to install from an alternative installation channel.
-# The following example installs the latest versions from the "test" channel,
-# which includes pre-releases (alpha, beta, rc):
-#
-#   $ sudo sh install-docker.sh --channel test
-#
-# Alternatively, use the script at https://test.docker.com, which uses the test
-# channel as default.
-#
-# --mirror <Aliyun|AzureChinaCloud>
-#
-# Use the --mirror option to install from a mirror supported by this script.
-# Available mirrors are "Aliyun" (https://mirrors.aliyun.com/docker-ce), and
-# "AzureChinaCloud" (https://mirror.azure.cn/docker-ce), for example:
-#
-#   $ sudo sh install-docker.sh --mirror AzureChinaCloud
-#
-# ==============================================================================
-
-
-# Git commit from https://github.com/docker/docker-install when
-# the script was uploaded (Should only be modified by upload job):
-SCRIPT_COMMIT_SHA="6d9743e9656cc56f699a64800b098d5ea5a60020"
-
-# strip "v" prefix if present
-VERSION="${VERSION#v}"
-
-# The channel to install from:
-#   * stable
-#   * test
-#   * edge (deprecated)
-#   * nightly (deprecated)
-DEFAULT_CHANNEL_VALUE="stable"
-if [ -z "$CHANNEL" ]; then
-	CHANNEL=$DEFAULT_CHANNEL_VALUE
-fi
-
-DEFAULT_DOWNLOAD_URL="https://download.docker.com"
-if [ -z "$DOWNLOAD_URL" ]; then
-	DOWNLOAD_URL=$DEFAULT_DOWNLOAD_URL
-fi
-
-DEFAULT_REPO_FILE="docker-ce.repo"
-if [ -z "$REPO_FILE" ]; then
-	REPO_FILE="$DEFAULT_REPO_FILE"
-fi
-
-mirror=''
-DRY_RUN=${DRY_RUN:-}
-while [ $# -gt 0 ]; do
-	case "$1" in
-		--channel)
-			CHANNEL="$2"
-			shift
-			;;
-		--dry-run)
-			DRY_RUN=1
-			;;
-		--mirror)
-			mirror="$2"
-			shift
-			;;
-		--version)
-			VERSION="${2#v}"
-			shift
-			;;
-		--*)
-			echo "Illegal option $1"
-			;;
-	esac
-	shift $(( $# > 0 ? 1 : 0 ))
-done
-
-case "$mirror" in
-	Aliyun)
-		DOWNLOAD_URL="https://mirrors.aliyun.com/docker-ce"
-		;;
-	AzureChinaCloud)
-		DOWNLOAD_URL="https://mirror.azure.cn/docker-ce"
-		;;
-	"")
-		;;
-	*)
-		>&2 echo "unknown mirror '$mirror': use either 'Aliyun', or 'AzureChinaCloud'."
-		exit 1
-		;;
-esac
-
-case "$CHANNEL" in
-	stable|test)
-		;;
-	edge|nightly)
-		>&2 echo "DEPRECATED: the $CHANNEL channel has been deprecated and is no longer supported by this script."
-		exit 1
-		;;
-	*)
-		>&2 echo "unknown CHANNEL '$CHANNEL': use either stable or test."
-		exit 1
-		;;
-esac
-
-command_exists() {
-	command -v "$@" > /dev/null 2>&1
-}
-
-# version_gte checks if the version specified in $VERSION is at least the given
-# SemVer (Maj.Minor[.Patch]), or CalVer (YY.MM) version.It returns 0 (success)
-# if $VERSION is either unset (=latest) or newer or equal than the specified
-# version, or returns 1 (fail) otherwise.
-#
-# examples:
-#
-# VERSION=23.0
-# version_gte 23.0  // 0 (success)
-# version_gte 20.10 // 0 (success)
-# version_gte 19.03 // 0 (success)
-# version_gte 21.10 // 1 (fail)
-version_gte() {
-	if [ -z "$VERSION" ]; then
-			return 0
-	fi
-	eval version_compare "$VERSION" "$1"
-}
-
-# version_compare compares two version strings (either SemVer (Major.Minor.Path),
-# or CalVer (YY.MM) version strings. It returns 0 (success) if version A is newer
-# or equal than version B, or 1 (fail) otherwise. Patch releases and pre-release
-# (-alpha/-beta) are not taken into account
-#
-# examples:
-#
-# version_compare 23.0.0 20.10 // 0 (success)
-# version_compare 23.0 20.10   // 0 (success)
-# version_compare 20.10 19.03  // 0 (success)
-# version_compare 20.10 20.10  // 0 (success)
-# version_compare 19.03 20.10  // 1 (fail)
-version_compare() (
-	set +x
-
-	yy_a="$(echo "$1" | cut -d'.' -f1)"
-	yy_b="$(echo "$2" | cut -d'.' -f1)"
-	if [ "$yy_a" -lt "$yy_b" ]; then
-		return 1
-	fi
-	if [ "$yy_a" -gt "$yy_b" ]; then
-		return 0
-	fi
-	mm_a="$(echo "$1" | cut -d'.' -f2)"
-	mm_b="$(echo "$2" | cut -d'.' -f2)"
-
-	# trim leading zeros to accommodate CalVer
-	mm_a="${mm_a#0}"
-	mm_b="${mm_b#0}"
-
-	if [ "${mm_a:-0}" -lt "${mm_b:-0}" ]; then
-		return 1
-	fi
-
-	return 0
-)
-
-is_dry_run() {
-	if [ -z "$DRY_RUN" ]; then
-		return 1
-	else
-		return 0
-	fi
-}
-
-is_wsl() {
-	case "$(uname -r)" in
-	*microsoft* ) true ;; # WSL 2
-	*Microsoft* ) true ;; # WSL 1
-	* ) false;;
-	esac
-}
-
-is_darwin() {
-	case "$(uname -s)" in
-	*darwin* ) true ;;
-	*Darwin* ) true ;;
-	* ) false;;
-	esac
-}
-
-deprecation_notice() {
-	distro=$1
-	distro_version=$2
-	echo
-	printf "\033[91;1mDEPRECATION WARNING\033[0m\n"
-	printf "    This Linux distribution (\033[1m%s %s\033[0m) reached end-of-life and is no longer supported by this script.\n" "$distro" "$distro_version"
-	echo   "    No updates or security fixes will be released for this distribution, and users are recommended"
-	echo   "    to upgrade to a currently maintained version of $distro."
-	echo
-	printf   "Press \033[1mCtrl+C\033[0m now to abort this script, or wait for the installation to continue."
-	echo
-	sleep 10
-}
-
-get_distribution() {
-	lsb_dist=""
-	# Every system that we officially support has /etc/os-release
-	if [ -r /etc/os-release ]; then
-		lsb_dist="$(. /etc/os-release && echo "$ID")"
-	fi
-	# Returning an empty string here should be alright since the
-	# case statements don't act unless you provide an actual value
-	echo "$lsb_dist"
-}
-
-echo_docker_as_nonroot() {
-	if is_dry_run; then
-		return
-	fi
-	if command_exists docker && [ -e /var/run/docker.sock ]; then
-		(
-			set -x
-			$sh_c 'docker version'
-		) || true
-	fi
-
-	# intentionally mixed spaces and tabs here -- tabs are stripped by "<<-EOF", spaces are kept in the output
-	echo
-	echo "================================================================================"
-	echo
-	if version_gte "20.10"; then
-		echo "To run Docker as a non-privileged user, consider setting up the"
-		echo "Docker daemon in rootless mode for your user:"
-		echo
-		echo "    dockerd-rootless-setuptool.sh install"
-		echo
-		echo "Visit https://docs.docker.com/go/rootless/ to learn about rootless mode."
-		echo
-	fi
-	echo
-	echo "To run the Docker daemon as a fully privileged service, but granting non-root"
-	echo "users access, refer to https://docs.docker.com/go/daemon-access/"
-	echo
-	echo "WARNING: Access to the remote API on a privileged Docker daemon is equivalent"
-	echo "         to root access on the host. Refer to the 'Docker daemon attack surface'"
-	echo "         documentation for details: https://docs.docker.com/go/attack-surface/"
-	echo
-	echo "================================================================================"
-	echo
-}
-
-# Check if this is a forked Linux distro
-check_forked() {
-
-	# Check for lsb_release command existence, it usually exists in forked distros
-	if command_exists lsb_release; then
-		# Check if the `-u` option is supported
-		set +e
-		lsb_release -a -u > /dev/null 2>&1
-		lsb_release_exit_code=$?
-		set -e
-
-		# Check if the command has exited successfully, it means we're in a forked distro
-		if [ "$lsb_release_exit_code" = "0" ]; then
-			# Print info about current distro
-			cat <<-EOF
-			You're using '$lsb_dist' version '$dist_version'.
-			EOF
-
-			# Get the upstream release info
-			lsb_dist=$(lsb_release -a -u 2>&1 | tr '[:upper:]' '[:lower:]' | grep -E 'id' | cut -d ':' -f 2 | tr -d '[:space:]')
-			dist_version=$(lsb_release -a -u 2>&1 | tr '[:upper:]' '[:lower:]' | grep -E 'codename' | cut -d ':' -f 2 | tr -d '[:space:]')
-
-			# Print info about upstream distro
-			cat <<-EOF
-			Upstream release is '$lsb_dist' version '$dist_version'.
-			EOF
-		else
-			if [ -r /etc/debian_version ] && [ "$lsb_dist" != "ubuntu" ] && [ "$lsb_dist" != "raspbian" ]; then
-				if [ "$lsb_dist" = "osmc" ]; then
-					# OSMC runs Raspbian
-					lsb_dist=raspbian
-				else
-					# We're Debian and don't even know it!
-					lsb_dist=debian
-				fi
-				dist_version="$(sed 's/\/.*//' /etc/debian_version | sed 's/\..*//')"
-				case "$dist_version" in
-					12)
-						dist_version="bookworm"
-					;;
-					11)
-						dist_version="bullseye"
-					;;
-					10)
-						dist_version="buster"
-					;;
-					9)
-						dist_version="stretch"
-					;;
-					8)
-						dist_version="jessie"
-					;;
-				esac
-			fi
-		fi
-	fi
-}
-
-do_install() {
-	echo "# Executing docker install script, commit: $SCRIPT_COMMIT_SHA"
-
-	if command_exists docker; then
-		cat >&2 <<-'EOF'
-			Warning: the "docker" command appears to already exist on this system.
-
-			If you already have Docker installed, this script can cause trouble, which is
-			why we're displaying this warning and provide the opportunity to cancel the
-			installation.
-
-			If you installed the current Docker package using this script and are using it
-			again to update Docker, you can safely ignore this message.
-
-			You may press Ctrl+C now to abort this script.
-		EOF
-		( set -x; sleep 20 )
-	fi
-
-	user="$(id -un 2>/dev/null || true)"
-
-	sh_c='sh -c'
-	if [ "$user" != 'root' ]; then
-		if command_exists sudo; then
-			sh_c='sudo -E sh -c'
-		elif command_exists su; then
-			sh_c='su -c'
-		else
-			cat >&2 <<-'EOF'
-			Error: this installer needs the ability to run commands as root.
-			We are unable to find either "sudo" or "su" available to make this happen.
-			EOF
-			exit 1
-		fi
-	fi
-
-	if is_dry_run; then
-		sh_c="echo"
-	fi
-
-	# perform some very rudimentary platform detection
-	lsb_dist=$( get_distribution )
-	lsb_dist="$(echo "$lsb_dist" | tr '[:upper:]' '[:lower:]')"
-
-	if is_wsl; then
-		echo
-		echo "WSL DETECTED: We recommend using Docker Desktop for Windows."
-		echo "Please get Docker Desktop from https://www.docker.com/products/docker-desktop/"
-		echo
-		cat >&2 <<-'EOF'
-
-			You may press Ctrl+C now to abort this script.
-		EOF
-		( set -x; sleep 20 )
-	fi
-
-	case "$lsb_dist" in
-
-		ubuntu)
-			if command_exists lsb_release; then
-				dist_version="$(lsb_release --codename | cut -f2)"
-			fi
-			if [ -z "$dist_version" ] && [ -r /etc/lsb-release ]; then
-				dist_version="$(. /etc/lsb-release && echo "$DISTRIB_CODENAME")"
-			fi
-		;;
-
-		debian|raspbian)
-			dist_version="$(sed 's/\/.*//' /etc/debian_version | sed 's/\..*//')"
-			case "$dist_version" in
-				12)
-					dist_version="bookworm"
-				;;
-				11)
-					dist_version="bullseye"
-				;;
-				10)
-					dist_version="buster"
-				;;
-				9)
-					dist_version="stretch"
-				;;
-				8)
-					dist_version="jessie"
-				;;
-			esac
-		;;
-
-		centos|rhel)
-			if [ -z "$dist_version" ] && [ -r /etc/os-release ]; then
-				dist_version="$(. /etc/os-release && echo "$VERSION_ID")"
-			fi
-		;;
-
-		*)
-			if command_exists lsb_release; then
-				dist_version="$(lsb_release --release | cut -f2)"
-			fi
-			if [ -z "$dist_version" ] && [ -r /etc/os-release ]; then
-				dist_version="$(. /etc/os-release && echo "$VERSION_ID")"
-			fi
-		;;
-
-	esac
-
-	# Check if this is a forked Linux distro
-	check_forked
-
-	# Print deprecation warnings for distro versions that recently reached EOL,
-	# but may still be commonly used (especially LTS versions).
-	case "$lsb_dist.$dist_version" in
-		debian.stretch|debian.jessie)
-			deprecation_notice "$lsb_dist" "$dist_version"
-			;;
-		raspbian.stretch|raspbian.jessie)
-			deprecation_notice "$lsb_dist" "$dist_version"
-			;;
-		ubuntu.xenial|ubuntu.trusty)
-			deprecation_notice "$lsb_dist" "$dist_version"
-			;;
-		ubuntu.lunar|ubuntu.kinetic|ubuntu.impish|ubuntu.hirsute|ubuntu.groovy|ubuntu.eoan|ubuntu.disco|ubuntu.cosmic)
-			deprecation_notice "$lsb_dist" "$dist_version"
-			;;
-		fedora.*)
-			if [ "$dist_version" -lt 36 ]; then
-				deprecation_notice "$lsb_dist" "$dist_version"
-			fi
-			;;
-	esac
-
-	# Run setup for each distro accordingly
-	case "$lsb_dist" in
-		ubuntu|debian|raspbian)
-			pre_reqs="apt-transport-https ca-certificates curl"
-			apt_repo="deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $DOWNLOAD_URL/linux/$lsb_dist $dist_version $CHANNEL"
-			(
-				if ! is_dry_run; then
-					set -x
-				fi
-				$sh_c 'apt-get update -qq >/dev/null'
-				$sh_c "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $pre_reqs >/dev/null"
-				$sh_c 'install -m 0755 -d /etc/apt/keyrings'
-				$sh_c "curl -fsSL \"$DOWNLOAD_URL/linux/$lsb_dist/gpg\" -o /etc/apt/keyrings/docker.asc"
-				$sh_c "chmod a+r /etc/apt/keyrings/docker.asc"
-				$sh_c "echo \"$apt_repo\" > /etc/apt/sources.list.d/docker.list"
-				$sh_c 'apt-get update -qq >/dev/null'
-			)
-			pkg_version=""
-			if [ -n "$VERSION" ]; then
-				if is_dry_run; then
-					echo "# WARNING: VERSION pinning is not supported in DRY_RUN"
-				else
-					# Will work for incomplete versions IE (17.12), but may not actually grab the "latest" if in the test channel
-					pkg_pattern="$(echo "$VERSION" | sed 's/-ce-/~ce~.*/g' | sed 's/-/.*/g')"
-					search_command="apt-cache madison docker-ce | grep '$pkg_pattern' | head -1 | awk '{\$1=\$1};1' | cut -d' ' -f 3"
-					pkg_version="$($sh_c "$search_command")"
-					echo "INFO: Searching repository for VERSION '$VERSION'"
-					echo "INFO: $search_command"
-					if [ -z "$pkg_version" ]; then
-						echo
-						echo "ERROR: '$VERSION' not found amongst apt-cache madison results"
-						echo
-						exit 1
-					fi
-					if version_gte "18.09"; then
-							search_command="apt-cache madison docker-ce-cli | grep '$pkg_pattern' | head -1 | awk '{\$1=\$1};1' | cut -d' ' -f 3"
-							echo "INFO: $search_command"
-							cli_pkg_version="=$($sh_c "$search_command")"
-					fi
-					pkg_version="=$pkg_version"
-				fi
-			fi
-			(
-				pkgs="docker-ce${pkg_version%=}"
-				if version_gte "18.09"; then
-						# older versions didn't ship the cli and containerd as separate packages
-						pkgs="$pkgs docker-ce-cli${cli_pkg_version%=} containerd.io"
-				fi
-				if version_gte "20.10"; then
-						pkgs="$pkgs docker-compose-plugin docker-ce-rootless-extras$pkg_version"
-				fi
-				if version_gte "23.0"; then
-						pkgs="$pkgs docker-buildx-plugin"
-				fi
-				if ! is_dry_run; then
-					set -x
-				fi
-				$sh_c "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $pkgs >/dev/null"
-			)
-			echo_docker_as_nonroot
-			exit 0
-			;;
-		centos|fedora|rhel)
-			if [ "$(uname -m)" != "s390x" ] && [ "$lsb_dist" = "rhel" ]; then
-				echo "Packages for RHEL are currently only available for s390x."
-				exit 1
-			fi
-
-			if command_exists dnf; then
-				pkg_manager="dnf"
-				pkg_manager_flags="--best"
-				config_manager="dnf config-manager"
-				enable_channel_flag="--set-enabled"
-				disable_channel_flag="--set-disabled"
-				pre_reqs="dnf-plugins-core"
-			else
-				pkg_manager="yum"
-				pkg_manager_flags=""
-				config_manager="yum-config-manager"
-				enable_channel_flag="--enable"
-				disable_channel_flag="--disable"
-				pre_reqs="yum-utils"
-			fi
-
-			if [ "$lsb_dist" = "fedora" ]; then
-				pkg_suffix="fc$dist_version"
-			else
-				pkg_suffix="el"
-			fi
-			repo_file_url="$DOWNLOAD_URL/linux/$lsb_dist/$REPO_FILE"
-			(
-				if ! is_dry_run; then
-					set -x
-				fi
-				$sh_c "$pkg_manager $pkg_manager_flags install -y -q $pre_reqs"
-				$sh_c "$config_manager --add-repo $repo_file_url"
-
-				if [ "$CHANNEL" != "stable" ]; then
-					$sh_c "$config_manager $disable_channel_flag 'docker-ce-*'"
-					$sh_c "$config_manager $enable_channel_flag 'docker-ce-$CHANNEL'"
-				fi
-				$sh_c "$pkg_manager makecache"
-			)
-			pkg_version=""
-			if [ -n "$VERSION" ]; then
-				if is_dry_run; then
-					echo "# WARNING: VERSION pinning is not supported in DRY_RUN"
-				else
-					pkg_pattern="$(echo "$VERSION" | sed 's/-ce-/\\\\.ce.*/g' | sed 's/-/.*/g').*$pkg_suffix"
-					search_command="$pkg_manager list --showduplicates docker-ce | grep '$pkg_pattern' | tail -1 | awk '{print \$2}'"
-					pkg_version="$($sh_c "$search_command")"
-					echo "INFO: Searching repository for VERSION '$VERSION'"
-					echo "INFO: $search_command"
-					if [ -z "$pkg_version" ]; then
-						echo
-						echo "ERROR: '$VERSION' not found amongst $pkg_manager list results"
-						echo
-						exit 1
-					fi
-					if version_gte "18.09"; then
-						# older versions don't support a cli package
-						search_command="$pkg_manager list --showduplicates docker-ce-cli | grep '$pkg_pattern' | tail -1 | awk '{print \$2}'"
-						cli_pkg_version="$($sh_c "$search_command" | cut -d':' -f 2)"
-					fi
-					# Cut out the epoch and prefix with a '-'
-					pkg_version="-$(echo "$pkg_version" | cut -d':' -f 2)"
-				fi
-			fi
-			(
-				pkgs="docker-ce$pkg_version"
-				if version_gte "18.09"; then
-					# older versions didn't ship the cli and containerd as separate packages
-					if [ -n "$cli_pkg_version" ]; then
-						pkgs="$pkgs docker-ce-cli-$cli_pkg_version containerd.io"
-					else
-						pkgs="$pkgs docker-ce-cli containerd.io"
-					fi
-				fi
-				if version_gte "20.10"; then
-					pkgs="$pkgs docker-compose-plugin docker-ce-rootless-extras$pkg_version"
-				fi
-				if version_gte "23.0"; then
-						pkgs="$pkgs docker-buildx-plugin"
-				fi
-				if ! is_dry_run; then
-					set -x
-				fi
-				$sh_c "$pkg_manager $pkg_manager_flags install -y -q $pkgs"
-			)
-			echo_docker_as_nonroot
-			exit 0
-			;;
-		sles)
-			if [ "$(uname -m)" != "s390x" ]; then
-				echo "Packages for SLES are currently only available for s390x"
-				exit 1
-			fi
-			repo_file_url="$DOWNLOAD_URL/linux/$lsb_dist/$REPO_FILE"
-			pre_reqs="ca-certificates curl libseccomp2 awk"
-			(
-				if ! is_dry_run; then
-					set -x
-				fi
-				$sh_c "zypper install -y $pre_reqs"
-				$sh_c "zypper addrepo $repo_file_url"
-				if ! is_dry_run; then
-						cat >&2 <<-'EOF'
-						WARNING!!
-						openSUSE repository (https://download.opensuse.org/repositories/security:/SELinux) will be enabled now.
-						Do you wish to continue?
-						You may press Ctrl+C now to abort this script.
-						EOF
-						( set -x; sleep 30 )
-				fi
-				opensuse_repo="https://download.opensuse.org/repositories/security:/SELinux/openSUSE_Factory/security:SELinux.repo"
-				$sh_c "zypper addrepo $opensuse_repo"
-				$sh_c "zypper --gpg-auto-import-keys refresh"
-				$sh_c "zypper lr -d"
-			)
-			pkg_version=""
-			if [ -n "$VERSION" ]; then
-				if is_dry_run; then
-					echo "# WARNING: VERSION pinning is not supported in DRY_RUN"
-				else
-					pkg_pattern="$(echo "$VERSION" | sed 's/-ce-/\\\\.ce.*/g' | sed 's/-/.*/g')"
-					search_command="zypper search -s --match-exact 'docker-ce' | grep '$pkg_pattern' | tail -1 | awk '{print \$6}'"
-					pkg_version="$($sh_c "$search_command")"
-					echo "INFO: Searching repository for VERSION '$VERSION'"
-					echo "INFO: $search_command"
-					if [ -z "$pkg_version" ]; then
-						echo
-						echo "ERROR: '$VERSION' not found amongst zypper list results"
-						echo
-						exit 1
-					fi
-					search_command="zypper search -s --match-exact 'docker-ce-cli' | grep '$pkg_pattern' | tail -1 | awk '{print \$6}'"
-					# It's okay for cli_pkg_version to be blank, since older versions don't support a cli package
-					cli_pkg_version="$($sh_c "$search_command")"
-					pkg_version="-$pkg_version"
-				fi
-			fi
-			(
-				pkgs="docker-ce$pkg_version"
-				if version_gte "18.09"; then
-					if [ -n "$cli_pkg_version" ]; then
-						# older versions didn't ship the cli and containerd as separate packages
-						pkgs="$pkgs docker-ce-cli-$cli_pkg_version containerd.io"
-					else
-						pkgs="$pkgs docker-ce-cli containerd.io"
-					fi
-				fi
-				if version_gte "20.10"; then
-					pkgs="$pkgs docker-compose-plugin docker-ce-rootless-extras$pkg_version"
-				fi
-				if version_gte "23.0"; then
-						pkgs="$pkgs docker-buildx-plugin"
-				fi
-				if ! is_dry_run; then
-					set -x
-				fi
-				$sh_c "zypper -q install -y $pkgs"
-			)
-			echo_docker_as_nonroot
-			exit 0
-			;;
-		*)
-			if [ -z "$lsb_dist" ]; then
-				if is_darwin; then
-					echo
-					echo "ERROR: Unsupported operating system 'macOS'"
-					echo "Please get Docker Desktop from https://www.docker.com/products/docker-desktop"
-					echo
-					exit 1
-				fi
-			fi
-			echo
-			echo "ERROR: Unsupported distribution '$lsb_dist'"
-			echo
-			exit 1
-			;;
-	esac
-	exit 1
-}
-
-# wrapped up in a function so that we have some protection against only getting
-# half the file during "curl | sh"
-do_install
--e 
 File: ./docker_requirements.txt
 
 langchain==0.2.3
@@ -943,13 +207,12 @@ langchain-core==0.2.5
 langchain-text-splitters==0.2.1
 langsmith==0.1.77
 openai==1.34.0
-numpy==1.26.4
 pydantic==2.7.4
 pydantic-core==2.18.4
 dataclasses-json==0.6.7
 python-dotenv==1.0.1
 aiosqlite
--e 
+rank_bm25==0.2.2-e 
 File: ./src/__init__.py
 
 -e 
@@ -1421,6 +684,151 @@ class MemoryManager:
             logger.info("Discrepancies fixed.")
         else:
             logger.info("No discrepancies found.")-e 
+File: ./src/memory/enhanced_memory_manager.py
+
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from rank_bm25 import BM25Okapi
+import aiosqlite
+from typing import List, Tuple, Dict
+from src.memory.memory_manager import MemoryManager
+from datetime import datetime
+
+class EnhancedMemoryManager(MemoryManager):
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.tfidf_vectorizer = None
+        self.bm25 = None
+        self.corpus = []
+
+    async def initialize(self):
+        await super().initialize()
+        await self._load_corpus()
+        if self.corpus:
+            self._update_indexing()
+
+    async def _load_corpus(self):
+        async with aiosqlite.connect(self.personal_db_path) as db:
+            async with db.execute("SELECT query, result FROM memories") as cursor:
+                memories = await cursor.fetchall()
+        self.corpus = [f"{query} {result}" for query, result in memories]
+
+    def _update_indexing(self):
+        if self.corpus:
+            self.tfidf_vectorizer = TfidfVectorizer()
+            self.tfidf_vectorizer.fit(self.corpus)
+            tokenized_corpus = [doc.split() for doc in self.corpus]
+            self.bm25 = BM25Okapi(tokenized_corpus)
+
+    async def save_memory(self, query: str, result: str):
+        await super().save_memory(query, result)
+        self.corpus.append(f"{query} {result}")
+        self._update_indexing()
+
+    async def retrieve_relevant_memories(self, query: str, threshold: float = 0.75, return_metadata: bool = False) -> List[Tuple[str, str, str]]:
+        if not self.corpus:
+            return []
+
+        query_embedding = np.array(await self.embeddings.aembed_query(query))
+        
+        l2_memories = await self._retrieve_l2_norm(query_embedding, threshold)
+        cosine_memories = await self._retrieve_cosine_similarity(query_embedding, threshold)
+        bm25_memories = await self._retrieve_bm25(query, threshold)
+        jaccard_memories = await self._retrieve_jaccard_similarity(query, threshold)
+
+        combined_memories = self._combine_unique_memories([l2_memories, cosine_memories, bm25_memories, jaccard_memories])
+
+        if return_metadata:
+            return {
+                "memories": [(memory[0], memory[1], memory[3]) for memory in combined_memories],
+                "metadata": {
+                    "l2_count": len(l2_memories),
+                    "cosine_count": len(cosine_memories),
+                    "bm25_count": len(bm25_memories),
+                    "jaccard_count": len(jaccard_memories)
+                }
+            }
+        else:
+            return [(memory[0], memory[1], memory[3]) for memory in combined_memories]
+
+    async def _retrieve_l2_norm(self, query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, float, str]]:
+        return await super()._retrieve_from_db(self.personal_db_path, query_embedding, threshold)
+
+    async def _retrieve_cosine_similarity(self, query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, float, str]]:
+        async with aiosqlite.connect(self.personal_db_path) as db:
+            async with db.execute("SELECT query, result, embedding, timestamp FROM memories") as cursor:
+                memories = await cursor.fetchall()
+
+        relevant_memories = []
+        for memory in memories:
+            memory_query, memory_result, memory_embedding, timestamp = memory
+            memory_embedding = np.frombuffer(memory_embedding)
+            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+            if similarity >= threshold:
+                relevant_memories.append((memory_query, memory_result, similarity, timestamp))
+
+        return relevant_memories
+
+    async def _retrieve_bm25(self, query: str, threshold: float) -> List[Tuple[str, str, float, str]]:
+        if not self.bm25:
+            return []
+
+        tokenized_query = query.split()
+        scores = self.bm25.get_scores(tokenized_query)
+        
+        if len(scores) == 0:
+            return []
+        
+        max_score = np.max(scores)
+        if max_score == 0:
+            return []
+        
+        normalized_scores = scores / max_score  # Normalize scores to [0, 1] range
+
+        relevant_memories = []
+        async with aiosqlite.connect(self.personal_db_path) as db:
+            for i, score in enumerate(normalized_scores):
+                if score >= threshold:
+                    async with db.execute("SELECT query, result, timestamp FROM memories WHERE rowid = ?", (i+1,)) as cursor:
+                        memory = await cursor.fetchone()
+                        if memory:
+                            relevant_memories.append((*memory, score))
+
+        return relevant_memories
+
+    async def _retrieve_jaccard_similarity(self, query: str, threshold: float) -> List[Tuple[str, str, float, str]]:
+        query_set = set(query.lower().split())
+
+        async with aiosqlite.connect(self.personal_db_path) as db:
+            async with db.execute("SELECT query, result, timestamp FROM memories") as cursor:
+                memories = await cursor.fetchall()
+
+        relevant_memories = []
+        for memory in memories:
+            memory_query, memory_result, timestamp = memory
+            memory_set = set((memory_query + " " + memory_result).lower().split())
+            similarity = len(query_set.intersection(memory_set)) / len(query_set.union(memory_set))
+            if similarity >= threshold:
+                relevant_memories.append((*memory, similarity))
+
+        return relevant_memories
+
+    def _combine_unique_memories(self, memory_lists: List[List[Tuple[str, str, float, str]]]) -> List[Tuple[str, str, str]]:
+        seen = set()
+        unique_memories = []
+        for memories in memory_lists:
+            for memory in memories:
+                if memory[0] not in seen:  # Assuming the first element is a unique identifier
+                    seen.add(memory[0])
+                    unique_memories.append(memory)
+        
+        # Sort by similarity score (descending) and then by timestamp (descending)
+        return sorted(
+            unique_memories,
+            key=lambda x: (-float(x[2]) if isinstance(x[2], (int, float)) else 0,
+                           datetime.fromisoformat(x[3]) if isinstance(x[3], str) else datetime.min),
+            reverse=True
+        )-e 
 File: ./src/utils/__init__.py
 
 -e 
@@ -1502,7 +910,7 @@ File: ./src/utils/controller.py
 import logging
 from typing import List, Tuple
 from src.agents.agent import Agent
-from src.memory.memory_manager import MemoryManager
+from src.memory.enhanced_memory_manager import EnhancedMemoryManager
 from config import config
 
 class Controller:
@@ -1513,7 +921,7 @@ class Controller:
         self.agent = None
 
     async def initialize(self):
-        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
+        self.memory_manager = EnhancedMemoryManager(config.OPENAI_API_KEY)
         await self.memory_manager.initialize()
         self.agent = Agent(self.memory_manager)
 
@@ -1525,7 +933,7 @@ class Controller:
             return response
         except Exception as e:
             self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
-            raise
+            return f"An error occurred while processing your query: {str(e)}"
 
     async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
         return await self.memory_manager.get_memories(limit)-e 
@@ -1598,6 +1006,47 @@ class MemoryAnalyzer:
         
         similarities.sort(key=lambda x: x[2], reverse=True)
         return similarities[:limit]-e 
+File: ./src/utils/similarity_analysis.py
+
+import logging
+from typing import Dict, List, Tuple
+
+logger = logging.getLogger('memory')
+
+class SimilarityAnalyzer:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+
+    async def analyze_retrieval_performance(self, query: str) -> Dict[str, List[Tuple[str, str, float]]]:
+        try:
+            results = await self.memory_manager.retrieve_relevant_memories(query, return_metadata=True)
+            memories = results['memories']
+            metadata = results['metadata']
+
+            logger.info(f"Retrieved {len(memories)} memories for query: '{query}'")
+            logger.info(f"Retrieval breakdown: {metadata}")
+
+            return {
+                "l2_norm": memories[:metadata['l2_count']],
+                "cosine_similarity": memories[metadata['l2_count']:metadata['l2_count'] + metadata['cosine_count']],
+                "bm25": memories[metadata['l2_count'] + metadata['cosine_count']:metadata['l2_count'] + metadata['cosine_count'] + metadata['bm25_count']],
+                "jaccard_similarity": memories[metadata['l2_count'] + metadata['cosine_count'] + metadata['bm25_count']:]
+            }
+        except Exception as e:
+            logger.error(f"Error during retrieval performance analysis: {str(e)}")
+            return {}
+
+    def print_analysis(self, analysis_results: Dict[str, List[Tuple[str, str, float]]]):
+        if not analysis_results:
+            print("No analysis results available.")
+            return
+
+        for method, memories in analysis_results.items():
+            print(f"\n{method.upper()} Results:")
+            for i, (query, result, _) in enumerate(memories, 1):
+                print(f"{i}. Query: {query}")
+                print(f"   Result: {result}")
+                print()-e 
 File: ./src/api.py
 
 from fastapi import FastAPI, HTTPException, Request
@@ -1681,18 +1130,22 @@ File: ./src/cli.py
 import asyncio
 from src.utils.controller import Controller
 from src.utils.logging_setup import setup_logging
+from src.utils.similarity_analysis import SimilarityAnalyzer
 
 master_logger, chat_logger, memory_logger, database_logger = setup_logging()
 controller = Controller()
+similarity_analyzer = None
 
 async def initialize():
     await controller.initialize()
+    global similarity_analyzer
+    similarity_analyzer = SimilarityAnalyzer(controller.memory_manager)
 
 async def main():
     await initialize()
     while True:
         try:
-            command = input("Enter a command (query/memories/consistency/quit): ").strip().lower()
+            command = input("Enter a command (query/memories/consistency/analyze/quit): ").strip().lower()
             
             if command == 'quit':
                 break
@@ -1711,6 +1164,10 @@ async def main():
             elif command == 'consistency':
                 await controller.memory_manager.run_consistency_check_and_fix()
                 print("Consistency check and fix completed.")
+            elif command == 'analyze':
+                query = input("Enter a query to analyze: ")
+                analysis_results = await similarity_analyzer.analyze_retrieval_performance(query)
+                similarity_analyzer.print_analysis(analysis_results)
             else:
                 print("Invalid command. Please try again.")
         except Exception as e:
@@ -1719,47 +1176,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())-e 
-File: ./docs/database_structure.md
-
-# Database Structure and Operations
-
-## Overview
-
-The system uses two types of databases:
-1. Personal Database: Stores memories specific to each container.
-2. Master Database: Stores memories from all containers.
-
-## Database Structure
-
-Both personal and master databases have the following table structure:
-
-### Memories Table
-
-| Column    | Type    | Description                            |
-|-----------|---------|----------------------------------------|
-| id        | INTEGER | Primary key                            |
-| query     | TEXT    | The original query                     |
-| result    | TEXT    | The response or result                 |
-| embedding | BLOB    | Vector representation of the query     |
-| timestamp | DATETIME| When the memory was created/updated    |
-| author    | TEXT    | (Master DB only) Container ID          |
-
-## Querying Process
-
-1. When a query is received, it's first converted to an embedding.
-2. The system searches the personal database for similar memories.
-3. If fewer than 3 relevant memories are found, it also searches the master database.
-4. Memories are ranked by similarity and the top results are returned.
-
-## Syncing Mechanism
-
-- New memories are saved to both the personal and master databases.
-- The master database includes an 'author' field to track which container created each memory.
-- There's no automatic sync between personal and master databases after initial creation.
-
-## Versioning and Change Tracking
-
-(To be implemented)-e 
 File: ./docs/README.md
 
 # Multi-Agent RAG System with Continual Learning

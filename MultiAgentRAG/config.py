@@ -29,4 +29,9 @@ class Config:
     def validate_api_keys(self):
         return bool(self.OPENAI_API_KEY and self.TAVILY_API_KEY)
 
+    L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
+    COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))
+    BM25_THRESHOLD = float(os.getenv("BM25_THRESHOLD", "0.5"))
+    JACCARD_SIMILARITY_THRESHOLD = float(os.getenv("JACCARD_SIMILARITY_THRESHOLD", "0.3"))
+
 config = Config()

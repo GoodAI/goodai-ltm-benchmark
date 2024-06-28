@@ -30,5 +30,3 @@ services:
     command: ["python", "-m", "src.cli"]
     stdin_open: true
     tty: true
-
-name: sql-ltm-tool

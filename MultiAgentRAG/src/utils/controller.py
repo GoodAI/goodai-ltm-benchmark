@@ -1,7 +1,7 @@
 import logging
 from typing import List, Tuple
 from src.agents.agent import Agent
-from src.memory.memory_manager import MemoryManager
+from src.memory.enhanced_memory_manager import EnhancedMemoryManager
 from config import config
 
 class Controller:
@@ -12,7 +12,7 @@ class Controller:
         self.agent = None
 
     async def initialize(self):
-        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
+        self.memory_manager = EnhancedMemoryManager(config.OPENAI_API_KEY)
         await self.memory_manager.initialize()
         self.agent = Agent(self.memory_manager)
 
@@ -24,7 +24,7 @@ class Controller:
             return response
         except Exception as e:
             self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
-            raise
+            return f"An error occurred while processing your query: {str(e)}"
 
     async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
         return await self.memory_manager.get_memories(limit)
