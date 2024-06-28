@@ -2,18 +2,31 @@
 ├── Dockerfile
 ├── config.py
 ├── data
+│   ├── 162436fab917.db
+│   ├── 3033715498f5.db
+│   ├── cc5c99166e8d.db
 │   └── master.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
 ├── docs
 │   └── README.md
 ├── logs
-│   ├── 20240628_084543_2ef4d7e8e029
+│   ├── 20240628_120952_a082c85f0fc3
+│   ├── 20240628_124321_cc5c99166e8d
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   └── 20240628_095224_ce8d257f5024
+│   ├── 20240628_124755_162436fab917
+│   │   ├── chat.log
+│   │   ├── database.log
+│   │   ├── master.log
+│   │   └── memory.log
+│   └── 20240628_125327_3033715498f5
+│       ├── chat.log
+│       ├── database.log
+│       ├── master.log
+│       └── memory.log
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
 ├── scripts
@@ -41,6 +54,7 @@
 │   │   └── memory_manager.py
 │   └── utils
 │       ├── __init__.py
+│       ├── api_utils.py
 │       ├── controller.py
 │       ├── enhanced_logging.py
 │       ├── logging_setup.py
@@ -49,7 +63,7 @@
 │       └── similarity_analysis.py
 └── tree.txt
 
-13 directories, 36 files
+15 directories, 48 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -212,7 +226,8 @@ pydantic-core==2.18.4
 dataclasses-json==0.6.7
 python-dotenv==1.0.1
 aiosqlite
-rank_bm25==0.2.2-e 
+rank_bm25==0.2.2
+cachetools==5.3.0-e 
 File: ./src/__init__.py
 
 -e 
@@ -227,6 +242,7 @@ from langchain.schema import HumanMessage
 from typing import List, Tuple
 from config import config
 import json
+from src.utils.api_utils import rate_limited, exponential_backoff, cached
 
 logger = logging.getLogger('master')
 chat_logger = logging.getLogger('chat')
@@ -236,12 +252,28 @@ class Agent:
         self.memory_manager = memory_manager
         self.chat_model = ChatOpenAI(model_name=config.MODEL_NAME)
 
+    @cached
+    @rate_limited(max_calls=4, period=60)  # Adjust these values based on your API limits
+    @exponential_backoff(max_retries=3, base_delay=2)
     async def process_query(self, query: str) -> str:
         relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
-        context = "\n\n".join([f"{doc[0]}\n{doc[1]} ({doc[2]})" for doc in relevant_memories])
         
         messages = [
-            HumanMessage(content=f"REQUEST = \"{query}\". CONTEXT = \"\"\"{context}\"\"\" INSTRUCTIONS = Your 'CONTEXT' is formed of reverse chronologically ordered 'memories' in the format <REQUEST>,<RESPONSE> (<TIMESTAMP>). Use these to best respond to the request.")
+            HumanMessage(content=f"""REQUEST = "{query}". 
+
+CONTEXT = "{relevant_memories}"
+
+INSTRUCTIONS = The 'CONTEXT' provided contains relevant memories retrieved based on similarity to the current request. The format of the context is as follows:
+
+Similar by [Similarity Metric] (ordered by timestamp - ascending):
+<memory_id>, <previous_query>, <previous_response>, <timestamp>, <similarity_score>
+
+For memories that have been mentioned before, the format is shortened to:
+<memory_id>, <similarity_score>
+
+Use this context to inform your response to the current request. Pay attention to the similarity metrics and scores to gauge the relevance of each memory. Memories with higher similarity scores and more recent timestamps may be more pertinent to the current query.
+
+Please respond to the REQUEST based on this context and your general knowledge.""")
         ]
         
         # Log the full message sent to the API
@@ -252,7 +284,7 @@ class Agent:
         # Log the full API response
         chat_logger.info(f"Full ChatGPT API response: {json.dumps(response.dict(), indent=2)}")
         
-        logger.debug(f"Processed query: {query} with context: {context}")
+        logger.debug(f"Processed query: {query} with context: {relevant_memories}")
         
         return response.content-e 
 File: ./src/app.py
@@ -316,6 +348,181 @@ if __name__ == "__main__":
 File: ./src/memory/__init__.py
 
 -e 
+File: ./src/memory/enhanced_memory_manager.py
+
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from rank_bm25 import BM25Okapi
+import aiosqlite
+from typing import List, Tuple, Dict, Optional
+from src.memory.memory_manager import MemoryManager
+from datetime import datetime
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import logging
+import time
+from config import Config
+
+logger = logging.getLogger(__name__)
+
+class EnhancedMemoryManager(MemoryManager):
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
+        self.tfidf_vectorizer: Optional[TfidfVectorizer] = None
+        self.bm25: Optional[BM25Okapi] = None
+        self.corpus: List[str] = []
+        self.config = Config()
+
+    async def initialize(self):
+        """Initialize the EnhancedMemoryManager by loading the corpus and updating indexing."""
+        await super().initialize()
+        await self._load_corpus()
+        if self.corpus:
+            self._update_indexing()
+
+    async def _load_corpus(self):
+        """Load the corpus from the database."""
+        start_time = time.time()
+        async with aiosqlite.connect(self.personal_db_path) as db:
+            async with db.execute("SELECT query, result FROM memories") as cursor:
+                memories = await cursor.fetchall()
+        self.corpus = [f"{query} {result}" for query, result in memories]
+        logger.info(f"Loaded corpus with {len(self.corpus)} entries in {time.time() - start_time:.2f} seconds")
+
+    def _update_indexing(self):
+        if self.corpus:
+            self.tfidf_vectorizer = TfidfVectorizer()
+            self.tfidf_vectorizer.fit(self.corpus)
+            tokenized_corpus = [doc.split() for doc in self.corpus]
+            self.bm25 = BM25Okapi(tokenized_corpus)
+            logger.info(f"Updated indexing with {len(self.corpus)} documents")
+        else:
+            logger.warning("Corpus is empty. Skipping indexing update.")
+
+    async def retrieve_relevant_memories(self, query: str, threshold: float = 0.75, return_metadata: bool = False) -> str:
+        """
+        Retrieve relevant memories based on the given query.
+
+        Args:
+            query (str): The input query.
+            threshold (float): The similarity threshold for memory retrieval.
+            return_metadata (bool): Whether to return additional metadata.
+
+        Returns:
+            str: Formatted string of relevant memories.
+        """
+        if not self.corpus:
+            logger.warning("Corpus is empty. No memories to retrieve.")
+            return ""
+
+        start_time = time.time()
+        query_embedding = np.array(await self.embeddings.aembed_query(query))
+        
+        try:
+            async with aiosqlite.connect(self.personal_db_path) as db:
+                async with db.execute("SELECT rowid, query, result, embedding, timestamp FROM memories") as cursor:
+                    all_memories = await cursor.fetchall()
+        except aiosqlite.Error as e:
+            logger.error(f"Database error: {e}")
+            return ""
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            l2_future = executor.submit(self._calculate_l2_norm, all_memories, query_embedding, threshold)
+            cosine_future = executor.submit(self._calculate_cosine_similarity, all_memories, query_embedding, threshold)
+            bm25_future = executor.submit(self._calculate_bm25, all_memories, query, threshold)
+            jaccard_future = executor.submit(self._calculate_jaccard_similarity, all_memories, query, threshold)
+
+            l2_memories = l2_future.result()
+            cosine_memories = cosine_future.result()
+            bm25_memories = bm25_future.result()
+            jaccard_memories = jaccard_future.result()
+
+        all_memories = {
+            'L2 norm': l2_memories,
+            'Cosine Similarity': cosine_memories,
+            'BM25': bm25_memories,
+            'Jaccard Similarity': jaccard_memories
+        }
+
+        formatted_output = self._format_memories(all_memories)
+
+        logger.info(f"Retrieved and processed memories in {time.time() - start_time:.2f} seconds")
+
+        if return_metadata:
+            metadata = {
+                "l2_count": len(l2_memories),
+                "cosine_count": len(cosine_memories),
+                "bm25_count": len(bm25_memories),
+                "jaccard_count": len(jaccard_memories),
+                "total_memories": len(all_memories),
+                "processing_time": time.time() - start_time
+            }
+            return formatted_output, metadata
+        else:
+            return formatted_output
+
+    def _calculate_l2_norm(self, memories: List[Tuple], query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, str, float, str]]:
+        """Calculate L2 norm similarity."""
+        return [
+            (str(memory[0]), memory[1], memory[2], np.linalg.norm(query_embedding - np.frombuffer(memory[3])), memory[4])
+            for memory in memories
+            if np.linalg.norm(query_embedding - np.frombuffer(memory[3])) <= threshold
+        ]
+
+    def _calculate_cosine_similarity(self, memories: List[Tuple], query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, str, float, str]]:
+        """Calculate cosine similarity."""
+        return [
+            (str(memory[0]), memory[1], memory[2], 
+             np.dot(query_embedding, np.frombuffer(memory[3])) / (np.linalg.norm(query_embedding) * np.linalg.norm(np.frombuffer(memory[3]))),
+             memory[4])
+            for memory in memories
+            if np.dot(query_embedding, np.frombuffer(memory[3])) / (np.linalg.norm(query_embedding) * np.linalg.norm(np.frombuffer(memory[3]))) >= threshold
+        ]
+
+    def _calculate_bm25(self, memories: List[Tuple], query: str, threshold: float) -> List[Tuple[str, str, str, float, str]]:
+        """Calculate BM25 similarity."""
+        tokenized_query = query.split()
+        scores = self.bm25.get_scores(tokenized_query)
+        max_score = max(scores) if scores else 1
+        normalized_scores = scores / max_score
+
+        return [
+            (str(memory[0]), memory[1], memory[2], score, memory[4])
+            for memory, score in zip(memories, normalized_scores)
+            if score >= threshold
+        ]
+
+    def _calculate_jaccard_similarity(self, memories: List[Tuple], query: str, threshold: float) -> List[Tuple[str, str, str, float, str]]:
+        """Calculate Jaccard similarity."""
+        query_set = set(query.lower().split())
+        return [
+            (str(memory[0]), memory[1], memory[2],
+             len(set(memory[1].lower().split()) & query_set) / len(set(memory[1].lower().split()) | query_set),
+             memory[4])
+            for memory in memories
+            if len(set(memory[1].lower().split()) & query_set) / len(set(memory[1].lower().split()) | query_set) >= threshold
+        ]
+
+    def _format_memories(self, all_memories: Dict[str, List[Tuple[str, str, str, float, str]]]) -> str:
+        formatted_output = []
+        seen_memories = set()
+
+        for metric, memories in all_memories.items():
+            if not memories:
+                continue
+
+            formatted_output.append(f"Similar by {metric} (ordered by timestamp - ascending):")
+            sorted_memories = sorted(memories, key=lambda x: datetime.fromisoformat(x[4]))
+
+            for memory in sorted_memories:
+                memory_id, query, result, score, timestamp = memory
+                if memory_id not in seen_memories:
+                    formatted_output.append(f"<{memory_id}>, <{query}>, <{result}>, <{timestamp}>, <{score:.2f}>")
+                    seen_memories.add(memory_id)
+                else:
+                    formatted_output.append(f"<{memory_id}>, <{score:.2f}>")
+
+        return " ".join(formatted_output)-e 
 File: ./src/memory/memory_manager.py
 
 import logging
@@ -453,6 +660,9 @@ class MemoryManager:
             await self.log_change(self.master_db_path, "INSERT", memory_id)
             
             logger.debug(f"Saved memory for query: {query} with result: {result}")
+            
+            # Reload the corpus after saving a new memory
+            await self._load_corpus()
         except Exception as e:
             logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
             raise
@@ -684,151 +894,6 @@ class MemoryManager:
             logger.info("Discrepancies fixed.")
         else:
             logger.info("No discrepancies found.")-e 
-File: ./src/memory/enhanced_memory_manager.py
-
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from rank_bm25 import BM25Okapi
-import aiosqlite
-from typing import List, Tuple, Dict
-from src.memory.memory_manager import MemoryManager
-from datetime import datetime
-
-class EnhancedMemoryManager(MemoryManager):
-    def __init__(self, api_key: str):
-        super().__init__(api_key)
-        self.tfidf_vectorizer = None
-        self.bm25 = None
-        self.corpus = []
-
-    async def initialize(self):
-        await super().initialize()
-        await self._load_corpus()
-        if self.corpus:
-            self._update_indexing()
-
-    async def _load_corpus(self):
-        async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT query, result FROM memories") as cursor:
-                memories = await cursor.fetchall()
-        self.corpus = [f"{query} {result}" for query, result in memories]
-
-    def _update_indexing(self):
-        if self.corpus:
-            self.tfidf_vectorizer = TfidfVectorizer()
-            self.tfidf_vectorizer.fit(self.corpus)
-            tokenized_corpus = [doc.split() for doc in self.corpus]
-            self.bm25 = BM25Okapi(tokenized_corpus)
-
-    async def save_memory(self, query: str, result: str):
-        await super().save_memory(query, result)
-        self.corpus.append(f"{query} {result}")
-        self._update_indexing()
-
-    async def retrieve_relevant_memories(self, query: str, threshold: float = 0.75, return_metadata: bool = False) -> List[Tuple[str, str, str]]:
-        if not self.corpus:
-            return []
-
-        query_embedding = np.array(await self.embeddings.aembed_query(query))
-        
-        l2_memories = await self._retrieve_l2_norm(query_embedding, threshold)
-        cosine_memories = await self._retrieve_cosine_similarity(query_embedding, threshold)
-        bm25_memories = await self._retrieve_bm25(query, threshold)
-        jaccard_memories = await self._retrieve_jaccard_similarity(query, threshold)
-
-        combined_memories = self._combine_unique_memories([l2_memories, cosine_memories, bm25_memories, jaccard_memories])
-
-        if return_metadata:
-            return {
-                "memories": [(memory[0], memory[1], memory[3]) for memory in combined_memories],
-                "metadata": {
-                    "l2_count": len(l2_memories),
-                    "cosine_count": len(cosine_memories),
-                    "bm25_count": len(bm25_memories),
-                    "jaccard_count": len(jaccard_memories)
-                }
-            }
-        else:
-            return [(memory[0], memory[1], memory[3]) for memory in combined_memories]
-
-    async def _retrieve_l2_norm(self, query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, float, str]]:
-        return await super()._retrieve_from_db(self.personal_db_path, query_embedding, threshold)
-
-    async def _retrieve_cosine_similarity(self, query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, float, str]]:
-        async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT query, result, embedding, timestamp FROM memories") as cursor:
-                memories = await cursor.fetchall()
-
-        relevant_memories = []
-        for memory in memories:
-            memory_query, memory_result, memory_embedding, timestamp = memory
-            memory_embedding = np.frombuffer(memory_embedding)
-            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-            if similarity >= threshold:
-                relevant_memories.append((memory_query, memory_result, similarity, timestamp))
-
-        return relevant_memories
-
-    async def _retrieve_bm25(self, query: str, threshold: float) -> List[Tuple[str, str, float, str]]:
-        if not self.bm25:
-            return []
-
-        tokenized_query = query.split()
-        scores = self.bm25.get_scores(tokenized_query)
-        
-        if len(scores) == 0:
-            return []
-        
-        max_score = np.max(scores)
-        if max_score == 0:
-            return []
-        
-        normalized_scores = scores / max_score  # Normalize scores to [0, 1] range
-
-        relevant_memories = []
-        async with aiosqlite.connect(self.personal_db_path) as db:
-            for i, score in enumerate(normalized_scores):
-                if score >= threshold:
-                    async with db.execute("SELECT query, result, timestamp FROM memories WHERE rowid = ?", (i+1,)) as cursor:
-                        memory = await cursor.fetchone()
-                        if memory:
-                            relevant_memories.append((*memory, score))
-
-        return relevant_memories
-
-    async def _retrieve_jaccard_similarity(self, query: str, threshold: float) -> List[Tuple[str, str, float, str]]:
-        query_set = set(query.lower().split())
-
-        async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT query, result, timestamp FROM memories") as cursor:
-                memories = await cursor.fetchall()
-
-        relevant_memories = []
-        for memory in memories:
-            memory_query, memory_result, timestamp = memory
-            memory_set = set((memory_query + " " + memory_result).lower().split())
-            similarity = len(query_set.intersection(memory_set)) / len(query_set.union(memory_set))
-            if similarity >= threshold:
-                relevant_memories.append((*memory, similarity))
-
-        return relevant_memories
-
-    def _combine_unique_memories(self, memory_lists: List[List[Tuple[str, str, float, str]]]) -> List[Tuple[str, str, str]]:
-        seen = set()
-        unique_memories = []
-        for memories in memory_lists:
-            for memory in memories:
-                if memory[0] not in seen:  # Assuming the first element is a unique identifier
-                    seen.add(memory[0])
-                    unique_memories.append(memory)
-        
-        # Sort by similarity score (descending) and then by timestamp (descending)
-        return sorted(
-            unique_memories,
-            key=lambda x: (-float(x[2]) if isinstance(x[2], (int, float)) else 0,
-                           datetime.fromisoformat(x[3]) if isinstance(x[3], str) else datetime.min),
-            reverse=True
-        )-e 
 File: ./src/utils/__init__.py
 
 -e 
@@ -855,122 +920,6 @@ if __name__ == "__main__":
     memory_manager.reset_database()
     print("Database has been reset.")
 -e 
-File: ./src/utils/logging_setup.py
-
-import logging
-import os
-import socket
-from datetime import datetime
-
-def setup_logging():
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    container_id = socket.gethostname() if is_running_in_docker() else 'local'
-    log_directory = f'logs/{timestamp}_{container_id}'
-
-    if not os.path.exists(log_directory):
-        os.makedirs(log_directory)
-
-    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-    master_logger = logging.getLogger('master')
-    master_logger.setLevel(logging.DEBUG)
-    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
-    file_handler.setFormatter(log_formatter)
-    master_logger.addHandler(file_handler)
-
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(message)s'))
-    master_logger.addHandler(console_handler)
-
-    chat_logger = logging.getLogger('chat')
-    chat_logger.setLevel(logging.DEBUG)
-    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
-    chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
-    chat_logger.addHandler(chat_file_handler)
-
-    memory_logger = logging.getLogger('memory')
-    memory_logger.setLevel(logging.DEBUG)
-    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
-    memory_file_handler.setFormatter(log_formatter)
-    memory_logger.addHandler(memory_file_handler)
-
-    database_logger = logging.getLogger('database')
-    database_logger.setLevel(logging.DEBUG)
-    database_file_handler = logging.FileHandler(os.path.join(log_directory, 'database.log'))
-    database_file_handler.setFormatter(log_formatter)
-    database_logger.addHandler(database_file_handler)
-
-    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
-    return master_logger, chat_logger, memory_logger, database_logger
-
-def is_running_in_docker() -> bool:
-    return os.path.exists('/.dockerenv')-e 
-File: ./src/utils/controller.py
-
-import logging
-from typing import List, Tuple
-from src.agents.agent import Agent
-from src.memory.enhanced_memory_manager import EnhancedMemoryManager
-from config import config
-
-class Controller:
-    def __init__(self):
-        self.logger = logging.getLogger('master')
-        self.db_logger = logging.getLogger('database')
-        self.memory_manager = None
-        self.agent = None
-
-    async def initialize(self):
-        self.memory_manager = EnhancedMemoryManager(config.OPENAI_API_KEY)
-        await self.memory_manager.initialize()
-        self.agent = Agent(self.memory_manager)
-
-    async def execute_query(self, query: str) -> str:
-        try:
-            response = await self.agent.process_query(query)
-            self.logger.debug(f"Generated response: {response}")
-            await self.memory_manager.save_memory(query, response)
-            return response
-        except Exception as e:
-            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
-            return f"An error occurred while processing your query: {str(e)}"
-
-    async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
-        return await self.memory_manager.get_memories(limit)-e 
-File: ./src/utils/enhanced_logging.py
-
-import time
-import logging
-from functools import wraps
-
-def log_execution_time(logger):
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            start_time = time.time()
-            result = await func(*args, **kwargs)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            logger.info(f"{func.__name__} executed in {execution_time:.4f} seconds")
-            return result
-        return wrapper
-    return decorator
-
-class DatabaseLogger:
-    def __init__(self, logger):
-        self.logger = logger
-        file_handler = logging.FileHandler('database.log')
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        self.logger.addHandler(file_handler)
-
-    def log_query(self, query, params=None):
-        self.logger.debug(f"Executing query: {query}, Params: {params}")
-
-    def log_memory_size(self, memory_size):
-        self.logger.info(f"Memory size: {memory_size} bytes")
-
-    def log_access(self, memory_id):
-        self.logger.info(f"Accessed memory: {memory_id}")-e 
 File: ./src/utils/memory_analysis.py
 
 from collections import Counter
@@ -1047,6 +996,237 @@ class SimilarityAnalyzer:
                 print(f"{i}. Query: {query}")
                 print(f"   Result: {result}")
                 print()-e 
+File: ./src/utils/controller.py
+
+import logging
+from typing import List, Tuple
+from src.agents.agent import Agent
+from src.memory.enhanced_memory_manager import EnhancedMemoryManager
+from config import config
+
+class Controller:
+    def __init__(self):
+        self.logger = logging.getLogger('master')
+        self.db_logger = logging.getLogger('database')
+        self.memory_manager = None
+        self.agent = None
+
+    async def initialize(self):
+        self.memory_manager = EnhancedMemoryManager(config.OPENAI_API_KEY)
+        await self.memory_manager.initialize()
+        self.agent = Agent(self.memory_manager)
+
+    async def execute_query(self, query: str) -> str:
+        try:
+            response = await self.agent.process_query(query)
+            self.logger.debug(f"Generated response: {response}")
+            await self.memory_manager.save_memory(query, response)
+            return response
+        except Exception as e:
+            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
+            return f"An error occurred while processing your query: {str(e)}"
+
+    async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
+        return await self.memory_manager.get_memories(limit)-e 
+File: ./src/utils/enhanced_logging.py
+
+import time
+import logging
+from functools import wraps
+
+def log_execution_time(logger):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = await func(*args, **kwargs)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            logger.info(f"{func.__name__} executed in {execution_time:.4f} seconds")
+            return result
+        return wrapper
+    return decorator
+
+class DatabaseLogger:
+    def __init__(self, logger):
+        self.logger = logger
+        file_handler = logging.FileHandler('database.log')
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(file_handler)
+
+    def log_query(self, query, params=None):
+        self.logger.debug(f"Executing query: {query}, Params: {params}")
+
+    def log_memory_size(self, memory_size):
+        self.logger.info(f"Memory size: {memory_size} bytes")
+
+    def log_access(self, memory_id):
+        self.logger.info(f"Accessed memory: {memory_id}")-e 
+File: ./src/utils/logging_setup.py
+
+import logging
+import os
+import socket
+from datetime import datetime
+
+def setup_logging():
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    container_id = socket.gethostname() if is_running_in_docker() else 'local'
+    log_directory = f'logs/{timestamp}_{container_id}'
+
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
+
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    master_logger = logging.getLogger('master')
+    master_logger.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
+    file_handler.setFormatter(log_formatter)
+    master_logger.addHandler(file_handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter('%(message)s'))
+    master_logger.addHandler(console_handler)
+
+    chat_logger = logging.getLogger('chat')
+    chat_logger.setLevel(logging.DEBUG)
+    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
+    chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+    chat_logger.addHandler(chat_file_handler)
+
+    memory_logger = logging.getLogger('memory')
+    memory_logger.setLevel(logging.DEBUG)
+    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
+    memory_file_handler.setFormatter(log_formatter)
+    memory_logger.addHandler(memory_file_handler)
+
+    database_logger = logging.getLogger('database')
+    database_logger.setLevel(logging.DEBUG)
+    database_file_handler = logging.FileHandler(os.path.join(log_directory, 'database.log'))
+    database_file_handler.setFormatter(log_formatter)
+    database_logger.addHandler(database_file_handler)
+
+    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
+    return master_logger, chat_logger, memory_logger, database_logger
+
+def is_running_in_docker() -> bool:
+    return os.path.exists('/.dockerenv')-e 
+File: ./src/utils/api_utils.py
+
+# src/utils/api_utils.py
+
+import time
+import asyncio
+from functools import wraps
+from cachetools import TTLCache
+
+class RateLimiter:
+    def __init__(self, max_calls, period):
+        self.max_calls = max_calls
+        self.period = period
+        self.calls = []
+
+    async def wait(self):
+        now = time.time()
+        self.calls = [call for call in self.calls if call > now - self.period]
+        if len(self.calls) >= self.max_calls:
+            sleep_time = self.calls[0] - (now - self.period)
+            await asyncio.sleep(sleep_time)
+        self.calls.append(time.time())
+
+def rate_limited(max_calls, period):
+    limiter = RateLimiter(max_calls, period)
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            await limiter.wait()
+            return await func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+def exponential_backoff(max_retries=5, base_delay=1):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            retries = 0
+            while retries < max_retries:
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:  # Replace with specific exception if needed
+                    if retries == max_retries - 1:
+                        raise
+                    delay = base_delay * (2 ** retries)
+                    print(f"API call failed. Retrying in {delay} seconds...")
+                    await asyncio.sleep(delay)
+                    retries += 1
+        return wrapper
+    return decorator
+
+# Simple cache with TTL
+cache = TTLCache(maxsize=100, ttl=300)  # Cache up to 100 items for 5 minutes
+
+def cached(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        key = str(args) + str(kwargs)
+        if key in cache:
+            return cache[key]
+        result = await func(*args, **kwargs)
+        cache[key] = result
+        return result
+    return wrapper-e 
+File: ./src/cli.py
+
+import asyncio
+from src.utils.controller import Controller
+from src.utils.logging_setup import setup_logging
+from src.utils.similarity_analysis import SimilarityAnalyzer
+
+master_logger, chat_logger, memory_logger, database_logger = setup_logging()
+controller = Controller()
+similarity_analyzer = None
+
+async def initialize():
+    await controller.initialize()
+    global similarity_analyzer
+    similarity_analyzer = SimilarityAnalyzer(controller.memory_manager)
+
+async def main():
+    await initialize()
+    while True:
+        try:
+            command = input("Enter a command (query/memories/consistency/analyze/quit): ").strip().lower()
+            
+            if command == 'quit':
+                break
+            elif command == 'query':
+                query = input("Enter your query: ")
+                response = await controller.execute_query(query)
+                print(f"Response: {response}")
+            elif command == 'memories':
+                try:
+                    limit = int(input("Enter the number of memories to retrieve: "))
+                    memories = await controller.get_recent_memories(limit)
+                    for i, (query, result) in enumerate(memories, 1):
+                        print(f"{i}. Query: {query}\n   Result: {result}\n")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+            elif command == 'consistency':
+                await controller.memory_manager.run_consistency_check_and_fix()
+                print("Consistency check and fix completed.")
+            elif command == 'analyze':
+                query = input("Enter a query to analyze: ")
+                analysis_results = await similarity_analyzer.analyze_retrieval_performance(query)
+                similarity_analyzer.print_analysis(analysis_results)
+            else:
+                print("Invalid command. Please try again.")
+        except Exception as e:
+            master_logger.error(f"An error occurred: {str(e)}", exc_info=True)
+            print(f"An error occurred: {str(e)}. Please try again.")
+
+if __name__ == "__main__":
+    asyncio.run(main())-e 
 File: ./src/api.py
 
 from fastapi import FastAPI, HTTPException, Request
@@ -1125,57 +1305,6 @@ if __name__ == "__main__":
     import uvicorn
     master_logger.info("Running the API server directly")
     uvicorn.run(app, host="0.0.0.0", port=8000)-e 
-File: ./src/cli.py
-
-import asyncio
-from src.utils.controller import Controller
-from src.utils.logging_setup import setup_logging
-from src.utils.similarity_analysis import SimilarityAnalyzer
-
-master_logger, chat_logger, memory_logger, database_logger = setup_logging()
-controller = Controller()
-similarity_analyzer = None
-
-async def initialize():
-    await controller.initialize()
-    global similarity_analyzer
-    similarity_analyzer = SimilarityAnalyzer(controller.memory_manager)
-
-async def main():
-    await initialize()
-    while True:
-        try:
-            command = input("Enter a command (query/memories/consistency/analyze/quit): ").strip().lower()
-            
-            if command == 'quit':
-                break
-            elif command == 'query':
-                query = input("Enter your query: ")
-                response = await controller.execute_query(query)
-                print(f"Response: {response}")
-            elif command == 'memories':
-                try:
-                    limit = int(input("Enter the number of memories to retrieve: "))
-                    memories = await controller.get_recent_memories(limit)
-                    for i, (query, result) in enumerate(memories, 1):
-                        print(f"{i}. Query: {query}\n   Result: {result}\n")
-                except ValueError:
-                    print("Invalid input. Please enter a number.")
-            elif command == 'consistency':
-                await controller.memory_manager.run_consistency_check_and_fix()
-                print("Consistency check and fix completed.")
-            elif command == 'analyze':
-                query = input("Enter a query to analyze: ")
-                analysis_results = await similarity_analyzer.analyze_retrieval_performance(query)
-                similarity_analyzer.print_analysis(analysis_results)
-            else:
-                print("Invalid command. Please try again.")
-        except Exception as e:
-            master_logger.error(f"An error occurred: {str(e)}", exc_info=True)
-            print(f"An error occurred: {str(e)}. Please try again.")
-
-if __name__ == "__main__":
-    asyncio.run(main())-e 
 File: ./docs/README.md
 
 # Multi-Agent RAG System with Continual Learning

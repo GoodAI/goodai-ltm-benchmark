@@ -133,6 +133,9 @@ class MemoryManager:
             await self.log_change(self.master_db_path, "INSERT", memory_id)
             
             logger.debug(f"Saved memory for query: {query} with result: {result}")
+            
+            # Reload the corpus after saving a new memory
+            await self._load_corpus()
         except Exception as e:
             logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
             raise
