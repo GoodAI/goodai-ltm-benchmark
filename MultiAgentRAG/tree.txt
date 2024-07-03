@@ -2,27 +2,25 @@
 ├── Dockerfile
 ├── config.py
 ├── data
-│   ├── 162436fab917.db
-│   ├── 3033715498f5.db
-│   ├── cc5c99166e8d.db
+│   ├── 6cb49552b425.db
+│   ├── ec6ab11fc693.db
 │   └── master.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
 ├── docs
 │   └── README.md
 ├── logs
-│   ├── 20240628_120952_a082c85f0fc3
-│   ├── 20240628_124321_cc5c99166e8d
+│   ├── 20240702_160538_6169c67053ff
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240628_124755_162436fab917
+│   ├── 20240702_181204_ec6ab11fc693
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   └── 20240628_125327_3033715498f5
+│   └── 20240703_070750_6cb49552b425
 │       ├── chat.log
 │       ├── database.log
 │       ├── master.log
@@ -63,7 +61,7 @@
 │       └── similarity_analysis.py
 └── tree.txt
 
-15 directories, 48 files
+14 directories, 47 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -72,279 +70,6 @@ __pycache__, .git, .env, text_docs, scripts, logs, tree.txt, generate_tree.sh, R
 File Contents:
 
 -e 
-File: ./.dockerignore
-
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-*.pdb
-*.egg
-*.egg-info
-dist
-build
-eggs
-parts
-var
-develop-eggs
-.installed.cfg
-lib
-lib64
-*.log
-logs
-notebooks
-data/raw/*
-text_docs/*
-.DS_Store
-.vscode
--e 
-File: ./Dockerfile
-
-FROM python:3.12
-
-# Create a non-root user
-RUN useradd -m appuser
-
-WORKDIR /app
-
-COPY . /app
-
-RUN mkdir -p /app/logs /app/data
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
-
-# Create and activate virtual environment
-RUN python -m venv /app/venv
-ENV PATH="/app/venv/bin:$PATH"
-
-# Upgrade pip and install dependencies with increased timeout and using a mirror
-RUN pip install --upgrade pip
-
-# Install numpy and scipy separately with increased timeout
-RUN pip install --no-cache-dir numpy==1.26.4 scipy==1.14.0 --timeout 600
-
-# Install scikit-learn separately with an even longer timeout
-RUN pip install --no-cache-dir scikit-learn==1.4.0 --timeout 900
-
-# Install other dependencies
-RUN pip install --no-cache-dir -r docker_requirements.txt --timeout 600 --index-url https://pypi.org/simple --trusted-host pypi.org
-
-RUN pip install fastapi uvicorn
-
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
-
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
-File: ./config.py
-
-import os
-from dotenv import load_dotenv
-
-class Config:
-    def __init__(self):
-        load_dotenv()
-        
-        # General settings
-        self.MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4-turbo")
-        
-        # Database settings
-        self.MEMORY_DB_PATH = self._get_memory_db_path()
-        
-        # API Keys
-        self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
-        self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-        
-        # Other settings
-        self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
-        
-        # Processing agent settings
-        self.PROCESSING_AGENT_MEMORIES_INCLUDED = int(os.getenv("PROCESSING_AGENT_MEMORIES_INCLUDED", "5"))
-        self.MEMORY_RETRIEVAL_THRESHOLD = float(os.getenv("MEMORY_RETRIEVAL_THRESHOLD", "0.75"))
-        self.MEMORY_RETRIEVAL_LIMIT = int(os.getenv("MEMORY_RETRIEVAL_LIMIT", "10"))
-
-    def _get_memory_db_path(self):
-        return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
-
-    def validate_api_keys(self):
-        return bool(self.OPENAI_API_KEY and self.TAVILY_API_KEY)
-
-    L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
-    COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))
-    BM25_THRESHOLD = float(os.getenv("BM25_THRESHOLD", "0.5"))
-    JACCARD_SIMILARITY_THRESHOLD = float(os.getenv("JACCARD_SIMILARITY_THRESHOLD", "0.3"))
-
-config = Config()-e 
-File: ./docker-compose.yml
-
-services:
-  multi-agent-rag:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: multi-agent-rag
-    ports:
-      - "8080:8000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - TAVILY_API_KEY=${TAVILY_API_KEY}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-    command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
-
-  multi-agent-rag-cli:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: multi-agent-rag
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - TAVILY_API_KEY=${TAVILY_API_KEY}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-    command: ["python", "-m", "src.cli"]
-    stdin_open: true
-    tty: true-e 
-File: ./docker_requirements.txt
-
-langchain==0.2.3
-langchain-openai==0.1.8
-langchain-community==0.2.4
-langchain-core==0.2.5
-langchain-text-splitters==0.2.1
-langsmith==0.1.77
-openai==1.34.0
-pydantic==2.7.4
-pydantic-core==2.18.4
-dataclasses-json==0.6.7
-python-dotenv==1.0.1
-aiosqlite
-rank_bm25==0.2.2
-cachetools==5.3.0-e 
-File: ./src/__init__.py
-
--e 
-File: ./src/agents/__init__.py
-
--e 
-File: ./src/agents/agent.py
-
-import logging
-from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
-from typing import List, Tuple
-from config import config
-import json
-from src.utils.api_utils import rate_limited, exponential_backoff, cached
-
-logger = logging.getLogger('master')
-chat_logger = logging.getLogger('chat')
-
-class Agent:
-    def __init__(self, memory_manager):
-        self.memory_manager = memory_manager
-        self.chat_model = ChatOpenAI(model_name=config.MODEL_NAME)
-
-    @cached
-    @rate_limited(max_calls=4, period=60)  # Adjust these values based on your API limits
-    @exponential_backoff(max_retries=3, base_delay=2)
-    async def process_query(self, query: str) -> str:
-        relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
-        
-        messages = [
-            HumanMessage(content=f"""REQUEST = "{query}". 
-
-CONTEXT = "{relevant_memories}"
-
-INSTRUCTIONS = The 'CONTEXT' provided contains relevant memories retrieved based on similarity to the current request. The format of the context is as follows:
-
-Similar by [Similarity Metric] (ordered by timestamp - ascending):
-<memory_id>, <previous_query>, <previous_response>, <timestamp>, <similarity_score>
-
-For memories that have been mentioned before, the format is shortened to:
-<memory_id>, <similarity_score>
-
-Use this context to inform your response to the current request. Pay attention to the similarity metrics and scores to gauge the relevance of each memory. Memories with higher similarity scores and more recent timestamps may be more pertinent to the current query.
-
-Please respond to the REQUEST based on this context and your general knowledge.""")
-        ]
-        
-        # Log the full message sent to the API
-        chat_logger.info(f"Full ChatGPT API request: {json.dumps([m.dict() for m in messages], indent=2)}")
-        
-        response = await self.chat_model.ainvoke(messages)
-        
-        # Log the full API response
-        chat_logger.info(f"Full ChatGPT API response: {json.dumps(response.dict(), indent=2)}")
-        
-        logger.debug(f"Processed query: {query} with context: {relevant_memories}")
-        
-        return response.content-e 
-File: ./src/app.py
-
-import asyncio
-from config import Config
-from MultiAgentRAG.src.utils.controller import Controller
-from MultiAgentRAG.src.utils.logging_setup import setup_logging
-import logging
-
-async def process_query(controller, query, chat_logger, memory_logger):
-    chat_logger.info(f"Query: {query}")
-    response = await controller.execute_query(query)
-    chat_logger.info(f"Response: {response}")
-    
-    memories = await controller.get_recent_memories(5)
-    memory_logger.info("Recent Memories:")
-    for memory in memories:
-        memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
-
-async def main():
-    # Initialize logging
-    master_logger, chat_logger, memory_logger = setup_logging()
-
-    # Set the log level for the memory logger
-    memory_logger.setLevel(logging.DEBUG)
-
-    try:
-        master_logger.info("Starting the Multi-Agent RAG System")
-        config = Config()
-        
-        if not config.validate_api_keys():
-            raise EnvironmentError("API keys not found in environment variables")
-
-        master_logger.info("API keys successfully loaded")
-        master_logger.info(f"Using memory database path: {config.MEMORY_DB_PATH}")
-
-        master_logger.debug("Initializing controller")
-        controller = Controller(config)
-
-        while True:
-            try:
-                query = input("Enter your query (or 'quit' to exit): ")
-                if query.lower() == "quit":
-                    master_logger.info("Exiting the program")
-                    break
-
-                master_logger.info(f"Executing query: {query}")
-                await process_query(controller, query, chat_logger, memory_logger)
-
-            except EOFError:
-                master_logger.info("Received EOF, exiting the program")
-                break
-            except Exception as e:
-                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
-    except Exception as e:
-        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
-
-if __name__ == "__main__":
-    asyncio.run(main())-e 
 File: ./src/memory/__init__.py
 
 -e 
@@ -377,11 +102,9 @@ class EnhancedMemoryManager(MemoryManager):
         """Initialize the EnhancedMemoryManager by loading the corpus and updating indexing."""
         await super().initialize()
         await self._load_corpus()
-        if self.corpus:
-            self._update_indexing()
+        self._update_indexing()
 
     async def _load_corpus(self):
-        """Load the corpus from the database."""
         start_time = time.time()
         async with aiosqlite.connect(self.personal_db_path) as db:
             async with db.execute("SELECT query, result FROM memories") as cursor:
@@ -391,26 +114,16 @@ class EnhancedMemoryManager(MemoryManager):
 
     def _update_indexing(self):
         if self.corpus:
+            start_time = time.time()
             self.tfidf_vectorizer = TfidfVectorizer()
             self.tfidf_vectorizer.fit(self.corpus)
             tokenized_corpus = [doc.split() for doc in self.corpus]
             self.bm25 = BM25Okapi(tokenized_corpus)
-            logger.info(f"Updated indexing with {len(self.corpus)} documents")
+            logger.info(f"Updated indexing with {len(self.corpus)} documents in {time.time() - start_time:.2f} seconds")
         else:
             logger.warning("Corpus is empty. Skipping indexing update.")
 
     async def retrieve_relevant_memories(self, query: str, threshold: float = 0.75, return_metadata: bool = False) -> str:
-        """
-        Retrieve relevant memories based on the given query.
-
-        Args:
-            query (str): The input query.
-            threshold (float): The similarity threshold for memory retrieval.
-            return_metadata (bool): Whether to return additional metadata.
-
-        Returns:
-            str: Formatted string of relevant memories.
-        """
         if not self.corpus:
             logger.warning("Corpus is empty. No memories to retrieve.")
             return ""
@@ -426,6 +139,8 @@ class EnhancedMemoryManager(MemoryManager):
             logger.error(f"Database error: {e}")
             return ""
 
+        logger.debug(f"Retrieved {len(all_memories)} memories from database")
+
         with ThreadPoolExecutor(max_workers=4) as executor:
             l2_future = executor.submit(self._calculate_l2_norm, all_memories, query_embedding, threshold)
             cosine_future = executor.submit(self._calculate_cosine_similarity, all_memories, query_embedding, threshold)
@@ -436,6 +151,8 @@ class EnhancedMemoryManager(MemoryManager):
             cosine_memories = cosine_future.result()
             bm25_memories = bm25_future.result()
             jaccard_memories = jaccard_future.result()
+
+        logger.debug(f"L2 memories: {len(l2_memories)}, Cosine memories: {len(cosine_memories)}, BM25 memories: {len(bm25_memories)}, Jaccard memories: {len(jaccard_memories)}")
 
         all_memories = {
             'L2 norm': l2_memories,
@@ -483,7 +200,7 @@ class EnhancedMemoryManager(MemoryManager):
         """Calculate BM25 similarity."""
         tokenized_query = query.split()
         scores = self.bm25.get_scores(tokenized_query)
-        max_score = max(scores) if scores else 1
+        max_score = np.max(scores) if scores.size > 0 else 1  # Use np.max instead of max
         normalized_scores = scores / max_score
 
         return [
@@ -491,7 +208,7 @@ class EnhancedMemoryManager(MemoryManager):
             for memory, score in zip(memories, normalized_scores)
             if score >= threshold
         ]
-
+    
     def _calculate_jaccard_similarity(self, memories: List[Tuple], query: str, threshold: float) -> List[Tuple[str, str, str, float, str]]:
         """Calculate Jaccard similarity."""
         query_set = set(query.lower().split())
@@ -502,6 +219,11 @@ class EnhancedMemoryManager(MemoryManager):
             for memory in memories
             if len(set(memory[1].lower().split()) & query_set) / len(set(memory[1].lower().split()) | query_set) >= threshold
         ]
+    
+    async def save_memory(self, query: str, result: str):
+        await super().save_memory(query, result)
+        await self._load_corpus()
+        self._update_indexing()
 
     def _format_memories(self, all_memories: Dict[str, List[Tuple[str, str, str, float, str]]]) -> str:
         formatted_output = []
@@ -894,140 +616,126 @@ class MemoryManager:
             logger.info("Discrepancies fixed.")
         else:
             logger.info("No discrepancies found.")-e 
+File: ./src/__init__.py
+
+-e 
+File: ./src/agents/__init__.py
+
+-e 
+File: ./src/agents/agent.py
+
+import logging
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage
+from typing import List, Tuple
+from config import config
+import json
+from src.utils.api_utils import rate_limited, exponential_backoff, cached
+
+logger = logging.getLogger('master')
+chat_logger = logging.getLogger('chat')
+
+class Agent:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+        self.chat_model = ChatOpenAI(model_name=config.MODEL_NAME)
+
+    @cached
+    @rate_limited(max_calls=6, period=60)  # Adjust these values based on your API limits
+    @exponential_backoff(max_retries=3, base_delay=2)
+    async def process_query(self, query: str) -> str:
+        relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
+        
+        messages = [
+            HumanMessage(content=f"""REQUEST = "{query}". 
+
+CONTEXT = "{relevant_memories}"
+
+INSTRUCTIONS = The 'CONTEXT' provided contains relevant memories retrieved based on similarity to the current request. The format of the context is as follows:
+
+Similar by [Similarity Metric] (ordered by timestamp - ascending):
+<memory_id>, <previous_query>, <previous_response>, <timestamp>, <similarity_score>
+
+For memories that have been mentioned before, the format is shortened to:
+<memory_id>, <similarity_score>
+
+Use this context to inform your response to the current request. Pay attention to the similarity metrics and scores to gauge the relevance of each memory. Memories with higher similarity scores and more recent timestamps may be more pertinent to the current query.
+
+Please respond to the REQUEST based on this context and your general knowledge.""")
+        ]
+        
+        # Log the full message sent to the API
+        chat_logger.info(f"Full ChatGPT API request: {json.dumps([m.dict() for m in messages], indent=2)}")
+        
+        response = await self.chat_model.ainvoke(messages)
+        
+        # Log the full API response
+        chat_logger.info(f"Full ChatGPT API response: {json.dumps(response.dict(), indent=2)}")
+        
+        logger.debug(f"Processed query: {query} with context: {relevant_memories}")
+        
+        return response.content-e 
+File: ./src/app.py
+
+import asyncio
+from config import Config
+from MultiAgentRAG.src.utils.controller import Controller
+from MultiAgentRAG.src.utils.logging_setup import setup_logging
+import logging
+
+async def process_query(controller, query, chat_logger, memory_logger):
+    chat_logger.info(f"Query: {query}")
+    response = await controller.execute_query(query)
+    chat_logger.info(f"Response: {response}")
+    
+    memories = await controller.get_recent_memories(5)
+    memory_logger.info("Recent Memories:")
+    for memory in memories:
+        memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
+
+async def main():
+    # Initialize logging
+    master_logger, chat_logger, memory_logger = setup_logging()
+
+    # Set the log level for the memory logger
+    memory_logger.setLevel(logging.DEBUG)
+
+    try:
+        master_logger.info("Starting the Multi-Agent RAG System")
+        config = Config()
+        
+        if not config.validate_api_keys():
+            raise EnvironmentError("API keys not found in environment variables")
+
+        master_logger.info("API keys successfully loaded")
+        master_logger.info(f"Using memory database path: {config.MEMORY_DB_PATH}")
+
+        master_logger.debug("Initializing controller")
+        controller = Controller(config)
+
+        while True:
+            try:
+                query = input("Enter your query (or 'quit' to exit): ")
+                if query.lower() == "quit":
+                    master_logger.info("Exiting the program")
+                    break
+
+                master_logger.info(f"Executing query: {query}")
+                await process_query(controller, query, chat_logger, memory_logger)
+
+            except EOFError:
+                master_logger.info("Received EOF, exiting the program")
+                break
+            except Exception as e:
+                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
+    except Exception as e:
+        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
+
+if __name__ == "__main__":
+    asyncio.run(main())-e 
 File: ./src/utils/__init__.py
 
 -e 
-File: ./src/utils/reset_database.py
-
-# src/utils/reset_database.py
-
-import sys
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Add the base directory of the project to the PYTHONPATH
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.append(base_path)
-
-from src.memory.memory_manager import MemoryManager
-from config import Config  # Import the config
-
-if __name__ == "__main__":
-    memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
-    memory_manager.reset_database()
-    print("Database has been reset.")
--e 
-File: ./src/utils/memory_analysis.py
-
-from collections import Counter
-import numpy as np
-import aiosqlite
-
-class MemoryAnalyzer:
-    def __init__(self, memory_manager):
-        self.memory_manager = memory_manager
-
-    async def analyze_distribution(self):
-        async with aiosqlite.connect(self.memory_manager.master_db_path) as db:
-            async with db.execute("SELECT author, COUNT(*) FROM memories GROUP BY author") as cursor:
-                distribution = await cursor.fetchall()
-        return dict(distribution)
-
-    async def find_most_accessed(self, limit=10):
-        # Assuming we've added an 'access_count' column to the memories table
-        async with aiosqlite.connect(self.memory_manager.master_db_path) as db:
-            async with db.execute("SELECT id, query, access_count FROM memories ORDER BY access_count DESC LIMIT ?", (limit,)) as cursor:
-                most_accessed = await cursor.fetchall()
-        return most_accessed
-
-    async def find_most_similar(self, query, limit=10):
-        query_embedding = await self.memory_manager.embeddings.aembed_query(query)
-        all_memories = await self.memory_manager.get_all_memories()
-        
-        similarities = []
-        for memory in all_memories:
-            memory_embedding = np.frombuffer(memory[2])
-            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-            similarities.append((memory[0], memory[1], similarity))
-        
-        similarities.sort(key=lambda x: x[2], reverse=True)
-        return similarities[:limit]-e 
-File: ./src/utils/similarity_analysis.py
-
-import logging
-from typing import Dict, List, Tuple
-
-logger = logging.getLogger('memory')
-
-class SimilarityAnalyzer:
-    def __init__(self, memory_manager):
-        self.memory_manager = memory_manager
-
-    async def analyze_retrieval_performance(self, query: str) -> Dict[str, List[Tuple[str, str, float]]]:
-        try:
-            results = await self.memory_manager.retrieve_relevant_memories(query, return_metadata=True)
-            memories = results['memories']
-            metadata = results['metadata']
-
-            logger.info(f"Retrieved {len(memories)} memories for query: '{query}'")
-            logger.info(f"Retrieval breakdown: {metadata}")
-
-            return {
-                "l2_norm": memories[:metadata['l2_count']],
-                "cosine_similarity": memories[metadata['l2_count']:metadata['l2_count'] + metadata['cosine_count']],
-                "bm25": memories[metadata['l2_count'] + metadata['cosine_count']:metadata['l2_count'] + metadata['cosine_count'] + metadata['bm25_count']],
-                "jaccard_similarity": memories[metadata['l2_count'] + metadata['cosine_count'] + metadata['bm25_count']:]
-            }
-        except Exception as e:
-            logger.error(f"Error during retrieval performance analysis: {str(e)}")
-            return {}
-
-    def print_analysis(self, analysis_results: Dict[str, List[Tuple[str, str, float]]]):
-        if not analysis_results:
-            print("No analysis results available.")
-            return
-
-        for method, memories in analysis_results.items():
-            print(f"\n{method.upper()} Results:")
-            for i, (query, result, _) in enumerate(memories, 1):
-                print(f"{i}. Query: {query}")
-                print(f"   Result: {result}")
-                print()-e 
-File: ./src/utils/controller.py
-
-import logging
-from typing import List, Tuple
-from src.agents.agent import Agent
-from src.memory.enhanced_memory_manager import EnhancedMemoryManager
-from config import config
-
-class Controller:
-    def __init__(self):
-        self.logger = logging.getLogger('master')
-        self.db_logger = logging.getLogger('database')
-        self.memory_manager = None
-        self.agent = None
-
-    async def initialize(self):
-        self.memory_manager = EnhancedMemoryManager(config.OPENAI_API_KEY)
-        await self.memory_manager.initialize()
-        self.agent = Agent(self.memory_manager)
-
-    async def execute_query(self, query: str) -> str:
-        try:
-            response = await self.agent.process_query(query)
-            self.logger.debug(f"Generated response: {response}")
-            await self.memory_manager.save_memory(query, response)
-            return response
-        except Exception as e:
-            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
-            return f"An error occurred while processing your query: {str(e)}"
-
-    async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
-        return await self.memory_manager.get_memories(limit)-e 
 File: ./src/utils/enhanced_logging.py
 
 import time
@@ -1112,6 +820,105 @@ def setup_logging():
 
 def is_running_in_docker() -> bool:
     return os.path.exists('/.dockerenv')-e 
+File: ./src/utils/memory_analysis.py
+
+from collections import Counter
+import numpy as np
+import aiosqlite
+
+class MemoryAnalyzer:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+
+    async def analyze_distribution(self):
+        async with aiosqlite.connect(self.memory_manager.master_db_path) as db:
+            async with db.execute("SELECT author, COUNT(*) FROM memories GROUP BY author") as cursor:
+                distribution = await cursor.fetchall()
+        return dict(distribution)
+
+    async def find_most_accessed(self, limit=10):
+        # Assuming we've added an 'access_count' column to the memories table
+        async with aiosqlite.connect(self.memory_manager.master_db_path) as db:
+            async with db.execute("SELECT id, query, access_count FROM memories ORDER BY access_count DESC LIMIT ?", (limit,)) as cursor:
+                most_accessed = await cursor.fetchall()
+        return most_accessed
+
+    async def find_most_similar(self, query, limit=10):
+        query_embedding = await self.memory_manager.embeddings.aembed_query(query)
+        all_memories = await self.memory_manager.get_all_memories()
+        
+        similarities = []
+        for memory in all_memories:
+            memory_embedding = np.frombuffer(memory[2])
+            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+            similarities.append((memory[0], memory[1], similarity))
+        
+        similarities.sort(key=lambda x: x[2], reverse=True)
+        return similarities[:limit]-e 
+File: ./src/utils/reset_database.py
+
+# src/utils/reset_database.py
+
+import sys
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Add the base directory of the project to the PYTHONPATH
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(base_path)
+
+from src.memory.memory_manager import MemoryManager
+from config import Config  # Import the config
+
+if __name__ == "__main__":
+    memory_manager = MemoryManager(Config.MEMORY_DB_PATH, Config.OPENAI_API_KEY)
+    memory_manager.reset_database()
+    print("Database has been reset.")
+-e 
+File: ./src/utils/similarity_analysis.py
+
+import logging
+from typing import Dict, List, Tuple
+
+logger = logging.getLogger('memory')
+
+class SimilarityAnalyzer:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+
+    async def analyze_retrieval_performance(self, query: str) -> Dict[str, List[Tuple[str, str, float]]]:
+        try:
+            results = await self.memory_manager.retrieve_relevant_memories(query, return_metadata=True)
+            memories = results['memories']
+            metadata = results['metadata']
+
+            logger.info(f"Retrieved {len(memories)} memories for query: '{query}'")
+            logger.info(f"Retrieval breakdown: {metadata}")
+
+            return {
+                "l2_norm": memories[:metadata['l2_count']],
+                "cosine_similarity": memories[metadata['l2_count']:metadata['l2_count'] + metadata['cosine_count']],
+                "bm25": memories[metadata['l2_count'] + metadata['cosine_count']:metadata['l2_count'] + metadata['cosine_count'] + metadata['bm25_count']],
+                "jaccard_similarity": memories[metadata['l2_count'] + metadata['cosine_count'] + metadata['bm25_count']:]
+            }
+        except Exception as e:
+            logger.error(f"Error during retrieval performance analysis: {str(e)}")
+            return {}
+
+    def print_analysis(self, analysis_results: Dict[str, List[Tuple[str, str, float]]]):
+        if not analysis_results:
+            print("No analysis results available.")
+            return
+
+        for method, memories in analysis_results.items():
+            print(f"\n{method.upper()} Results:")
+            for i, (query, result, _) in enumerate(memories, 1):
+                print(f"{i}. Query: {query}")
+                print(f"   Result: {result}")
+                print()-e 
 File: ./src/utils/api_utils.py
 
 # src/utils/api_utils.py
@@ -1176,57 +983,38 @@ def cached(func):
         cache[key] = result
         return result
     return wrapper-e 
-File: ./src/cli.py
+File: ./src/utils/controller.py
 
-import asyncio
-from src.utils.controller import Controller
-from src.utils.logging_setup import setup_logging
-from src.utils.similarity_analysis import SimilarityAnalyzer
+import logging
+from typing import List, Tuple
+from src.agents.agent import Agent
+from src.memory.enhanced_memory_manager import EnhancedMemoryManager
+from config import config
 
-master_logger, chat_logger, memory_logger, database_logger = setup_logging()
-controller = Controller()
-similarity_analyzer = None
+class Controller:
+    def __init__(self):
+        self.logger = logging.getLogger('master')
+        self.db_logger = logging.getLogger('database')
+        self.memory_manager = None
+        self.agent = None
 
-async def initialize():
-    await controller.initialize()
-    global similarity_analyzer
-    similarity_analyzer = SimilarityAnalyzer(controller.memory_manager)
+    async def initialize(self):
+        self.memory_manager = EnhancedMemoryManager(config.OPENAI_API_KEY)
+        await self.memory_manager.initialize()
+        self.agent = Agent(self.memory_manager)
 
-async def main():
-    await initialize()
-    while True:
+    async def execute_query(self, query: str) -> str:
         try:
-            command = input("Enter a command (query/memories/consistency/analyze/quit): ").strip().lower()
-            
-            if command == 'quit':
-                break
-            elif command == 'query':
-                query = input("Enter your query: ")
-                response = await controller.execute_query(query)
-                print(f"Response: {response}")
-            elif command == 'memories':
-                try:
-                    limit = int(input("Enter the number of memories to retrieve: "))
-                    memories = await controller.get_recent_memories(limit)
-                    for i, (query, result) in enumerate(memories, 1):
-                        print(f"{i}. Query: {query}\n   Result: {result}\n")
-                except ValueError:
-                    print("Invalid input. Please enter a number.")
-            elif command == 'consistency':
-                await controller.memory_manager.run_consistency_check_and_fix()
-                print("Consistency check and fix completed.")
-            elif command == 'analyze':
-                query = input("Enter a query to analyze: ")
-                analysis_results = await similarity_analyzer.analyze_retrieval_performance(query)
-                similarity_analyzer.print_analysis(analysis_results)
-            else:
-                print("Invalid command. Please try again.")
+            response = await self.agent.process_query(query)
+            self.logger.debug(f"Generated response: {response}")
+            await self.memory_manager.save_memory(query, response)
+            return response
         except Exception as e:
-            master_logger.error(f"An error occurred: {str(e)}", exc_info=True)
-            print(f"An error occurred: {str(e)}. Please try again.")
+            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
+            return f"An error occurred while processing your query: {str(e)}"
 
-if __name__ == "__main__":
-    asyncio.run(main())-e 
+    async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
+        return await self.memory_manager.get_memories(limit)-e 
 File: ./src/api.py
 
 from fastapi import FastAPI, HTTPException, Request
@@ -1305,6 +1093,151 @@ if __name__ == "__main__":
     import uvicorn
     master_logger.info("Running the API server directly")
     uvicorn.run(app, host="0.0.0.0", port=8000)-e 
+File: ./src/cli.py
+
+import asyncio
+from src.utils.controller import Controller
+from src.utils.logging_setup import setup_logging
+from src.utils.similarity_analysis import SimilarityAnalyzer
+
+master_logger, chat_logger, memory_logger, database_logger = setup_logging()
+controller = Controller()
+similarity_analyzer = None
+
+async def initialize():
+    await controller.initialize()
+    global similarity_analyzer
+    similarity_analyzer = SimilarityAnalyzer(controller.memory_manager)
+
+async def main():
+    await initialize()
+    while True:
+        try:
+            command = input("Enter a command (query/memories/consistency/analyze/quit): ").strip().lower()
+            
+            if command == 'quit':
+                break
+            elif command == 'query':
+                query = input("Enter your query: ")
+                response = await controller.execute_query(query)
+                print(f"Response: {response}")
+            elif command == 'memories':
+                try:
+                    limit = int(input("Enter the number of memories to retrieve: "))
+                    memories = await controller.get_recent_memories(limit)
+                    for i, (query, result) in enumerate(memories, 1):
+                        print(f"{i}. Query: {query}\n   Result: {result}\n")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+            elif command == 'consistency':
+                await controller.memory_manager.run_consistency_check_and_fix()
+                print("Consistency check and fix completed.")
+            elif command == 'analyze':
+                query = input("Enter a query to analyze: ")
+                analysis_results = await similarity_analyzer.analyze_retrieval_performance(query)
+                similarity_analyzer.print_analysis(analysis_results)
+            else:
+                print("Invalid command. Please try again.")
+        except Exception as e:
+            master_logger.error(f"An error occurred: {str(e)}", exc_info=True)
+            print(f"An error occurred: {str(e)}. Please try again.")
+
+if __name__ == "__main__":
+    asyncio.run(main())-e 
+File: ./.pytest_cache/README.md
+
+# pytest cache directory #
+
+This directory contains data from the pytest's cache plugin,
+which provides the `--lf` and `--ff` options, as well as the `cache` fixture.
+
+**Do not** commit this to version control.
+
+See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information.
+-e 
+File: ./.pytest_cache/.gitignore
+
+# Created by pytest automatically.
+*
+-e 
+File: ./.pytest_cache/CACHEDIR.TAG
+
+Signature: 8a477f597d28d172789f06886806bc55
+# This file is a cache directory tag created by pytest.
+# For information about cache directory tags, see:
+#	https://bford.info/cachedir/spec.html
+-e 
+File: ./.pytest_cache/v/cache/nodeids
+
+[]-e 
+File: ./.pytest_cache/v/cache/lastfailed
+
+{
+  "tests/test_memory_manager.py": true
+}-e 
+File: ./.pytest_cache/v/cache/stepwise
+
+[]-e 
+File: ./.dockerignore
+
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+develop-eggs
+.installed.cfg
+lib
+lib64
+*.log
+logs
+notebooks
+data/raw/*
+text_docs/*
+.DS_Store
+.vscode
+-e 
+File: ./docker-compose.yml
+
+services:
+  multi-agent-rag:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: multi-agent-rag
+    ports:
+      - "8080:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  multi-agent-rag-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: multi-agent-rag
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["python", "-m", "src.cli"]
+    stdin_open: true
+    tty: true-e 
 File: ./docs/README.md
 
 # Multi-Agent RAG System with Continual Learning
@@ -1447,37 +1380,99 @@ Run the test suite with:
 pytest tests/
 ```
 -e 
-File: ./.pytest_cache/README.md
+File: ./Dockerfile
 
-# pytest cache directory #
+FROM python:3.12
 
-This directory contains data from the pytest's cache plugin,
-which provides the `--lf` and `--ff` options, as well as the `cache` fixture.
+# Create a non-root user
+RUN useradd -m appuser
 
-**Do not** commit this to version control.
+WORKDIR /app
 
-See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information.
--e 
-File: ./.pytest_cache/.gitignore
+COPY . /app
 
-# Created by pytest automatically.
-*
--e 
-File: ./.pytest_cache/CACHEDIR.TAG
+RUN mkdir -p /app/logs /app/data
+RUN chown -R appuser:appuser /app
 
-Signature: 8a477f597d28d172789f06886806bc55
-# This file is a cache directory tag created by pytest.
-# For information about cache directory tags, see:
-#	https://bford.info/cachedir/spec.html
--e 
-File: ./.pytest_cache/v/cache/nodeids
+# Switch to non-root user
+USER appuser
 
-[]-e 
-File: ./.pytest_cache/v/cache/lastfailed
+# Create and activate virtual environment
+RUN python -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
 
-{
-  "tests/test_memory_manager.py": true
-}-e 
-File: ./.pytest_cache/v/cache/stepwise
+# Upgrade pip and install dependencies with increased timeout and using a mirror
+RUN pip install --upgrade pip
 
-[]
+# Install numpy and scipy separately with increased timeout
+RUN pip install --no-cache-dir numpy==1.26.4 scipy==1.14.0 --timeout 600
+
+# Install scikit-learn separately with an even longer timeout
+RUN pip install --no-cache-dir scikit-learn==1.4.0 --timeout 900
+
+# Install other dependencies
+RUN pip install --no-cache-dir -r docker_requirements.txt --timeout 600 --index-url https://pypi.org/simple --trusted-host pypi.org
+
+RUN pip install fastapi uvicorn
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
+File: ./config.py
+
+import os
+from dotenv import load_dotenv
+
+class Config:
+    def __init__(self):
+        load_dotenv()
+        
+        # General settings
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4-turbo")
+        
+        # Database settings
+        self.MEMORY_DB_PATH = self._get_memory_db_path()
+        
+        # API Keys
+        self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
+        self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+        
+        # Other settings
+        self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
+        
+        # Processing agent settings
+        self.PROCESSING_AGENT_MEMORIES_INCLUDED = int(os.getenv("PROCESSING_AGENT_MEMORIES_INCLUDED", "5"))
+        self.MEMORY_RETRIEVAL_THRESHOLD = float(os.getenv("MEMORY_RETRIEVAL_THRESHOLD", "0.75"))
+        self.MEMORY_RETRIEVAL_LIMIT = int(os.getenv("MEMORY_RETRIEVAL_LIMIT", "10"))
+
+    def _get_memory_db_path(self):
+        return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
+
+    def validate_api_keys(self):
+        return bool(self.OPENAI_API_KEY and self.TAVILY_API_KEY)
+
+    L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
+    COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))
+    BM25_THRESHOLD = float(os.getenv("BM25_THRESHOLD", "0.5"))
+    JACCARD_SIMILARITY_THRESHOLD = float(os.getenv("JACCARD_SIMILARITY_THRESHOLD", "0.3"))
+
+config = Config()-e 
+File: ./docker_requirements.txt
+
+langchain==0.2.3
+langchain-openai==0.1.8
+langchain-community==0.2.4
+langchain-core==0.2.5
+langchain-text-splitters==0.2.1
+langsmith==0.1.77
+openai==1.34.0
+pydantic==2.7.4
+pydantic-core==2.18.4
+dataclasses-json==0.6.7
+python-dotenv==1.0.1
+aiosqlite
+rank_bm25==0.2.2
+cachetools==5.3.0

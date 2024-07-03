@@ -14,9 +14,9 @@ class Agent:
         self.memory_manager = memory_manager
         self.chat_model = ChatOpenAI(model_name=config.MODEL_NAME)
 
-    @cached
-    @rate_limited(max_calls=6, period=60)  # Adjust these values based on your API limits
-    @exponential_backoff(max_retries=3, base_delay=2)
+    # @cached
+    # @rate_limited(max_calls=6, period=60)  # Adjust these values based on your API limits
+    # @exponential_backoff(max_retries=3, base_delay=2)
     async def process_query(self, query: str) -> str:
         relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
         
