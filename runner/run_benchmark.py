@@ -1,3 +1,12 @@
+import os
+import sys
+from pathlib import Path
+
+# Add the project root to the PYTHONPATH
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
+
 import logging
 import os.path
 import os

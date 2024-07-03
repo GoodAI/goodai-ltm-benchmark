@@ -12,8 +12,6 @@ from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 from goodai.ltm.prompts.chronological_ltm import cltm_template_queries_info
-import requests
-import os
 
 from utils.constants import DATA_DIR
 from utils.llm import make_user_message, make_system_message
@@ -26,9 +24,6 @@ Prior interactions with the user are tagged with a timestamp.
 Current time: {datetime}
 Current information about the user:
 {user_info}
-
-Here is a response from a cooperative retrieval agent:
-{relevant_memories}
 """.strip()
 _user_info_system_message = (
     "You are an expert in helping AI assistants manage their knowledge about a user and their operating environment."
@@ -72,8 +67,6 @@ class LTMAgent:
         return f"{self.model}-{self.max_prompt_size}-{self.max_completion_tokens}"
 
     def __post_init__(self):
-        if self.max_prompt_size is None:
-            self.max_prompt_size = 4096
         mem_config = TextMemoryConfig(
             queue_capacity=self.config.chunk_queue_capacity,
             chunk_capacity=self.config.chunk_size,
@@ -132,31 +125,22 @@ class LTMAgent:
         self.prompt_callback = prompt_callback
         self.convo_mem.set_state(state["convo_mem"])
 
-    def system_prompt(self, relevant_memories: str = "") -> str:
+    def system_prompt(self) -> str:
         return _default_system_message.format(
             datetime=str(self.now)[:-7],
             user_info=json.dumps(self.user_info, indent=2),
-            relevant_memories=relevant_memories
         )
 
     def _build_llm_context(self, m_history: list[Message], user_content: str,
-                        cost_callback: Callable[[float], Any]) -> list[dict]:
-        max_prompt_size = self.max_prompt_size or 4096  # Use default if None
-        target_history_tokens = max_prompt_size * (1.0 - self.config.ctx_fraction_for_mem)
-        
-        # Get relevant memories
-        relevant_memories = self.get_relevant_memories(user_content)
-        
-        # Build system message with relevant memories
-        new_system_content = self.system_prompt(relevant_memories)
-        
+                           cost_callback: Callable[[float], Any]) -> list[dict]:
+        target_history_tokens = self.max_prompt_size * (1.0 - self.config.ctx_fraction_for_mem)
+        new_system_content = self.system_prompt()
         context = []
         if new_system_content:
             context.append(make_system_message(new_system_content))
         context.append(make_user_message(user_content))
         token_count = token_counter(model=self.model, messages=context)
         oldest_message_ts = self.now
-        
         for message in reversed(m_history):
             if message.is_user:
                 ts = datetime.datetime.fromtimestamp(message.timestamp)
@@ -169,8 +153,13 @@ class LTMAgent:
                 break
             context.insert(1, message_dict)
             token_count = new_token_count
-            # oldest_message_ts = message.timestamp
-        
+            oldest_message_ts = message.timestamp
+        remaining_tokens = self.max_prompt_size - token_count
+        self.user_info, mem_appendix = self._get_mem_message(
+            m_history, user_content, remaining_tokens, oldest_message_ts, cost_callback,
+        )
+        if mem_appendix:
+            context[0]["content"] += "\n\n" + mem_appendix
         return context
 
     def convo_retrieve(
@@ -281,22 +270,23 @@ class LTMAgent:
         self.convo_mem.add_text(text, timestamp=message.timestamp)
 
     def reply(self, user_content: str, cost_callback: Callable[[float], Any] = None) -> str:
+        """
+        Asks the LLM to generate a completion from a user question/statement.
+        This method first constructs a prompt from session history and memory excerpts.
+        :param user_content: The user's question or statement.
+        :param cost_callback: An optional function used to track LLM costs.
+        :return: The agent's completion or reply.
+        """
         self.now = datetime.datetime.now()
         session = self.session
-        
-        # Build context using _build_llm_context
-        context = self._build_llm_context(session.message_history, user_content, cost_callback)
-        
-        # Generate response
+        context = self._build_llm_context(session.message_history, user_content,
+                                          cost_callback)
         response = self._completion(context, temperature=self.config.llm_temperature, label="reply",
                                     cost_callback=cost_callback)
-        
-        # Add messages to history
         for role, content in [("user", user_content), ("assistant", response)]:
             message = Message(role=role, content=content, timestamp=self.now.timestamp())
             session.add(message)
             self._add_to_convo_memory(message)
-        
         return response
 
     def _completion(self, context: List[dict[str, str]], temperature: float, label: str,
@@ -345,23 +335,6 @@ class LTMAgent:
         self.convo_mem.clear()
         self.user_info = dict()
         self.new_session()
-
-    def get_relevant_memories(self, user_message: str) -> str:
-        api_url = "http://localhost:8080/query"  # Adjust if your API URL is different
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY is not set in environment variables")
-        
-        headers = {"Authorization": f"Bearer {api_key}"}
-        payload = {"query": user_message}
-        
-        try:
-            response = requests.post(api_url, json=payload, headers=headers)
-            response.raise_for_status()
-            return response.json()["response"]
-        except requests.RequestException as e:
-            _logger.error(f"Failed to retrieve memories: {str(e)}")
-            return ""
 
 
 class LTMAgentSession:

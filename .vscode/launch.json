@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python: Run Benchmark",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/runner/run_benchmark.py",
+        "args": [
+          "-c",
+          "./configurations/ltm_dev_benchmarks/dev_benchmark_1-2.yml",
+          "-a",
+          "ltm_agent/gpt-4o"
+        ],
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        }
+      }
+    ]
+  }
+  

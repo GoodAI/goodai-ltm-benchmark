@@ -5,7 +5,7 @@ from typing import List, Tuple
 from utils.llm import make_user_message
 from utils.json_utils import LLMJSONError
 from goodai.helpers.json_helper import sanitize_and_parse_json
-from datasets.locations import (
+from local_datasets.locations import (
     LocationsDataset,
     LOCATIONS,
     DISTANCES,
