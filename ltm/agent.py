@@ -2,7 +2,9 @@ import datetime
 import json
 import logging
 import uuid
+import ltm.scratchpad as sp
 from dataclasses import dataclass, field
+from copy import deepcopy
 from json import JSONDecodeError
 from typing import List, Callable, Optional, Any, Union
 from litellm import completion, completion_cost, token_counter
@@ -11,10 +13,9 @@ from goodai.ltm.agent import LTMAgentConfig, Message
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
-from goodai.ltm.prompts.chronological_ltm import cltm_template_queries_info
 
 from utils.constants import DATA_DIR
-from utils.llm import make_user_message, make_system_message
+from utils.llm import make_user_message, make_assistant_message, make_system_message, LLMContext
 
 _debug_dir = DATA_DIR.joinpath("ltm_debug_info")
 _logger = logging.getLogger("exp_agent")
@@ -58,6 +59,7 @@ class LTMAgent:
     config: LTMAgentConfig = field(default_factory=LTMAgentConfig)
     prompt_callback: Callable[[str, str, list[dict], str], Any] = None
     user_info: dict = field(default_factory=dict)
+    user_info_ts: dict[str, float] = field(default_factory=dict)  # Tracks changes in user_info (timestamps)
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
     debug_level: int = 0
     llm_call_idx: int = None
@@ -105,6 +107,7 @@ class LTMAgent:
             config=self.config,
             convo_mem=self.convo_mem.state_as_text(),
             user_info=self.user_info,
+            user_info_ts=self.user_info_ts,
             session=self.session.state_as_text(),
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
@@ -123,6 +126,7 @@ class LTMAgent:
         self.model = state["model"]
         self.config = state["config"]
         self.user_info = state["user_info"]
+        self.user_info_ts = state["user_info_ts"]
         self.prompt_callback = prompt_callback
         self.convo_mem.set_state(state["convo_mem"])
         self.session = LTMAgentSession.from_state_text(state["session"])
@@ -142,7 +146,7 @@ class LTMAgent:
             context.append(make_system_message(new_system_content))
         context.append(make_user_message(user_content))
         token_count = token_counter(model=self.model, messages=context)
-        oldest_message_ts = self.now
+        oldest_message_ts = self.now.timestamp()
         for message in reversed(m_history):
             if message.is_user:
                 ts = datetime.datetime.fromtimestamp(message.timestamp)
@@ -203,11 +207,11 @@ class LTMAgent:
             user_info_description = f"Prior information about the user:\n{user_info_text}"
         else:
             user_info_description = f"There is no prior information about the user."
-        sp_content = cltm_template_queries_info.format(
+        query_rewrite_msg = sp.query_rewrite_template.format(
             user_info_description=user_info_description,
             user_content=user_content,
-        ).strip()
-        prompt_messages.append({"role": "user", "content": sp_content})
+        )
+        prompt_messages.append({"role": "user", "content": query_rewrite_msg})
         query_json = self._completion(prompt_messages, temperature=self.config.mem_temperature,
                                       label="query-generation", cost_callback=cost_callback)
         try:
@@ -218,7 +222,7 @@ class LTMAgent:
         if not isinstance(queries_and_info, dict):
             _logger.warning("Query generation completion was not a dictionary!")
             queries_and_info = {}
-        user_info = queries_and_info.get("user", self.user_info)
+        user_info = self._update_scratchpad(user_content, cost_callback)
         _logger.info(f"New user object: {user_info}")
         queries = queries_and_info.get("queries", [])
         return (
@@ -291,6 +295,12 @@ class LTMAgent:
             self._add_to_convo_memory(message)
         return response
 
+    def _truncated_completion(self, context: LLMContext, max_messages: int, **kwargs) -> str:
+        while len(context) + 1 > max_messages or token_counter(model=self.model,
+                                                               messages=context) > self.max_prompt_size:
+            context.pop(1)
+        return self._completion(context, **kwargs)
+
     def _completion(self, context: List[dict[str, str]], temperature: float, label: str,
                     cost_callback: Callable[[float], Any]) -> str:
         # TODO: max_tokens is borked: https://github.com/BerriAI/litellm/issues/4439
@@ -312,7 +322,7 @@ class LTMAgent:
         # See if dir exists or create it, and set llm_call_idx
         save_dir = _debug_dir.joinpath(self.save_name)
         if self.llm_call_idx is None:
-            if save_dir.exists():
+            if save_dir.exists() and len(list(save_dir.glob("*.txt"))) > 0:
                 self.llm_call_idx = max(int(p.name.removesuffix(".txt")) for p in save_dir.glob("*.txt")) + 1
             else:
                 self.llm_call_idx = 0
@@ -337,6 +347,58 @@ class LTMAgent:
         self.convo_mem.clear()
         self.user_info = dict()
         self.new_session()
+
+    def _update_scratchpad(
+        self, user_message: str, cost_cb: Callable[[float], None],
+        max_changes: int = 10, max_tries: int = 5, max_messages: int = 10, max_scratchpad_tokens: int = None,
+    ) -> dict:
+        """An embodied agent interacts with an extremely simple environment to safely update the scratchpad."""
+
+        max_scratchpad_tokens = max_scratchpad_tokens or self.max_prompt_size // 4
+        assert 0 < max_scratchpad_tokens < self.max_prompt_size // 2
+        ask_kwargs = dict(label="scratchpad", temperature=0.01, cost_callback=cost_cb, max_messages=max_messages)
+        scratchpad = deepcopy(self.user_info)
+        scratchpad_timestamps = self.user_info_ts
+        context = [make_system_message(sp.system_prompt_template.format(message=user_message))]
+        for _ in range(max_changes):
+
+            # This is how the info looks like, do you wanna make changes?
+            context.append(make_user_message(sp.changes_yesno_template.format(user_info=sp.to_text(scratchpad))))
+            response = self._truncated_completion(context, **ask_kwargs)
+            if "yes" not in response.lower():
+                break
+
+            # Alright, make a single change
+            changed = False
+            context.append(make_assistant_message("yes"))
+            context.append(make_user_message(sp.single_change_template))
+            response = self._truncated_completion(context, **ask_kwargs)
+            context.append(make_assistant_message(response))
+            for _ in range(max_tries):
+                try:
+                    d = sp.extract_json_dict(response)
+                    sp.add_new_content(scratchpad_timestamps, scratchpad, d["key"], d["new_content"])
+                    changed = True
+                    break
+                except Exception as exc:
+                    context.append(make_user_message(f"There has been an error:\n\n{str(exc)}\n\nTry again, but take this error into account."))
+                    response = self._truncated_completion(context, **ask_kwargs)
+                    context.append(make_assistant_message(response))
+
+            # Register changes with timestamps and remove items if necessary
+            if changed:
+                keys_ts = None
+                while token_counter(model=self.model, text=sp.to_text(scratchpad)) > max_scratchpad_tokens:
+                    # Older and deeper items (with longer path) go first
+                    if keys_ts is None:
+                        keys_ts = sorted(
+                            [(k, ts) for k, ts in scratchpad_timestamps.items()],
+                            key=lambda t: (t[1], -len(t[0])),
+                        )
+                    keypath, _ = keys_ts.pop(0)
+                    sp.remove_item(scratchpad, keypath)
+                    del scratchpad_timestamps[keypath]
+        return scratchpad
 
 
 class LTMAgentSession:
