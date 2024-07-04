@@ -2,8 +2,6 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import List, Tuple
 
-import pystache
-
 from dataset_interfaces.interface import DatasetInterface, TestExample
 
 
@@ -28,9 +26,9 @@ DIRECTIONS = [
 DISTANCES = [1, 2, 3, 4]
 
 STATEMENTS = [
-    "{{place}} is a location in my home town, it is {{distance}} KM, {{direction}} from {{other_place}}.",
-    "I visited {{place}}, which is {{distance}} KM, {{direction}} from {{other_place}}.",
-    "About {{distance}} km {{direction}} of the {{other_place}} there is a {{place}}",
+    "{place} is a location in my home town, it is {distance} KM, {direction} from {other_place}.",
+    "I visited {place}, which is {distance} KM, {direction} from {other_place}.",
+    "About {distance} km {direction} of the {other_place} there is a {place}",
 ]
 
 
@@ -42,7 +40,7 @@ class LocationsDataset(DatasetInterface):
         "one. Finally the agent is asked the distance and direction from the first mentioned place to the last."
     )
     question: str = (
-        "Please calculate the direction and distance starting from {{place}} going directly to {{origin}}. Solve it "
+        "Please calculate the direction and distance starting from {place} going directly to {origin}. Solve it "
         "step by step."
     )
     known_locations: int = 5
@@ -52,7 +50,6 @@ class LocationsDataset(DatasetInterface):
 
     def generate_examples(self, num_examples):
         examples = []
-        renderer = pystache.Renderer()
         for _ in range(num_examples):
             script = []
             is_question = []
@@ -65,7 +62,7 @@ class LocationsDataset(DatasetInterface):
                 locations.remove(place)
 
                 if len(known_locations) == 0:
-                    statement = "There is a {{place}} in the center of my hometown."
+                    statement = "There is a {place} in the center of my hometown."
                     other_place = ""
                     direction = ""
                     distance = 0
@@ -79,14 +76,11 @@ class LocationsDataset(DatasetInterface):
                 location_information.append((place, other_place, direction, distance))
 
                 script.append(
-                    renderer.render(
-                        statement,
-                        {
-                            "place": place,
-                            "other_place": other_place,
-                            "direction": direction,
-                            "distance": distance,
-                        },
+                    statement.format(
+                        place=place,
+                        other_place=other_place,
+                        direction=direction,
+                        distance=distance,
                     )
                 )
                 is_question.append(False)
@@ -103,9 +97,7 @@ class LocationsDataset(DatasetInterface):
             is_question.append(False)
 
             origin = known_locations[0]
-            question = renderer.render(
-                self.question, {"place": place, "origin": origin}
-            )
+            question = self.question.format(place=place, origin=origin)
 
             script.append(question)
             is_question.append(True)

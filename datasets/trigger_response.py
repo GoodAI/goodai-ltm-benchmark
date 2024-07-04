@@ -5,8 +5,6 @@ from utils.llm import make_user_message, GPT_CHEAPEST
 from utils.text import rouge_l, standardise
 from utils.ui import colour_print
 from goodai.helpers.json_helper import sanitize_and_parse_json
-import pystache
-
 from dataset_interfaces.interface import DatasetInterface, TestExample
 
 
@@ -73,7 +71,7 @@ class TriggerResponseDataset(DatasetInterface):
 
     def generate_examples(self, num_examples):
         examples = []
-        setup = "Whenever I {{request}} then say: '{{response}}'"
+        setup = "Whenever I {request} then say: {response}"
 
         for _, request_num in zip(range(num_examples), self.request_num_generator()):
             answer_list = []
@@ -81,7 +79,7 @@ class TriggerResponseDataset(DatasetInterface):
             response = RESPONSE[request_num]
             trigger = TRIGGERS[request_num]
 
-            script = [pystache.render(setup, {"request": request, "response": response})]
+            script = [setup.format(request=request, response=repr(response))]
             is_question = [False]
 
             for _ in range(self.trigger_activations):
