@@ -2,9 +2,8 @@ import json
 import time
 from typing import Callable, Any, Iterator
 from copy import deepcopy
-from utils.llm import make_system_message, make_user_message, make_assistant_message, LLMContext
+from utils.llm import make_user_message, LLMContext
 from goodai.helpers.json_helper import sanitize_and_parse_json
-from litellm import token_counter
 
 
 query_rewrite_template = """
@@ -28,19 +27,22 @@ Write JSON in the following format:
 
 system_prompt_template = """
 You are an expert in helping AI assistants manage their knowledge about a user and their operating environment.
+These AI assistants keep a JSON structure with user information that they use as a scratchpad.
+
+Now an AI assistant requires your expertise.
+{last_messages}
 
 == New user question/statement ==
 {message}
 ==
 
-The AI assistant has just received the above user question/statement. Based on it, your task is to update the user information in order to adjust its content to the current situation.
-The user object is expected to contain information provided by the user, such as facts about themselves or information they are expecting the AI assistant to keep track of.
+This AI assistant has just received the above user question/statement. Based on it, your task is to keep the JSON scratchpad up to date.
+The scratchpad is expected to contain information provided by the user, such as facts about themselves or information they are expecting the AI assistant to keep track of. The scratchpad is specially well suited for quickly-changing or temporal information.
 Avoid storing unimportant general knowledge that any AI assistant should be already aware of.
 Capture information provided by the user without omitting important details.
-Exercise judgment in determining if new information overrides, deletes or augments existing information.
 Property names should be descriptive.
 
-You will address this task in turns, and I will guide you through the process.
+You will address this task in turns. You will be guided through the process.
 """.strip()
 
 changes_yesno_template = """
@@ -52,14 +54,14 @@ Would you like to add new information or update any part of it? Answer "yes" or 
 
 single_change_template = """
 Let's update the user information then, one item at a time.
-You can either add new content or update an existing item.
+You can either add new content or update an existing item. If updating, the full item's content will be replaced by "new_content".
+Only apply small and concise changes and avoid duplicates. Summarize large items if you really want to keep the info, otherwise empty them or set them to null.
 Provide JSON text indicating the content to store:
 {
   "key": "key_to_update",
-  "new_content": { ... }
+  "new_content": ... // Any JSON object
 }
 If the item is nested, provide the full key with slashes, like a path: "A/B/C"
-And remember: the user information is meant to store details, so updates must be short.
 """.strip()
 
 item_use_question_template = """

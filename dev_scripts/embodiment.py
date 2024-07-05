@@ -1,9 +1,9 @@
 import json
-import string
 from datasets.chapterbreak import ChapterBreakDataset
 from utils.constants import DATA_DIR
 from utils.llm import make_system_message, make_user_message, make_assistant_message, LLMContext, ask_llm as _ask_llm
 from utils.ui import colour_print
+from utils.text import truncate
 from random import Random
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
@@ -66,12 +66,6 @@ def parse_response(response: str) -> tuple[str, int | str | None]:
     if parts[0] in ["goto", "answer"]:
         return parts[0], int(parts[1])
     return parts[0], parts[1]
-
-
-def truncate(s: str, length: int = 40) -> str:
-    if len(s) <= length:
-        return s
-    return s[:length - 3].rstrip(string.punctuation) + "..."
 
 
 def feedback(context: LLMContext, f: str):
