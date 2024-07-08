@@ -355,11 +355,10 @@ class LTMAgent:
 
     def _update_scratchpad(
         self, message_history: list[Message], user_message: str, cost_cb: Callable[[float], None],
-        max_changes: int = 10, max_tries: int = 5, max_messages: int = 10, max_scratchpad_tokens: int = None,
+        max_changes: int = 10, max_tries: int = 5, max_messages: int = 10, max_scratchpad_tokens: int = 1024,
     ) -> dict:
-        """An embodied agent interacts with an extremely simple environment to safely update the scratchpad."""
-
-        max_scratchpad_tokens = max_scratchpad_tokens or min(1024, self.max_prompt_size // 4)
+        """An embodied agent interacts with an extremely simple environment to safely update the scratchpad.
+        A rather small scratchpad (1k tokens) seems to work optimally."""
         assert 0 < max_scratchpad_tokens < self.max_prompt_size // 2
         ask_kwargs = dict(label="scratchpad", temperature=0, cost_callback=cost_cb, max_messages=max_messages)
         scratchpad = deepcopy(self.user_info)

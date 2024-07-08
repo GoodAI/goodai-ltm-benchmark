@@ -53,7 +53,7 @@ Would you like to add new information or update any part of it? Answer "yes" or 
 """.strip()
 
 single_change_template = """
-Let's update the user information then, one item at a time.
+The user information must be updated one item at a time.
 You can either add new content or update an existing item. If updating, the full item's content will be replaced by "new_content".
 Only apply small and concise changes and avoid duplicates. Summarize large items if you really want to keep the info, otherwise empty them or set them to null.
 Provide JSON text indicating the content to store:
