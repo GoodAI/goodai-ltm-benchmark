@@ -6,7 +6,7 @@ from typing import Optional
 from model_interfaces.interface import ChatSession
 from utils.json_utils import CustomEncoder
 from utils.llm import LLMContext, make_user_message, make_assistant_message, make_system_message, \
-    get_max_prompt_size, ask_llm, count_tokens_for_model
+    get_max_prompt_size, ask_llm, count_tokens_for_model, ensure_context_len
 
 _system_prompt = "You are a helpful assistant."
 
@@ -43,8 +43,10 @@ class LLMChatSession(ChatSession):
         self.context.append(make_user_message(user_message))
         if agent_response is None:
             c_callback = None if self.is_local else cost_callback
-            response = ask_llm(self.context, self.model, context_length=self.max_prompt_size, cost_callback=c_callback,
-                               max_response_tokens=self.max_response_tokens)
+            self.context, _ = ensure_context_len(self.context, self.model,
+                                                 max_len=self.max_prompt_size - self.max_response_tokens)
+            response = ask_llm(self.context, self.model, max_overall_tokens=self.max_prompt_size,
+                               cost_callback=c_callback, max_response_tokens=self.max_response_tokens)
         else:
             response = agent_response
 

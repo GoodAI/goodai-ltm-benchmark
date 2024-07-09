@@ -10,7 +10,7 @@ model = "gpt-4-turbo-preview"
 ds = ChapterBreakDataset(split="ao3")
 samples = ds.get_samples(ds.load_data())
 s = samples[1]
-llm = lambda ctx: ask_llm(ctx, model, temperature=0, context_length=16384, cost_callback=cost_callback, max_response_tokens=1024)
+llm = lambda ctx: ask_llm(ctx, model, temperature=0, max_overall_tokens=16384, cost_callback=cost_callback, max_response_tokens=1024)
 fix_commas = lambda txt: txt.replace("’", "'")
 last_pages = fix_commas(s["ctx"])
 continuation = fix_commas(s["pos"])

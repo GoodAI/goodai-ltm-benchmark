@@ -15,10 +15,8 @@ jinja2~=3.1.2
 Werkzeug==2.2.2  # It's crucial to specify this package's version to make flask work
 flask==2.2.3
 browser-cookie3
-langchain==0.1.1
-langchain-openai==0.0.2
 rouge_score==0.1.2
-litellm  # Unifies interface from most LLM APIs
+litellm==1.41.13  # Unifies interface from most LLM APIs
 zstd==1.5.5.1  # To decompress chapterbreak
 humanize==4.9.0  # Shows data in human-readable form e.g. timedelta as "1 hour and 23 seconds"
 transformers==4.40.2  # Required to load some HuggingFace tokenizers
