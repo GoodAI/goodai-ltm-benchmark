@@ -1,7 +1,7 @@
 import logging
 from typing import List, Tuple
 from src.agents.agent import Agent
-from src.memory.enhanced_memory_manager import EnhancedMemoryManager
+from src.memory.memory_manager import MemoryManager
 from config import config
 
 class Controller:
@@ -12,7 +12,7 @@ class Controller:
         self.agent = None
 
     async def initialize(self):
-        self.memory_manager = EnhancedMemoryManager(config.OPENAI_API_KEY)
+        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
         await self.memory_manager.initialize()
         self.agent = Agent(self.memory_manager)
 

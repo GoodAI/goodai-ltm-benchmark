@@ -1,14 +1,11 @@
 import logging
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
-from typing import List, Tuple
 from config import config
 import json
-from src.utils.api_utils import rate_limited, exponential_backoff, cached
 
 logger = logging.getLogger("master")
 chat_logger = logging.getLogger("chat")
-
 
 class Agent:
     def __init__(self, memory_manager):
@@ -16,6 +13,16 @@ class Agent:
         self.chat_model = ChatOpenAI(model_name=config.MODEL_NAME)
 
     async def process_query(self, query: str) -> str:
+        # Check for trivia indicator
+        trivia_indicator = "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message:"
+        
+        if trivia_indicator in query:
+            logger.info("Trivia question detected. Skipping processing and API call.")
+            return "Deemed trivia - not added to DB"
+
+        return await self._process_non_trivia_query(query)
+
+    async def _process_non_trivia_query(self, query: str) -> str:
         relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
         messages = [
             HumanMessage(

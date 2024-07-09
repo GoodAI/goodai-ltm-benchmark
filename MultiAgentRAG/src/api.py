@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from src.utils.controller import Controller
 from src.utils.logging_setup import setup_logging
 from config import config
-from src.utils.memory_analysis import MemoryAnalyzer
 
 class QueryRequest(BaseModel):
     query: str
@@ -25,7 +24,6 @@ async def startup_event():
     global memory_analyzer
     master_logger.info("Starting up the API server")
     await controller.initialize()
-    memory_analyzer = MemoryAnalyzer(controller.memory_manager)
 
 @app.on_event("shutdown")
 async def shutdown_event():
