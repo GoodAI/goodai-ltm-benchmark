@@ -84,7 +84,11 @@ def ask_llm(
         context_tokens = count_tokens_for_model(model=model, context=context)
         if context_tokens > max_overall_tokens:
             colour_print("lightred", f"WARNING: you have set a limit of {max_overall_tokens} context tokens, "
-                                     f"but there are {context_tokens}.")
+                                     f"but there are {context_tokens}. Response tokens won't be limited automatically.")
+        else:
+            if max_response_tokens is None:
+                max_response_tokens = max_overall_tokens
+            max_response_tokens = min(max_response_tokens, max_overall_tokens - context_tokens)
 
     # Actual LLM call
     response = completion(
