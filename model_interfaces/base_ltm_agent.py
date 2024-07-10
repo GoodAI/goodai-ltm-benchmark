@@ -85,8 +85,7 @@ class BaseLTMAgent(ChatSession, abc.ABC):
             self.costs_usd += cost_usd
 
         response = ask_llm(
-            context, self.model, temperature=temperature, context_length=None,
-            cost_callback=cost_callback
+            context, self.model, temperature=temperature, cost_callback=cost_callback
         )
         if _log_prompts:
             with self.log_lock:
