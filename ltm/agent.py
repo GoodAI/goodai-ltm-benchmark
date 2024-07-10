@@ -125,7 +125,7 @@ class LTMAgent:
         self.user_info = state["user_info"]
         self.prompt_callback = prompt_callback
         self.convo_mem.set_state(state["convo_mem"])
-        self.session.from_state_text(state["session"])
+        self.session = LTMAgentSession.from_state_text(state["session"])
 
     def system_prompt(self) -> str:
         return _default_system_message.format(
