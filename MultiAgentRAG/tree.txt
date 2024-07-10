@@ -2,51 +2,15 @@
 ├── Dockerfile
 ├── config.py
 ├── data
-│   ├── 838622856d00.db
-│   ├── 8aae7173af37.db
-│   ├── e69ce7b49fea.db
+│   ├── 5de0a800ff22.db
 │   └── master.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
 ├── docs
 │   └── README.md
 ├── logs
-│   ├── 20240704_101957_9b54d4275e48
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240704_104434_b2d089a0ff0c
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240708_105442_4d43a30ff783
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240708_111940_92044deca7b2
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240708_113157_92929d0ea2fc
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240708_125536_838622856d00
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240709_092326_8aae7173af37
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   └── 20240709_093333_e69ce7b49fea
+│   ├── 20240709_093333_e69ce7b49fea
+│   └── 20240709_095633_5de0a800ff22
 │       ├── chat.log
 │       ├── database.log
 │       ├── master.log
@@ -82,7 +46,7 @@
 │       └── logging_setup.py
 └── tree.txt
 
-19 directories, 63 files
+13 directories, 33 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -589,25 +553,35 @@ File: ./src/agents/__init__.py
 File: ./src/agents/agent.py
 
 import logging
-from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+from groq import Groq
 from config import config
 import json
 
 logger = logging.getLogger("master")
 chat_logger = logging.getLogger("chat")
 
-
 class Agent:
     def __init__(self, memory_manager):
         self.memory_manager = memory_manager
-        self.chat_model = ChatOpenAI(model_name=config.MODEL_NAME)
+        self.groq_client = Groq(api_key=config.GROQ_API_KEY)
 
     async def process_query(self, query: str) -> str:
+        # Check for trivia indicator
+        trivia_indicator = "Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message:"
+        
+        if trivia_indicator in query:
+            logger.info("Trivia question detected. Skipping processing and API call.")
+            return "Deemed trivia - not added to DB"
+
+        return await self._process_non_trivia_query(query)
+
+    async def _process_non_trivia_query(self, query: str) -> str:
         relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
+        
         messages = [
-            HumanMessage(
-                content=f"""REQUEST = "{query}"
+            {
+                "role": "user",
+                "content": f"""REQUEST = "{query}"
 
 CONTEXT = "{relevant_memories}"
 
@@ -642,25 +616,23 @@ SUMMARY:
 RELEVANCE SCORE: [Provide a score from 1-10 indicating how relevant and useful the summarized memories are to the REQUEST, with 10 being highly relevant and 1 being minimally relevant]
 
 This summary aims to provide a comprehensive yet concise overview of the relevant memories to assist in formulating an optimal response to the REQUEST."""
-            )
+            }
         ]
 
         # Log the full message sent to the API
-        chat_logger.info(
-            f"Full ChatGPT API request: {json.dumps([m.dict() for m in messages], indent=2)}"
-        )
+        chat_logger.info(f"Full Groq API request: {json.dumps(messages, indent=2)}")
 
-        response = await self.chat_model.ainvoke(messages)
+        response = await self.groq_client.chat.completions.create(
+            messages=messages,
+            model=config.MODEL_NAME,
+        )
 
         # Log the full API response
-        chat_logger.info(
-            f"Full ChatGPT API response: {json.dumps(response.dict(), indent=2)}"
-        )
+        chat_logger.info(f"Full Groq API response: {json.dumps(response.dict(), indent=2)}")
 
         logger.debug(f"Processed query: {query} with context: {relevant_memories}")
 
-        return response.content
--e 
+        return response.choices[0].message.content-e 
 File: ./src/app.py
 
 import asyncio
@@ -1019,7 +991,7 @@ services:
     ports:
       - "8080:8000"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
@@ -1033,7 +1005,7 @@ services:
       dockerfile: Dockerfile
     image: multi-agent-rag
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
@@ -1219,6 +1191,8 @@ RUN pip install --no-cache-dir -r docker_requirements.txt --timeout 600 --index-
 
 RUN pip install fastapi uvicorn
 
+RUN pip install groq
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
@@ -1235,7 +1209,7 @@ class Config:
         load_dotenv()
         
         # General settings
-        self.MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4-turbo")
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192")
         
         # Database settings
         self.MEMORY_DB_PATH = self._get_memory_db_path()
@@ -1243,6 +1217,7 @@ class Config:
         # API Keys
         self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
         self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+        self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
         
         # Other settings
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
@@ -1256,7 +1231,7 @@ class Config:
         return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
 
     def validate_api_keys(self):
-        return bool(self.OPENAI_API_KEY and self.TAVILY_API_KEY)
+        return bool(self.GROQ_API_KEY and self.TAVILY_API_KEY)
 
     L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
     COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))
@@ -1280,3 +1255,4 @@ python-dotenv==1.0.1
 aiosqlite
 rank_bm25==0.2.2
 cachetools==5.3.0
+groq

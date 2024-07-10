@@ -6,7 +6,7 @@ class Config:
         load_dotenv()
         
         # General settings
-        self.MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4-turbo")
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192")
         
         # Database settings
         self.MEMORY_DB_PATH = self._get_memory_db_path()
@@ -14,6 +14,7 @@ class Config:
         # API Keys
         self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
         self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+        self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
         
         # Other settings
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
@@ -27,7 +28,7 @@ class Config:
         return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
 
     def validate_api_keys(self):
-        return bool(self.OPENAI_API_KEY and self.TAVILY_API_KEY)
+        return bool(self.GROQ_API_KEY and self.TAVILY_API_KEY)
 
     L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
     COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))

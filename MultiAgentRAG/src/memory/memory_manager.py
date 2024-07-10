@@ -480,5 +480,3 @@ class MemoryManager:
         except Exception as e:
             logger.error(f"Error getting memory stats: {str(e)}", exc_info=True)
             raise
-
-# Add any additional methods or error handling as needed
