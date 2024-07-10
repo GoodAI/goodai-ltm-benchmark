@@ -14,7 +14,7 @@ GPT_4_TURBO_BEST = "gpt-4-turbo"
 LEAST_EFFICIENT_TOKENISER = "claude-3-opus"
 litellm.model_alias_map = {
     "gpt-4-1106": "gpt-4-1106-preview",
-    "claude-3-haiku": "claude-3-haiku-20240229",
+    "claude-3-haiku": "claude-3-haiku-20240307",
     "claude-3-sonnet": "claude-3-sonnet-20240229",
     "claude-3-opus": "claude-3-opus-20240229",
 }
