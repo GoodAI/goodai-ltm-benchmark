@@ -105,6 +105,7 @@ class LTMAgent:
             config=self.config,
             convo_mem=self.convo_mem.state_as_text(),
             user_info=self.user_info,
+            session=self.session.state_as_text(),
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
@@ -124,6 +125,7 @@ class LTMAgent:
         self.user_info = state["user_info"]
         self.prompt_callback = prompt_callback
         self.convo_mem.set_state(state["convo_mem"])
+        self.session.from_state_text(state["session"])
 
     def system_prompt(self) -> str:
         return _default_system_message.format(
