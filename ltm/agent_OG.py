@@ -35,7 +35,7 @@ _convo_excerpts_prefix = f"# The following are excerpts from the early part of t
 def td_format(td: datetime.timedelta) -> str:
     seconds = int(td.total_seconds())
     periods = [
-        ('year', 3600*24*365), ('month', 3600*24*30), ('day', 3600*24), ('hour', 3600), ('minute', 60), ('second', 1)
+        ('year', 3600*24*365), ('month', 3600*24*30), ('day', 3600*24), ('hour', 3600), ('minute', 60), ('second', 1) #? is this accurate? 30 days in a month?
     ]
     parts = list()
     for period_name, period_seconds in periods:

@@ -10,7 +10,7 @@
           "-c",
           "./configurations/ltm_dev_benchmarks/dev_benchmark_1-2.yml",
           "-a",
-          "ltm_agent/gpt-4o"
+          "ltm_agent/groq/llama3-70b-8192"
         ],
         "env": {
           "PYTHONPATH": "${workspaceFolder}"

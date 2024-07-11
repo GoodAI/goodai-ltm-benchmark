@@ -14,7 +14,6 @@ from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 from goodai.ltm.prompts.chronological_ltm import cltm_template_queries_info
 import requests
 import os
-import re
 
 from utils.constants import DATA_DIR
 from utils.llm import make_user_message, make_system_message
@@ -27,6 +26,9 @@ Prior interactions with the user are tagged with a timestamp.
 Current time: {datetime}
 Current information about the user:
 {user_info}
+
+Here is a response from a cooperative retrieval agent:
+{relevant_memories}
 """.strip()
 _user_info_system_message = (
     "You are an expert in helping AI assistants manage their knowledge about a user and their operating environment."
@@ -38,7 +40,7 @@ _convo_excerpts_prefix = f"# The following are excerpts from the early part of t
 def td_format(td: datetime.timedelta) -> str:
     seconds = int(td.total_seconds())
     periods = [
-        ('year', 3600*24*365), ('month', 3600*24*30), ('day', 3600*24), ('hour', 3600), ('minute', 60), ('second', 1) #? is this accurate? 30 days in a month?
+        ('year', 3600*24*365), ('month', 3600*24*30), ('day', 3600*24), ('hour', 3600), ('minute', 60), ('second', 1)
     ]
     parts = list()
     for period_name, period_seconds in periods:
@@ -72,7 +74,6 @@ class LTMAgent:
     def __post_init__(self):
         if self.max_prompt_size is None:
             self.max_prompt_size = 4096
-            _logger.warning("max_prompt_size was not set. Using default value of 4096.")
         mem_config = TextMemoryConfig(
             queue_capacity=self.config.chunk_queue_capacity,
             chunk_capacity=self.config.chunk_size,
@@ -131,33 +132,31 @@ class LTMAgent:
         self.prompt_callback = prompt_callback
         self.convo_mem.set_state(state["convo_mem"])
 
-    def system_prompt(self) -> str:
+    def system_prompt(self, relevant_memories: str = "") -> str:
         return _default_system_message.format(
             datetime=str(self.now)[:-7],
             user_info=json.dumps(self.user_info, indent=2),
+            relevant_memories=relevant_memories
         )
 
     def _build_llm_context(self, m_history: list[Message], user_content: str,
-                           cost_callback: Callable[[float], Any]) -> list[dict]:
-        max_prompt_size = self._get_max_prompt_size()
+                        cost_callback: Callable[[float], Any]) -> list[dict]:
+        max_prompt_size = self.max_prompt_size or 4096  # Use default if None
         target_history_tokens = max_prompt_size * (1.0 - self.config.ctx_fraction_for_mem)
-        new_system_content = self.system_prompt()
+        
+        # Get relevant memories
+        relevant_memories = self.get_relevant_memories(user_content)
+        
+        # Build system message with relevant memories
+        new_system_content = self.system_prompt(relevant_memories)
+        
         context = []
         if new_system_content:
             context.append(make_system_message(new_system_content))
         context.append(make_user_message(user_content))
-
-        # Get relevant memories from API
-        external_memories = self.get_relevant_memories(user_content)
-
-        # Modify context to include external memories
-        if external_memories:
-            external_mem_message = make_system_message(f"Additional relevant information from external source:\n{external_memories}")
-            context.insert(1, external_mem_message)
-
         token_count = token_counter(model=self.model, messages=context)
         oldest_message_ts = self.now
-
+        
         for message in reversed(m_history):
             if message.is_user:
                 ts = datetime.datetime.fromtimestamp(message.timestamp)
@@ -170,46 +169,19 @@ class LTMAgent:
                 break
             context.insert(1, message_dict)
             token_count = new_token_count
-            oldest_message_ts = message.timestamp
-        remaining_tokens = max_prompt_size - token_count
-        self.user_info, mem_appendix = self._get_mem_message(
-            m_history, user_content, remaining_tokens, oldest_message_ts, cost_callback,
-        )
-        if mem_appendix:
-            context[0]["content"] += "\n\n" + mem_appendix
+            # oldest_message_ts = message.timestamp
+        
         return context
 
     def convo_retrieve(
-        self, queries: list[str], k_per_query: int, before_timestamp: Union[float, datetime.datetime],
+        self, queries: list[str], k_per_query: int, before_timestamp: float,
     ) -> List[RetrievedMemory]:
         try:
             multi_list = self.convo_mem.retrieve_multiple(queries, k=k_per_query)
         except IndexError:
             _logger.error(f"Unable to retrieve memories using these queries: {queries}")
             raise
-        
-        # Ensure before_timestamp is a datetime object
-        if isinstance(before_timestamp, (int, float)):
-            before_datetime = datetime.datetime.fromtimestamp(before_timestamp)
-        elif isinstance(before_timestamp, datetime.datetime):
-            before_datetime = before_timestamp
-        else:
-            raise TypeError(f"Unexpected type for before_timestamp: {type(before_timestamp)}")
-        
-        r_memories = []
-        for entry in multi_list:
-            for rm in entry:
-                if isinstance(rm.timestamp, (int, float)):
-                    rm_datetime = datetime.datetime.fromtimestamp(rm.timestamp)
-                elif isinstance(rm.timestamp, datetime.datetime):
-                    rm_datetime = rm.timestamp
-                else:
-                    _logger.warning(f"Unexpected timestamp type in memory: {type(rm.timestamp)}")
-                    continue
-                
-                if rm_datetime < before_datetime:
-                    r_memories.append(rm)
-        
+        r_memories = [rm for entry in multi_list for rm in entry if rm.timestamp < before_timestamp]
         r_memories = RetrievedMemory.remove_overlaps(
             r_memories, overlap_threshold=self.config.redundancy_overlap_threshold,
         )
@@ -231,12 +203,6 @@ class LTMAgent:
         convo_memories = self.convo_retrieve(queries, k_per_query, before_timestamp)
         excerpts_text = self.get_mem_excerpts(convo_memories, remain_tokens)
         return user_info, excerpts_text
-    
-    def _get_max_prompt_size(self) -> int:
-        if self.max_prompt_size is None:
-            _logger.warning("max_prompt_size is None. Using default value of 4096.")
-            return 4096  # Default value
-        return self.max_prompt_size
 
     def _complete_prepare_user_info(self, prompt_messages: list[dict],
                                     user_content: str,
@@ -252,46 +218,22 @@ class LTMAgent:
         ).strip()
         prompt_messages.append({"role": "user", "content": sp_content})
         query_json = self._completion(prompt_messages, temperature=self.config.mem_temperature,
-                                    label="query-generation", cost_callback=cost_callback)
-        
+                                      label="query-generation", cost_callback=cost_callback)
         try:
             queries_and_info = sanitize_and_parse_json(query_json)
-        except (JSONDecodeError, ValueError) as e:
+        except (JSONDecodeError, ValueError):
             _logger.exception(f"Unable to parse JSON: {query_json}")
-            _logger.error(f"JSON parse error details: {str(e)}")
-            
-            # Fallback: attempt to extract information manually
-            queries_and_info = self._extract_info_from_malformed_json(query_json)
-        
-        if not isinstance(queries_and_info, dict):
-            _logger.warning("Query generation result is not a dictionary!")
             queries_and_info = {}
-        
+        if not isinstance(queries_and_info, dict):
+            _logger.warning("Query generation completion was not a dictionary!")
+            queries_and_info = {}
         user_info = queries_and_info.get("user", self.user_info)
         _logger.info(f"New user object: {user_info}")
         queries = queries_and_info.get("queries", [])
-        return (queries, user_info)
-
-    def _extract_info_from_malformed_json(self, text: str) -> dict:
-        """Attempt to extract useful information from malformed JSON."""
-        result = {"user": {}, "queries": []}
-        
-        # Simple pattern matching for user info and queries
-        user_match = re.search(r'"user"\s*:\s*({[^}]+})', text)
-        if user_match:
-            try:
-                result["user"] = json.loads(user_match.group(1))
-            except json.JSONDecodeError:
-                _logger.warning("Failed to parse user info from malformed JSON")
-        
-        queries_match = re.search(r'"queries"\s*:\s*(\[[^\]]+\])', text)
-        if queries_match:
-            try:
-                result["queries"] = json.loads(queries_match.group(1))
-            except json.JSONDecodeError:
-                _logger.warning("Failed to parse queries from malformed JSON")
-        
-        return result
+        return (
+            queries,
+            user_info,
+        )
 
     def _prepare_mem_info(
             self, message_history: list[Message], user_content: str, cost_callback: Callable[[float], Any],
@@ -304,8 +246,7 @@ class LTMAgent:
         token_count = token_counter(model=self.model, messages=prompt_messages)
         token_count += token_counter(model=self.model, text=messages_prefix)
         messages = list()
-        max_prompt_size = self._get_max_prompt_size()
-        token_limit = int(0.8 * max_prompt_size)
+        token_limit = int(0.8 * self.max_prompt_size)
         for m in reversed(message_history[-10:]):
             msg = f"{m.role.upper()}: {m.content}"
             new_token_count = token_count + token_counter(model=self.model, text=msg)
@@ -340,23 +281,22 @@ class LTMAgent:
         self.convo_mem.add_text(text, timestamp=message.timestamp)
 
     def reply(self, user_content: str, cost_callback: Callable[[float], Any] = None) -> str:
-        """
-        Asks the LLM to generate a completion from a user question/statement.
-        This method first constructs a prompt from session history and memory excerpts.
-        :param user_content: The user's question or statement.
-        :param cost_callback: An optional function used to track LLM costs.
-        :return: The agent's completion or reply.
-        """
         self.now = datetime.datetime.now()
         session = self.session
-        context = self._build_llm_context(session.message_history, user_content,
-                                          cost_callback)
+        
+        # Build context using _build_llm_context
+        context = self._build_llm_context(session.message_history, user_content, cost_callback)
+        
+        # Generate response
         response = self._completion(context, temperature=self.config.llm_temperature, label="reply",
                                     cost_callback=cost_callback)
+        
+        # Add messages to history
         for role, content in [("user", user_content), ("assistant", response)]:
             message = Message(role=role, content=content, timestamp=self.now.timestamp())
             session.add(message)
             self._add_to_convo_memory(message)
+        
         return response
 
     def _completion(self, context: List[dict[str, str]], temperature: float, label: str,
@@ -369,9 +309,7 @@ class LTMAgent:
             self.prompt_callback(self.session.session_id, label, context, response_text)
         if cost_callback:
             cost = completion_cost(model=self.model, completion_response=response, messages=context)
-            # cost_callback(0.01)
             cost_callback(cost)
-
         self._debug_actions(context, temperature, response_text)
         return response_text
 
@@ -409,25 +347,22 @@ class LTMAgent:
         self.new_session()
 
     def get_relevant_memories(self, user_message: str) -> str:
-        api_url = "http://localhost:8080/query"
+        api_url = "http://localhost:8080/query"  # Adjust if your API URL is different
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
-            _logger.warning("OPENAI_API_KEY is not set in environment variables")
-            return ""
+            raise ValueError("OPENAI_API_KEY is not set in environment variables")
         
         headers = {"Authorization": f"Bearer {api_key}"}
         payload = {"query": user_message}
         
         try:
-            response = requests.post(api_url, json=payload, headers=headers, timeout=60)
+            response = requests.post(api_url, json=payload, headers=headers)
             response.raise_for_status()
-            return response.json().get("response", "")
+            return response.json()["response"]
         except requests.RequestException as e:
-            _logger.warning(f"Failed to retrieve external memories: {str(e)}")
+            _logger.error(f"Failed to retrieve memories: {str(e)}")
             return ""
-        except Exception as e:
-            _logger.error(f"Unexpected error in get_relevant_memories: {str(e)}")
-            return ""
+
 
 class LTMAgentSession:
     """
