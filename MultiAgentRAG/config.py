@@ -9,7 +9,7 @@ class Config:
         self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192")
         
         # Database settings
-        self.MEMORY_DB_PATH = self._get_memory_db_path()
+        self.personal_db_path = self._get_personal_db_path()
         
         # API Keys
         self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
@@ -26,6 +26,10 @@ class Config:
 
     def _get_memory_db_path(self):
         return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
+    
+    def _get_personal_db_path(self):
+        container_id = os.environ.get('HOSTNAME', 'local')
+        return f"/app/data/{container_id}.db" if os.path.exists("/.dockerenv") else f"{container_id}.db"
 
     def validate_api_keys(self):
         return bool(self.GROQ_API_KEY and self.TAVILY_API_KEY)

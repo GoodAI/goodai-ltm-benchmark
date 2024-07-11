@@ -41,15 +41,30 @@ async def query_endpoint(request: QueryRequest):
     except Exception as e:
         master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
-
-@app.get("/memory_distribution")
-async def memory_distribution_endpoint():
+    
+@app.get("/memory_stats")
+async def memory_stats_endpoint():
     try:
-        distribution = await memory_analyzer.analyze_distribution()
+        stats = await controller.memory_manager.get_memory_stats()
+        return {"stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/link_distribution")
+async def link_distribution_endpoint():
+    try:
+        distribution = await controller.memory_manager.analyze_link_distribution()
         return {"distribution": distribution}
     except Exception as e:
-        master_logger.error(f"Error analyzing memory distribution: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error analyzing memory distribution: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/visualize_network")
+async def visualize_network_endpoint():
+    try:
+        await controller.memory_manager.visualize_network()
+        return {"message": "Network visualization generated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
@@ -58,15 +73,6 @@ async def general_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": f"An unexpected error occurred: {str(exc)}"}
     )
-
-@app.get("/consistency_check")
-async def consistency_check_endpoint():
-    try:
-        await controller.memory_manager.run_consistency_check_and_fix()
-        return {"message": "Consistency check and fix completed."}
-    except Exception as e:
-        master_logger.error(f"Error during consistency check: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error during consistency check: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

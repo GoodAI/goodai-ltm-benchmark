@@ -31,6 +31,8 @@ RUN pip install --no-cache-dir -r docker_requirements.txt --timeout 600 --index-
 
 RUN pip install fastapi uvicorn
 
+RUN pip install networkx matplotlib
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
