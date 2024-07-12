@@ -79,7 +79,8 @@ The messages above are informational, they have already been addressed and repli
 You should address and reply to this current message.
 """
     inner_loop_plan = """Create a plan for the next step of addressing the above user message using one of the tools that you have available to you.
-Getting memories can be expensive. Do it only if you know that the memories will help.
+Reading memories is expensive. Do it only if you know that the memories will help.
+Making changes to memories does not require you to read them first.
 """
     inner_loop_call = """Choose a tool to call that follows your plan above."""
 
@@ -127,7 +128,7 @@ Getting memories can be expensive. Do it only if you know that the memories will
 
         self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=200, chunk_overlap_fraction=0.0))
 
-        memory_read_loop_tool = MemoryReadLoop(self.semantic_memory)
+        memory_read_loop_tool = MemoryReadLoop(self.semantic_memory, self.defined_kws)
         self.scratchpad_tool = UpdateScratchpadTool()
 
         self.functions = {
@@ -161,6 +162,7 @@ Getting memories can be expensive. Do it only if you know that the memories will
 
         self.save_interaction(interaction)
         self.context, _ = ensure_context_len(self.context, "gpt-4o", max_len=self.max_prompt_size)
+        print(f"Context size: {_}")
 
         # Update scratchpad
         self.scratchpad = self.scratchpad_tool.update_scratchpad(self.scratchpad, interaction)
@@ -225,7 +227,7 @@ Getting memories can be expensive. Do it only if you know that the memories will
     def save_interaction(self, memory):
         while True:
             context = [make_user_message(
-                f"Create two general keywords to describe the topic of this interaction:\n{memory}.\nProduce the keywords in JSON like: `[keyword_1, keyword_2, keyword_3]`\nReuse these keywords if appropriate {list(self.defined_kws)}")]
+                f"Create two keywords to describe the topic of this interaction:\n{memory}.\nFocus on the topic introduced by the user. Produce the keywords in JSON like: `[keyword_1, keyword_2]`\nReuse these keywords if appropriate {list(self.defined_kws)}")]
 
             response = litellm.completion(model="gpt-4o", messages=context)
             try:
@@ -305,6 +307,8 @@ The original query is: {{original_query}}.
 
 Read from the vector database and consolidate the memories into a useful summary.
 Each run see if the memories are relevant, if there are no relevant memories at all, then the topic is not in memory.
+Here are some keywords that you could use to append to your queries. Choose the two most relevant:
+{{keywords}} 
 """
 
     read_memory_plan = """Given the memories you have retrieved, and the original query, what should the next step be.
@@ -313,7 +317,7 @@ Do not ask questions, address the memories and the query.
 
     inner_loop_call = """Choose a tool to call that follows your plan above."""
 
-    def __init__(self, memory):
+    def __init__(self, memory, keywords_object):
         self.memory = memory
         self.functions = {
             "read_memory": self.read_memory,
@@ -321,6 +325,7 @@ Do not ask questions, address the memories and the query.
         }
         self.tool_loop_active = False
         self.tool_loop_responses = []
+        self.keywords = keywords_object
 
     def tool_loop(self, query):
 
@@ -328,7 +333,7 @@ Do not ask questions, address the memories and the query.
         self.tool_loop_responses = []
         # self.memory_loop_active = True
         context = [make_user_message(
-            pystache.render(self.read_memory_loop, {"original_query": query}))]
+            pystache.render(self.read_memory_loop, {"original_query": query, "keywords": repr(self.keywords)}))]
         while self.tool_loop_active:
             # Prompt the agent to plan if you need to
             if context[-1]["content"] != self.read_memory_plan:
@@ -366,9 +371,14 @@ Do not ask questions, address the memories and the query.
 
         memories = self.memory.retrieve(query, 100)
 
-        colour_print("MAGENTA", f"Found {len(memories)} memories.")
-        if len(memories) > 0:
-            sorted_mems = sorted(sorted(memories, key=lambda i: i.distance)[:20], key=lambda i: i.timestamp, reverse=True)
+        all_memories = []
+        for m in memories:
+            if m.relevance > 0.6:
+                all_memories.append(m)
+
+        colour_print("MAGENTA", f"Found {len(all_memories)} memories.")
+        if len(all_memories) > 0:
+            sorted_mems = sorted(sorted(all_memories, key=lambda i: i.distance)[:20], key=lambda i: i.timestamp, reverse=True)
 
             current_state = self.rebuild_state(sorted_mems, query)
 

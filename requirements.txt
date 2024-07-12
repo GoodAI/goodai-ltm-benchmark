@@ -6,7 +6,7 @@ faker~=20.1.0
 colorama~=0.4.6
 pytest
 time-machine==2.13.0
-tiktoken~=0.5.2
+tiktoken
 goodai-ltm==0.4.4
 gdown==4.7.1  # For downloading files from google drive (some datasets use it)
 tqdm  # Showing progress bar during some downloads

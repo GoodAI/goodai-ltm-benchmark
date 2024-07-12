@@ -12,8 +12,7 @@ import yaml
 from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
-from ltm.agent import LTMAgent
-from ltm.agent_v1 import LTMAgentV1
+from ltm.inserted_context_agent import InsertedContextAgent
 from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
 from model_interfaces.llm_interface import LLMChatSession, TimestampLLMChatSession
@@ -49,7 +48,7 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
             raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
         return LTMAgentWrapper(model=match.groupdict()["model"], **kwargs)
     if name == "ltm_prototype":
-        return LTMAgentV1(**kwargs)
+        return InsertedContextAgent(**kwargs)
 
     if name == "length_bias":
         return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
@@ -167,16 +166,17 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 @click.option("-i", "--isolated", required=False, is_flag=True, default=False, help=(
         "Run tests separately, without interleaving and clearing up the context between tests."
 ))
+@click.option("-int", "--interactive", required=False, is_flag=True, default=False, help=("Start the test with an interactive prompt with the agent. Start the test with '/test'."))
 def main(
     configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, local: bool = False,
-    isolated: bool = False,
+    isolated: bool = False, interactive: bool = False
 ):
-    _main(configuration, agent_name, max_prompt_size, y, local, isolated)
+    _main(configuration, agent_name, max_prompt_size, y, local, isolated, interactive)
 
 
 def _main(
     configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local: bool = False,
-    isolated: bool = False,
+    isolated: bool = False, interactive: bool = False
 ):
     config_path = Path(configuration)
     if not config_path.is_absolute():
@@ -213,7 +213,7 @@ def _main(
 
     runner = TestRunner(config=conf, agent=agent, tests=examples, skip_evaluations=agent_name.startswith("cost("))
     time1 = time.time()
-    runner.run()
+    runner.run(interactive)
 
     time2 = time.time()
     elapsed = (time2 - time1) / 60
