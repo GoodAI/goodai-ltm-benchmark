@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from copy import deepcopy
 from json import JSONDecodeError
 from typing import List, Callable, Optional, Any, Union
-from litellm import completion, completion_cost, token_counter
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
 from goodai.ltm.agent import LTMAgentConfig, Message
 from goodai.ltm.mem.auto import AutoTextMemory
@@ -16,6 +15,7 @@ from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
 
 from utils.constants import DATA_DIR
 from utils.llm import make_user_message, make_assistant_message, make_system_message, LLMContext
+from utils.llm import ask_llm, count_tokens_for_model
 from utils.text import truncate
 
 _debug_dir = DATA_DIR.joinpath("ltm_debug_info")
@@ -64,7 +64,12 @@ class LTMAgent:
 
     @property
     def save_name(self) -> str:
-        return f"{self.model}-{self.max_prompt_size}-{self.max_completion_tokens}"
+        model = self.model.replace("/", "-")
+        return f"{model}-{self.max_prompt_size}-{self.max_completion_tokens}"
+
+    @property
+    def max_input_tokens(self) -> int:
+        return int(0.9 * (self.max_prompt_size - self.max_completion_tokens))
 
     def __post_init__(self):
         mem_config = TextMemoryConfig(
@@ -129,14 +134,12 @@ class LTMAgent:
         self.convo_mem.set_state(state["convo_mem"])
         self.session = LTMAgentSession.from_state_text(state["session"])
 
-    def count_tokens(
-        self, text: str | list[str] = None, messages: LLMContext = None, count_response_tokens: bool = False,
-    ) -> int:
-        return token_counter(model=self.model, text=text, messages=messages, count_response_tokens=count_response_tokens)
+    def count_tokens(self, text: str | list[str] = None, messages: LLMContext = None) -> int:
+        return count_tokens_for_model(self.model, text=text, context=messages)
 
     def _build_llm_context(self, m_history: list[Message], user_content: str,
                            cost_callback: Callable[[float], Any]) -> list[dict]:
-        target_history_tokens = self.max_prompt_size * (1.0 - self.config.ctx_fraction_for_mem)
+        target_history_tokens = self.max_input_tokens * (1.0 - self.config.ctx_fraction_for_mem)
         context = [
             make_system_message(_default_system_message.format(
                 datetime=str(self.now)[:-7],
@@ -159,7 +162,7 @@ class LTMAgent:
             context.insert(1, message_dict)
             token_count = new_token_count
             oldest_message_ts = message.timestamp
-        remaining_tokens = self.max_prompt_size - token_count
+        remaining_tokens = self.max_input_tokens - token_count
         self.user_info, mem_appendix = self._get_mem_message(
             m_history, user_content, remaining_tokens, oldest_message_ts, cost_callback,
         )
@@ -223,7 +226,7 @@ class LTMAgent:
             "(prior conversation context omitted)\n\n"
         )
         system_tokens = self.count_tokens(text=system_prompt + messages_prefix)
-        msg_preview = self._last_messages_preview(message_history, self.max_prompt_size - system_tokens)
+        msg_preview = self._last_messages_preview(message_history, self.max_input_tokens - system_tokens)
         if msg_preview != "":
             system_prompt += messages_prefix + msg_preview
 
@@ -302,21 +305,17 @@ class LTMAgent:
         return response
 
     def _truncated_completion(self, context: LLMContext, max_messages: int, **kwargs) -> str:
-        while len(context) + 1 > max_messages or self.count_tokens(messages=context) > self.max_prompt_size:
+        while len(context) + 1 > max_messages or self.count_tokens(messages=context) > self.max_input_tokens:
             context.pop(1)
         return self._completion(context, **kwargs)
 
     def _completion(self, context: List[dict[str, str]], temperature: float, label: str,
                     cost_callback: Callable[[float], Any]) -> str:
-        # TODO: max_tokens is borked: https://github.com/BerriAI/litellm/issues/4439
-        response = completion(model=self.model, messages=context, timeout=self.config.timeout,
-                              temperature=temperature)
-        response_text = response['choices'][0]['message']['content']
+        response_text = ask_llm(
+            context, self.model, temperature=temperature, timeout=self.config.timeout, cost_callback=cost_callback,
+        )
         if self.prompt_callback:
             self.prompt_callback(self.session.session_id, label, context, response_text)
-        if cost_callback:
-            cost = completion_cost(model=self.model, completion_response=response, messages=context)
-            cost_callback(cost)
         self._debug_actions(context, temperature, response_text)
         return response_text
 
@@ -359,12 +358,12 @@ class LTMAgent:
     ) -> dict:
         """An embodied agent interacts with an extremely simple environment to safely update the scratchpad.
         A rather small scratchpad (1k tokens) seems to work optimally."""
-        assert 0 < max_scratchpad_tokens < self.max_prompt_size // 2
+        assert 0 < max_scratchpad_tokens < self.max_input_tokens // 2
         ask_kwargs = dict(label="scratchpad", temperature=0, cost_callback=cost_cb, max_messages=max_messages)
         scratchpad = deepcopy(self.user_info)
         scratchpad_timestamps = self.user_info_ts
-        preview_tokens = (self.max_prompt_size // 2) - self.count_tokens(text=sp.to_text(self.user_info))
-        assert 0 < preview_tokens < self.max_prompt_size // 2
+        preview_tokens = (self.max_input_tokens // 2) - self.count_tokens(text=sp.to_text(self.user_info))
+        assert 0 < preview_tokens < self.max_input_tokens // 2
         msg_preview = self._last_messages_preview(message_history, preview_tokens)
         if msg_preview == "":
             msg_preview = "This assistant has not exchanged any messages with the user so far."
