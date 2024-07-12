@@ -5,26 +5,40 @@ from langchain_openai import OpenAIEmbeddings
 import numpy as np
 from config import Config
 import os
-from src.utils.enhanced_logging import log_execution_time, DatabaseLogger
+from src.utils.enhanced_logging import log_execution_time
 from src.utils.visualizer import visualize_memory_network
 from sklearn.feature_extraction.text import TfidfVectorizer
 from rank_bm25 import BM25Okapi # type: ignore
 from datetime import datetime
 import time
 from scipy.spatial.distance import cosine
+from src.utils.structured_logging import get_logger
+from src.utils.logging_config import setup_logging
+import asyncio
 
-logger = logging.getLogger('memory')
+from src.utils.structured_logging import get_logger
+from src.utils.enhanced_logging import log_execution_time
+
+logger = get_logger('memory')
 
 class MemoryManager:
-    def __init__(self, api_key: str):
+    def __init__(self, openai_api_key: str):
+        self.logger = get_logger(__name__)
         self.config = Config()
         self.personal_db_path = self.get_personal_db_path()
-        self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         self.container_id = self.get_container_id()
-        self.db_logger = DatabaseLogger(logging.getLogger('database'))
         self.tfidf_vectorizer: Optional[TfidfVectorizer] = None
         self.bm25: Optional[BM25Okapi] = None
         self.corpus: List[str] = []
+        # Remove this line: self.async_logger = None
+
+    async def initialize(self):
+        # Remove this line: self.async_logger = await setup_logging(self.container_id)
+        os.makedirs("/app/data", exist_ok=True)
+        await self.create_tables(self.personal_db_path)
+        await self._load_corpus()
+        await self._update_indexing()
 
     def get_container_id(self):
         return os.environ.get('HOSTNAME', 'local')
@@ -32,12 +46,6 @@ class MemoryManager:
     def get_personal_db_path(self):
         container_id = self.get_container_id()
         return f"/app/data/{container_id}.db"
-
-    async def initialize(self):
-        os.makedirs("/app/data", exist_ok=True)
-        await self.create_tables(self.personal_db_path)
-        await self._load_corpus()
-        self._update_indexing()
 
     async def create_tables(self, db_path):
         async with aiosqlite.connect(db_path) as db:
@@ -66,6 +74,7 @@ class MemoryManager:
             await db.commit()
         logger.debug(f"Ensured memories and memory_links tables exist in {db_path}")
 
+    @log_execution_time
     async def create_memory_link(self, source_id: int, target_id: int, link_type: str):
         async with aiosqlite.connect(self.personal_db_path) as db:
             await db.execute("""
@@ -74,6 +83,7 @@ class MemoryManager:
             """, (source_id, target_id, link_type))
             await db.commit()
 
+    @log_execution_time
     async def get_linked_memories(self, memory_id: int) -> List[Tuple[int, str]]:
         async with aiosqlite.connect(self.personal_db_path) as db:
             async with db.execute("""
@@ -83,7 +93,7 @@ class MemoryManager:
                 return await cursor.fetchall()
 
 
-    @log_execution_time(logger)
+    @log_execution_time
     async def save_memory(self, query: str, result: str):
         try:
             embedding = await self.embeddings.aembed_query(query)
@@ -101,20 +111,20 @@ class MemoryManager:
                 memory_id = cursor.lastrowid
                 await db.commit()
             
-            self.db_logger.log_access(memory_id)
+            # Remove this line: self.db_logger.log_access(memory_id)
             
-            logger.debug(f"Saved memory for query: {query} with result: {result}")
+            self.logger.debug(f"Saved memory for query: {query} with result: {result}")
             
             # Update corpus and indexing
             await self._load_corpus()
-            self._update_indexing()
+            await self._update_indexing()
 
             # Call auto_link_memories with the new memory_id
             await self.auto_link_memories(memory_id)
             
-            return memory_id
+            self.logger.info("Memory saved", extra={"query": query, "memory_id": memory_id})
         except Exception as e:
-            logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
+            self.logger.error("Error saving memory", extra={"query": query, "error": str(e)})
             raise
 
     async def _load_corpus(self):
@@ -124,20 +134,21 @@ class MemoryManager:
                 memories = await cursor.fetchall()
         self.corpus = [f"{query} {result}" for query, result in memories]
         logger.info(f"Loaded corpus with {len(self.corpus)} entries in {time.time() - start_time:.2f} seconds")
-
-    def _update_indexing(self):
+    
+    @log_execution_time
+    async def _update_indexing(self):
         if self.corpus:
             start_time = time.time()
             self.tfidf_vectorizer = TfidfVectorizer()
             self.tfidf_vectorizer.fit(self.corpus)
             tokenized_corpus = [doc.split() for doc in self.corpus]
             self.bm25 = BM25Okapi(tokenized_corpus)
-            logger.info(f"Updated indexing with {len(self.corpus)} documents in {time.time() - start_time:.2f} seconds")
+            self.logger.info(f"Updated indexing with {len(self.corpus)} documents in {time.time() - start_time:.2f} seconds")
         else:
-            logger.warning("Corpus is empty. Skipping indexing update.")
+            self.logger.warning("Corpus is empty. Skipping indexing update.")
 
 
-    @log_execution_time(logger)
+    @log_execution_time
     async def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> str:
         query_embedding = await self.embeddings.aembed_query(query)
         
@@ -333,7 +344,8 @@ class MemoryManager:
         except Exception as e:
             logger.error(f"Error getting memory stats: {str(e)}", exc_info=True)
             raise
-
+        
+    @log_execution_time
     async def auto_link_memories(self, new_memory_id: int, threshold: float = 0.8):
         new_memory = await self.get_memory(new_memory_id)
         all_memories = await self.get_all_memories()

@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Ensure we're using the correct Docker socket
+export DOCKER_HOST="unix:///var/run/docker.sock"
+
+# Add diagnostic information
+echo "Docker version: $(docker --version)"
+echo "Docker Compose version: $(docker-compose --version)"
+echo "Docker info:"
+docker info
+
 # Function to display usage information
 usage() {
     echo "Usage: $0 [OPTIONS]"
@@ -10,7 +19,6 @@ usage() {
     exit 1
 }
 
-# Function to check API health
 check_api_health() {
     local max_attempts=30
     local attempt=0
@@ -26,14 +34,14 @@ check_api_health() {
         fi
         echo "Response code: $response"
         echo "Container logs (last 10 lines):"
-        docker-compose logs --tail=10 multi-agent-rag
+        docker compose logs --tail=10 multi-agent-rag
         attempt=$((attempt+1))
         sleep $wait_time
     done
 
     echo "API failed to start after $max_attempts attempts."
     echo "Full container logs:"
-    docker-compose logs multi-agent-rag
+    docker compose logs multi-agent-rag
     return 1
 }
 
@@ -78,7 +86,7 @@ fi
 
 # Stop and remove the existing containers
 echo "Stopping and removing existing containers..."
-docker-compose down
+docker compose down
 
 # Remove the old image if rebuild is requested
 if [ "$REBUILD" = true ]; then
@@ -93,20 +101,20 @@ DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker buildx bake -f docker-compos
 # Start the new container based on the mode
 if [ "$MODE" = "cli" ]; then
     echo "Starting container in CLI mode..."
-    docker-compose run --rm multi-agent-rag-cli
+    docker compose run --rm multi-agent-rag-cli
 elif [ "$MODE" = "api" ]; then
     echo "Starting container in API mode..."
-    docker-compose up -d multi-agent-rag
+    docker compose up -d multi-agent-rag
     
     # Check API health
     if check_api_health; then
         # Print the container name
-        CONTAINER_NAME=$(docker-compose ps --services | grep multi-agent-rag)
+        CONTAINER_NAME=$(docker compose ps --services | grep multi-agent-rag)
         echo "Container name: $CONTAINER_NAME"
         
         # Print the logs
         echo "Container logs:"
-        docker-compose logs -f multi-agent-rag
+        docker compose logs -f multi-agent-rag
     else
         echo "Error: API failed to start. Please check the logs above for more information."
         exit 1

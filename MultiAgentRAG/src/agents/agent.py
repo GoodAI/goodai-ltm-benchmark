@@ -4,14 +4,17 @@ from config import config
 import json
 import asyncio
 
-logger = logging.getLogger("master")
-chat_logger = logging.getLogger("chat")
+from src.utils.structured_logging import get_logger
+from src.utils.enhanced_logging import log_execution_time
+
+logger = get_logger("agent")
 
 class Agent:
-    def __init__(self, memory_manager):
+    def __init__(self, memory_manager, groq_api_key: str):
         self.memory_manager = memory_manager
-        self.groq_client = Groq(api_key=config.GROQ_API_KEY)
-
+        self.groq_client = Groq(api_key=groq_api_key)
+        
+    @log_execution_time
     async def process_query(self, query: str) -> str:
         relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
         

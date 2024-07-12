@@ -1,81 +1,132 @@
 .
 ├── Dockerfile
+├── __pycache__
+│   └── config.cpython-312.pyc
 ├── config.py
 ├── data
-│   ├── 03b25eed4fd8.db
-│   ├── 03c18103bfc5.db
-│   ├── 0e219f7e80e5.db
-│   ├── 5f11c137201c.db
-│   ├── 8f93254e5723.db
-│   ├── 9aa526467221.db
-│   ├── a091c8cf7499.db
-│   └── master.db
+│   ├── 02c5010b543e.db
+│   ├── 3d900cef16ed.db
+│   ├── 43518d53f98d.db
+│   ├── 58a0e7a8334f.db
+│   ├── 6288678806d5.db
+│   ├── 90f419cf105f.db
+│   ├── da6316bea3ca.db
+│   └── f87914c34446.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
 ├── docs
 │   └── README.md
+├── json_output
+│   ├── Memory_1.json
+│   ├── Memory_2.json
+│   ├── Memory_3.json
+│   ├── Memory_4.json
+│   └── Memory_5.json
 ├── logs
-│   ├── 20240709_093333_e69ce7b49fea
-│   ├── 20240709_095633_5de0a800ff22
+│   ├── 20240712_124040_fba618fa6ca7
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240709_130550_a61892017a31
+│   ├── 20240712_124625_a495eb43508d
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240709_134226_ea8518f85a49
+│   ├── 20240712_130127_b912ba994df8
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240710_080256_1fae9a5ca75d
+│   ├── 20240712_130128_b912ba994df8
+│   │   └── app.log
+│   ├── 20240712_130607_ec771763c014
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240710_095500_da5ece9965da
+│   ├── 20240712_133657_40478d8aa5b4
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240711_114845_5f11c137201c
+│   ├── 20240712_134059_3d900cef16ed
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240711_115142_03c18103bfc5
+│   ├── 20240712_134351_02c5010b543e
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240711_115517_0e219f7e80e5
+│   ├── 20240712_134656_6288678806d5
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240711_115807_9aa526467221
+│   ├── 20240712_135147_da6316bea3ca
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240711_120832_03b25eed4fd8
+│   ├── 20240712_142151_58a0e7a8334f
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240711_122943_8f93254e5723
+│   ├── 20240712_155221_43518d53f98d
+│   │   ├── app.log
 │   │   ├── chat.log
 │   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   └── 20240711_123317_a091c8cf7499
-│       ├── chat.log
-│       ├── database.log
-│       ├── master.log
-│       └── memory.log
+│   ├── 20240712_160046_90f419cf105f
+│   │   ├── app.log
+│   │   ├── chat.log
+│   │   ├── database.log
+│   │   ├── master.log
+│   │   └── memory.log
+│   ├── 20240712_160900_f87914c34446
+│   │   ├── app.log
+│   │   ├── chat.log
+│   │   ├── database.log
+│   │   ├── master.log
+│   │   └── memory.log
+│   └── docker_agents
+│       ├── 20240621_122849_c4871e6f4b4c
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── 20240621_131848_0c9335780884
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── 20240621_134307_9108ac89f851
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── 20240621_134614_240eb5a9fa25
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       ├── 20240621_134832_e32f8be7080c
+│       │   ├── chat.log
+│       │   ├── master.log
+│       │   └── memory.log
+│       └── 20240621_140806_5d95a2ed862b
+│           ├── chat.log
+│           ├── master.log
+│           └── memory.log
+├── memory.db
 ├── notebooks
 │   └── Multi_Agent_RAG_LangGraph.ipynb
 ├── scripts
@@ -87,9 +138,18 @@
 ├── src
 │   ├── __init__.py
 │   ├── __pycache__
-│   │   └── __init__.cpython-310.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── controller.cpython-310.pyc
+│   │   └── controller.cpython-312.pyc
 │   ├── agents
 │   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── processing_agent.cpython-312.pyc
+│   │   │   ├── response_agent.cpython-312.pyc
+│   │   │   ├── retrieval_agent.cpython-310.pyc
+│   │   │   └── retrieval_agent.cpython-312.pyc
 │   │   └── agent.py
 │   ├── api.py
 │   ├── app.py
@@ -97,18 +157,27 @@
 │   ├── memory
 │   │   ├── __init__.py
 │   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-310.pyc
-│   │   │   └── memory_manager.cpython-310.pyc
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   └── memory_manager.cpython-312.pyc
 │   │   └── memory_manager.py
 │   └── utils
 │       ├── __init__.py
+│       ├── __pycache__
+│       │   ├── __init__.cpython-312.pyc
+│       │   ├── data_utils.cpython-312.pyc
+│       │   └── json_utils.cpython-312.pyc
 │       ├── controller.py
 │       ├── enhanced_logging.py
+│       ├── error_handling.py
+│       ├── log_sync.py
+│       ├── logging_config.py
 │       ├── logging_setup.py
+│       ├── structured_logging.py
+│       ├── tracing.py
 │       └── visualizer.py
 └── tree.txt
 
-24 directories, 84 files
+36 directories, 141 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -117,9 +186,657 @@ __pycache__, .git, .env, text_docs, scripts, logs, tree.txt, generate_tree.sh, R
 File Contents:
 
 -e 
-File: ./src/memory/__init__.py
+File: ./.dockerignore
+
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+develop-eggs
+.installed.cfg
+lib
+lib64
+*.log
+logs
+notebooks
+data/raw/*
+text_docs/*
+.DS_Store
+.vscode
+-e 
+File: ./config.py
+
+import os
+from dotenv import load_dotenv
+
+class Config:
+    def __init__(self):
+        load_dotenv()
+        
+        # General settings
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192")
+        
+        # Database settings
+        self.personal_db_path = self._get_personal_db_path()
+        
+        # API Keys
+        self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
+        self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+        self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+        
+        # Other settings
+        self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
+        
+        # Processing agent settings
+        self.PROCESSING_AGENT_MEMORIES_INCLUDED = int(os.getenv("PROCESSING_AGENT_MEMORIES_INCLUDED", "5"))
+        self.MEMORY_RETRIEVAL_THRESHOLD = float(os.getenv("MEMORY_RETRIEVAL_THRESHOLD", "0.75"))
+        self.MEMORY_RETRIEVAL_LIMIT = int(os.getenv("MEMORY_RETRIEVAL_LIMIT", "10"))
+
+    def _get_memory_db_path(self):
+        return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
+    
+    def _get_personal_db_path(self):
+        container_id = os.environ.get('HOSTNAME', 'local')
+        return f"/app/data/{container_id}.db" if os.path.exists("/.dockerenv") else f"{container_id}.db"
+
+    def validate_api_keys(self):
+        return bool(self.GROQ_API_KEY and self.TAVILY_API_KEY)
+
+    L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
+    COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))
+    BM25_THRESHOLD = float(os.getenv("BM25_THRESHOLD", "0.5"))
+    JACCARD_SIMILARITY_THRESHOLD = float(os.getenv("JACCARD_SIMILARITY_THRESHOLD", "0.3"))
+
+config = Config()-e 
+File: ./docker-compose.yml
+
+services:
+
+  loki:
+    image: grafana/loki:2.8.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana-provisioning:/etc/grafana/provisioning
+
+  promtail:
+    image: grafana/promtail:2.8.0
+    volumes:
+      - ./logs:/var/log
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml
+    
+  multi-agent-rag:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: multi-agent-rag
+    ports:
+      - "8080:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GOODAI_OPENAI_API_KEY_LTM01=${GOODAI_OPENAI_API_KEY_LTM01}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  multi-agent-rag-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: multi-agent-rag
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GOODAI_OPENAI_API_KEY_LTM01=${GOODAI_OPENAI_API_KEY_LTM01}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./local_logs:/app/local_logs
+    command: ["python", "-m", "src.cli"]
+    stdin_open: true
+    tty: true-e 
+File: ./Dockerfile
+
+FROM python:3.12
+
+# Create a non-root user
+RUN useradd -m appuser
+
+WORKDIR /app
+
+COPY . /app
+
+RUN mkdir -p /app/logs /app/data
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Create and activate virtual environment
+RUN python -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
+
+# Upgrade pip and install dependencies with increased timeout and using a mirror
+RUN pip install --upgrade pip
+
+# Install numpy and scipy separately with increased timeout
+RUN pip install --no-cache-dir numpy==1.26.4 scipy==1.14.0 --timeout 600
+
+# Install scikit-learn separately with an even longer timeout
+RUN pip install --no-cache-dir scikit-learn==1.4.0 --timeout 900
+
+# Install other dependencies
+RUN pip install --no-cache-dir -r docker_requirements.txt --timeout 600 --index-url https://pypi.org/simple --trusted-host pypi.org
+
+RUN pip install fastapi uvicorn
+
+RUN pip install networkx matplotlib
+
+RUN pip install structlog==24.1.0
+
+RUN pip install structlog aiologger
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["python", "-u", "src/utils/log_sync.py", "uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
+File: ./docker_requirements.txt
+
+langchain==0.2.3
+langchain-openai==0.1.8
+langchain-community==0.2.4
+langchain-core==0.2.5
+langchain-text-splitters==0.2.1
+langsmith==0.1.77
+openai==1.34.0
+pydantic==2.7.4
+pydantic-core==2.18.4
+dataclasses-json==0.6.7
+python-dotenv==1.0.1
+aiosqlite
+rank_bm25==0.2.2
+cachetools==5.3.0
+groq
+fastapi
+uvicorn
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+aiologger==0.7.0
+aiofiles-e 
+File: ./docs/README.md
+
+# Multi-Agent RAG System with Continual Learning
+
+## Project Overview
+
+This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities. It uses LangChain, LangGraph, and LLM API calls to create a sophisticated question-answering system that learns from interactions.
+
+## Key Features
+
+- Multi-agent architecture for complex query processing
+- RAG (Retrieval-Augmented Generation) for enhanced responses
+- Continual learning to improve performance over time
+- Distributed memory management with personal and master databases
+- CLI and API interfaces for versatile interaction
+- Comprehensive logging system for debugging and analysis
+- Docker support for easy deployment and scaling
+
+## System Architecture
+
+The system consists of the following main components:
+
+1. **Controller**: Orchestrates the overall flow of query processing.
+2. **Agents**: Specialized modules for retrieval, processing, and response generation.
+3. **Memory Manager**: Handles storage and retrieval of past interactions.
+4. **Logging System**: Provides detailed logs for system operations, including database interactions.
+
+## Directory Structure
+
+```
+.
+├── Dockerfile
+├── README.md
+├── config.py
+├── data/
+├── docker-compose.yml
+├── docs/
+├── logs/
+├── notebooks/
+├── scripts/
+├── src/
+│   ├── agents/
+│   ├── memory/
+│   ├── utils/
+│   ├── api.py
+│   ├── app.py
+│   └── cli.py
+└── tests/
+```
+
+## Setup and Installation
+
+### Prerequisites
+
+- Python 3.12+
+- Docker and Docker Compose
+
+### Local Setup
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-username/multi-agent-rag.git
+   cd multi-agent-rag
+   ```
+
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   ```
+
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables:
+   Create a `.env` file in the root directory with the following content:
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   TAVILY_API_KEY=your_tavily_api_key
+   ```
+
+### Docker Setup
+
+1. Build the Docker image:
+   ```
+   docker-compose build
+   ```
+
+2. Run the container:
+   ```
+   docker-compose up
+   ```
+
+## Usage
+
+### CLI Interface
+
+Run the CLI interface with:
+
+```
+python src/cli.py
+```
+
+Available commands:
+- `query`: Enter a query to process
+- `memories`: Retrieve recent memories
+- `consistency`: Run a consistency check on the databases
+- `quit`: Exit the program
+
+### API Interface
+
+Start the API server with:
+
+```
+uvicorn src.api:app --host 0.0.0.0 --port 8000
+```
+
+API endpoints:
+- POST `/query`: Submit a query for processing
+- GET `/consistency_check`: Run a consistency check on the databases
+- GET `/health`: Check the health status of the API
+- GET `/memory_distribution`: Get the distribution of memories across containers
+
+## Logging
+
+Logs are stored in the `logs/` directory, organized by timestamp and container ID. There are separate log files for:
+
+- Master log (`master.log`)
+- Chat log (`chat.log`)
+- Memory operations log (`memory.log`)
+- Database operations log (`database.log`)
+
+## Testing
+
+Run the test suite with:
+
+```
+pytest tests/
+```
+-e 
+File: ./json_output/Memory_1.json
+
+{
+    "title": "Memory_1",
+    "query": "Today is Wednesday, June 19th.",
+    "result": "I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.",
+    "tags": "retrieved, processed"
+}-e 
+File: ./json_output/Memory_2.json
+
+{
+    "title": "Memory_2",
+    "query": "What is the day today? ",
+    "result": "Today is Tuesday, June 18th.",
+    "tags": "retrieved, processed"
+}-e 
+File: ./json_output/Memory_3.json
+
+{
+    "title": "Memory_3",
+    "query": "This is a test. Respond with how tall I am. ",
+    "result": "I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!",
+    "tags": "retrieved, processed"
+}-e 
+File: ./json_output/Memory_4.json
+
+{
+    "title": "Memory_4",
+    "query": "What is my name? Use your context.",
+    "result": "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.",
+    "tags": "retrieved, processed"
+}-e 
+File: ./json_output/Memory_5.json
+
+{
+    "title": "Memory_5",
+    "query": "What is my name? ",
+    "result": "I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.",
+    "tags": "retrieved, processed"
+}-e 
+File: ./src/agents/agent.py
+
+import logging
+from groq import Groq # type: ignore
+from config import config
+import json
+import asyncio
+
+from src.utils.structured_logging import get_logger
+from src.utils.enhanced_logging import log_execution_time
+
+logger = get_logger("agent")
+
+class Agent:
+    def __init__(self, memory_manager):
+        self.memory_manager = memory_manager
+        self.groq_client = Groq(api_key=config.GROQ_API_KEY)
+        
+    @log_execution_time
+    async def process_query(self, query: str) -> str:
+        relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
+        
+        messages = [
+            {
+                "role": "system",
+                "content": """You are a highly efficient, no-nonsense administrator at the core of a sophisticated memory system. Your primary role is to analyze retrieved memories and provide concise, relevant summaries or indicate their lack of relevance. You value brevity and directness above all else.
+
+    The retrieved memories you will be processing are structured as follows:
+
+    1. Each memory entry contains: <memory_id>, <previous_query>, <previous_response>, <similarity_score>
+    2. Some entries may have an additional field indicating if they are linked to another memory.
+
+    Analyze these memories in relation to the current query efficiently, paying special attention to linked memories."""
+            },
+            {
+                "role": "user",
+                "content": f"""QUERY: {query}
+
+    RETRIEVED MEMORIES:
+    {relevant_memories}
+
+    Your task:
+
+    1. Assess if the retrieved memories contain ANY relevant information to the query.
+    2. If NO relevant information exists, respond ONLY with: "NO RELEVANT INFORMATION"
+    3. If relevant information exists, provide a brief, bullet-point summary of ONLY the most pertinent points. Be extremely concise.
+    4. Pay special attention to linked memories and their relevance to the current query.
+
+    Your response should either be "NO RELEVANT INFORMATION" or a brief, focused summary. Exclude any explanation or elaboration."""
+            }
+        ]
+
+        # Use asyncio.to_thread to run the synchronous API call in a separate thread
+        response = await asyncio.to_thread(
+            self.groq_client.chat.completions.create,
+            messages=messages,
+            model=config.MODEL_NAME,
+        )
+
+        return response.choices[0].message.content-e 
+File: ./src/agents/__init__.py
 
 -e 
+File: ./src/api.py
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from src.utils.controller import Controller
+from src.utils.logging_setup import setup_logging
+from src.utils.tracing import setup_tracing, instrument_fastapi, tracer
+from config import config
+from src.utils.error_handling import global_exception_handler
+from src.utils.structured_logging import get_logger
+from src.utils.tracing import setup_tracing, instrument_fastapi, tracer
+from src.utils.error_handling import global_exception_handler
+import os
+
+class QueryRequest(BaseModel):
+    query: str
+
+class QueryResponse(BaseModel):
+    response: str
+
+# Initialize logging
+master_logger, chat_logger, memory_logger, database_logger = setup_logging()
+logger = get_logger("api")
+app = FastAPI()
+app.add_exception_handler(Exception, global_exception_handler)
+setup_tracing()
+instrument_fastapi(app)
+memory_analyzer = None
+
+controller = None
+
+@app.on_event("startup")
+async def startup_event():
+    global controller
+    logger.info("Starting up the API server")
+    controller = Controller()
+    await controller.initialize()
+    logger.info("API server initialization complete")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    master_logger.info("Shutting down the API server")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
+@app.post("/query", response_model=QueryResponse)
+async def query_endpoint(request: QueryRequest):
+    with tracer.start_as_current_span("query_processing"):
+        try:
+            logger.info(f"Received query: {request.query}")
+            if controller is None or controller.agent is None:
+                raise ValueError("Controller or Agent not initialized")
+            response = await controller.execute_query(request.query)
+            logger.info(f"Query processed successfully")
+            return QueryResponse(response=response)
+        except Exception as e:
+            logger.error(f"Error processing query: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
+    
+@app.get("/memory_stats")
+async def memory_stats_endpoint():
+    try:
+        stats = await controller.memory_manager.get_memory_stats()
+        return {"stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/link_distribution")
+async def link_distribution_endpoint():
+    try:
+        distribution = await controller.memory_manager.analyze_link_distribution()
+        return {"distribution": distribution}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/visualize_network")
+async def visualize_network_endpoint():
+    try:
+        await controller.memory_manager.visualize_network()
+        return {"message": "Network visualization generated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    master_logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"An unexpected error occurred: {str(exc)}"}
+    )
+
+if __name__ == "__main__":
+    import uvicorn
+    master_logger.info("Running the API server directly")
+    uvicorn.run(app, host="0.0.0.0", port=8000)-e 
+File: ./src/app.py
+
+import asyncio
+from config import Config
+from MultiAgentRAG.src.utils.controller import Controller
+from MultiAgentRAG.src.utils.logging_setup import setup_logging
+import logging
+
+async def process_query(controller, query, chat_logger, memory_logger):
+    chat_logger.info(f"Query: {query}")
+    response = await controller.execute_query(query)
+    chat_logger.info(f"Response: {response}")
+    
+    memories = await controller.get_recent_memories(5)
+    memory_logger.info("Recent Memories:")
+    for memory in memories:
+        memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
+
+async def main():
+    # Initialize logging
+    master_logger, chat_logger, memory_logger = setup_logging()
+
+    # Set the log level for the memory logger
+    memory_logger.setLevel(logging.DEBUG)
+
+    try:
+        master_logger.info("Starting the Multi-Agent RAG System")
+        config = Config()
+        
+        if not config.validate_api_keys():
+            raise EnvironmentError("API keys not found in environment variables")
+
+        master_logger.info("API keys successfully loaded")
+        master_logger.info(f"Using memory database path: {config.MEMORY_DB_PATH}")
+
+        master_logger.debug("Initializing controller")
+        controller = Controller(config)
+
+        while True:
+            try:
+                query = input("Enter your query (or 'quit' to exit): ")
+                if query.lower() == "quit":
+                    master_logger.info("Exiting the program")
+                    break
+
+                master_logger.info(f"Executing query: {query}")
+                await process_query(controller, query, chat_logger, memory_logger)
+
+            except EOFError:
+                master_logger.info("Received EOF, exiting the program")
+                break
+            except Exception as e:
+                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
+    except Exception as e:
+        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
+
+if __name__ == "__main__":
+    asyncio.run(main())-e 
+File: ./src/cli.py
+
+import asyncio
+from src.utils.controller import Controller
+from src.utils.logging_setup import setup_logging
+from src.utils.structured_logging import get_logger
+
+master_logger, chat_logger, memory_logger, database_logger = setup_logging()
+controller = Controller()
+similarity_analyzer = None
+logger = get_logger("cli")
+
+async def initialize():
+    await controller.initialize()
+    global similarity_analyzer
+
+async def main():
+    await initialize()
+    while True:
+        try:
+            command = input("Enter a command (query/stats/distribution/visualize/quit): ").strip().lower()
+            
+            if command == 'quit':
+                break
+            elif command == 'query':
+                query = input("Enter your query: ")
+                response = await controller.execute_query(query)
+                print(f"Response: {response}")
+            elif command == 'stats':
+                stats = await controller.memory_manager.get_memory_stats()
+                print("Memory Statistics:")
+                for key, value in stats.items():
+                    print(f"{key}: {value}")
+            elif command == 'distribution':
+                distribution = await controller.memory_manager.analyze_link_distribution()
+                print("Link Type Distribution:")
+                for link_type, count in distribution.items():
+                    print(f"{link_type}: {count}")
+            elif command == 'visualize':
+                await controller.memory_manager.visualize_network()
+                print("Network visualization generated and saved as 'memory_network.png'")
+            else:
+                print("Invalid command. Please try again.")
+        except Exception as e:
+            print(f"An error occurred: {str(e)}. Please try again.")
+
+if __name__ == "__main__":
+    asyncio.run(main())-e 
 File: ./src/memory/memory_manager.py
 
 import logging
@@ -129,26 +846,40 @@ from langchain_openai import OpenAIEmbeddings
 import numpy as np
 from config import Config
 import os
-from src.utils.enhanced_logging import log_execution_time, DatabaseLogger
+from src.utils.enhanced_logging import log_execution_time
 from src.utils.visualizer import visualize_memory_network
 from sklearn.feature_extraction.text import TfidfVectorizer
 from rank_bm25 import BM25Okapi # type: ignore
 from datetime import datetime
 import time
 from scipy.spatial.distance import cosine
+from src.utils.structured_logging import get_logger
+from src.utils.logging_config import setup_logging
+import asyncio
 
-logger = logging.getLogger('memory')
+from src.utils.structured_logging import get_logger
+from src.utils.enhanced_logging import log_execution_time
+
+logger = get_logger('memory')
 
 class MemoryManager:
     def __init__(self, api_key: str):
+        self.logger = get_logger(__name__)
         self.config = Config()
         self.personal_db_path = self.get_personal_db_path()
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         self.container_id = self.get_container_id()
-        self.db_logger = DatabaseLogger(logging.getLogger('database'))
         self.tfidf_vectorizer: Optional[TfidfVectorizer] = None
         self.bm25: Optional[BM25Okapi] = None
         self.corpus: List[str] = []
+        self.async_logger = None
+
+    async def initialize(self):
+        self.async_logger = await setup_logging(self.container_id)
+        os.makedirs("/app/data", exist_ok=True)
+        await self.create_tables(self.personal_db_path)
+        await self._load_corpus()
+        await self._update_indexing()
 
     def get_container_id(self):
         return os.environ.get('HOSTNAME', 'local')
@@ -156,12 +887,6 @@ class MemoryManager:
     def get_personal_db_path(self):
         container_id = self.get_container_id()
         return f"/app/data/{container_id}.db"
-
-    async def initialize(self):
-        os.makedirs("/app/data", exist_ok=True)
-        await self.create_tables(self.personal_db_path)
-        await self._load_corpus()
-        self._update_indexing()
 
     async def create_tables(self, db_path):
         async with aiosqlite.connect(db_path) as db:
@@ -190,6 +915,7 @@ class MemoryManager:
             await db.commit()
         logger.debug(f"Ensured memories and memory_links tables exist in {db_path}")
 
+    @log_execution_time
     async def create_memory_link(self, source_id: int, target_id: int, link_type: str):
         async with aiosqlite.connect(self.personal_db_path) as db:
             await db.execute("""
@@ -198,6 +924,7 @@ class MemoryManager:
             """, (source_id, target_id, link_type))
             await db.commit()
 
+    @log_execution_time
     async def get_linked_memories(self, memory_id: int) -> List[Tuple[int, str]]:
         async with aiosqlite.connect(self.personal_db_path) as db:
             async with db.execute("""
@@ -207,7 +934,7 @@ class MemoryManager:
                 return await cursor.fetchall()
 
 
-    @log_execution_time(logger)
+    @log_execution_time
     async def save_memory(self, query: str, result: str):
         try:
             embedding = await self.embeddings.aembed_query(query)
@@ -231,14 +958,14 @@ class MemoryManager:
             
             # Update corpus and indexing
             await self._load_corpus()
-            self._update_indexing()
+            await self._update_indexing()
 
             # Call auto_link_memories with the new memory_id
             await self.auto_link_memories(memory_id)
             
-            return memory_id
+            await self.async_logger.info("Memory saved", query=query, memory_id=memory_id)
         except Exception as e:
-            logger.error(f"Error saving memory for query '{query}': {str(e)}", exc_info=True)
+            await self.async_logger.error("Error saving memory", query=query, error=str(e))
             raise
 
     async def _load_corpus(self):
@@ -248,20 +975,21 @@ class MemoryManager:
                 memories = await cursor.fetchall()
         self.corpus = [f"{query} {result}" for query, result in memories]
         logger.info(f"Loaded corpus with {len(self.corpus)} entries in {time.time() - start_time:.2f} seconds")
-
-    def _update_indexing(self):
+    
+    @log_execution_time
+    async def _update_indexing(self):
         if self.corpus:
             start_time = time.time()
             self.tfidf_vectorizer = TfidfVectorizer()
             self.tfidf_vectorizer.fit(self.corpus)
             tokenized_corpus = [doc.split() for doc in self.corpus]
             self.bm25 = BM25Okapi(tokenized_corpus)
-            logger.info(f"Updated indexing with {len(self.corpus)} documents in {time.time() - start_time:.2f} seconds")
+            self.logger.info(f"Updated indexing with {len(self.corpus)} documents in {time.time() - start_time:.2f} seconds")
         else:
-            logger.warning("Corpus is empty. Skipping indexing update.")
+            self.logger.warning("Corpus is empty. Skipping indexing update.")
 
 
-    @log_execution_time(logger)
+    @log_execution_time
     async def retrieve_relevant_memories(self, query: str, threshold: float = 0.75) -> str:
         query_embedding = await self.embeddings.aembed_query(query)
         
@@ -457,7 +1185,8 @@ class MemoryManager:
         except Exception as e:
             logger.error(f"Error getting memory stats: {str(e)}", exc_info=True)
             raise
-
+        
+    @log_execution_time
     async def auto_link_memories(self, new_memory_id: int, threshold: float = 0.8):
         new_memory = await self.get_memory(new_memory_id)
         all_memories = await self.get_all_memories()
@@ -535,164 +1264,160 @@ class MemoryManager:
         async with aiosqlite.connect(self.personal_db_path) as db:
             async with db.execute("SELECT source_memory_id, target_memory_id, link_type FROM memory_links") as cursor:
                 return await cursor.fetchall()-e 
-File: ./src/__init__.py
+File: ./src/memory/__init__.py
 
 -e 
-File: ./src/agents/__init__.py
-
--e 
-File: ./src/agents/agent.py
+File: ./src/utils/controller.py
 
 import logging
-from groq import Groq # type: ignore
+from typing import List, Tuple
+from src.agents.agent import Agent
+from src.memory.memory_manager import MemoryManager
 from config import config
-import json
-import asyncio
+from src.utils.logging_config import setup_logging
+from src.utils.structured_logging import get_logger
+import os
 
-logger = logging.getLogger("master")
-chat_logger = logging.getLogger("chat")
+from src.utils.structured_logging import get_logger
 
-class Agent:
-    def __init__(self, memory_manager):
-        self.memory_manager = memory_manager
-        self.groq_client = Groq(api_key=config.GROQ_API_KEY)
+class Controller:
+    def __init__(self):
+        self.logger = get_logger(__name__)
+        self.memory_manager = None
+        self.agent = None
 
-    async def process_query(self, query: str) -> str:
-        relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
-        
-        messages = [
-            {
-                "role": "system",
-                "content": """You are a highly efficient, no-nonsense administrator at the core of a sophisticated memory system. Your primary role is to analyze retrieved memories and provide concise, relevant summaries or indicate their lack of relevance. You value brevity and directness above all else.
+    async def initialize(self):
+        container_id = os.environ.get('HOSTNAME', 'local')
+        self.memory_manager = MemoryManager(config.GROQ_API_KEY)
+        await self.memory_manager.initialize()
+        self.agent = Agent(self.memory_manager)
 
-    The retrieved memories you will be processing are structured as follows:
+    async def execute_query(self, query: str) -> str:
+        try:
+            response = await self.agent.process_query(query)
+            self.logger.debug("Generated response", response=response)
+            await self.memory_manager.save_memory(query, response)
+            return response
+        except Exception as e:
+            self.logger.error(f"Error executing query", query=query, error=str(e), exc_info=True)
+            return f"An error occurred while processing your query: {str(e)}"
 
-    1. Each memory entry contains: <memory_id>, <previous_query>, <previous_response>, <similarity_score>
-    2. Some entries may have an additional field indicating if they are linked to another memory.
-
-    Analyze these memories in relation to the current query efficiently, paying special attention to linked memories."""
-            },
-            {
-                "role": "user",
-                "content": f"""QUERY: {query}
-
-    RETRIEVED MEMORIES:
-    {relevant_memories}
-
-    Your task:
-
-    1. Assess if the retrieved memories contain ANY relevant information to the query.
-    2. If NO relevant information exists, respond ONLY with: "NO RELEVANT INFORMATION"
-    3. If relevant information exists, provide a brief, bullet-point summary of ONLY the most pertinent points. Be extremely concise.
-    4. Pay special attention to linked memories and their relevance to the current query.
-
-    Your response should either be "NO RELEVANT INFORMATION" or a brief, focused summary. Exclude any explanation or elaboration."""
-            }
-        ]
-
-        # Use asyncio.to_thread to run the synchronous API call in a separate thread
-        response = await asyncio.to_thread(
-            self.groq_client.chat.completions.create,
-            messages=messages,
-            model=config.MODEL_NAME,
-        )
-
-        return response.choices[0].message.content-e 
-File: ./src/app.py
-
-import asyncio
-from config import Config
-from MultiAgentRAG.src.utils.controller import Controller
-from MultiAgentRAG.src.utils.logging_setup import setup_logging
-import logging
-
-async def process_query(controller, query, chat_logger, memory_logger):
-    chat_logger.info(f"Query: {query}")
-    response = await controller.execute_query(query)
-    chat_logger.info(f"Response: {response}")
-    
-    memories = await controller.get_recent_memories(5)
-    memory_logger.info("Recent Memories:")
-    for memory in memories:
-        memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
-
-async def main():
-    # Initialize logging
-    master_logger, chat_logger, memory_logger = setup_logging()
-
-    # Set the log level for the memory logger
-    memory_logger.setLevel(logging.DEBUG)
-
-    try:
-        master_logger.info("Starting the Multi-Agent RAG System")
-        config = Config()
-        
-        if not config.validate_api_keys():
-            raise EnvironmentError("API keys not found in environment variables")
-
-        master_logger.info("API keys successfully loaded")
-        master_logger.info(f"Using memory database path: {config.MEMORY_DB_PATH}")
-
-        master_logger.debug("Initializing controller")
-        controller = Controller(config)
-
-        while True:
-            try:
-                query = input("Enter your query (or 'quit' to exit): ")
-                if query.lower() == "quit":
-                    master_logger.info("Exiting the program")
-                    break
-
-                master_logger.info(f"Executing query: {query}")
-                await process_query(controller, query, chat_logger, memory_logger)
-
-            except EOFError:
-                master_logger.info("Received EOF, exiting the program")
-                break
-            except Exception as e:
-                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
-    except Exception as e:
-        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
-
-if __name__ == "__main__":
-    asyncio.run(main())-e 
-File: ./src/utils/__init__.py
-
--e 
+    async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
+        return await self.memory_manager.get_memories(limit)-e 
 File: ./src/utils/enhanced_logging.py
 
-import time
-import logging
 from functools import wraps
+import time
+from src.utils.structured_logging import get_logger
+import asyncio
 
-def log_execution_time(logger):
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            start_time = time.time()
-            result = await func(*args, **kwargs)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            logger.info(f"{func.__name__} executed in {execution_time:.4f} seconds")
-            return result
-        return wrapper
-    return decorator
+performance_logger = get_logger("performance")
 
-class DatabaseLogger:
-    def __init__(self, logger):
-        self.logger = logger
-        file_handler = logging.FileHandler('database.log')
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        self.logger.addHandler(file_handler)
+def log_execution_time(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = await func(*args, **kwargs)
+        execution_time = time.time() - start_time
+        performance_logger.info(f"{func.__name__} executed",
+                                execution_time=execution_time,
+                                function=func.__name__)
+        return result
+    return wrapper-e 
+File: ./src/utils/error_handling.py
 
-    def log_query(self, query, params=None):
-        self.logger.debug(f"Executing query: {query}, Params: {params}")
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from src.utils.structured_logging import get_logger
 
-    def log_memory_size(self, memory_size):
-        self.logger.info(f"Memory size: {memory_size} bytes")
+error_logger = get_logger("error")
 
-    def log_access(self, memory_id):
-        self.logger.info(f"Accessed memory: {memory_id}")-e 
+async def global_exception_handler(request: Request, exc: Exception):
+    error_logger.error("Unhandled exception", 
+                       url=str(request.url),
+                       method=request.method,
+                       error=str(exc),
+                       exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"An unexpected error occurred: {str(exc)}"}
+    )-e 
+File: ./src/utils/logging_config.py
+
+import logging
+import logging.config
+import os
+from datetime import datetime
+from aiologger import Logger
+from aiologger.handlers.files import AsyncFileHandler
+from aiologger.formatters.base import Formatter
+import asyncio
+
+async def setup_logging(container_id):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    docker_log_directory = f'/app/logs/{timestamp}_{container_id}'
+    local_log_directory = f'./logs/{timestamp}_{container_id}'
+    
+    os.makedirs(docker_log_directory, exist_ok=True)
+    os.makedirs(local_log_directory, exist_ok=True)
+
+    config = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'standard': {
+                'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            },
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+                'level': 'DEBUG',
+            },
+            'docker_file': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'formatter': 'standard',
+                'level': 'DEBUG',
+                'filename': f'{docker_log_directory}/app.log',
+                'maxBytes': 10485760,  # 10MB
+                'backupCount': 5,
+            },
+            'local_file': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'formatter': 'standard',
+                'level': 'DEBUG',
+                'filename': f'{local_log_directory}/app.log',
+                'maxBytes': 10485760,  # 10MB
+                'backupCount': 5,
+            },
+        },
+        'loggers': {
+            '': {  # root logger
+                'handlers': ['console', 'docker_file', 'local_file'],
+                'level': 'DEBUG',
+                'propagate': True
+            },
+        }
+    }
+    
+    logging.config.dictConfig(config)
+    return await setup_async_logging(docker_log_directory, local_log_directory)
+
+async def setup_async_logging(docker_log_directory, local_log_directory):
+    formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    docker_handler = AsyncFileHandler(filename=f'{docker_log_directory}/async_app.log')
+    docker_handler.formatter = formatter
+
+    local_handler = AsyncFileHandler(filename=f'{local_log_directory}/async_app.log')
+    local_handler.formatter = formatter
+
+    async_logger = Logger(name="async_logger")
+    async_logger.add_handler(docker_handler)  # Remove await
+    async_logger.add_handler(local_handler)   # Remove await
+
+    return async_logger-e 
 File: ./src/utils/logging_setup.py
 
 import logging
@@ -743,38 +1468,77 @@ def setup_logging():
 
 def is_running_in_docker() -> bool:
     return os.path.exists('/.dockerenv')-e 
-File: ./src/utils/controller.py
+File: ./src/utils/log_sync.py
 
-import logging
-from typing import List, Tuple
-from src.agents.agent import Agent
-from src.memory.memory_manager import MemoryManager
-from config import config
+import os
+import shutil
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
-class Controller:
-    def __init__(self):
-        self.logger = logging.getLogger('master')
-        self.db_logger = logging.getLogger('database')
-        self.memory_manager = None
-        self.agent = None
+class LogSyncHandler(FileSystemEventHandler):
+    def __init__(self, src_path, dest_path):
+        self.src_path = src_path
+        self.dest_path = dest_path
 
-    async def initialize(self):
-        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)
-        await self.memory_manager.initialize()
-        self.agent = Agent(self.memory_manager)
+    def on_modified(self, event):
+        if not event.is_directory:
+            src_file = event.src_path
+            dest_file = os.path.join(self.dest_path, os.path.basename(src_file))
+            shutil.copy2(src_file, dest_file)
 
-    async def execute_query(self, query: str) -> str:
-        try:
-            response = await self.agent.process_query(query)
-            self.logger.debug(f"Generated response: {response}")
-            await self.memory_manager.save_memory(query, response)
-            return response
-        except Exception as e:
-            self.logger.error(f"Error executing query '{query}': {str(e)}", exc_info=True)
-            return f"An error occurred while processing your query: {str(e)}"
+def start_log_sync(src_path, dest_path):
+    event_handler = LogSyncHandler(src_path, dest_path)
+    observer = Observer()
+    observer.schedule(event_handler, src_path, recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
 
-    async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
-        return await self.memory_manager.get_memories(limit)-e 
+if __name__ == "__main__":
+    start_log_sync("/app/logs", "/app/local_logs")-e 
+File: ./src/utils/structured_logging.py
+
+import structlog
+
+def setup_structured_logging():
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.processors.JSONRenderer()
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+def get_logger(name):
+    return structlog.get_logger(name)-e 
+File: ./src/utils/tracing.py
+
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+def setup_tracing():
+    trace.set_tracer_provider(TracerProvider())
+    trace.get_tracer_provider().add_span_processor(
+        BatchSpanProcessor(ConsoleSpanExporter())
+    )
+
+def instrument_fastapi(app):
+    FastAPIInstrumentor.instrument_app(app)
+
+tracer = trace.get_tracer(__name__)-e 
 File: ./src/utils/visualizer.py
 
 import networkx as nx
@@ -816,473 +1580,8 @@ def visualize_memory_network(memories: List[Tuple[int, str, str]], links: List[T
 #     memories = await self.get_all_memories()
 #     links = await self.get_all_links()
 #     visualize_memory_network([(m['id'], m['query'], m['result']) for m in memories], links)-e 
-File: ./src/api.py
+File: ./src/utils/__init__.py
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from src.utils.controller import Controller
-from src.utils.logging_setup import setup_logging
-from config import config
-
-class QueryRequest(BaseModel):
-    query: str
-
-class QueryResponse(BaseModel):
-    response: str
-
-# Initialize logging
-master_logger, chat_logger, memory_logger, database_logger = setup_logging()
-
-app = FastAPI()
-
-controller = Controller()
-memory_analyzer = None
-
-@app.on_event("startup")
-async def startup_event():
-    global memory_analyzer
-    master_logger.info("Starting up the API server")
-    await controller.initialize()
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    master_logger.info("Shutting down the API server")
-
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
-@app.post("/query", response_model=QueryResponse)
-async def query_endpoint(request: QueryRequest):
-    try:
-        response = await controller.execute_query(request.query)
-        return QueryResponse(response=response)
-    except Exception as e:
-        master_logger.error(f"Error processing query: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
-    
-@app.get("/memory_stats")
-async def memory_stats_endpoint():
-    try:
-        stats = await controller.memory_manager.get_memory_stats()
-        return {"stats": stats}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/link_distribution")
-async def link_distribution_endpoint():
-    try:
-        distribution = await controller.memory_manager.analyze_link_distribution()
-        return {"distribution": distribution}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/visualize_network")
-async def visualize_network_endpoint():
-    try:
-        await controller.memory_manager.visualize_network()
-        return {"message": "Network visualization generated successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    master_logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": f"An unexpected error occurred: {str(exc)}"}
-    )
-
-if __name__ == "__main__":
-    import uvicorn
-    master_logger.info("Running the API server directly")
-    uvicorn.run(app, host="0.0.0.0", port=8000)-e 
-File: ./src/cli.py
-
-import asyncio
-from src.utils.controller import Controller
-from src.utils.logging_setup import setup_logging
-
-master_logger, chat_logger, memory_logger, database_logger = setup_logging()
-controller = Controller()
-similarity_analyzer = None
-
-async def initialize():
-    await controller.initialize()
-    global similarity_analyzer
-
-async def main():
-    await initialize()
-    while True:
-        try:
-            command = input("Enter a command (query/stats/distribution/visualize/quit): ").strip().lower()
-            
-            if command == 'quit':
-                break
-            elif command == 'query':
-                query = input("Enter your query: ")
-                response = await controller.execute_query(query)
-                print(f"Response: {response}")
-            elif command == 'stats':
-                stats = await controller.memory_manager.get_memory_stats()
-                print("Memory Statistics:")
-                for key, value in stats.items():
-                    print(f"{key}: {value}")
-            elif command == 'distribution':
-                distribution = await controller.memory_manager.analyze_link_distribution()
-                print("Link Type Distribution:")
-                for link_type, count in distribution.items():
-                    print(f"{link_type}: {count}")
-            elif command == 'visualize':
-                await controller.memory_manager.visualize_network()
-                print("Network visualization generated and saved as 'memory_network.png'")
-            else:
-                print("Invalid command. Please try again.")
-        except Exception as e:
-            print(f"An error occurred: {str(e)}. Please try again.")
-
-if __name__ == "__main__":
-    asyncio.run(main())-e 
-File: ./.pytest_cache/README.md
-
-# pytest cache directory #
-
-This directory contains data from the pytest's cache plugin,
-which provides the `--lf` and `--ff` options, as well as the `cache` fixture.
-
-**Do not** commit this to version control.
-
-See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information.
 -e 
-File: ./.pytest_cache/.gitignore
+File: ./src/__init__.py
 
-# Created by pytest automatically.
-*
--e 
-File: ./.pytest_cache/CACHEDIR.TAG
-
-Signature: 8a477f597d28d172789f06886806bc55
-# This file is a cache directory tag created by pytest.
-# For information about cache directory tags, see:
-#	https://bford.info/cachedir/spec.html
--e 
-File: ./.pytest_cache/v/cache/nodeids
-
-[]-e 
-File: ./.pytest_cache/v/cache/lastfailed
-
-{
-  "tests/test_memory_manager.py": true
-}-e 
-File: ./.pytest_cache/v/cache/stepwise
-
-[]-e 
-File: ./.dockerignore
-
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-*.pdb
-*.egg
-*.egg-info
-dist
-build
-eggs
-parts
-var
-develop-eggs
-.installed.cfg
-lib
-lib64
-*.log
-logs
-notebooks
-data/raw/*
-text_docs/*
-.DS_Store
-.vscode
--e 
-File: ./docker-compose.yml
-
-services:
-  multi-agent-rag:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: multi-agent-rag
-    ports:
-      - "8080:8000"
-    environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - GOODAI_OPENAI_API_KEY_LTM01=${GOODAI_OPENAI_API_KEY_LTM01}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-    command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
-
-  multi-agent-rag-cli:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: multi-agent-rag
-    environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - GOODAI_OPENAI_API_KEY_LTM01=${GOODAI_OPENAI_API_KEY_LTM01}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-    command: ["python", "-m", "src.cli"]
-    stdin_open: true
-    tty: true-e 
-File: ./docs/README.md
-
-# Multi-Agent RAG System with Continual Learning
-
-## Project Overview
-
-This project implements a vertical slice of a multi-agent RAG (Retrieval-Augmented Generation) system with continual learning capabilities. It uses LangChain, LangGraph, and LLM API calls to create a sophisticated question-answering system that learns from interactions.
-
-## Key Features
-
-- Multi-agent architecture for complex query processing
-- RAG (Retrieval-Augmented Generation) for enhanced responses
-- Continual learning to improve performance over time
-- Distributed memory management with personal and master databases
-- CLI and API interfaces for versatile interaction
-- Comprehensive logging system for debugging and analysis
-- Docker support for easy deployment and scaling
-
-## System Architecture
-
-The system consists of the following main components:
-
-1. **Controller**: Orchestrates the overall flow of query processing.
-2. **Agents**: Specialized modules for retrieval, processing, and response generation.
-3. **Memory Manager**: Handles storage and retrieval of past interactions.
-4. **Logging System**: Provides detailed logs for system operations, including database interactions.
-
-## Directory Structure
-
-```
-.
-├── Dockerfile
-├── README.md
-├── config.py
-├── data/
-├── docker-compose.yml
-├── docs/
-├── logs/
-├── notebooks/
-├── scripts/
-├── src/
-│   ├── agents/
-│   ├── memory/
-│   ├── utils/
-│   ├── api.py
-│   ├── app.py
-│   └── cli.py
-└── tests/
-```
-
-## Setup and Installation
-
-### Prerequisites
-
-- Python 3.12+
-- Docker and Docker Compose
-
-### Local Setup
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/your-username/multi-agent-rag.git
-   cd multi-agent-rag
-   ```
-
-2. Create a virtual environment:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-3. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-4. Set up environment variables:
-   Create a `.env` file in the root directory with the following content:
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   TAVILY_API_KEY=your_tavily_api_key
-   ```
-
-### Docker Setup
-
-1. Build the Docker image:
-   ```
-   docker-compose build
-   ```
-
-2. Run the container:
-   ```
-   docker-compose up
-   ```
-
-## Usage
-
-### CLI Interface
-
-Run the CLI interface with:
-
-```
-python src/cli.py
-```
-
-Available commands:
-- `query`: Enter a query to process
-- `memories`: Retrieve recent memories
-- `consistency`: Run a consistency check on the databases
-- `quit`: Exit the program
-
-### API Interface
-
-Start the API server with:
-
-```
-uvicorn src.api:app --host 0.0.0.0 --port 8000
-```
-
-API endpoints:
-- POST `/query`: Submit a query for processing
-- GET `/consistency_check`: Run a consistency check on the databases
-- GET `/health`: Check the health status of the API
-- GET `/memory_distribution`: Get the distribution of memories across containers
-
-## Logging
-
-Logs are stored in the `logs/` directory, organized by timestamp and container ID. There are separate log files for:
-
-- Master log (`master.log`)
-- Chat log (`chat.log`)
-- Memory operations log (`memory.log`)
-- Database operations log (`database.log`)
-
-## Testing
-
-Run the test suite with:
-
-```
-pytest tests/
-```
--e 
-File: ./Dockerfile
-
-FROM python:3.12
-
-# Create a non-root user
-RUN useradd -m appuser
-
-WORKDIR /app
-
-COPY . /app
-
-RUN mkdir -p /app/logs /app/data
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
-
-# Create and activate virtual environment
-RUN python -m venv /app/venv
-ENV PATH="/app/venv/bin:$PATH"
-
-# Upgrade pip and install dependencies with increased timeout and using a mirror
-RUN pip install --upgrade pip
-
-# Install numpy and scipy separately with increased timeout
-RUN pip install --no-cache-dir numpy==1.26.4 scipy==1.14.0 --timeout 600
-
-# Install scikit-learn separately with an even longer timeout
-RUN pip install --no-cache-dir scikit-learn==1.4.0 --timeout 900
-
-# Install other dependencies
-RUN pip install --no-cache-dir -r docker_requirements.txt --timeout 600 --index-url https://pypi.org/simple --trusted-host pypi.org
-
-RUN pip install fastapi uvicorn
-
-RUN pip install networkx matplotlib
-
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
-
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]-e 
-File: ./config.py
-
-import os
-from dotenv import load_dotenv
-
-class Config:
-    def __init__(self):
-        load_dotenv()
-        
-        # General settings
-        self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192")
-        
-        # Database settings
-        self.personal_db_path = self._get_personal_db_path()
-        
-        # API Keys
-        self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
-        self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-        self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-        
-        # Other settings
-        self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
-        
-        # Processing agent settings
-        self.PROCESSING_AGENT_MEMORIES_INCLUDED = int(os.getenv("PROCESSING_AGENT_MEMORIES_INCLUDED", "5"))
-        self.MEMORY_RETRIEVAL_THRESHOLD = float(os.getenv("MEMORY_RETRIEVAL_THRESHOLD", "0.75"))
-        self.MEMORY_RETRIEVAL_LIMIT = int(os.getenv("MEMORY_RETRIEVAL_LIMIT", "10"))
-
-    def _get_memory_db_path(self):
-        return "/app/memory.db" if os.path.exists("/.dockerenv") else "memory.db"
-    
-    def _get_personal_db_path(self):
-        container_id = os.environ.get('HOSTNAME', 'local')
-        return f"/app/data/{container_id}.db" if os.path.exists("/.dockerenv") else f"{container_id}.db"
-
-    def validate_api_keys(self):
-        return bool(self.GROQ_API_KEY and self.TAVILY_API_KEY)
-
-    L2_NORM_THRESHOLD = float(os.getenv("L2_NORM_THRESHOLD", "0.75"))
-    COSINE_SIMILARITY_THRESHOLD = float(os.getenv("COSINE_SIMILARITY_THRESHOLD", "0.75"))
-    BM25_THRESHOLD = float(os.getenv("BM25_THRESHOLD", "0.5"))
-    JACCARD_SIMILARITY_THRESHOLD = float(os.getenv("JACCARD_SIMILARITY_THRESHOLD", "0.3"))
-
-config = Config()-e 
-File: ./docker_requirements.txt
-
-langchain==0.2.3
-langchain-openai==0.1.8
-langchain-community==0.2.4
-langchain-core==0.2.5
-langchain-text-splitters==0.2.1
-langsmith==0.1.77
-openai==1.34.0
-pydantic==2.7.4
-pydantic-core==2.18.4
-dataclasses-json==0.6.7
-python-dotenv==1.0.1
-aiosqlite
-rank_bm25==0.2.2
-cachetools==5.3.0
-groq
-fastapi
-uvicorn

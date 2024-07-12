@@ -1,10 +1,12 @@
 import asyncio
 from src.utils.controller import Controller
 from src.utils.logging_setup import setup_logging
+from src.utils.structured_logging import get_logger
 
 master_logger, chat_logger, memory_logger, database_logger = setup_logging()
 controller = Controller()
 similarity_analyzer = None
+logger = get_logger("cli")
 
 async def initialize():
     await controller.initialize()

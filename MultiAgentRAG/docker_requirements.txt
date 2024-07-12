@@ -15,3 +15,8 @@ cachetools==5.3.0
 groq
 fastapi
 uvicorn
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+aiologger==0.7.0
+aiofiles
