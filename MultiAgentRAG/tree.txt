@@ -4,131 +4,46 @@
 │   └── config.cpython-312.pyc
 ├── config.py
 ├── data
-│   ├── 02c5010b543e.db
-│   ├── 3d900cef16ed.db
-│   ├── 43518d53f98d.db
-│   ├── 58a0e7a8334f.db
-│   ├── 6288678806d5.db
-│   ├── 90f419cf105f.db
-│   ├── da6316bea3ca.db
-│   └── f87914c34446.db
+│   ├── be2117638dc8.db
+│   ├── d09f2973073d.db
+│   ├── d561de7f7631.db
+│   ├── e49b6a1e67d7.db
+│   └── fda22b21d614.db
 ├── docker-compose.yml
 ├── docker_requirements.txt
 ├── docs
 │   └── README.md
-├── json_output
-│   ├── Memory_1.json
-│   ├── Memory_2.json
-│   ├── Memory_3.json
-│   ├── Memory_4.json
-│   └── Memory_5.json
 ├── logs
-│   ├── 20240712_124040_fba618fa6ca7
-│   │   ├── app.log
+│   ├── 20240715_122843_27e301997f58
+│   │   ├── all.log
 │   │   ├── chat.log
-│   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240712_124625_a495eb43508d
+│   ├── 20240715_124939_e49b6a1e67d7
+│   │   ├── all.log
 │   │   ├── chat.log
-│   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240712_130127_b912ba994df8
+│   ├── 20240715_132323_fda22b21d614
+│   │   ├── all.log
 │   │   ├── chat.log
-│   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240712_130128_b912ba994df8
-│   │   └── app.log
-│   ├── 20240712_130607_ec771763c014
-│   │   ├── app.log
+│   ├── 20240715_133049_d09f2973073d
+│   │   ├── all.log
 │   │   ├── chat.log
-│   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240712_133657_40478d8aa5b4
-│   │   ├── app.log
+│   ├── 20240715_133643_be2117638dc8
+│   │   ├── all.log
 │   │   ├── chat.log
-│   │   ├── database.log
 │   │   ├── master.log
 │   │   └── memory.log
-│   ├── 20240712_134059_3d900cef16ed
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240712_134351_02c5010b543e
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240712_134656_6288678806d5
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240712_135147_da6316bea3ca
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240712_142151_58a0e7a8334f
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240712_155221_43518d53f98d
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240712_160046_90f419cf105f
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   ├── 20240712_160900_f87914c34446
-│   │   ├── app.log
-│   │   ├── chat.log
-│   │   ├── database.log
-│   │   ├── master.log
-│   │   └── memory.log
-│   └── docker_agents
-│       ├── 20240621_122849_c4871e6f4b4c
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240621_131848_0c9335780884
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240621_134307_9108ac89f851
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240621_134614_240eb5a9fa25
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       ├── 20240621_134832_e32f8be7080c
-│       │   ├── chat.log
-│       │   ├── master.log
-│       │   └── memory.log
-│       └── 20240621_140806_5d95a2ed862b
-│           ├── chat.log
-│           ├── master.log
-│           └── memory.log
-├── memory.db
-├── notebooks
-│   └── Multi_Agent_RAG_LangGraph.ipynb
+│   └── 20240715_134114_d561de7f7631
+│       ├── all.log
+│       ├── chat.log
+│       ├── master.log
+│       └── memory.log
 ├── scripts
 │   ├── _docker_reset.sh
 │   ├── generate_tree.sh
@@ -152,7 +67,6 @@
 │   │   │   └── retrieval_agent.cpython-312.pyc
 │   │   └── agent.py
 │   ├── api.py
-│   ├── app.py
 │   ├── cli.py
 │   ├── memory
 │   │   ├── __init__.py
@@ -169,15 +83,13 @@
 │       ├── controller.py
 │       ├── enhanced_logging.py
 │       ├── error_handling.py
-│       ├── log_sync.py
-│       ├── logging_config.py
 │       ├── logging_setup.py
 │       ├── structured_logging.py
 │       ├── tracing.py
 │       └── visualizer.py
 └── tree.txt
 
-36 directories, 141 files
+19 directories, 70 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -222,7 +134,8 @@ class Config:
         load_dotenv()
         
         # General settings
-        self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192")
+        # self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192") #! groq
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3-70b-chat-hf") #? Together AI
         
         # Database settings
         self.personal_db_path = self._get_personal_db_path()
@@ -231,6 +144,7 @@ class Config:
         self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
         self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
         self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+        self.TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY')
         
         # Other settings
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
@@ -380,14 +294,14 @@ python-dotenv==1.0.1
 aiosqlite
 rank_bm25==0.2.2
 cachetools==5.3.0
-groq
 fastapi
 uvicorn
 opentelemetry-api==1.22.0
 opentelemetry-sdk==1.22.0
 opentelemetry-instrumentation-fastapi==0.43b0
 aiologger==0.7.0
-aiofiles-e 
+aiofiles
+together-e 
 File: ./docs/README.md
 
 # Multi-Agent RAG System with Continual Learning
@@ -530,106 +444,100 @@ Run the test suite with:
 pytest tests/
 ```
 -e 
-File: ./json_output/Memory_1.json
-
-{
-    "title": "Memory_1",
-    "query": "Today is Wednesday, June 19th.",
-    "result": "I apologize for the mistake in my initial response. Today is indeed Tuesday, June 18th. Thank you for bringing it to my attention.",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_2.json
-
-{
-    "title": "Memory_2",
-    "query": "What is the day today? ",
-    "result": "Today is Tuesday, June 18th.",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_3.json
-
-{
-    "title": "Memory_3",
-    "query": "This is a test. Respond with how tall I am. ",
-    "result": "I apologize for the incorrect response earlier. As a language model AI, I do not have the ability to determine your height. If you have any other questions or need assistance with something else, feel free to ask!",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_4.json
-
-{
-    "title": "Memory_4",
-    "query": "What is my name? Use your context.",
-    "result": "I'm sorry, I made an error in my initial response. Without knowing your name, I cannot accurately determine what it is based on the context provided. If you would like to share your name with me, I can assist you further.",
-    "tags": "retrieved, processed"
-}-e 
-File: ./json_output/Memory_5.json
-
-{
-    "title": "Memory_5",
-    "query": "What is my name? ",
-    "result": "I apologize for the confusion. Without knowing your actual name, I can only provide possible guesses. If you could kindly provide me with your name, I would be happy to address you correctly.",
-    "tags": "retrieved, processed"
-}-e 
 File: ./src/agents/agent.py
 
-import logging
-from groq import Groq # type: ignore
-from config import config
 import json
+# from groq import Groq # type: ignore #! groq version
+from together import Together  # Import the Together SDK
+from config import config
 import asyncio
 
 from src.utils.structured_logging import get_logger
 from src.utils.enhanced_logging import log_execution_time
-
-logger = get_logger("agent")
+from src.utils.error_handling import log_error_with_traceback
 
 class Agent:
-    def __init__(self, memory_manager):
+    # def __init__(self, memory_manager, groq_api_key: str): #! groq version
+    def __init__(self, memory_manager, together_api_key: str):
+        self.logger = get_logger('chat')
         self.memory_manager = memory_manager
-        self.groq_client = Groq(api_key=config.GROQ_API_KEY)
+        # self.groq_client = Groq(api_key=groq_api_key) #! groq version
+        self.together_client = Together(api_key=together_api_key)
         
     @log_execution_time
     async def process_query(self, query: str) -> str:
-        relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
-        
-        messages = [
-            {
-                "role": "system",
-                "content": """You are a highly efficient, no-nonsense administrator at the core of a sophisticated memory system. Your primary role is to analyze retrieved memories and provide concise, relevant summaries or indicate their lack of relevance. You value brevity and directness above all else.
+        try:
+            self.logger.info("Processing query", extra={"query": query})
+            relevant_memories = await self.memory_manager.retrieve_relevant_memories(query)
+            
+            messages = [
+                {
+                    "role": "system",
+                    "content": """You are a highly efficient, no-nonsense administrator at the core of a sophisticated memory system. Your primary role is to analyze retrieved memories and provide concise, relevant summaries or indicate their lack of relevance. You value brevity and directness above all else.
 
-    The retrieved memories you will be processing are structured as follows:
+        The retrieved memories you will be processing are structured as follows:
 
-    1. Each memory entry contains: <memory_id>, <previous_query>, <previous_response>, <similarity_score>
-    2. Some entries may have an additional field indicating if they are linked to another memory.
-
-    Analyze these memories in relation to the current query efficiently, paying special attention to linked memories."""
+        {
+        "Relevant Injected Content": {
+            "UID": {
+            "Time": "timestamp",
+            "Query": "previous query",
+            "Response": "previous response",
+            "Similarity": float value,
+            "linked_UIDs": ["list of linked memory UIDs"]
             },
-            {
-                "role": "user",
-                "content": f"""QUERY: {query}
+            ...
+        }
+        }
 
-    RETRIEVED MEMORIES:
-    {relevant_memories}
+        Analyze these memories in relation to the current query efficiently, paying special attention to linked memories."""
+                },
+                {
+                    "role": "user",
+                    "content": f"""QUERY: {query}
 
-    Your task:
+        RETRIEVED MEMORIES:
+        {relevant_memories}
 
-    1. Assess if the retrieved memories contain ANY relevant information to the query.
-    2. If NO relevant information exists, respond ONLY with: "NO RELEVANT INFORMATION"
-    3. If relevant information exists, provide a brief, bullet-point summary of ONLY the most pertinent points. Be extremely concise.
-    4. Pay special attention to linked memories and their relevance to the current query.
+        Your task:
 
-    Your response should either be "NO RELEVANT INFORMATION" or a brief, focused summary. Exclude any explanation or elaboration."""
-            }
-        ]
+        1. Assess if the retrieved memories contain ANY relevant information to the query.
+        2. If NO relevant information exists, respond ONLY with: "NO RELEVANT INFORMATION"
+        3. If relevant information exists, assess, making an internal summary of ONLY the most pertinent points.
+        4. Pay special attention to linked memories and their relevance to the current query.
+        5. After summarizing, provide a concise response to the original query based on the relevant information.
 
-        # Use asyncio.to_thread to run the synchronous API call in a separate thread
-        response = await asyncio.to_thread(
-            self.groq_client.chat.completions.create,
-            messages=messages,
-            model=config.MODEL_NAME,
-        )
+        Imagine your internal summary in the following format:
+        SUMMARY:
+        • Point 1
+        • Point 2
+        ...
 
-        return response.choices[0].message.content-e 
+        RESPONSE BASED ON INTERNAL SUMMARY:
+        [Your concise response to the original query]
+    Note - only respond with the terse response appropriate to the query, provide none of the summary information that is for your eyes only."""
+                }
+            ]
+
+            # Log the full request
+            self.logger.info("LLM Request", extra={"messages": json.dumps(messages, indent=2)})
+
+            # Use asyncio.to_thread to run the synchronous API call in a separate thread
+            response = await asyncio.to_thread(
+                self.together_client.chat.completions.create,  # Use Together API method
+                messages=messages,
+                model=config.MODEL_NAME,
+            )
+
+            # Log the full response
+            self.logger.info("LLM Response", extra={"response": json.dumps(response.model_dump(), indent=2)})
+
+            self.logger.info("Query processed", extra={"query": query})
+            return response.choices[0].message.content
+        except Exception as e:
+            log_error_with_traceback(self.logger, "Error processing query", e)
+            raise
+-e 
 File: ./src/agents/__init__.py
 
 -e 
@@ -645,8 +553,6 @@ from config import config
 from src.utils.error_handling import global_exception_handler
 from src.utils.structured_logging import get_logger
 from src.utils.tracing import setup_tracing, instrument_fastapi, tracer
-from src.utils.error_handling import global_exception_handler
-import os
 
 class QueryRequest(BaseModel):
     query: str
@@ -655,8 +561,9 @@ class QueryResponse(BaseModel):
     response: str
 
 # Initialize logging
-master_logger, chat_logger, memory_logger, database_logger = setup_logging()
-logger = get_logger("api")
+loggers = setup_logging()
+logger = get_logger('master')
+
 app = FastAPI()
 app.add_exception_handler(Exception, global_exception_handler)
 setup_tracing()
@@ -675,7 +582,7 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    master_logger.info("Shutting down the API server")
+    logger.info("Shutting down the API server")
 
 @app.get("/health")
 async def health_check():
@@ -685,16 +592,16 @@ async def health_check():
 async def query_endpoint(request: QueryRequest):
     with tracer.start_as_current_span("query_processing"):
         try:
-            logger.info(f"Received query: {request.query}")
+            logger.info("Received query", extra={"query": request.query})
             if controller is None or controller.agent is None:
                 raise ValueError("Controller or Agent not initialized")
             response = await controller.execute_query(request.query)
-            logger.info(f"Query processed successfully")
+            logger.info("Query processed successfully", extra={"query": request.query})
             return QueryResponse(response=response)
         except Exception as e:
-            logger.error(f"Error processing query: {str(e)}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
-    
+            logger.error("Error processing query", extra={"query": request.query, "error": str(e)})
+            raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")                     
+
 @app.get("/memory_stats")
 async def memory_stats_endpoint():
     try:
@@ -721,7 +628,7 @@ async def visualize_network_endpoint():
     
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    master_logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": f"An unexpected error occurred: {str(exc)}"}
@@ -729,66 +636,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    master_logger.info("Running the API server directly")
+    logger.info("Running the API server directly")
     uvicorn.run(app, host="0.0.0.0", port=8000)-e 
-File: ./src/app.py
-
-import asyncio
-from config import Config
-from MultiAgentRAG.src.utils.controller import Controller
-from MultiAgentRAG.src.utils.logging_setup import setup_logging
-import logging
-
-async def process_query(controller, query, chat_logger, memory_logger):
-    chat_logger.info(f"Query: {query}")
-    response = await controller.execute_query(query)
-    chat_logger.info(f"Response: {response}")
-    
-    memories = await controller.get_recent_memories(5)
-    memory_logger.info("Recent Memories:")
-    for memory in memories:
-        memory_logger.info(f"Query: {memory[0]}, Result: {memory[1]}")
-
-async def main():
-    # Initialize logging
-    master_logger, chat_logger, memory_logger = setup_logging()
-
-    # Set the log level for the memory logger
-    memory_logger.setLevel(logging.DEBUG)
-
-    try:
-        master_logger.info("Starting the Multi-Agent RAG System")
-        config = Config()
-        
-        if not config.validate_api_keys():
-            raise EnvironmentError("API keys not found in environment variables")
-
-        master_logger.info("API keys successfully loaded")
-        master_logger.info(f"Using memory database path: {config.MEMORY_DB_PATH}")
-
-        master_logger.debug("Initializing controller")
-        controller = Controller(config)
-
-        while True:
-            try:
-                query = input("Enter your query (or 'quit' to exit): ")
-                if query.lower() == "quit":
-                    master_logger.info("Exiting the program")
-                    break
-
-                master_logger.info(f"Executing query: {query}")
-                await process_query(controller, query, chat_logger, memory_logger)
-
-            except EOFError:
-                master_logger.info("Received EOF, exiting the program")
-                break
-            except Exception as e:
-                master_logger.error(f"An error occurred while processing the query: {e}", exc_info=True)
-    except Exception as e:
-        master_logger.error(f"An error occurred in the main program: {e}", exc_info=True)
-
-if __name__ == "__main__":
-    asyncio.run(main())-e 
 File: ./src/cli.py
 
 import asyncio
@@ -796,10 +645,11 @@ from src.utils.controller import Controller
 from src.utils.logging_setup import setup_logging
 from src.utils.structured_logging import get_logger
 
-master_logger, chat_logger, memory_logger, database_logger = setup_logging()
+loggers = setup_logging()
+logger = get_logger('master')
+
 controller = Controller()
 similarity_analyzer = None
-logger = get_logger("cli")
 
 async def initialize():
     await controller.initialize()
@@ -810,11 +660,14 @@ async def main():
     while True:
         try:
             command = input("Enter a command (query/stats/distribution/visualize/quit): ").strip().lower()
+            logger.info("Received command", extra={"command": command})
             
             if command == 'quit':
+                logger.info("Exiting CLI")
                 break
             elif command == 'query':
                 query = input("Enter your query: ")
+                logger.info("Processing query", extra={"query": query})
                 response = await controller.execute_query(query)
                 print(f"Response: {response}")
             elif command == 'stats':
@@ -833,13 +686,13 @@ async def main():
             else:
                 print("Invalid command. Please try again.")
         except Exception as e:
+            logger.error("Error processing command", extra={"command": command, "error": str(e)})
             print(f"An error occurred: {str(e)}. Please try again.")
 
 if __name__ == "__main__":
     asyncio.run(main())-e 
 File: ./src/memory/memory_manager.py
 
-import logging
 import aiosqlite # type: ignore
 from typing import List, Tuple, Union, Dict, Optional
 from langchain_openai import OpenAIEmbeddings
@@ -854,28 +707,21 @@ from datetime import datetime
 import time
 from scipy.spatial.distance import cosine
 from src.utils.structured_logging import get_logger
-from src.utils.logging_config import setup_logging
-import asyncio
-
-from src.utils.structured_logging import get_logger
-from src.utils.enhanced_logging import log_execution_time
-
-logger = get_logger('memory')
+from src.utils.error_handling import log_error_with_traceback
+import json
 
 class MemoryManager:
-    def __init__(self, api_key: str):
-        self.logger = get_logger(__name__)
+    def __init__(self, openai_api_key: str):
+        self.logger = get_logger('memory')
         self.config = Config()
         self.personal_db_path = self.get_personal_db_path()
-        self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         self.container_id = self.get_container_id()
         self.tfidf_vectorizer: Optional[TfidfVectorizer] = None
         self.bm25: Optional[BM25Okapi] = None
         self.corpus: List[str] = []
-        self.async_logger = None
 
     async def initialize(self):
-        self.async_logger = await setup_logging(self.container_id)
         os.makedirs("/app/data", exist_ok=True)
         await self.create_tables(self.personal_db_path)
         await self._load_corpus()
@@ -913,7 +759,7 @@ class MemoryManager:
                 )
             """)
             await db.commit()
-        logger.debug(f"Ensured memories and memory_links tables exist in {db_path}")
+        self.logger.debug(f"Ensured memories and memory_links tables exist in {db_path}")
 
     @log_execution_time
     async def create_memory_link(self, source_id: int, target_id: int, link_type: str):
@@ -952,9 +798,9 @@ class MemoryManager:
                 memory_id = cursor.lastrowid
                 await db.commit()
             
-            self.db_logger.log_access(memory_id)
+            # Remove this line: self.db_logger.log_access(memory_id)
             
-            logger.debug(f"Saved memory for query: {query} with result: {result}")
+            self.logger.debug(f"Saved memory for query: {query} with result: {result}")
             
             # Update corpus and indexing
             await self._load_corpus()
@@ -963,9 +809,9 @@ class MemoryManager:
             # Call auto_link_memories with the new memory_id
             await self.auto_link_memories(memory_id)
             
-            await self.async_logger.info("Memory saved", query=query, memory_id=memory_id)
+            self.logger.info("Memory saved", extra={"query": query, "memory_id": memory_id})
         except Exception as e:
-            await self.async_logger.error("Error saving memory", query=query, error=str(e))
+            log_error_with_traceback(self.logger, "Error retrieving relevant memories", e)
             raise
 
     async def _load_corpus(self):
@@ -974,7 +820,7 @@ class MemoryManager:
             async with db.execute("SELECT query, result FROM memories") as cursor:
                 memories = await cursor.fetchall()
         self.corpus = [f"{query} {result}" for query, result in memories]
-        logger.info(f"Loaded corpus with {len(self.corpus)} entries in {time.time() - start_time:.2f} seconds")
+        self.logger.info(f"Loaded corpus with {len(self.corpus)} entries in {time.time() - start_time:.2f} seconds")
     
     @log_execution_time
     async def _update_indexing(self):
@@ -994,37 +840,45 @@ class MemoryManager:
         query_embedding = await self.embeddings.aembed_query(query)
         
         async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT id, query, result, embedding FROM memories") as cursor:
+            async with db.execute("SELECT id, query, result, embedding, timestamp FROM memories") as cursor:
                 all_memories = await cursor.fetchall()
         
         relevant_memories = self._calculate_cosine_similarity(all_memories, query_embedding, threshold)
         
-        # Retrieve linked memories
-        linked_memories = set()
+        structured_memories = {}
         for memory in relevant_memories:
-            memory_id = memory[0]  # Assuming the first element is the memory_id
-            linked = await self.get_linked_memories(int(memory_id))
-            linked_memories.update(linked)
+            memory_id, query, result, similarity, timestamp = memory
+            linked_memories = await self.get_linked_memories(int(memory_id))
+            structured_memories[str(memory_id)] = {
+                "Time": timestamp.isoformat() if isinstance(timestamp, datetime) else timestamp,
+                "Query": query,
+                "Response": result,
+                "Similarity": similarity,
+                "linked_UIDs": [str(linked_id) for linked_id, _ in linked_memories]
+            }
         
         # Fetch details of linked memories
-        for linked_id, link_type in linked_memories:
-            memory = await self.get_memory(linked_id)
-            relevant_memories.append((str(memory['id']), memory['query'], memory['result'], 1.0, f"Linked ({link_type})"))
+        for memory_id, memory_data in structured_memories.items():
+            for linked_id in memory_data["linked_UIDs"]:
+                if linked_id not in structured_memories:
+                    linked_memory = await self.get_memory(int(linked_id))
+                    structured_memories[linked_id] = {
+                        "Time": linked_memory['timestamp'].isoformat() if isinstance(linked_memory['timestamp'], datetime) else linked_memory['timestamp'],
+                        "Query": linked_memory['query'],
+                        "Response": linked_memory['result'],
+                        "Similarity": 1.0,  # Linked memories are considered fully relevant
+                        "linked_UIDs": []  # We don't fetch nested links to avoid potential infinite recursion
+                    }
         
-        # Sort memories by similarity
-        relevant_memories.sort(key=lambda x: x[3], reverse=True)
+        self.logger.info("Retrieved relevant memories", 
+                         extra={
+                             "query": query, 
+                             "total_memories": len(structured_memories),
+                             "linked_memories": sum(len(m["linked_UIDs"]) for m in structured_memories.values())
+                         })
         
-        # Format the output
-        formatted_output = []
-        for memory in relevant_memories:
-            if len(memory) == 5:
-                memory_id, query, result, similarity, link_info = memory
-                formatted_output.append(f"<{memory_id}>, <{query}>, <{result}>, <{similarity:.2f}>, <{link_info}>")
-            else:
-                memory_id, query, result, similarity = memory
-                formatted_output.append(f"<{memory_id}>, <{query}>, <{result}>, <{similarity:.2f}>")
-        
-        return " ".join(formatted_output)
+        return json.dumps({"Relevant Injected Content": structured_memories}, indent=2)
+
 
     def _calculate_l2_norm(self, memories: List[Tuple], query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, str, float, str]]:
         return [
@@ -1033,33 +887,37 @@ class MemoryManager:
             if np.linalg.norm(query_embedding - np.frombuffer(memory[3])) <= threshold
         ]
 
-    def _calculate_cosine_similarity(self, memories: List[Tuple], query_embedding: Union[List[float], np.ndarray], threshold: float) -> List[Tuple[str, str, str, float, str]]:
-        results = []
+    def _calculate_cosine_similarity(self, memories: List[Tuple], query_embedding: Union[List[float], np.ndarray], threshold: float) -> List[Tuple[int, str, str, float, datetime]]:
+        try:
+            results = []
         
-        # Ensure query_embedding is a numpy array
-        if isinstance(query_embedding, list):
-            query_embedding = np.array(query_embedding, dtype=np.float32)
-        
-        for memory in memories:
-            memory_id, query, result, embedding_bytes = memory
-            memory_embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
+            # Ensure query_embedding is a numpy array
+            if isinstance(query_embedding, list):
+                query_embedding = np.array(query_embedding, dtype=np.float32)
             
-            # Reshape memory_embedding if necessary
-            if memory_embedding.shape != query_embedding.shape:
-                logger.warning(f"Reshaping embedding for memory {memory_id}: {memory_embedding.shape} to {query_embedding.shape}")
-                try:
-                    memory_embedding = memory_embedding.reshape(query_embedding.shape)
-                except ValueError:
-                    logger.error(f"Cannot reshape embedding for memory {memory_id}. Skipping.")
-                    continue
-            
-            # Compute cosine similarity
-            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-            
-            if similarity >= threshold:
-                results.append((str(memory_id), query, result, float(similarity), ""))
-        
-        return results
+            for memory in memories:
+                memory_id, query, result, embedding_bytes, timestamp = memory
+                memory_embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
+                
+                # Reshape memory_embedding if necessary
+                if memory_embedding.shape != query_embedding.shape:
+                    self.logger.warning(f"Reshaping embedding for memory {memory_id}: {memory_embedding.shape} to {query_embedding.shape}")
+                    try:
+                        memory_embedding = memory_embedding.reshape(query_embedding.shape)
+                    except ValueError as v:
+                        log_error_with_traceback(self.logger, "Cannot reshape embedding for memory {memory_id}. Skipping.", v)
+                        continue
+                
+                # Compute cosine similarity
+                similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+                
+                if similarity >= threshold:
+                    results.append((memory_id, query, result, float(similarity), timestamp))
+ 
+            return results
+        except Exception as e:
+            log_error_with_traceback(self.logger, "Error calculating cosine similarity", e)
+            raise
 
     def _calculate_bm25(self, memories: List[Tuple], query: str, threshold: float) -> List[Tuple[str, str, str, float, str]]:
         tokenized_query = query.split()
@@ -1110,7 +968,7 @@ class MemoryManager:
                 SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
             """, (limit,)) as cursor:
                 memories = await cursor.fetchall()
-        logger.debug(f"Retrieved {len(memories)} memories")
+        self.logger.debug(f"Retrieved {len(memories)} memories")
         return memories
 
     async def get_all_memories(self) -> List[Dict]:
@@ -1131,7 +989,7 @@ class MemoryManager:
                     INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
                 """, (query, result, embedding))
                 await db.commit()
-            logger.info(f"Added missing memory to personal DB: {query}")
+            self.logger.info(f"Added missing memory to personal DB: {query}")
 
     async def analyze_memory_distribution(self) -> Dict[str, int]:
         """
@@ -1183,7 +1041,7 @@ class MemoryManager:
                 "distribution": distribution
             }
         except Exception as e:
-            logger.error(f"Error getting memory stats: {str(e)}", exc_info=True)
+            log_error_with_traceback(self.logger, "Error getting memory stats: {str(e)}", e)
             raise
         
     @log_execution_time
@@ -1204,13 +1062,14 @@ class MemoryManager:
 
     async def get_memory(self, memory_id: int) -> Dict:
         async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT id, query, result, embedding FROM memories WHERE id = ?", (memory_id,)) as cursor:
+            async with db.execute("SELECT id, query, result, embedding, timestamp FROM memories WHERE id = ?", (memory_id,)) as cursor:
                 row = await cursor.fetchone()
                 return {
                     'id': row[0],
                     'query': row[1],
                     'result': row[2],
-                    'embedding': np.frombuffer(row[3], dtype=np.float32)
+                    'embedding': np.frombuffer(row[3], dtype=np.float32),
+                    'timestamp': row[4]
                 }
 
     async def get_all_memories(self) -> List[Dict]:
@@ -1246,12 +1105,6 @@ class MemoryManager:
             "total_links": total_links,
             "avg_links_per_memory": avg_links_per_memory
         }
-
-    async def analyze_link_distribution(self) -> Dict[str, int]:
-        async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT link_type, COUNT(*) FROM memory_links GROUP BY link_type") as cursor:
-                distribution = dict(await cursor.fetchall())
-        return distribution
     
     async def visualize_network(self):
         memories = await self.get_all_memories()
@@ -1269,37 +1122,36 @@ File: ./src/memory/__init__.py
 -e 
 File: ./src/utils/controller.py
 
-import logging
 from typing import List, Tuple
 from src.agents.agent import Agent
 from src.memory.memory_manager import MemoryManager
 from config import config
-from src.utils.logging_config import setup_logging
 from src.utils.structured_logging import get_logger
+from src.utils.error_handling import log_error_with_traceback
 import os
-
-from src.utils.structured_logging import get_logger
 
 class Controller:
     def __init__(self):
-        self.logger = get_logger(__name__)
+        self.logger = get_logger('master')
         self.memory_manager = None
         self.agent = None
 
     async def initialize(self):
         container_id = os.environ.get('HOSTNAME', 'local')
-        self.memory_manager = MemoryManager(config.GROQ_API_KEY)
+        self.memory_manager = MemoryManager(config.OPENAI_API_KEY)  # Use OpenAI API key for embeddings
         await self.memory_manager.initialize()
-        self.agent = Agent(self.memory_manager)
+        # self.agent = Agent(self.memory_manager, config.GROQ_API_KEY)  # Pass Groq API key to Agent
+        self.agent = Agent(self.memory_manager, config.TOGETHER_API_KEY)  #? Together version
 
     async def execute_query(self, query: str) -> str:
         try:
+            self.logger.info("Executing query", extra={"query": query})
             response = await self.agent.process_query(query)
-            self.logger.debug("Generated response", response=response)
+            self.logger.info("Query executed successfully", extra={"query": query})
             await self.memory_manager.save_memory(query, response)
             return response
         except Exception as e:
-            self.logger.error(f"Error executing query", query=query, error=str(e), exc_info=True)
+            log_error_with_traceback(self.logger, "Error executing query", e)
             return f"An error occurred while processing your query: {str(e)}"
 
     async def get_recent_memories(self, limit: int) -> List[Tuple[str, str]]:
@@ -1308,24 +1160,23 @@ File: ./src/utils/enhanced_logging.py
 
 from functools import wraps
 import time
-from src.utils.structured_logging import get_logger
-import asyncio
-
-performance_logger = get_logger("performance")
+import structlog
 
 def log_execution_time(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
+        logger = structlog.get_logger(func.__module__)
         start_time = time.time()
         result = await func(*args, **kwargs)
         execution_time = time.time() - start_time
-        performance_logger.info(f"{func.__name__} executed",
-                                execution_time=execution_time,
-                                function=func.__name__)
+        logger.info(f"{func.__name__} executed",
+                    execution_time=execution_time,
+                    function=func.__name__)
         return result
     return wrapper-e 
 File: ./src/utils/error_handling.py
 
+import traceback
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from src.utils.structured_logging import get_logger
@@ -1337,170 +1188,89 @@ async def global_exception_handler(request: Request, exc: Exception):
                        url=str(request.url),
                        method=request.method,
                        error=str(exc),
-                       exc_info=True)
+                       traceback=traceback.format_exc())
     return JSONResponse(
         status_code=500,
         content={"detail": f"An unexpected error occurred: {str(exc)}"}
-    )-e 
-File: ./src/utils/logging_config.py
+    )
 
-import logging
-import logging.config
-import os
-from datetime import datetime
-from aiologger import Logger
-from aiologger.handlers.files import AsyncFileHandler
-from aiologger.formatters.base import Formatter
-import asyncio
-
-async def setup_logging(container_id):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    docker_log_directory = f'/app/logs/{timestamp}_{container_id}'
-    local_log_directory = f'./logs/{timestamp}_{container_id}'
-    
-    os.makedirs(docker_log_directory, exist_ok=True)
-    os.makedirs(local_log_directory, exist_ok=True)
-
-    config = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'standard': {
-                'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            },
-        },
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-                'formatter': 'standard',
-                'level': 'DEBUG',
-            },
-            'docker_file': {
-                'class': 'logging.handlers.RotatingFileHandler',
-                'formatter': 'standard',
-                'level': 'DEBUG',
-                'filename': f'{docker_log_directory}/app.log',
-                'maxBytes': 10485760,  # 10MB
-                'backupCount': 5,
-            },
-            'local_file': {
-                'class': 'logging.handlers.RotatingFileHandler',
-                'formatter': 'standard',
-                'level': 'DEBUG',
-                'filename': f'{local_log_directory}/app.log',
-                'maxBytes': 10485760,  # 10MB
-                'backupCount': 5,
-            },
-        },
-        'loggers': {
-            '': {  # root logger
-                'handlers': ['console', 'docker_file', 'local_file'],
-                'level': 'DEBUG',
-                'propagate': True
-            },
-        }
-    }
-    
-    logging.config.dictConfig(config)
-    return await setup_async_logging(docker_log_directory, local_log_directory)
-
-async def setup_async_logging(docker_log_directory, local_log_directory):
-    formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-    docker_handler = AsyncFileHandler(filename=f'{docker_log_directory}/async_app.log')
-    docker_handler.formatter = formatter
-
-    local_handler = AsyncFileHandler(filename=f'{local_log_directory}/async_app.log')
-    local_handler.formatter = formatter
-
-    async_logger = Logger(name="async_logger")
-    async_logger.add_handler(docker_handler)  # Remove await
-    async_logger.add_handler(local_handler)   # Remove await
-
-    return async_logger-e 
+def log_error_with_traceback(logger, message, exc):
+    logger.error(f"{message}: {str(exc)}", 
+                 exc_info=True, 
+                 extra={"traceback": traceback.format_exc()})-e 
 File: ./src/utils/logging_setup.py
 
 import logging
 import os
-import socket
+import sys
 from datetime import datetime
+import structlog
+from structlog.stdlib import LoggerFactory
+from structlog.processors import JSONRenderer
 
 def setup_logging():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    container_id = socket.gethostname() if is_running_in_docker() else 'local'
+    container_id = os.environ.get('HOSTNAME', 'local')
     log_directory = f'logs/{timestamp}_{container_id}'
 
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
 
-    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # Define a custom processor to handle 'extra' fields
+    def add_extra_fields(logger, method_name, event_dict):
+        extra = event_dict.pop('extra', {})
+        event_dict.update(extra)
+        return event_dict
 
-    master_logger = logging.getLogger('master')
-    master_logger.setLevel(logging.DEBUG)
-    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
-    file_handler.setFormatter(log_formatter)
-    master_logger.addHandler(file_handler)
+    # Configure structlog
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            add_extra_fields,
+            structlog.processors.JSONRenderer()
+        ],
+        context_class=dict,
+        logger_factory=LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
 
-    console_handler = logging.StreamHandler()
+    # Set up root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    # File handler for all logs
+    all_file_handler = logging.FileHandler(os.path.join(log_directory, "all.log"))
+    all_file_handler.setFormatter(logging.Formatter('%(message)s'))
+    root_logger.addHandler(all_file_handler)
+
+    # Console handler for all logs
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(logging.Formatter('%(message)s'))
-    master_logger.addHandler(console_handler)
+    root_logger.addHandler(console_handler)
 
-    chat_logger = logging.getLogger('chat')
-    chat_logger.setLevel(logging.DEBUG)
-    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
-    chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
-    chat_logger.addHandler(chat_file_handler)
+    # Specific loggers
+    logger_names = ['master', 'chat', 'memory']
+    loggers = {}
+    for name in logger_names:
+        logger = structlog.get_logger(name)
+        file_handler = logging.FileHandler(os.path.join(log_directory, f"{name}.log"))
+        file_handler.setFormatter(logging.Formatter('%(message)s'))
+        logger.addHandler(file_handler)
+        loggers[name] = logger
 
-    memory_logger = logging.getLogger('memory')
-    memory_logger.setLevel(logging.DEBUG)
-    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
-    memory_file_handler.setFormatter(log_formatter)
-    memory_logger.addHandler(memory_file_handler)
+    logging.info(f"Logging setup complete. Log directory: {log_directory}")
+    return loggers
 
-    database_logger = logging.getLogger('database')
-    database_logger.setLevel(logging.DEBUG)
-    database_file_handler = logging.FileHandler(os.path.join(log_directory, 'database.log'))
-    database_file_handler.setFormatter(log_formatter)
-    database_logger.addHandler(database_file_handler)
-
-    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
-    return master_logger, chat_logger, memory_logger, database_logger
-
-def is_running_in_docker() -> bool:
-    return os.path.exists('/.dockerenv')-e 
-File: ./src/utils/log_sync.py
-
-import os
-import shutil
-import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-
-class LogSyncHandler(FileSystemEventHandler):
-    def __init__(self, src_path, dest_path):
-        self.src_path = src_path
-        self.dest_path = dest_path
-
-    def on_modified(self, event):
-        if not event.is_directory:
-            src_file = event.src_path
-            dest_file = os.path.join(self.dest_path, os.path.basename(src_file))
-            shutil.copy2(src_file, dest_file)
-
-def start_log_sync(src_path, dest_path):
-    event_handler = LogSyncHandler(src_path, dest_path)
-    observer = Observer()
-    observer.schedule(event_handler, src_path, recursive=True)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
-
-if __name__ == "__main__":
-    start_log_sync("/app/logs", "/app/local_logs")-e 
+def get_logger(name):
+    return structlog.get_logger(name)-e 
 File: ./src/utils/structured_logging.py
 
 import structlog
@@ -1519,7 +1289,7 @@ def setup_structured_logging():
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
-
+    
 def get_logger(name):
     return structlog.get_logger(name)-e 
 File: ./src/utils/tracing.py

@@ -1,4 +1,3 @@
-import logging
 import aiosqlite # type: ignore
 from typing import List, Tuple, Union, Dict, Optional
 from langchain_openai import OpenAIEmbeddings
@@ -13,17 +12,12 @@ from datetime import datetime
 import time
 from scipy.spatial.distance import cosine
 from src.utils.structured_logging import get_logger
-from src.utils.logging_config import setup_logging
-import asyncio
-
-from src.utils.structured_logging import get_logger
-from src.utils.enhanced_logging import log_execution_time
-
-logger = get_logger('memory')
+from src.utils.error_handling import log_error_with_traceback
+import json
 
 class MemoryManager:
     def __init__(self, openai_api_key: str):
-        self.logger = get_logger(__name__)
+        self.logger = get_logger('memory')
         self.config = Config()
         self.personal_db_path = self.get_personal_db_path()
         self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
@@ -31,10 +25,8 @@ class MemoryManager:
         self.tfidf_vectorizer: Optional[TfidfVectorizer] = None
         self.bm25: Optional[BM25Okapi] = None
         self.corpus: List[str] = []
-        # Remove this line: self.async_logger = None
 
     async def initialize(self):
-        # Remove this line: self.async_logger = await setup_logging(self.container_id)
         os.makedirs("/app/data", exist_ok=True)
         await self.create_tables(self.personal_db_path)
         await self._load_corpus()
@@ -72,7 +64,7 @@ class MemoryManager:
                 )
             """)
             await db.commit()
-        logger.debug(f"Ensured memories and memory_links tables exist in {db_path}")
+        self.logger.debug(f"Ensured memories and memory_links tables exist in {db_path}")
 
     @log_execution_time
     async def create_memory_link(self, source_id: int, target_id: int, link_type: str):
@@ -124,7 +116,7 @@ class MemoryManager:
             
             self.logger.info("Memory saved", extra={"query": query, "memory_id": memory_id})
         except Exception as e:
-            self.logger.error("Error saving memory", extra={"query": query, "error": str(e)})
+            log_error_with_traceback(self.logger, "Error retrieving relevant memories", e)
             raise
 
     async def _load_corpus(self):
@@ -133,7 +125,7 @@ class MemoryManager:
             async with db.execute("SELECT query, result FROM memories") as cursor:
                 memories = await cursor.fetchall()
         self.corpus = [f"{query} {result}" for query, result in memories]
-        logger.info(f"Loaded corpus with {len(self.corpus)} entries in {time.time() - start_time:.2f} seconds")
+        self.logger.info(f"Loaded corpus with {len(self.corpus)} entries in {time.time() - start_time:.2f} seconds")
     
     @log_execution_time
     async def _update_indexing(self):
@@ -153,37 +145,45 @@ class MemoryManager:
         query_embedding = await self.embeddings.aembed_query(query)
         
         async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT id, query, result, embedding FROM memories") as cursor:
+            async with db.execute("SELECT id, query, result, embedding, timestamp FROM memories") as cursor:
                 all_memories = await cursor.fetchall()
         
         relevant_memories = self._calculate_cosine_similarity(all_memories, query_embedding, threshold)
         
-        # Retrieve linked memories
-        linked_memories = set()
+        structured_memories = {}
         for memory in relevant_memories:
-            memory_id = memory[0]  # Assuming the first element is the memory_id
-            linked = await self.get_linked_memories(int(memory_id))
-            linked_memories.update(linked)
+            memory_id, query, result, similarity, timestamp = memory
+            linked_memories = await self.get_linked_memories(int(memory_id))
+            structured_memories[str(memory_id)] = {
+                "Time": timestamp.isoformat() if isinstance(timestamp, datetime) else timestamp,
+                "Query": query,
+                "Response": result,
+                "Similarity": similarity,
+                "linked_UIDs": [str(linked_id) for linked_id, _ in linked_memories]
+            }
         
         # Fetch details of linked memories
-        for linked_id, link_type in linked_memories:
-            memory = await self.get_memory(linked_id)
-            relevant_memories.append((str(memory['id']), memory['query'], memory['result'], 1.0, f"Linked ({link_type})"))
+        for memory_id, memory_data in structured_memories.items():
+            for linked_id in memory_data["linked_UIDs"]:
+                if linked_id not in structured_memories:
+                    linked_memory = await self.get_memory(int(linked_id))
+                    structured_memories[linked_id] = {
+                        "Time": linked_memory['timestamp'].isoformat() if isinstance(linked_memory['timestamp'], datetime) else linked_memory['timestamp'],
+                        "Query": linked_memory['query'],
+                        "Response": linked_memory['result'],
+                        "Similarity": 1.0,  # Linked memories are considered fully relevant
+                        "linked_UIDs": []  # We don't fetch nested links to avoid potential infinite recursion
+                    }
         
-        # Sort memories by similarity
-        relevant_memories.sort(key=lambda x: x[3], reverse=True)
+        self.logger.info("Retrieved relevant memories", 
+                         extra={
+                             "query": query, 
+                             "total_memories": len(structured_memories),
+                             "linked_memories": sum(len(m["linked_UIDs"]) for m in structured_memories.values())
+                         })
         
-        # Format the output
-        formatted_output = []
-        for memory in relevant_memories:
-            if len(memory) == 5:
-                memory_id, query, result, similarity, link_info = memory
-                formatted_output.append(f"<{memory_id}>, <{query}>, <{result}>, <{similarity:.2f}>, <{link_info}>")
-            else:
-                memory_id, query, result, similarity = memory
-                formatted_output.append(f"<{memory_id}>, <{query}>, <{result}>, <{similarity:.2f}>")
-        
-        return " ".join(formatted_output)
+        return json.dumps({"Relevant Injected Content": structured_memories}, indent=2)
+
 
     def _calculate_l2_norm(self, memories: List[Tuple], query_embedding: np.ndarray, threshold: float) -> List[Tuple[str, str, str, float, str]]:
         return [
@@ -192,33 +192,37 @@ class MemoryManager:
             if np.linalg.norm(query_embedding - np.frombuffer(memory[3])) <= threshold
         ]
 
-    def _calculate_cosine_similarity(self, memories: List[Tuple], query_embedding: Union[List[float], np.ndarray], threshold: float) -> List[Tuple[str, str, str, float, str]]:
-        results = []
+    def _calculate_cosine_similarity(self, memories: List[Tuple], query_embedding: Union[List[float], np.ndarray], threshold: float) -> List[Tuple[int, str, str, float, datetime]]:
+        try:
+            results = []
         
-        # Ensure query_embedding is a numpy array
-        if isinstance(query_embedding, list):
-            query_embedding = np.array(query_embedding, dtype=np.float32)
-        
-        for memory in memories:
-            memory_id, query, result, embedding_bytes = memory
-            memory_embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
+            # Ensure query_embedding is a numpy array
+            if isinstance(query_embedding, list):
+                query_embedding = np.array(query_embedding, dtype=np.float32)
             
-            # Reshape memory_embedding if necessary
-            if memory_embedding.shape != query_embedding.shape:
-                logger.warning(f"Reshaping embedding for memory {memory_id}: {memory_embedding.shape} to {query_embedding.shape}")
-                try:
-                    memory_embedding = memory_embedding.reshape(query_embedding.shape)
-                except ValueError:
-                    logger.error(f"Cannot reshape embedding for memory {memory_id}. Skipping.")
-                    continue
-            
-            # Compute cosine similarity
-            similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
-            
-            if similarity >= threshold:
-                results.append((str(memory_id), query, result, float(similarity), ""))
-        
-        return results
+            for memory in memories:
+                memory_id, query, result, embedding_bytes, timestamp = memory
+                memory_embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
+                
+                # Reshape memory_embedding if necessary
+                if memory_embedding.shape != query_embedding.shape:
+                    self.logger.warning(f"Reshaping embedding for memory {memory_id}: {memory_embedding.shape} to {query_embedding.shape}")
+                    try:
+                        memory_embedding = memory_embedding.reshape(query_embedding.shape)
+                    except ValueError as v:
+                        log_error_with_traceback(self.logger, "Cannot reshape embedding for memory {memory_id}. Skipping.", v)
+                        continue
+                
+                # Compute cosine similarity
+                similarity = np.dot(query_embedding, memory_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(memory_embedding))
+                
+                if similarity >= threshold:
+                    results.append((memory_id, query, result, float(similarity), timestamp))
+ 
+            return results
+        except Exception as e:
+            log_error_with_traceback(self.logger, "Error calculating cosine similarity", e)
+            raise
 
     def _calculate_bm25(self, memories: List[Tuple], query: str, threshold: float) -> List[Tuple[str, str, str, float, str]]:
         tokenized_query = query.split()
@@ -269,7 +273,7 @@ class MemoryManager:
                 SELECT query, result FROM memories ORDER BY timestamp DESC LIMIT ?
             """, (limit,)) as cursor:
                 memories = await cursor.fetchall()
-        logger.debug(f"Retrieved {len(memories)} memories")
+        self.logger.debug(f"Retrieved {len(memories)} memories")
         return memories
 
     async def get_all_memories(self) -> List[Dict]:
@@ -290,7 +294,7 @@ class MemoryManager:
                     INSERT INTO memories (query, result, embedding) VALUES (?, ?, ?)
                 """, (query, result, embedding))
                 await db.commit()
-            logger.info(f"Added missing memory to personal DB: {query}")
+            self.logger.info(f"Added missing memory to personal DB: {query}")
 
     async def analyze_memory_distribution(self) -> Dict[str, int]:
         """
@@ -342,7 +346,7 @@ class MemoryManager:
                 "distribution": distribution
             }
         except Exception as e:
-            logger.error(f"Error getting memory stats: {str(e)}", exc_info=True)
+            log_error_with_traceback(self.logger, "Error getting memory stats: {str(e)}", e)
             raise
         
     @log_execution_time
@@ -363,13 +367,14 @@ class MemoryManager:
 
     async def get_memory(self, memory_id: int) -> Dict:
         async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT id, query, result, embedding FROM memories WHERE id = ?", (memory_id,)) as cursor:
+            async with db.execute("SELECT id, query, result, embedding, timestamp FROM memories WHERE id = ?", (memory_id,)) as cursor:
                 row = await cursor.fetchone()
                 return {
                     'id': row[0],
                     'query': row[1],
                     'result': row[2],
-                    'embedding': np.frombuffer(row[3], dtype=np.float32)
+                    'embedding': np.frombuffer(row[3], dtype=np.float32),
+                    'timestamp': row[4]
                 }
 
     async def get_all_memories(self) -> List[Dict]:
@@ -405,12 +410,6 @@ class MemoryManager:
             "total_links": total_links,
             "avg_links_per_memory": avg_links_per_memory
         }
-
-    async def analyze_link_distribution(self) -> Dict[str, int]:
-        async with aiosqlite.connect(self.personal_db_path) as db:
-            async with db.execute("SELECT link_type, COUNT(*) FROM memory_links GROUP BY link_type") as cursor:
-                distribution = dict(await cursor.fetchall())
-        return distribution
     
     async def visualize_network(self):
         memories = await self.get_all_memories()

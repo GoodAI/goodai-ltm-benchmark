@@ -14,6 +14,6 @@ def setup_structured_logging():
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
-
+    
 def get_logger(name):
     return structlog.get_logger(name)

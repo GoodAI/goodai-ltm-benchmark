@@ -1,48 +1,71 @@
 import logging
 import os
-import socket
+import sys
 from datetime import datetime
+import structlog
+from structlog.stdlib import LoggerFactory
+from structlog.processors import JSONRenderer
 
 def setup_logging():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    container_id = socket.gethostname() if is_running_in_docker() else 'local'
+    container_id = os.environ.get('HOSTNAME', 'local')
     log_directory = f'logs/{timestamp}_{container_id}'
 
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
 
-    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # Define a custom processor to handle 'extra' fields
+    def add_extra_fields(logger, method_name, event_dict):
+        extra = event_dict.pop('extra', {})
+        event_dict.update(extra)
+        return event_dict
 
-    master_logger = logging.getLogger('master')
-    master_logger.setLevel(logging.DEBUG)
-    file_handler = logging.FileHandler(os.path.join(log_directory, "master.log"))
-    file_handler.setFormatter(log_formatter)
-    master_logger.addHandler(file_handler)
+    # Configure structlog
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            add_extra_fields,
+            structlog.processors.JSONRenderer()
+        ],
+        context_class=dict,
+        logger_factory=LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
 
-    console_handler = logging.StreamHandler()
+    # Set up root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    # File handler for all logs
+    all_file_handler = logging.FileHandler(os.path.join(log_directory, "all.log"))
+    all_file_handler.setFormatter(logging.Formatter('%(message)s'))
+    root_logger.addHandler(all_file_handler)
+
+    # Console handler for all logs
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(logging.Formatter('%(message)s'))
-    master_logger.addHandler(console_handler)
+    root_logger.addHandler(console_handler)
 
-    chat_logger = logging.getLogger('chat')
-    chat_logger.setLevel(logging.DEBUG)
-    chat_file_handler = logging.FileHandler(os.path.join(log_directory, 'chat.log'))
-    chat_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
-    chat_logger.addHandler(chat_file_handler)
+    # Specific loggers
+    logger_names = ['master', 'chat', 'memory']
+    loggers = {}
+    for name in logger_names:
+        logger = structlog.get_logger(name)
+        file_handler = logging.FileHandler(os.path.join(log_directory, f"{name}.log"))
+        file_handler.setFormatter(logging.Formatter('%(message)s'))
+        logger.addHandler(file_handler)
+        loggers[name] = logger
 
-    memory_logger = logging.getLogger('memory')
-    memory_logger.setLevel(logging.DEBUG)
-    memory_file_handler = logging.FileHandler(os.path.join(log_directory, 'memory.log'))
-    memory_file_handler.setFormatter(log_formatter)
-    memory_logger.addHandler(memory_file_handler)
+    logging.info(f"Logging setup complete. Log directory: {log_directory}")
+    return loggers
 
-    database_logger = logging.getLogger('database')
-    database_logger.setLevel(logging.DEBUG)
-    database_file_handler = logging.FileHandler(os.path.join(log_directory, 'database.log'))
-    database_file_handler.setFormatter(log_formatter)
-    database_logger.addHandler(database_file_handler)
-
-    master_logger.info(f"Logging setup complete. Log directory: {log_directory}")
-    return master_logger, chat_logger, memory_logger, database_logger
-
-def is_running_in_docker() -> bool:
-    return os.path.exists('/.dockerenv')
+def get_logger(name):
+    return structlog.get_logger(name)

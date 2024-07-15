@@ -6,7 +6,8 @@ class Config:
         load_dotenv()
         
         # General settings
-        self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192")
+        # self.MODEL_NAME = os.getenv("MODEL_NAME", "llama3-70b-8192") #! groq
+        self.MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3-70b-chat-hf") #? Together AI
         
         # Database settings
         self.personal_db_path = self._get_personal_db_path()
@@ -15,6 +16,7 @@ class Config:
         self.OPENAI_API_KEY = os.getenv("GOODAI_OPENAI_API_KEY_LTM01")
         self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
         self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+        self.TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY')
         
         # Other settings
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
