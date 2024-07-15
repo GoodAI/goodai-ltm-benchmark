@@ -4,7 +4,6 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Optional
 
-import litellm
 from goodai.helpers.json_helper import sanitize_and_parse_json
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.config import TextMemoryConfig
