@@ -1,0 +1,458 @@
+.
+├── app
+│   ├── __init__.py
+│   ├── agent.py
+│   ├── api.py
+│   ├── config.py
+│   ├── db
+│   │   ├── __init__.py
+│   │   └── memory_manager.py
+│   └── utils
+│       ├── __init__.py
+│       └── logging.py
+├── data
+├── logs
+├── project_structure.txt
+├── requirements.txt
+├── run.py
+├── tests
+│   ├── __init__.py
+│   ├── test_agent.py
+│   └── test_memory_manager.py
+└── tree.sh
+
+6 directories, 15 files
+
+Note: The following list of files and directories are excluded only from the appended file contents section:
+
+__pycache__, .git, .env, MLP_venv, *.db
+
+File Contents:
+
+-e 
+File: ./app/agent.py
+
+from together import Together
+from app.db.memory_manager import MemoryManager
+from app.config import config
+
+class Agent:
+    def __init__(self, api_key: str, memory_manager: MemoryManager):
+        self.together_client = Together(api_key=api_key)
+        self.memory_manager = memory_manager
+
+    async def process_query(self, query: str) -> str:
+        relevant_memories = await self._retrieve_relevant_memories(query)
+        response = await self._generate_response(query, relevant_memories)
+        await self._update_memory(query, response)
+        return response
+
+    async def _retrieve_relevant_memories(self, query: str) -> list:
+        relevant_memories = await self.memory_manager.get_relevant_memories(query, top_k=5)
+        return [memory[0] for memory in relevant_memories]  # Return only the content
+
+    async def _generate_response(self, query: str, relevant_memories: list) -> str:
+        prompt = self._construct_prompt(query, relevant_memories)
+        response = self.together_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=config.MODEL_NAME,
+        )
+        return response.choices[0].message.content
+
+    async def _update_memory(self, query: str, response: str):
+        await self.memory_manager.add_memory(f"Query: {query}\nResponse: {response}")
+
+    def _construct_prompt(self, query: str, relevant_memories: list) -> str:
+        memory_context = "\n".join([f"- {memory}" for memory in relevant_memories])
+        return f"""Given the following context and query, provide a relevant and informative response:
+
+Context:
+{memory_context}
+
+Query: {query}
+
+Response:"""-e 
+File: ./app/api.py
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from app.agent import Agent
+from app.db.memory_manager import MemoryManager
+from app.config import config
+from app.utils.logging import get_logger
+
+app = FastAPI()
+logger = get_logger(__name__)
+
+class Query(BaseModel):
+    text: str
+
+agent = Agent(config.TOGETHER_API_KEY, MemoryManager(config.DATABASE_URL))
+
+@app.post("/query")
+async def query_endpoint(query: Query):
+    try:
+        logger.info(f"Received query: {query.text}")
+        response = await agent.process_query(query.text)
+        logger.info(f"Query processed successfully")
+        return {"response": response}
+    except Exception as e:
+        logger.error(f"Error processing query: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+-e 
+File: ./app/config.py
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/memories.db")
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+    MODEL_NAME = "meta-llama/Llama-3-70b-chat-hf"
+
+config = Config()
+-e 
+File: ./app/db/memory_manager.py
+
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Table
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.sql import func
+from app.config import config
+import numpy as np
+
+Base = declarative_base()
+
+memory_links = Table('memory_links', Base.metadata,
+    Column('id', Integer, primary_key=True),
+    Column('source_id', Integer, ForeignKey('memories.id')),
+    Column('target_id', Integer, ForeignKey('memories.id'))
+)
+
+class Memory(Base):
+    __tablename__ = 'memories'
+
+    id = Column(Integer, primary_key=True)
+    content = Column(String)
+    embedding = Column(String)  # Store as comma-separated string
+    timestamp = Column(Float, server_default=func.now())
+
+    links = relationship('Memory', secondary=memory_links,
+                         primaryjoin=id==memory_links.c.source_id,
+                         secondaryjoin=id==memory_links.c.target_id)
+
+class MemoryManager:
+    def __init__(self, db_url: str):
+        self.engine = create_engine(db_url)
+        Base.metadata.create_all(self.engine)
+        self.Session = sessionmaker(bind=self.engine)
+        self.together_client = Together(api_key=config.TOGETHER_API_KEY)
+
+    async def add_memory(self, content: str):
+        embedding = self._get_embedding(content)
+        session = self.Session()
+        new_memory = Memory(content=content, embedding=','.join(map(str, embedding)))
+        session.add(new_memory)
+        session.commit()
+        await self._update_links(new_memory)
+        session.close()
+
+    async def get_relevant_memories(self, query: str, top_k: int = 5):
+        query_embedding = self._get_embedding(query)
+        session = self.Session()
+        memories = session.query(Memory).all()
+        similarities = [self._cosine_similarity(query_embedding, np.fromstring(m.embedding, sep=',')) for m in memories]
+        sorted_memories = sorted(zip(memories, similarities), key=lambda x: x[1], reverse=True)[:top_k]
+        session.close()
+        return [(m.content, sim) for m, sim in sorted_memories]
+
+    async def _update_links(self, new_memory: Memory):
+        session = self.Session()
+        all_memories = session.query(Memory).all()
+        for memory in all_memories:
+            if memory.id != new_memory.id:
+                similarity = self._cosine_similarity(
+                    np.fromstring(new_memory.embedding, sep=','),
+                    np.fromstring(memory.embedding, sep=',')
+                )
+                if similarity > 0.8:  # Threshold for linking
+                    new_memory.links.append(memory)
+        session.commit()
+        session.close()
+
+    def _get_embedding(self, text: str) -> list:
+        response = self.together_client.embeddings.create(
+            input=[text],
+            model="togethercomputer/m2-bert-80M-8k-retrieval"
+        )
+        return response.data[0].embedding
+
+    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+-e 
+File: ./app/db/__init__.py
+
+-e 
+File: ./app/utils/logging.py
+
+import logging
+from app.config import config
+
+def setup_logging():
+    logging.basicConfig(
+        level=config.LOG_LEVEL,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler("logs/app.log"),
+            logging.StreamHandler()
+        ]
+    )
+
+def get_logger(name: str):
+    return logging.getLogger(name)
+-e 
+File: ./app/utils/__init__.py
+
+-e 
+File: ./app/__init__.py
+
+-e 
+File: ./requirements.txt
+
+aiohttp==3.9.5
+aiologger==0.7.0
+aiosignal==1.3.1
+aiosqlite==0.20.0
+annotated-types==0.7.0
+anyio==4.4.0
+asgiref==3.8.1
+async-timeout==4.0.3
+attrs==23.2.0
+blinker==1.4
+certifi==2024.6.2
+chardet==4.0.0
+charset-normalizer==3.3.2
+click==8.1.7
+command-not-found==0.3
+cryptography==3.4.8
+dbus-python==1.2.18
+Deprecated==1.2.14
+distro==1.7.0
+distro-info==1.1+ubuntu0.2
+dnspython==2.6.1
+docker==5.0.3
+docker-compose==1.29.2
+dockerpty==0.4.1
+docopt==0.6.2
+email_validator==2.2.0
+eval_type_backport==0.2.0
+exceptiongroup==1.2.1
+faiss-cpu==1.8.0
+fastapi==0.111.1
+fastapi-cli==0.0.4
+filelock==3.15.4
+frozenlist==1.4.1
+greenlet==3.0.3
+grpcio==1.64.1
+grpcio-tools==1.64.1
+h11==0.14.0
+h2==4.1.0
+hpack==4.0.0
+httpcore==1.0.5
+httplib2==0.20.2
+httptools==0.6.1
+httpx==0.27.0
+hyperframe==6.0.1
+idna==3.7
+importlib-metadata==6.11.0
+iniconfig==2.0.0
+jeepney==0.7.1
+Jinja2==3.1.4
+jsonpatch==1.33
+jsonpointer==3.0.0
+jsonschema==3.2.0
+keyring==23.5.0
+langchain==0.2.3
+langchain-core==0.2.5
+langchain-text-splitters==0.2.1
+langsmith==0.1.77
+launchpadlib==1.10.16
+lazr.restfulclient==0.14.4
+lazr.uri==1.0.6
+markdown-it-py==3.0.0
+MarkupSafe==2.1.5
+mdurl==0.1.2
+more-itertools==8.10.0
+multidict==6.0.5
+netifaces==0.11.0
+numpy==1.26.4
+oauthlib==3.2.0
+openai==1.34.0
+opentelemetry-api==1.22.0
+opentelemetry-instrumentation==0.43b0
+opentelemetry-instrumentation-asgi==0.43b0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-sdk==1.22.0
+opentelemetry-semantic-conventions==0.43b0
+opentelemetry-util-http==0.43b0
+orjson==3.10.4
+packaging==23.2
+pillow==10.4.0
+pluggy==1.5.0
+portalocker==2.8.2
+protobuf==5.27.1
+pyarrow==16.1.0
+pydantic==2.7.4
+pydantic_core==2.18.4
+Pygments==2.18.0
+PyGObject==3.42.1
+PyJWT==2.3.0
+PyMuPDF==1.24.5
+PyMuPDFb==1.24.3
+pyparsing==2.4.7
+pyrsistent==0.18.1
+pytest==8.2.2
+python-apt==2.4.0+ubuntu3
+python-dotenv==0.19.2
+python-multipart==0.0.9
+PyYAML==5.4.1
+qdrant-client==1.9.1
+regex==2024.5.15
+requests==2.32.3
+rich==13.7.1
+SecretStorage==3.3.1
+shellingham==1.5.4
+six==1.16.0
+sniffio==1.3.1
+SQLAlchemy==2.0.30
+starlette==0.37.2
+structlog==24.1.0
+systemd-python==234
+tabulate==0.9.0
+tenacity==8.3.0
+texttable==1.6.4
+tiktoken==0.7.0
+together==1.2.1
+tomli==2.0.1
+tqdm==4.66.4
+typer==0.12.3
+typing_extensions==4.12.2
+ubuntu-pro-client==8001
+ufw==0.36.1
+unattended-upgrades==0.1
+urllib3==2.2.1
+uvicorn==0.30.1
+uvloop==0.19.0
+wadllib==1.3.6
+watchfiles==0.22.0
+websocket-client==1.2.3
+websockets==12.0
+wrapt==1.16.0
+yarl==1.9.4
+zipp==1.0.0
+-e 
+File: ./run.py
+
+import uvicorn
+from app.utils.logging import setup_logging
+
+if __name__ == "__main__":
+    setup_logging()
+    uvicorn.run("app.api:app", host="0.0.0.0", port=8000, reload=True)
+-e 
+File: ./tests/test_agent.py
+
+import pytest
+from unittest.mock import AsyncMock, patch
+from app.agent import Agent
+from app.db.memory_manager import MemoryManager
+
+@pytest.fixture
+def agent():
+    memory_manager = AsyncMock(spec=MemoryManager)
+    memory_manager.get_relevant_memories.return_value = [
+        ("Memory 1 content", 0.9),
+        ("Memory 2 content", 0.8)
+    ]
+    return Agent("fake_api_key", memory_manager)
+
+@pytest.mark.asyncio
+async def test_process_query(agent):
+    with patch.object(agent.together_client.chat.completions, 'create', new_callable=AsyncMock) as mock_create:
+        mock_create.return_value.choices[0].message.content = "Mocked response"
+        
+        response = await agent.process_query("What is the capital of France?")
+        
+        assert response == "Mocked response"
+        agent.memory_manager.get_relevant_memories.assert_called_once()
+        agent.memory_manager.add_memory.assert_called_once()
+        mock_create.assert_called_once()-e 
+File: ./tests/test_memory_manager.py
+
+import pytest
+from app.db.memory_manager import MemoryManager
+
+@pytest.fixture
+def memory_manager():
+    return MemoryManager("sqlite:///:memory:")
+
+@pytest.mark.asyncio
+async def test_add_and_retrieve_memory(memory_manager):
+    await memory_manager.add_memory("Test memory content")
+    memories = await memory_manager.get_relevant_memories("Test", top_k=1)
+    assert len(memories) == 1
+    assert memories[0][0] == "Test memory content"
+
+@pytest.mark.asyncio
+async def test_memory_linking(memory_manager):
+    await memory_manager.add_memory("The capital of France is Paris.")
+    await memory_manager.add_memory("Paris is known for the Eiffel Tower.")
+    
+    memories = await memory_manager.get_relevant_memories("What is the capital of France?", top_k=2)
+    assert len(memories) == 2
+    assert any("capital of France" in memory[0] for memory in memories)
+    assert any("Eiffel Tower" in memory[0] for memory in memories)
+-e 
+File: ./tests/__init__.py
+
+-e 
+File: ./tree.sh
+
+#!/bin/bash
+
+# File where the tree structure will be stored
+OUTPUT_FILE="project_structure.txt"
+
+# Clear the previous contents of the output file
+> "$OUTPUT_FILE"
+
+# Generate tree structure and append to the output file
+tree -I 'MLP_venv|__pycache__|*.db' >> "$OUTPUT_FILE"
+
+# Add a note about the exclusions for appended file contents
+echo -e "\nNote: The following list of files and directories are excluded only from the appended file contents section:\n" >> "$OUTPUT_FILE"
+echo -e "__pycache__, .git, .env, MLP_venv, *.db\n" >> "$OUTPUT_FILE"
+
+# Append file contents, excluding specified files and directories
+echo -e "File Contents:\n" >> "$OUTPUT_FILE"
+find . \( -name 'project_structure.txt' -o -name '*.db' -o -name '.env' -o -path '*/__pycache__/*' -o -path '*/.git/*' -o -path '*/MLP_venv/*' \) -prune -o -type f -print0 | xargs -0 -I {} sh -c 'echo -e "\nFile: {}\n"; cat "{}"' >> "$OUTPUT_FILE"
+
+# Copy the output file contents to the clipboard
+if command -v xclip &> /dev/null; then
+    # Use xclip for Linux
+    xclip -selection clipboard < "$OUTPUT_FILE"
+elif command -v pbcopy &> /dev/null; then
+    # Use pbcopy for macOS
+    pbcopy < "$OUTPUT_FILE"
+else
+    echo "Clipboard copy command not found. Please install xclip (Linux) or pbcopy (macOS) to enable this feature."
+fi
+
+echo "Project structure and file contents have been written to $OUTPUT_FILE and copied to the clipboard."
