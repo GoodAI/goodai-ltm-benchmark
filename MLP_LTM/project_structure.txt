@@ -1,4 +1,29 @@
 .
+├── _Deprecated
+│   ├── 20240715_182052
+│   │   └── app.log
+│   ├── 20240715_182345
+│   │   └── app.log
+│   ├── 20240716_085901
+│   │   └── app.log
+│   ├── 20240716_125937
+│   │   └── app.log
+│   ├── 20240716_130100
+│   │   └── app.log
+│   ├── 20240716_131919
+│   │   └── app.log
+│   ├── 20240716_132037
+│   │   └── app.log
+│   ├── 20240716_132209
+│   │   └── app.log
+│   ├── 20240716_132349
+│   │   └── app.log
+│   ├── 20240716_133054
+│   │   └── app.log
+│   ├── 20240716_134159
+│   │   └── app.log
+│   ├── app_20240715_180946.log
+│   └── fresh_run.py
 ├── app
 │   ├── __init__.py
 │   ├── agent.py
@@ -12,6 +37,7 @@
 │       └── logging.py
 ├── data
 ├── logs
+│   └── app.log
 ├── project_structure.txt
 ├── requirements.txt
 ├── run.py
@@ -21,7 +47,7 @@
 │   └── test_memory_manager.py
 └── tree.sh
 
-6 directories, 15 files
+18 directories, 29 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -84,18 +110,24 @@ from app.utils.logging import get_logger
 app = FastAPI()
 logger = get_logger(__name__)
 
-class Query(BaseModel):
-    text: str
+class QueryRequest(BaseModel):
+    query: str
+
+class QueryResponse(BaseModel):
+    response: str
+
+# class Query(BaseModel):
+#     text: str
 
 agent = Agent(config.TOGETHER_API_KEY, MemoryManager(config.DATABASE_URL))
 
-@app.post("/query")
-async def query_endpoint(query: Query):
+@app.post("/query", response_model=QueryResponse)
+async def query_endpoint(request: QueryRequest):
     try:
-        logger.info(f"Received query: {query.text}")
-        response = await agent.process_query(query.text)
-        logger.info(f"Query processed successfully")
-        return {"response": response}
+        logger.info(f"Received query: {request.query}")
+        response = await agent.process_query(request.query)
+        logger.info(f"Query processed successfully with response: {response}")
+        return QueryResponse(response=response)
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
@@ -113,7 +145,8 @@ load_dotenv()
 
 class Config:
     TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/memories.db")
+    DATABASE_URL = 'sqlite:///./data/memories.db'
+    LOG_FILE = './logs/app.log'
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     MODEL_NAME = "meta-llama/Llama-3-70b-chat-hf"
 
@@ -121,12 +154,13 @@ config = Config()
 -e 
 File: ./app/db/memory_manager.py
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Table, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
 from app.config import config
 import numpy as np
+from together import Together
 
 Base = declarative_base()
 
@@ -174,18 +208,26 @@ class MemoryManager:
         return [(m.content, sim) for m, sim in sorted_memories]
 
     async def _update_links(self, new_memory: Memory):
-        session = self.Session()
-        all_memories = session.query(Memory).all()
-        for memory in all_memories:
-            if memory.id != new_memory.id:
-                similarity = self._cosine_similarity(
-                    np.fromstring(new_memory.embedding, sep=','),
-                    np.fromstring(memory.embedding, sep=',')
-                )
-                if similarity > 0.8:  # Threshold for linking
-                    new_memory.links.append(memory)
-        session.commit()
-        session.close()
+        async with self.async_session() as session:
+            async with session.begin():
+                # Refresh the new_memory object within this session
+                await session.refresh(new_memory)
+                
+                all_memories = await session.execute(select(Memory))
+                all_memories = all_memories.scalars().all()
+                
+                for memory in all_memories:
+                    if memory.id != new_memory.id:
+                        similarity = self._cosine_similarity(
+                            np.fromstring(new_memory.embedding, sep=','),
+                            np.fromstring(memory.embedding, sep=',')
+                        )
+                        if similarity > 0.8:  # Threshold for linking
+                            # Use merge instead of append
+                            merged_memory = await session.merge(memory)
+                            new_memory.links.append(merged_memory)
+                
+                await session.commit()
 
     def _get_embedding(self, text: str) -> list:
         response = self.together_client.embeddings.create(
@@ -203,169 +245,176 @@ File: ./app/db/__init__.py
 File: ./app/utils/logging.py
 
 import logging
+from logging.handlers import RotatingFileHandler
 from app.config import config
+import os
 
 def setup_logging():
-    logging.basicConfig(
-        level=config.LOG_LEVEL,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler("logs/app.log"),
-            logging.StreamHandler()
-        ]
+    # Ensure the logs directory exists
+    os.makedirs("logs", exist_ok=True)
+
+    # Create a logger
+    logger = logging.getLogger()
+    logger.setLevel(config.LOG_LEVEL)
+
+    # Create handlers
+    file_handler = RotatingFileHandler(
+        "logs/app.log", 
+        maxBytes=10*1024*1024,  # 10MB
+        backupCount=5
     )
+    console_handler = logging.StreamHandler()
+
+    # Create formatters and add it to handlers
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    file_formatter = logging.Formatter(log_format)
+    console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+    console_handler.setFormatter(console_formatter)
+
+    # Add handlers to the logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
 
 def get_logger(name: str):
-    return logging.getLogger(name)
--e 
+    return logging.getLogger(name)-e 
 File: ./app/utils/__init__.py
 
 -e 
 File: ./app/__init__.py
 
 -e 
+File: ./logs/app.log
+
+2024-07-16 13:41:59,675 - __main__ - INFO - Starting the application.
+2024-07-16 13:42:14,025 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/api.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__')}
+2024-07-16 13:42:27,903 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:42:41,841 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:42:55,517 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:43:08,892 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:43:22,167 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:43:36,345 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:43:50,322 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:44:04,200 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:44:18,126 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:44:32,203 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:44:45,628 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:44:59,505 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:45:13,483 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:45:27,460 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:45:41,336 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+-e 
 File: ./requirements.txt
 
 aiohttp==3.9.5
-aiologger==0.7.0
 aiosignal==1.3.1
-aiosqlite==0.20.0
 annotated-types==0.7.0
 anyio==4.4.0
-asgiref==3.8.1
-async-timeout==4.0.3
+asyncio==3.4.3
 attrs==23.2.0
-blinker==1.4
-certifi==2024.6.2
-chardet==4.0.0
+certifi==2024.7.4
 charset-normalizer==3.3.2
 click==8.1.7
-command-not-found==0.3
-cryptography==3.4.8
-dbus-python==1.2.18
-Deprecated==1.2.14
-distro==1.7.0
-distro-info==1.1+ubuntu0.2
 dnspython==2.6.1
-docker==5.0.3
-docker-compose==1.29.2
-dockerpty==0.4.1
-docopt==0.6.2
 email_validator==2.2.0
 eval_type_backport==0.2.0
-exceptiongroup==1.2.1
-faiss-cpu==1.8.0
 fastapi==0.111.1
 fastapi-cli==0.0.4
 filelock==3.15.4
 frozenlist==1.4.1
 greenlet==3.0.3
-grpcio==1.64.1
-grpcio-tools==1.64.1
 h11==0.14.0
-h2==4.1.0
-hpack==4.0.0
 httpcore==1.0.5
-httplib2==0.20.2
 httptools==0.6.1
 httpx==0.27.0
-hyperframe==6.0.1
 idna==3.7
-importlib-metadata==6.11.0
 iniconfig==2.0.0
-jeepney==0.7.1
 Jinja2==3.1.4
-jsonpatch==1.33
-jsonpointer==3.0.0
-jsonschema==3.2.0
-keyring==23.5.0
-langchain==0.2.3
-langchain-core==0.2.5
-langchain-text-splitters==0.2.1
-langsmith==0.1.77
-launchpadlib==1.10.16
-lazr.restfulclient==0.14.4
-lazr.uri==1.0.6
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
-more-itertools==8.10.0
 multidict==6.0.5
-netifaces==0.11.0
-numpy==1.26.4
-oauthlib==3.2.0
-openai==1.34.0
-opentelemetry-api==1.22.0
-opentelemetry-instrumentation==0.43b0
-opentelemetry-instrumentation-asgi==0.43b0
-opentelemetry-instrumentation-fastapi==0.43b0
-opentelemetry-sdk==1.22.0
-opentelemetry-semantic-conventions==0.43b0
-opentelemetry-util-http==0.43b0
-orjson==3.10.4
-packaging==23.2
+numpy==2.0.0
+packaging==24.1
 pillow==10.4.0
 pluggy==1.5.0
-portalocker==2.8.2
-protobuf==5.27.1
 pyarrow==16.1.0
-pydantic==2.7.4
-pydantic_core==2.18.4
+pydantic==2.8.2
+pydantic_core==2.20.1
 Pygments==2.18.0
-PyGObject==3.42.1
-PyJWT==2.3.0
-PyMuPDF==1.24.5
-PyMuPDFb==1.24.3
-pyparsing==2.4.7
-pyrsistent==0.18.1
 pytest==8.2.2
-python-apt==2.4.0+ubuntu3
-python-dotenv==0.19.2
+pytest-asyncio==0.23.7
+python-dotenv==1.0.1
 python-multipart==0.0.9
-PyYAML==5.4.1
-qdrant-client==1.9.1
-regex==2024.5.15
+PyYAML==6.0.1
 requests==2.32.3
 rich==13.7.1
-SecretStorage==3.3.1
 shellingham==1.5.4
-six==1.16.0
 sniffio==1.3.1
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.31
 starlette==0.37.2
-structlog==24.1.0
-systemd-python==234
 tabulate==0.9.0
-tenacity==8.3.0
-texttable==1.6.4
-tiktoken==0.7.0
 together==1.2.1
-tomli==2.0.1
 tqdm==4.66.4
 typer==0.12.3
 typing_extensions==4.12.2
-ubuntu-pro-client==8001
-ufw==0.36.1
-unattended-upgrades==0.1
-urllib3==2.2.1
+urllib3==2.2.2
 uvicorn==0.30.1
 uvloop==0.19.0
-wadllib==1.3.6
 watchfiles==0.22.0
-websocket-client==1.2.3
 websockets==12.0
-wrapt==1.16.0
 yarl==1.9.4
-zipp==1.0.0
 -e 
 File: ./run.py
 
+import os
+import shutil
+import argparse
+import datetime
 import uvicorn
-from app.utils.logging import setup_logging
+from app.utils.logging import setup_logging, get_logger
+
+def move_old_files_to_deprecated():
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    deprecated_dir = os.path.join("_Deprecated", timestamp)
+    
+    os.makedirs(deprecated_dir, exist_ok=True)
+    
+    items_to_move = [
+        "./data/memories.db",  # Update this to match your actual DB file pattern if needed
+        "./logs/app.log"
+    ]
+    
+    for item in items_to_move:
+        if os.path.exists(item):
+            shutil.move(item, deprecated_dir)
+
+def main():
+    parser = argparse.ArgumentParser(description="Run the application with optional fresh start.")
+    parser.add_argument("--new", action="store_true", help="Move old logs and database to a deprecated folder and start fresh.")
+    
+    args = parser.parse_args()
+    
+    if args.new:
+        move_old_files_to_deprecated()
+    
+    # Ensure directories exist
+    os.makedirs("./data", exist_ok=True)
+    os.makedirs("./logs", exist_ok=True)
+
+    # Create a new empty database file if needed
+    new_db_path = "./data/memories.db"
+    if not os.path.exists(new_db_path):
+        open(new_db_path, 'w').close()
+
+    setup_logging()
+    logger = get_logger(__name__)
+    logger.info("Starting the application.")
+    
+    uvicorn.run("app.api:app", host="0.0.0.0", port=8080, reload=True)
 
 if __name__ == "__main__":
-    setup_logging()
-    uvicorn.run("app.api:app", host="0.0.0.0", port=8000, reload=True)
+    main()
 -e 
 File: ./tests/test_agent.py
 
@@ -456,3 +505,171 @@ else
 fi
 
 echo "Project structure and file contents have been written to $OUTPUT_FILE and copied to the clipboard."
+-e 
+File: ./_Deprecated/20240715_182052/app.log
+
+2024-07-15 18:00:45,143 - watchfiles.main - INFO - 9 changes detected
+2024-07-15 18:02:16,751 - watchfiles.main - INFO - 2 changes detected
+2024-07-15 18:02:24,867 - watchfiles.main - INFO - 1 change detected
+2024-07-15 18:02:32,932 - watchfiles.main - INFO - 1 change detected
+2024-07-15 18:02:41,096 - watchfiles.main - INFO - 1 change detected
+-e 
+File: ./_Deprecated/20240715_182345/app.log
+
+2024-07-15 18:20:52,570 - __main__ - INFO - Starting the application.
+2024-07-15 18:21:00,635 - watchfiles.main - INFO - 2 changes detected
+2024-07-15 18:21:08,550 - watchfiles.main - INFO - 1 change detected
+2024-07-15 18:21:16,514 - watchfiles.main - INFO - 1 change detected
+-e 
+File: ./_Deprecated/20240716_085901/app.log
+
+2024-07-15 18:23:45,907 - __main__ - INFO - Starting the application.
+2024-07-15 18:23:54,518 - watchfiles.main - INFO - 2 changes detected
+2024-07-15 18:24:02,584 - watchfiles.main - INFO - 1 change detected
+-e 
+File: ./_Deprecated/20240716_125937/app.log
+
+2024-07-16 08:59:01,437 - __main__ - INFO - Starting the application.
+-e 
+File: ./_Deprecated/20240716_130100/app.log
+
+2024-07-16 12:59:37,164 - __main__ - INFO - Starting the application.
+2024-07-16 12:59:53,176 - watchfiles.main - INFO - 2 changes detected
+2024-07-16 13:00:07,755 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:00:23,887 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:00:38,315 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:00:53,094 - watchfiles.main - INFO - 1 change detected
+-e 
+File: ./_Deprecated/20240716_131919/app.log
+
+2024-07-16 13:01:00,392 - __main__ - INFO - Starting the application.
+2024-07-16 13:01:14,937 - watchfiles.main - INFO - 2 changes detected
+2024-07-16 13:01:28,614 - watchfiles.main - INFO - 1 change detected
+-e 
+File: ./_Deprecated/20240716_132037/app.log
+
+2024-07-16 13:19:19,025 - __main__ - INFO - Starting the application.
+2024-07-16 13:19:33,684 - watchfiles.main - INFO - 4 changes detected
+2024-07-16 13:19:47,611 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:20:01,537 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:20:15,513 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:20:29,540 - watchfiles.main - INFO - 2 changes detected
+-e 
+File: ./_Deprecated/20240716_132209/app.log
+
+2024-07-16 13:20:37,516 - __main__ - INFO - Starting the application.
+2024-07-16 13:20:51,904 - watchfiles.main - INFO - 2 changes detected
+2024-07-16 13:21:05,732 - watchfiles.main - INFO - 3 changes detected
+2024-07-16 13:21:19,507 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:21:33,534 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:21:47,511 - watchfiles.main - INFO - 1 change detected
+2024-07-16 13:22:01,689 - watchfiles.main - INFO - 2 changes detected
+-e 
+File: ./_Deprecated/20240716_132349/app.log
+
+2024-07-16 13:22:09,647 - __main__ - INFO - Starting the application.
+2024-07-16 13:22:22,748 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
+2024-07-16 13:22:36,125 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:22:50,002 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+-e 
+File: ./_Deprecated/20240716_133054/app.log
+
+2024-07-16 13:23:49,491 - __main__ - INFO - Starting the application.
+2024-07-16 13:24:03,831 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
+2024-07-16 13:24:16,708 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:24:30,784 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:24:44,912 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:24:59,139 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:25:12,916 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:25:26,793 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:25:40,670 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:25:54,647 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:26:08,725 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:26:23,054 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:26:36,530 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:26:50,557 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/api.py')}
+2024-07-16 13:27:05,040 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/api.cpython-312.pyc')}
+2024-07-16 13:27:19,017 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:27:32,493 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:27:46,320 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:28:00,447 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:28:14,524 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:28:28,350 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:28:42,176 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:28:56,303 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:29:10,279 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:29:23,955 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:29:37,983 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:29:52,010 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:30:05,936 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+2024-07-16 13:30:20,565 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+-e 
+File: ./_Deprecated/20240716_134159/app.log
+
+2024-07-16 13:30:54,174 - __main__ - INFO - Starting the application.
+2024-07-16 13:31:08,718 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
+2024-07-16 13:31:23,199 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
+-e 
+File: ./_Deprecated/app_20240715_180946.log
+
+2024-07-15 18:15:10,682 - __main__ - INFO - Starting the application with fresh configuration.
+2024-07-15 18:15:19,286 - watchfiles.main - INFO - 6 changes detected
+2024-07-15 18:15:27,746 - watchfiles.main - INFO - 7 changes detected
+2024-07-15 18:15:36,218 - watchfiles.main - INFO - 7 changes detected
+-e 
+File: ./_Deprecated/fresh_run.py
+
+import os
+import datetime
+import uvicorn
+from app.utils.logging import setup_logging, get_logger
+
+# Create a new timestamp
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+# Define paths for the fresh versions
+new_db_path = f"./data/memories_{timestamp}.db"
+new_log_path = f"./logs/app_{timestamp}.log"
+
+# Ensure the data and logs directories exist
+os.makedirs("./data", exist_ok=True)
+os.makedirs("./logs", exist_ok=True)
+
+# Create a new empty database file
+open(new_db_path, 'w').close()
+
+# Update the config file to use the new database and log file
+with open("./app/config.py", "r") as file:
+    config_lines = file.readlines()
+
+with open("./app/config.py", "w") as file:
+    for line in config_lines:
+        if line.strip().startswith("DATABASE_URL"):
+            file.write(f"    DATABASE_URL = 'sqlite:///{new_db_path}'\n")
+        elif line.strip().startswith("LOG_FILE"):
+            file.write(f"    LOG_FILE = '{new_log_path}'\n")
+        elif line.strip().startswith("TOGETHER_API_KEY") or line.strip().startswith("MODEL_NAME") or line.strip().startswith("LOG_LEVEL"):
+            file.write(line)
+        else:
+            file.write(line)
+
+# Update the logging setup to use the new log file
+def setup_logging():
+    import logging
+    from app.config import config
+
+    logging.basicConfig(
+        level=config.LOG_LEVEL,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(config.LOG_FILE),
+            logging.StreamHandler()
+        ]
+    )
+
+# Run the application
+if __name__ == "__main__":
+    setup_logging()
+    logger = get_logger(__name__)
+    logger.info("Starting the application with fresh configuration.")
+    uvicorn.run("app.api:app", host="0.0.0.0", port=8000, reload=True)

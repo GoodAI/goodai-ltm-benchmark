@@ -15,12 +15,20 @@ load_dotenv()  # Load environment variables from .env file
 #             raise ValueError("OPENAI_API_KEY is not set")
 #         self.costs_usd = 0  # Add an attribute to track costs
 
+# class MultiAgentRAGInterface(ChatSession): #? GROQ
+#     def __init__(self, api_url: str = "http://localhost:8080"):
+#         self.api_url = api_url
+#         self.api_key = os.getenv('GROQ_API_KEY')  # Fetch the API key from environment variables
+#         if not self.api_key:
+#             raise ValueError("GROQ_API_KEY is not set")
+#         self.costs_usd = 0  # Add an attribute to track costs
+
 class MultiAgentRAGInterface(ChatSession):
     def __init__(self, api_url: str = "http://localhost:8080"):
         self.api_url = api_url
-        self.api_key = os.getenv('GROQ_API_KEY')  # Fetch the API key from environment variables
+        self.api_key = os.getenv('TOGETHER_API_KEY')  # Fetch the API key from environment variables
         if not self.api_key:
-            raise ValueError("GROQ_API_KEY is not set")
+            raise ValueError("TOGETHER_API_KEY is not set")
         self.costs_usd = 0  # Add an attribute to track costs
 
     def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
