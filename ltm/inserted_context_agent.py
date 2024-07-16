@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from json import JSONDecodeError
+from math import ceil
 from typing import Optional
 
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -32,10 +33,29 @@ def remove_timestamps(text: str):
     return text
 
 
+class MessageArchive:
+
+    def __init__(self):
+        self.message_list = []
+        self.message_dict = {}
+
+    def add_interaction(self, key, interaction):
+        self.message_list.extend(interaction)
+        self.message_dict[key] = interaction
+
+    def get_from_key(self, key):
+        return self.message_dict[key]
+
+    def length(self):
+        return len(self.message_list)
+
+    def by_index(self, index):
+        return self.message_list[index]
+
 
 @dataclass
 class InsertedContextAgent(ChatSession):
-    all_messages: LLMContext = field(default_factory=list)
+    all_messages: MessageArchive = field(default_factory=MessageArchive)
     semantic_memory: DefaultTextMemory = field(default_factory=AutoTextMemory.create)
     max_prompt_size: int = 16384
     is_local: bool = True
@@ -60,7 +80,6 @@ update the scratchpad, and what changes should be made. Ignore all data that loo
 Try to answer these questions:
 - Does the interaction contain information that will be useful in future?
 - Is the information unimportant general knowledge, or useful user specific knowledge?
-
 
 Sketch out some general plan for the data you think should be written to the scratchpad.
 
@@ -117,15 +136,16 @@ Write JSON in the following format:
             self.llm_index += 1
 
         response_ts = str(datetime.now()) + ": " + response_text
-        self.all_messages.append(context[-1])
-        self.all_messages.append(make_assistant_message(response_ts))
+
+        timestamp_key = datetime.now()
+        self.all_messages.add_interaction(timestamp_key, [context[-1], make_assistant_message(response_ts)])
 
         # Save interaction to memory
         user_ts = context[-1]["content"]
-        interaction = "(User) " + user_ts + "\n---\n" + "(Agent) " + response_ts
-        self.save_interaction(user_ts, response_ts)
+        self.save_interaction(user_ts, response_ts, timestamp_key)
 
         # Update scratchpad
+        interaction = "(User) " + user_ts + "\n---\n" + "(Agent) " + response_ts
         self.update_scratchpad(interaction)
 
         colour_print("Magenta", f"Current total cost: {self.costs_usd}")
@@ -141,13 +161,13 @@ Write JSON in the following format:
             colour_print("YELLOW", f"Got memory: {m}")
 
         # Add the previous messages
-        final_idx = len(self.all_messages) - 1
+        final_idx = self.all_messages.length() - 1
         while previous_interactions > 0 and final_idx > 0:
 
             # Agent reply
-            context.insert(1, self.all_messages[final_idx])
+            context.insert(1, self.all_messages.by_index(final_idx))
             # User message
-            context.insert(1, self.all_messages[final_idx-1])
+            context.insert(1, self.all_messages.by_index(final_idx-1))
 
             final_idx -= 2
             previous_interactions -= 1
@@ -155,19 +175,17 @@ Write JSON in the following format:
         # Add in memories up to the max prompt size
         current_size = token_counter("gpt-4o", messages=context)
         memory_idx = len(relevant_memories) - 1
-        while current_size < max_prompt_size - self.max_message_size and memory_idx >= 0:
-            user_message, assistant_message = self.messages_from_memory(relevant_memories[memory_idx])
+        max_mems_to_show = 10
 
-            # TODO: This should never be the case, but it is for now...
-            if user_message is None:
-                memory_idx -= 1
-                continue
+        while current_size < max_prompt_size - self.max_message_size and memory_idx >= 0 and max_mems_to_show > 0:
+            user_message, assistant_message = self.messages_from_memory(relevant_memories[memory_idx])
 
             if user_message not in context:
                 context.insert(1, assistant_message)
                 context.insert(1, user_message)
+                max_mems_to_show -= 1
 
-            current_size = token_counter("gpt-4o", messages=context)
+                current_size = token_counter("gpt-4o", messages=context)
             memory_idx -= 1
 
         print(f"current context size: {current_size}")
@@ -190,31 +208,48 @@ Express your answer as a JSON list. For example: `[2, 3, ..., 7]`
         if len(memories) == 0:
             return []
 
-        memories_passages = []
-        for idx, m in enumerate(memories):
-            memories_passages.append(f"{idx}). {m.passage}\n")
+        splice_length = 10
 
-        passages = "\n".join(memories_passages)
-        context = [make_system_message(prompt.format(passages=passages, queries= "\n".join(queries)))]
-
-        # print("\n\nLLM filtering")
-        # colour_print("GREEN", "Memories before filtering:")
-        # for m in memories:
-        #     colour_print("GREEN", m)
-
-        while True:
-            try:
-                result = ask_llm(context, model="gpt-4o", max_overall_tokens=16384, cost_callback=self.add_cost)
-
-                json_list = sanitize_and_parse_json(result)
-
-                break
-            except:
-                continue
-
+        added_timestamps = []
+        mems_to_filter = []  # Memories without duplicates
         filtered_mems = []
-        for idx in json_list:
-            filtered_mems.append(memories[idx])
+
+        # Remove memories that map to the same interaction
+        for m in memories:
+            timestamp = m.metadata["timestamp"]
+            if timestamp not in added_timestamps:
+                added_timestamps.append(timestamp)
+                mems_to_filter.append(m)
+
+        num_splices = ceil(len(mems_to_filter) / splice_length)
+        # Iterate through the mems_to_filter list and create the passage
+        for splice in range(num_splices):
+            start_idx = splice * splice_length
+            end_idx = (splice + 1) * splice_length
+
+            memories_passages = []
+            memory_counter = 0
+
+            for m in mems_to_filter[start_idx:end_idx]:
+                timestamp = m.metadata["timestamp"]
+                um, am = self.all_messages.get_from_key(timestamp)
+                memories_passages.append(f"{memory_counter}). (User): {um['content']}\n(You): {am['content']}")
+                memory_counter += 1
+
+            passages = "\n----\n".join(memories_passages)
+            context = [make_system_message(prompt.format(passages=passages, queries="\n".join(queries)))]
+
+            while True:
+                try:
+                    print("Attempting filter")
+                    result = ask_llm(context, model="gpt-4o", max_overall_tokens=16384, cost_callback=self.add_cost)
+
+                    json_list = sanitize_and_parse_json(result)
+                    for idx in json_list:
+                        filtered_mems.append(mems_to_filter[idx + start_idx])
+                    break
+                except:
+                    continue
 
         print("Memories after LLM filtering")
         for m in filtered_mems:
@@ -249,7 +284,7 @@ Write JSON in the following format:
                 query_dict = sanitize_and_parse_json(response)
 
                 all_retrieved_memories = []
-                for q in query_dict["queries"]:
+                for q in query_dict["queries"] + [user_message]:
                     print(f"Querying with: {q}")
                     for mem in self.semantic_memory.retrieve(q, k=20):
                         if not self.memory_present(mem, all_retrieved_memories):
@@ -288,35 +323,17 @@ Write JSON in the following format:
                 return True
         return False
 
-    def save_interaction(self, user_message, response_message):
-        self.semantic_memory.add_text(user_message)
+    def save_interaction(self, user_message, response_message, timestamp):
+        self.semantic_memory.add_text(user_message, metadata={"timestamp": timestamp})
         self.semantic_memory.add_separator()
-        self.semantic_memory.add_text(response_message)
+        self.semantic_memory.add_text(response_message, metadata={"timestamp": timestamp})
         self.semantic_memory.add_separator()
 
     def messages_from_memory(self, memory):
-        memory_text = memory.passage.strip()
+        timestamp_key = memory.metadata["timestamp"]
 
-        index = -1
-        for idx, m in enumerate(self.all_messages):
-            if memory_text in m["content"]:
-                index = idx
-                break
-
-        #TODO There is sometimes weirdness with adding spaces to memories somehow, which breaks the comparison
-        if index == -1:
-            # colour_print("RED", f"No memory found for fragment {memory_text}")
-            colour_print("RED", f"No memory found for a fragment")
-            return None, None
-
-        if self.all_messages[index]["role"] == "user":
-            user_message = self.all_messages[index]
-            assistant_message = self.all_messages[index+1]
-        else:
-            user_message = self.all_messages[index-1]
-            assistant_message = self.all_messages[index]
-
-        return user_message, assistant_message
+        interaction = self.all_messages.get_from_key(timestamp_key)
+        return interaction[0], interaction[1]
 
     def update_scratchpad(self, instruction):
 
