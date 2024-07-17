@@ -15,7 +15,7 @@ class QueryResponse(BaseModel):
     response: str
 
 memory_manager = MemoryManager(config.DATABASE_URL)
-memory_manager.initialize()  # Call this synchronously
+memory_manager.initialize()
 agent = Agent(config.TOGETHER_API_KEY, memory_manager)
 
 @app.post("/query", response_model=QueryResponse)

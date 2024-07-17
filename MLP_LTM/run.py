@@ -3,7 +3,9 @@ import shutil
 import argparse
 import datetime
 import uvicorn
-from app.utils.logging import setup_logging, get_logger
+from app.utils.logging import get_logger
+import yaml
+import logging.config
 
 def move_old_files_to_deprecated():
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -38,11 +40,20 @@ def main():
     if not os.path.exists(new_db_path):
         open(new_db_path, 'w').close()
 
-    setup_logging()
+    with open('logging_config.yaml', 'r') as f:
+        config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
+
     logger = get_logger(__name__)
     logger.info("Starting the application.")
-    
-    uvicorn.run("app.api:app", host="0.0.0.0", port=8080, reload=True)
 
+    # Run the application with uvicorn
+    uvicorn.run(
+        "app.api:app",
+        host="0.0.0.0",
+        port=8080,
+        reload=True,
+        log_config="logging_config.yaml"
+    )
 if __name__ == "__main__":
     main()

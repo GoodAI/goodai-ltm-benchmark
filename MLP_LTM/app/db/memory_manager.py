@@ -35,7 +35,8 @@ class MemoryManager:
         self.engine = create_engine(db_url)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.together_client = Together(api_key=config.TOGETHER_API_KEY)
-
+        logger.info("MemoryManager initialized")
+        
     def initialize(self):
         Base.metadata.create_all(bind=self.engine)
         logger.info("Database initialized")
