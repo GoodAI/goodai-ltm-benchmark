@@ -1,49 +1,5 @@
 .
 ├── _Deprecated
-│   ├── 20240715_182052
-│   │   └── app.log
-│   ├── 20240715_182345
-│   │   └── app.log
-│   ├── 20240716_085901
-│   │   └── app.log
-│   ├── 20240716_125937
-│   │   └── app.log
-│   ├── 20240716_130100
-│   │   └── app.log
-│   ├── 20240716_131919
-│   │   └── app.log
-│   ├── 20240716_132037
-│   │   └── app.log
-│   ├── 20240716_132209
-│   │   └── app.log
-│   ├── 20240716_132349
-│   │   └── app.log
-│   ├── 20240716_133054
-│   │   └── app.log
-│   ├── 20240716_134159
-│   │   └── app.log
-│   ├── 20240716_135444
-│   │   └── app.log
-│   ├── 20240716_141009
-│   │   └── app.log
-│   ├── 20240716_141216
-│   │   └── app.log
-│   ├── 20240716_141410
-│   │   └── app.log
-│   ├── 20240716_141546
-│   │   └── app.log
-│   ├── 20240716_141838
-│   │   └── app.log
-│   ├── 20240716_144430
-│   │   └── app.log
-│   ├── 20240717_103508
-│   │   └── app.log
-│   ├── 20240717_103729
-│   │   └── app.log
-│   ├── 20240717_104557
-│   │   └── app.log
-│   ├── app_20240715_180946.log
-│   └── fresh_run.py
 ├── app
 │   ├── __init__.py
 │   ├── agent.py
@@ -56,6 +12,7 @@
 │       ├── __init__.py
 │       └── logging.py
 ├── data
+├── logging_config.yaml
 ├── logs
 │   └── app.log
 ├── project_structure.txt
@@ -67,7 +24,7 @@
 │   └── test_memory_manager.py
 └── tree.sh
 
-28 directories, 39 files
+7 directories, 17 files
 
 Note: The following list of files and directories are excluded only from the appended file contents section:
 
@@ -157,7 +114,7 @@ class QueryResponse(BaseModel):
     response: str
 
 memory_manager = MemoryManager(config.DATABASE_URL)
-memory_manager.initialize()  # Call this synchronously
+memory_manager.initialize()
 agent = Agent(config.TOGETHER_API_KEY, memory_manager)
 
 @app.post("/query", response_model=QueryResponse)
@@ -198,9 +155,10 @@ from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.sql import func
 from app.config import config
 import numpy as np
-from together import Together
+from openai import AsyncOpenAI
 from app.utils.logging import get_logger
 from contextlib import contextmanager
+import os
 
 logger = get_logger(__name__)
 
@@ -228,8 +186,13 @@ class MemoryManager:
     def __init__(self, db_url: str):
         self.engine = create_engine(db_url)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-        self.together_client = Together(api_key=config.TOGETHER_API_KEY)
-        logger.info("MemoryManager initialized")
+        
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+        self.openai_client = AsyncOpenAI(api_key=openai_api_key)
+        
+        logger.info("MemoryManager initialized with OpenAI embeddings")
         
     def initialize(self):
         Base.metadata.create_all(bind=self.engine)
@@ -281,14 +244,19 @@ class MemoryManager:
                 logger.debug(f"Linked memory ID {memory.id} to new memory ID {new_memory.id}")
         db.commit()
 
-    async def _get_embedding(self, text: str) -> list:
-        logger.debug("Generating embedding")
-        response = self.together_client.embeddings.create(
-            input=[text],
-            model="togethercomputer/m2-bert-80M-8k-retrieval"
-        )
-        logger.debug("Embedding generated successfully")
-        return response.data[0].embedding
+    async def _get_embedding(self, text: str) -> np.ndarray:
+        logger.debug("Generating embedding using OpenAI")
+        try:
+            response = await self.openai_client.embeddings.create(
+                input=[text],
+                model="text-embedding-ada-002"  # Use the appropriate OpenAI embedding model
+            )
+            embedding = response.data[0].embedding
+            logger.debug("Embedding generated successfully")
+            return np.array(embedding, dtype=np.float32)
+        except Exception as e:
+            logger.error(f"Error generating embedding: {str(e)}")
+            raise
 
     def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))-e 
@@ -298,41 +266,6 @@ File: ./app/db/__init__.py
 File: ./app/utils/logging.py
 
 import logging
-from logging.handlers import RotatingFileHandler
-from app.config import config
-import os
-
-def setup_logging():
-    # Ensure the logs directory exists
-    os.makedirs("logs", exist_ok=True)
-
-    # Create a logger
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture all levels
-
-    # Create handlers
-    file_handler = RotatingFileHandler(
-        config.LOG_FILE, 
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
-    )
-    file_handler.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-
-    # Create formatters and add it to handlers
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    formatter = logging.Formatter(log_format)
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
-
-    # Add handlers to the logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-
-    # Disable uvicorn access logs
-    uvicorn_logger = logging.getLogger("uvicorn.access")
-    uvicorn_logger.disabled = True
 
 def get_logger(name: str):
     return logging.getLogger(name)-e 
@@ -342,19 +275,230 @@ File: ./app/utils/__init__.py
 File: ./app/__init__.py
 
 -e 
+File: ./logging_config.yaml
+
+version: 1
+disable_existing_loggers: False
+formatters:
+  default:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: default
+    stream: ext://sys.stdout
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: default
+    filename: logs/app.log
+    maxBytes: 10485760 # 10MB
+    backupCount: 5
+loggers:
+  uvicorn:
+    level: INFO
+  uvicorn.access:
+    level: INFO
+root:
+  level: DEBUG
+  handlers: [console, file]-e 
 File: ./logs/app.log
 
-2024-07-17 10:45:57,666 - __main__ - INFO - Starting the application.
-2024-07-17 10:45:57,666 - uvicorn.error - INFO - Will watch for changes in these directories: ['/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM']
-2024-07-17 10:45:57,667 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-2024-07-17 10:45:57,668 - uvicorn.error - INFO - Started reloader process [7269] using WatchFiles
-2024-07-17 10:46:12,137 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
-2024-07-17 10:46:25,525 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:46:39,352 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:46:52,328 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:47:06,205 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
-2024-07-17 10:47:20,182 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
-2024-07-17 10:47:27,605 - uvicorn.error - INFO - Stopping reloader process [7269]
+2024-07-17 11:51:49,854 - __main__ - INFO - Starting the application.
+2024-07-17 11:51:49,860 - uvicorn.error - INFO - Will watch for changes in these directories: ['/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM']
+2024-07-17 11:51:49,860 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+2024-07-17 11:51:49,861 - uvicorn.error - INFO - Started reloader process [24475] using WatchFiles
+2024-07-17 11:51:59,624 - httpx - DEBUG - load_ssl_context verify=True cert=None trust_env=True http2=False
+2024-07-17 11:51:59,626 - httpx - DEBUG - load_verify_locations cafile='/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/MLP_venv/lib/python3.12/site-packages/certifi/cacert.pem'
+2024-07-17 11:51:59,673 - app.db.memory_manager - INFO - MemoryManager initialized with OpenAI embeddings
+2024-07-17 11:51:59,696 - app.db.memory_manager - INFO - Database initialized
+2024-07-17 11:51:59,698 - uvicorn.error - INFO - Started server process [24481]
+2024-07-17 11:51:59,699 - uvicorn.error - INFO - Waiting for application startup.
+2024-07-17 11:51:59,702 - uvicorn.error - INFO - Application startup complete.
+2024-07-17 11:52:12,550 - watchfiles.main - DEBUG - 5 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
+2024-07-17 11:52:19,964 - app.api - INFO - Received query: I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?
+2024-07-17 11:52:19,965 - app.db.memory_manager - DEBUG - Retrieving relevant memories for query: I am going to subject you to a Long-Term Memory be...
+2024-07-17 11:52:19,966 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:20,006 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f52922ea480>, 'json_data': {'input': ['I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:20,014 - httpcore.connection - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-07-17 11:52:20,075 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x7f52922d3c80>
+2024-07-17 11:52:20,076 - httpcore.connection - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f52922dc250> server_hostname='api.openai.com' timeout=5.0
+2024-07-17 11:52:20,090 - httpcore.connection - DEBUG - start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x7f52922d0bc0>
+2024-07-17 11:52:20,091 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:20,092 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:20,093 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:20,093 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:20,094 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:20,387 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:20 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'23'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999927'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_798cda9832c3096310af32db9ca5053e'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=0y0lwp8vaTEIN1qK08Vn7v6FOqei4lm_FlsLCq3nMNs-1721213540-1.0.1.1-KxWwtgk5XB69Omjce.OdiIGz3rSanwUpE13UU2yQOzdqioIO3MRs3QX6vj2baMQ5sBTsnHIFwmuorOwZUGXVNg; path=/; expires=Wed, 17-Jul-24 11:22:20 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=gPuV.cmtuAtFhadVfsgc7g_lebLbWDEdgjM8nnNoriM-1721213540267-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49ae90eca635ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:20,388 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:20,389 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:20,430 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:20,431 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:20,431 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:20,432 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:20,433 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:20,439 - app.db.memory_manager - INFO - Retrieved 0 relevant memories
+2024-07-17 11:52:20,440 - together - DEBUG - headers='{"X-Together-Client-User-Agent": "{\\"bindings_version\\": \\"1.2.1\\", \\"httplib\\": \\"requests\\", \\"lang\\": \\"python\\", \\"lang_version\\": \\"3.12.4\\", \\"platform\\": \\"Linux-5.15.146.1-microsoft-standard-WSL2-x86_64-with-glibc2.35\\", \\"publisher\\": \\"together\\", \\"uname\\": \\"Linux 5.15.146.1-microsoft-standard-WSL2 #1 SMP Thu Jan 11 04:09:03 UTC 2024 x86_64 x86_64\\"}", "Authorization": "Bearer 4a26b3919abc69391758674bfbedb03fcf91281374318ae1046ba3b3623b3750", "User-Agent": "Together/v1 PythonBindings/1.2.1", "Content-Type": "application/json"}' message='Request to Together API' method=POST path=https://api.together.xyz/v1/chat/completions post_data='{"messages": [{"role": "user", "content": "Given the following context and query, provide a relevant and informative response:\\n\\nContext:\\n\\n\\nQuery: I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?\\n\\nResponse:", "tool_calls": null}], "model": "meta-llama/Llama-3-70b-chat-hf", "max_tokens": null, "stop": null, "temperature": null, "top_p": null, "top_k": null, "repetition_penalty": null, "presence_penalty": null, "frequency_penalty": null, "min_p": null, "logit_bias": null, "stream": false, "logprobs": null, "echo": null, "n": null, "safety_model": null, "response_format": null, "tools": null, "tool_choice": null}'
+2024-07-17 11:52:20,441 - urllib3.util.retry - DEBUG - Converted retries value: 2 -> Retry(total=2, connect=None, read=None, redirect=None, status=None)
+2024-07-17 11:52:20,443 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.together.xyz:443
+2024-07-17 11:52:21,687 - urllib3.connectionpool - DEBUG - https://api.together.xyz:443 "POST /v1/chat/completions HTTP/11" 200 None
+2024-07-17 11:52:21,688 - together - DEBUG - message='Together API response' path=https://api.together.xyz/v1/chat/completions processing_ms=867 request_id=8a49ae93998ab314-MAN response_code=200
+2024-07-17 11:52:21,689 - app.db.memory_manager - DEBUG - Adding new memory: Query: I am going to subject you to a Long-Term Me...
+2024-07-17 11:52:21,689 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:21,690 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f52923825c0>, 'json_data': {'input': ['Query: I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?\nResponse: Understood.'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:21,691 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:21,692 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:21,693 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:21,693 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:21,694 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:21,900 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:21 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'29'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999920'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_ace2bf886fe78d11ff0823970e0ae5d7'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49ae9ae93b35ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:21,900 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:21,901 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:21,914 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:21,915 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:21,916 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:21,917 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:21,918 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:21,943 - app.db.memory_manager - DEBUG - Updating links for memory: ID 1
+2024-07-17 11:52:21,946 - app.db.memory_manager - INFO - Memory added successfully: ID 1
+2024-07-17 11:52:21,946 - app.agent - INFO - Memory updated with ID: 1
+2024-07-17 11:52:21,947 - app.api - INFO - Query processed successfully with response: Understood.
+2024-07-17 11:52:21,947 - uvicorn.access - INFO - 127.0.0.1:37546 - "POST /query HTTP/1.1" 200
+2024-07-17 11:52:23,987 - app.api - INFO - Received query: My favourite colour is Purple.
+2024-07-17 11:52:23,988 - app.db.memory_manager - DEBUG - Retrieving relevant memories for query: My favourite colour is Purple....
+2024-07-17 11:52:23,988 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:23,989 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f5292383e20>, 'json_data': {'input': ['My favourite colour is Purple.'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:23,990 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:23,991 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:23,992 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:23,992 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:23,993 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:24,213 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:24 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'24'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999993'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_7b268f6edf0cc6676447d2dd4ae2d852'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49aea94a3335ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:24,214 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:24,214 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:24,255 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:24,255 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:24,256 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:24,257 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:24,258 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:24,260 - app.db.memory_manager - INFO - Retrieved 1 relevant memories
+2024-07-17 11:52:24,261 - together - DEBUG - headers='{"X-Together-Client-User-Agent": "{\\"bindings_version\\": \\"1.2.1\\", \\"httplib\\": \\"requests\\", \\"lang\\": \\"python\\", \\"lang_version\\": \\"3.12.4\\", \\"platform\\": \\"Linux-5.15.146.1-microsoft-standard-WSL2-x86_64-with-glibc2.35\\", \\"publisher\\": \\"together\\", \\"uname\\": \\"Linux 5.15.146.1-microsoft-standard-WSL2 #1 SMP Thu Jan 11 04:09:03 UTC 2024 x86_64 x86_64\\"}", "Authorization": "Bearer 4a26b3919abc69391758674bfbedb03fcf91281374318ae1046ba3b3623b3750", "User-Agent": "Together/v1 PythonBindings/1.2.1", "Content-Type": "application/json"}' message='Request to Together API' method=POST path=https://api.together.xyz/v1/chat/completions post_data='{"messages": [{"role": "user", "content": "Given the following context and query, provide a relevant and informative response:\\n\\nContext:\\n- Query: I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?\\nResponse: Understood.\\n\\nQuery: My favourite colour is Purple.\\n\\nResponse:", "tool_calls": null}], "model": "meta-llama/Llama-3-70b-chat-hf", "max_tokens": null, "stop": null, "temperature": null, "top_p": null, "top_k": null, "repetition_penalty": null, "presence_penalty": null, "frequency_penalty": null, "min_p": null, "logit_bias": null, "stream": false, "logprobs": null, "echo": null, "n": null, "safety_model": null, "response_format": null, "tools": null, "tool_choice": null}'
+2024-07-17 11:52:24,809 - urllib3.connectionpool - DEBUG - https://api.together.xyz:443 "POST /v1/chat/completions HTTP/11" 200 None
+2024-07-17 11:52:24,810 - together - DEBUG - message='Together API response' path=https://api.together.xyz/v1/chat/completions processing_ms=302 request_id=8a49aeaaf973b314-MAN response_code=200
+2024-07-17 11:52:24,811 - app.db.memory_manager - DEBUG - Adding new memory: Query: My favourite colour is Purple.
+Response: Co...
+2024-07-17 11:52:24,811 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:24,812 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f52c62acd60>, 'json_data': {'input': ['Query: My favourite colour is Purple.\nResponse: Confirmed.'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:24,813 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:24,814 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:24,814 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:24,815 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:24,816 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:25,020 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:24 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'25'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999986'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_ba92f823a2cb60668d671b8bd016c365'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49aeae680e35ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:25,021 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:25,021 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:25,022 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:25,023 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:25,023 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:25,024 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:25,025 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:25,050 - app.db.memory_manager - DEBUG - Updating links for memory: ID 2
+2024-07-17 11:52:25,052 - app.db.memory_manager - INFO - Memory added successfully: ID 2
+2024-07-17 11:52:25,052 - app.agent - INFO - Memory updated with ID: 2
+2024-07-17 11:52:25,053 - app.api - INFO - Query processed successfully with response: Confirmed.
+2024-07-17 11:52:25,054 - uvicorn.access - INFO - 127.0.0.1:35710 - "POST /query HTTP/1.1" 200
+2024-07-17 11:52:27,085 - app.api - INFO - Received query: Atheism is a non-prophet organization
+2024-07-17 11:52:27,086 - app.db.memory_manager - DEBUG - Retrieving relevant memories for query: Atheism is a non-prophet organization...
+2024-07-17 11:52:27,086 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:27,087 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f5292383ce0>, 'json_data': {'input': ['Atheism is a non-prophet organization'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:27,088 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:27,089 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:27,089 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:27,090 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:27,090 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:27,314 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:27 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'80'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999991'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_2fddc174bd4122992481e3e3e3bbbd97'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49aebcaa2935ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:27,315 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:27,316 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:27,338 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:27,338 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:27,339 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:27,340 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:27,340 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:27,343 - app.db.memory_manager - INFO - Retrieved 2 relevant memories
+2024-07-17 11:52:27,343 - together - DEBUG - headers='{"X-Together-Client-User-Agent": "{\\"bindings_version\\": \\"1.2.1\\", \\"httplib\\": \\"requests\\", \\"lang\\": \\"python\\", \\"lang_version\\": \\"3.12.4\\", \\"platform\\": \\"Linux-5.15.146.1-microsoft-standard-WSL2-x86_64-with-glibc2.35\\", \\"publisher\\": \\"together\\", \\"uname\\": \\"Linux 5.15.146.1-microsoft-standard-WSL2 #1 SMP Thu Jan 11 04:09:03 UTC 2024 x86_64 x86_64\\"}", "Authorization": "Bearer 4a26b3919abc69391758674bfbedb03fcf91281374318ae1046ba3b3623b3750", "User-Agent": "Together/v1 PythonBindings/1.2.1", "Content-Type": "application/json"}' message='Request to Together API' method=POST path=https://api.together.xyz/v1/chat/completions post_data='{"messages": [{"role": "user", "content": "Given the following context and query, provide a relevant and informative response:\\n\\nContext:\\n- Query: I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?\\nResponse: Understood.\\n- Query: My favourite colour is Purple.\\nResponse: Confirmed.\\n\\nQuery: Atheism is a non-prophet organization\\n\\nResponse:", "tool_calls": null}], "model": "meta-llama/Llama-3-70b-chat-hf", "max_tokens": null, "stop": null, "temperature": null, "top_p": null, "top_k": null, "repetition_penalty": null, "presence_penalty": null, "frequency_penalty": null, "min_p": null, "logit_bias": null, "stream": false, "logprobs": null, "echo": null, "n": null, "safety_model": null, "response_format": null, "tools": null, "tool_choice": null}'
+2024-07-17 11:52:27,907 - urllib3.connectionpool - DEBUG - https://api.together.xyz:443 "POST /v1/chat/completions HTTP/11" 200 None
+2024-07-17 11:52:27,908 - together - DEBUG - message='Together API response' path=https://api.together.xyz/v1/chat/completions processing_ms=306 request_id=8a49aebe3e25b314-MAN response_code=200
+2024-07-17 11:52:27,908 - app.db.memory_manager - DEBUG - Adding new memory: Query: Atheism is a non-prophet organization
+Respo...
+2024-07-17 11:52:27,909 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:27,910 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f52922ea2a0>, 'json_data': {'input': ['Query: Atheism is a non-prophet organization\nResponse: Confirmed.'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:27,911 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:27,912 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:27,912 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:27,913 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:27,914 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:28,115 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:27 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'19'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999984'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_c590325eaf6c265cf137f8eb3521a349'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49aec1c81e35ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:28,115 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:28,116 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:28,145 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:28,146 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:28,146 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:28,147 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:28,148 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:28,170 - app.db.memory_manager - DEBUG - Updating links for memory: ID 3
+2024-07-17 11:52:28,172 - app.db.memory_manager - INFO - Memory added successfully: ID 3
+2024-07-17 11:52:28,173 - app.agent - INFO - Memory updated with ID: 3
+2024-07-17 11:52:28,173 - app.api - INFO - Query processed successfully with response: Confirmed.
+2024-07-17 11:52:28,174 - uvicorn.access - INFO - 127.0.0.1:35726 - "POST /query HTTP/1.1" 200
+2024-07-17 11:52:30,205 - app.api - INFO - Received query: There is a Museum in the center of my hometown.
+2024-07-17 11:52:30,206 - app.db.memory_manager - DEBUG - Retrieving relevant memories for query: There is a Museum in the center of my hometown....
+2024-07-17 11:52:30,207 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:30,207 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f5292383e20>, 'json_data': {'input': ['There is a Museum in the center of my hometown.'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:30,208 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:30,209 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:30,210 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:30,210 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:30,211 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:30,437 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:30 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'21'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999989'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_b17d4051df16ba4008ff641a86331f2c'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49aed029a435ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:30,438 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:30,438 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:30,457 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:30,458 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:30,458 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:30,459 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:30,460 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:30,463 - app.db.memory_manager - INFO - Retrieved 3 relevant memories
+2024-07-17 11:52:30,463 - together - DEBUG - headers='{"X-Together-Client-User-Agent": "{\\"bindings_version\\": \\"1.2.1\\", \\"httplib\\": \\"requests\\", \\"lang\\": \\"python\\", \\"lang_version\\": \\"3.12.4\\", \\"platform\\": \\"Linux-5.15.146.1-microsoft-standard-WSL2-x86_64-with-glibc2.35\\", \\"publisher\\": \\"together\\", \\"uname\\": \\"Linux 5.15.146.1-microsoft-standard-WSL2 #1 SMP Thu Jan 11 04:09:03 UTC 2024 x86_64 x86_64\\"}", "Authorization": "Bearer 4a26b3919abc69391758674bfbedb03fcf91281374318ae1046ba3b3623b3750", "User-Agent": "Together/v1 PythonBindings/1.2.1", "Content-Type": "application/json"}' message='Request to Together API' method=POST path=https://api.together.xyz/v1/chat/completions post_data='{"messages": [{"role": "user", "content": "Given the following context and query, provide a relevant and informative response:\\n\\nContext:\\n- Query: My favourite colour is Purple.\\nResponse: Confirmed.\\n- Query: Atheism is a non-prophet organization\\nResponse: Confirmed.\\n- Query: I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?\\nResponse: Understood.\\n\\nQuery: There is a Museum in the center of my hometown.\\n\\nResponse:", "tool_calls": null}], "model": "meta-llama/Llama-3-70b-chat-hf", "max_tokens": null, "stop": null, "temperature": null, "top_p": null, "top_k": null, "repetition_penalty": null, "presence_penalty": null, "frequency_penalty": null, "min_p": null, "logit_bias": null, "stream": false, "logprobs": null, "echo": null, "n": null, "safety_model": null, "response_format": null, "tools": null, "tool_choice": null}'
+2024-07-17 11:52:31,118 - urllib3.connectionpool - DEBUG - https://api.together.xyz:443 "POST /v1/chat/completions HTTP/11" 200 None
+2024-07-17 11:52:31,118 - together - DEBUG - message='Together API response' path=https://api.together.xyz/v1/chat/completions processing_ms=228 request_id=8a49aed1bb64b314-MAN response_code=200
+2024-07-17 11:52:31,119 - app.db.memory_manager - DEBUG - Adding new memory: Query: There is a Museum in the center of my homet...
+2024-07-17 11:52:31,120 - app.db.memory_manager - DEBUG - Generating embedding using OpenAI
+2024-07-17 11:52:31,120 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'post_parser': <function AsyncEmbeddings.create.<locals>.parser at 0x7f52c62acd60>, 'json_data': {'input': ['Query: There is a Museum in the center of my hometown.\nResponse: Confirmed.'], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+2024-07-17 11:52:31,122 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:31,122 - httpcore.http11 - DEBUG - send_request_headers.complete
+2024-07-17 11:52:31,123 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-07-17 11:52:31,123 - httpcore.http11 - DEBUG - send_request_body.complete
+2024-07-17 11:52:31,124 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-07-17 11:52:31,331 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Wed, 17 Jul 2024 10:52:31 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-allow-origin', b'*'), (b'openai-model', b'text-embedding-ada-002'), (b'openai-organization', b'goodai-research'), (b'openai-processing-ms', b'21'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=15552000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'10000'), (b'x-ratelimit-limit-tokens', b'10000000'), (b'x-ratelimit-remaining-requests', b'9999'), (b'x-ratelimit-remaining-tokens', b'9999982'), (b'x-ratelimit-reset-requests', b'6ms'), (b'x-ratelimit-reset-tokens', b'0s'), (b'x-request-id', b'req_07a7ee5dd749382f445db2cf81ce9105'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8a49aed5d86b35ef-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-07-17 11:52:31,332 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2024-07-17 11:52:31,333 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-07-17 11:52:31,334 - httpcore.http11 - DEBUG - receive_response_body.complete
+2024-07-17 11:52:31,334 - httpcore.http11 - DEBUG - response_closed.started
+2024-07-17 11:52:31,335 - httpcore.http11 - DEBUG - response_closed.complete
+2024-07-17 11:52:31,335 - openai._base_client - DEBUG - HTTP Request: POST https://api.openai.com/v1/embeddings "200 OK"
+2024-07-17 11:52:31,336 - app.db.memory_manager - DEBUG - Embedding generated successfully
+2024-07-17 11:52:31,360 - app.db.memory_manager - DEBUG - Updating links for memory: ID 4
+2024-07-17 11:52:31,365 - app.db.memory_manager - DEBUG - Linked memory ID 2 to new memory ID 4
+2024-07-17 11:52:31,375 - app.db.memory_manager - INFO - Memory added successfully: ID 4
+2024-07-17 11:52:31,375 - app.agent - INFO - Memory updated with ID: 4
+2024-07-17 11:52:31,376 - app.api - INFO - Query processed successfully with response: Confirmed.
+2024-07-17 11:52:31,376 - uvicorn.access - INFO - 127.0.0.1:35734 - "POST /query HTTP/1.1" 200
+2024-07-17 11:52:33,025 - uvicorn.error - INFO - Shutting down
+2024-07-17 11:52:33,126 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-07-17 11:52:33,126 - uvicorn.error - INFO - Application shutdown complete.
+2024-07-17 11:52:33,127 - uvicorn.error - INFO - Finished server process [24481]
+2024-07-17 11:52:33,148 - uvicorn.error - INFO - Stopping reloader process [24475]
 -e 
 File: ./requirements.txt
 
@@ -416,7 +560,7 @@ uvloop==0.19.0
 watchfiles==0.22.0
 websockets==12.0
 yarl==1.9.4
--e 
+python-json-logger==2.0.7-e 
 File: ./run.py
 
 import os
@@ -424,11 +568,13 @@ import shutil
 import argparse
 import datetime
 import uvicorn
-from app.utils.logging import setup_logging, get_logger
+from app.utils.logging import get_logger
+import yaml
+import logging.config
 
 def move_old_files_to_deprecated():
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    deprecated_dir = os.path.join("_Deprecated", timestamp)
+    deprecated_dir = os.path.join("../_Deprecated", timestamp)
     
     os.makedirs(deprecated_dir, exist_ok=True)
     
@@ -459,8 +605,10 @@ def main():
     if not os.path.exists(new_db_path):
         open(new_db_path, 'w').close()
 
-    # Set up logging
-    setup_logging()
+    with open('logging_config.yaml', 'r') as f:
+        config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
+
     logger = get_logger(__name__)
     logger.info("Starting the application.")
 
@@ -470,9 +618,8 @@ def main():
         host="0.0.0.0",
         port=8080,
         reload=True,
-        log_config=None  # This is crucial to prevent uvicorn from overriding our logging setup
+        log_config="logging_config.yaml"
     )
-
 if __name__ == "__main__":
     main()
 -e 
@@ -565,389 +712,3 @@ else
 fi
 
 echo "Project structure and file contents have been written to $OUTPUT_FILE and copied to the clipboard."
--e 
-File: ./_Deprecated/20240715_182052/app.log
-
-2024-07-15 18:00:45,143 - watchfiles.main - INFO - 9 changes detected
-2024-07-15 18:02:16,751 - watchfiles.main - INFO - 2 changes detected
-2024-07-15 18:02:24,867 - watchfiles.main - INFO - 1 change detected
-2024-07-15 18:02:32,932 - watchfiles.main - INFO - 1 change detected
-2024-07-15 18:02:41,096 - watchfiles.main - INFO - 1 change detected
--e 
-File: ./_Deprecated/20240715_182345/app.log
-
-2024-07-15 18:20:52,570 - __main__ - INFO - Starting the application.
-2024-07-15 18:21:00,635 - watchfiles.main - INFO - 2 changes detected
-2024-07-15 18:21:08,550 - watchfiles.main - INFO - 1 change detected
-2024-07-15 18:21:16,514 - watchfiles.main - INFO - 1 change detected
--e 
-File: ./_Deprecated/20240716_085901/app.log
-
-2024-07-15 18:23:45,907 - __main__ - INFO - Starting the application.
-2024-07-15 18:23:54,518 - watchfiles.main - INFO - 2 changes detected
-2024-07-15 18:24:02,584 - watchfiles.main - INFO - 1 change detected
--e 
-File: ./_Deprecated/20240716_125937/app.log
-
-2024-07-16 08:59:01,437 - __main__ - INFO - Starting the application.
--e 
-File: ./_Deprecated/20240716_130100/app.log
-
-2024-07-16 12:59:37,164 - __main__ - INFO - Starting the application.
-2024-07-16 12:59:53,176 - watchfiles.main - INFO - 2 changes detected
-2024-07-16 13:00:07,755 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:00:23,887 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:00:38,315 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:00:53,094 - watchfiles.main - INFO - 1 change detected
--e 
-File: ./_Deprecated/20240716_131919/app.log
-
-2024-07-16 13:01:00,392 - __main__ - INFO - Starting the application.
-2024-07-16 13:01:14,937 - watchfiles.main - INFO - 2 changes detected
-2024-07-16 13:01:28,614 - watchfiles.main - INFO - 1 change detected
--e 
-File: ./_Deprecated/20240716_132037/app.log
-
-2024-07-16 13:19:19,025 - __main__ - INFO - Starting the application.
-2024-07-16 13:19:33,684 - watchfiles.main - INFO - 4 changes detected
-2024-07-16 13:19:47,611 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:20:01,537 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:20:15,513 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:20:29,540 - watchfiles.main - INFO - 2 changes detected
--e 
-File: ./_Deprecated/20240716_132209/app.log
-
-2024-07-16 13:20:37,516 - __main__ - INFO - Starting the application.
-2024-07-16 13:20:51,904 - watchfiles.main - INFO - 2 changes detected
-2024-07-16 13:21:05,732 - watchfiles.main - INFO - 3 changes detected
-2024-07-16 13:21:19,507 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:21:33,534 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:21:47,511 - watchfiles.main - INFO - 1 change detected
-2024-07-16 13:22:01,689 - watchfiles.main - INFO - 2 changes detected
--e 
-File: ./_Deprecated/20240716_132349/app.log
-
-2024-07-16 13:22:09,647 - __main__ - INFO - Starting the application.
-2024-07-16 13:22:22,748 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
-2024-07-16 13:22:36,125 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:22:50,002 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240716_133054/app.log
-
-2024-07-16 13:23:49,491 - __main__ - INFO - Starting the application.
-2024-07-16 13:24:03,831 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
-2024-07-16 13:24:16,708 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:24:30,784 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:24:44,912 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:24:59,139 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:25:12,916 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:25:26,793 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:25:40,670 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:25:54,647 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:26:08,725 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:26:23,054 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:26:36,530 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:26:50,557 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/api.py')}
-2024-07-16 13:27:05,040 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/api.cpython-312.pyc')}
-2024-07-16 13:27:19,017 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:27:32,493 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:27:46,320 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:28:00,447 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:28:14,524 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:28:28,350 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:28:42,176 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:28:56,303 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:29:10,279 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:29:23,955 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:29:37,983 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:29:52,010 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:30:05,936 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:30:20,565 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240716_134159/app.log
-
-2024-07-16 13:30:54,174 - __main__ - INFO - Starting the application.
-2024-07-16 13:31:08,718 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
-2024-07-16 13:31:23,199 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240716_135444/app.log
-
-2024-07-16 13:41:59,675 - __main__ - INFO - Starting the application.
-2024-07-16 13:42:14,025 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/api.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__')}
-2024-07-16 13:42:27,903 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:42:41,841 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:42:55,517 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:43:08,892 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:43:22,167 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:43:36,345 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:43:50,322 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:44:04,200 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:44:18,126 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:44:32,203 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:44:45,628 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:44:59,505 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:45:13,483 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:45:27,460 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:45:41,336 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240716_141009/app.log
-
-2024-07-16 13:54:44,990 - __main__ - INFO - Starting the application.
-2024-07-16 13:55:00,308 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
-2024-07-16 13:55:14,789 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:55:29,330 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 13:55:43,558 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
--e 
-File: ./_Deprecated/20240716_141216/app.log
-
-2024-07-16 14:10:09,423 - __main__ - INFO - Starting the application.
-2024-07-16 14:10:24,159 - watchfiles.main - DEBUG - 7 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/agent.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/api.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__')}
-2024-07-16 14:10:38,350 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:10:52,627 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:11:07,155 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240716_141410/app.log
-
-2024-07-16 14:12:16,302 - __main__ - INFO - Starting the application.
-2024-07-16 14:12:31,390 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
-2024-07-16 14:12:45,871 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:12:59,409 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:13:13,836 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:13:28,464 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:13:42,892 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:13:57,120 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240716_141546/app.log
-
-2024-07-16 14:14:10,274 - __main__ - INFO - Starting the application.
-2024-07-16 14:14:24,839 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__')}
-2024-07-16 14:14:39,170 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:14:53,648 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:15:07,887 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:15:22,265 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/memory_manager.py'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:15:36,845 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/api.py'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__')}
--e 
-File: ./_Deprecated/20240716_141838/app.log
-
-2024-07-16 14:15:46,848 - __main__ - INFO - Starting the application.
-2024-07-16 14:16:01,264 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db')}
-2024-07-16 14:16:14,092 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:16:28,070 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:16:42,559 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:16:56,737 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:17:10,914 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:17:25,393 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:17:39,371 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:17:52,596 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/memory_manager.py')}
-2024-07-16 14:18:07,080 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:18:21,609 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/agent.py'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240716_144430/app.log
-
-2024-07-16 14:18:38,819 - __main__ - INFO - Starting the application.
-2024-07-16 14:20:05,651 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/agent.py'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/memory_manager.py')}
-2024-07-16 14:20:19,885 - watchfiles.main - DEBUG - 7 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/agent.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:20:33,873 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:20:48,101 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:21:02,228 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:21:16,406 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:21:30,435 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:21:44,412 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:21:58,440 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:22:12,368 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:22:26,345 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:22:40,272 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:22:54,300 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:23:08,278 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:23:22,255 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:23:36,232 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:23:50,009 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:24:03,936 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:24:17,663 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:24:31,239 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:24:43,664 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:24:56,289 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:25:10,316 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:25:24,494 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:25:37,570 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:25:51,547 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:26:05,524 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:26:19,452 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:26:33,430 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:26:47,357 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:27:01,284 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:27:15,211 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:27:29,188 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:27:42,715 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:27:56,693 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:28:10,570 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:28:24,497 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:28:38,374 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:28:52,301 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:29:05,877 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:29:19,854 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:29:33,131 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:29:47,058 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:30:00,885 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:30:13,310 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:30:27,337 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:30:41,213 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:30:55,140 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:31:09,017 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:31:22,945 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:31:36,823 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:31:50,750 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:32:04,576 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:32:18,553 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:32:31,178 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:32:45,056 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:32:59,084 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:33:13,012 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:33:26,991 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:33:40,817 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:33:54,795 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:34:08,671 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:34:22,649 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:34:36,526 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:34:50,503 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:35:04,431 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:35:18,459 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:35:32,485 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:35:46,512 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:36:00,590 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:36:14,517 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240717_103508/app.log
-
-2024-07-16 14:44:30,100 - __main__ - INFO - Starting the application.
-2024-07-16 14:44:44,560 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__/agent.cpython-312.pyc'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/__pycache__')}
-2024-07-16 14:44:58,440 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:45:12,318 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:45:26,296 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:45:40,173 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:45:54,101 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:46:07,979 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:46:21,957 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:46:35,834 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:46:49,761 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:47:03,238 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:47:15,213 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:47:29,140 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:47:43,066 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:47:56,993 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:48:10,921 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:48:24,899 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:48:38,826 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:48:52,804 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:49:06,782 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:49:20,208 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:49:34,136 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:49:48,063 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:50:01,941 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:50:15,868 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:50:29,797 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:50:43,774 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:50:57,753 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:51:11,680 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:51:25,658 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:51:39,134 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:51:53,011 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:52:06,888 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:52:21,315 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:52:35,293 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:52:49,220 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:53:03,197 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:53:20,134 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:53:36,570 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:53:50,948 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:54:05,075 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:54:19,101 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:54:33,178 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:54:47,156 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:54:59,732 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:55:13,810 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:55:27,788 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:55:41,665 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-16 14:55:55,591 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
--e 
-File: ./_Deprecated/20240717_103729/app.log
-
-2024-07-17 10:35:08,898 - __main__ - INFO - Starting the application.
-2024-07-17 10:35:24,313 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/app/db/__pycache__/memory_manager.cpython-312.pyc')}
-2024-07-17 10:35:38,293 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:35:52,182 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:36:06,058 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:36:19,884 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:36:33,860 - watchfiles.main - DEBUG - 1 change detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log')}
-2024-07-17 10:36:47,436 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
-2024-07-17 10:37:29,079 - __main__ - INFO - Starting the application.
--e 
-File: ./_Deprecated/20240717_104557/app.log
-
-2024-07-17 10:37:43,934 - watchfiles.main - DEBUG - 2 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
-2024-07-17 10:37:58,113 - watchfiles.main - DEBUG - 4 changes detected: {(<Change.added: 1>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
-2024-07-17 10:38:12,202 - watchfiles.main - DEBUG - 3 changes detected: {(<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/logs/app.log'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data/memories.db'), (<Change.modified: 2>, '/mnt/c/Users/fkgde/Desktop/GoodAI/__FULLTIME/LTM-Benchmark/goodai-ltm-benchmark/MLP_LTM/data')}
--e 
-File: ./_Deprecated/app_20240715_180946.log
-
-2024-07-15 18:15:10,682 - __main__ - INFO - Starting the application with fresh configuration.
-2024-07-15 18:15:19,286 - watchfiles.main - INFO - 6 changes detected
-2024-07-15 18:15:27,746 - watchfiles.main - INFO - 7 changes detected
-2024-07-15 18:15:36,218 - watchfiles.main - INFO - 7 changes detected
--e 
-File: ./_Deprecated/fresh_run.py
-
-import os
-import datetime
-import uvicorn
-from app.utils.logging import setup_logging, get_logger
-
-# Create a new timestamp
-timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-# Define paths for the fresh versions
-new_db_path = f"./data/memories_{timestamp}.db"
-new_log_path = f"./logs/app_{timestamp}.log"
-
-# Ensure the data and logs directories exist
-os.makedirs("./data", exist_ok=True)
-os.makedirs("./logs", exist_ok=True)
-
-# Create a new empty database file
-open(new_db_path, 'w').close()
-
-# Update the config file to use the new database and log file
-with open("./app/config.py", "r") as file:
-    config_lines = file.readlines()
-
-with open("./app/config.py", "w") as file:
-    for line in config_lines:
-        if line.strip().startswith("DATABASE_URL"):
-            file.write(f"    DATABASE_URL = 'sqlite:///{new_db_path}'\n")
-        elif line.strip().startswith("LOG_FILE"):
-            file.write(f"    LOG_FILE = '{new_log_path}'\n")
-        elif line.strip().startswith("TOGETHER_API_KEY") or line.strip().startswith("MODEL_NAME") or line.strip().startswith("LOG_LEVEL"):
-            file.write(line)
-        else:
-            file.write(line)
-
-# Update the logging setup to use the new log file
-def setup_logging():
-    import logging
-    from app.config import config
-
-    logging.basicConfig(
-        level=config.LOG_LEVEL,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(config.LOG_FILE),
-            logging.StreamHandler()
-        ]
-    )
-
-# Run the application
-if __name__ == "__main__":
-    setup_logging()
-    logger = get_logger(__name__)
-    logger.info("Starting the application with fresh configuration.")
-    uvicorn.run("app.api:app", host="0.0.0.0", port=8000, reload=True)

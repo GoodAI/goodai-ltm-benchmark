@@ -4,9 +4,10 @@ from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.sql import func
 from app.config import config
 import numpy as np
-from together import Together
+from openai import AsyncOpenAI
 from app.utils.logging import get_logger
 from contextlib import contextmanager
+import os
 
 logger = get_logger(__name__)
 
@@ -34,8 +35,13 @@ class MemoryManager:
     def __init__(self, db_url: str):
         self.engine = create_engine(db_url)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-        self.together_client = Together(api_key=config.TOGETHER_API_KEY)
-        logger.info("MemoryManager initialized")
+        
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+        self.openai_client = AsyncOpenAI(api_key=openai_api_key)
+        
+        logger.info("MemoryManager initialized with OpenAI embeddings")
         
     def initialize(self):
         Base.metadata.create_all(bind=self.engine)
@@ -87,14 +93,19 @@ class MemoryManager:
                 logger.debug(f"Linked memory ID {memory.id} to new memory ID {new_memory.id}")
         db.commit()
 
-    async def _get_embedding(self, text: str) -> list:
-        logger.debug("Generating embedding")
-        response = self.together_client.embeddings.create(
-            input=[text],
-            model="togethercomputer/m2-bert-80M-8k-retrieval"
-        )
-        logger.debug("Embedding generated successfully")
-        return response.data[0].embedding
+    async def _get_embedding(self, text: str) -> np.ndarray:
+        logger.debug("Generating embedding using OpenAI")
+        try:
+            response = await self.openai_client.embeddings.create(
+                input=[text],
+                model="text-embedding-ada-002"  # Use the appropriate OpenAI embedding model
+            )
+            embedding = response.data[0].embedding
+            logger.debug("Embedding generated successfully")
+            return np.array(embedding, dtype=np.float32)
+        except Exception as e:
+            logger.error(f"Error generating embedding: {str(e)}")
+            raise
 
     def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
