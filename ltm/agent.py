@@ -2,7 +2,9 @@ import datetime
 import json
 import logging
 import uuid
+import ltm.scratchpad as sp
 from dataclasses import dataclass, field
+from copy import deepcopy
 from json import JSONDecodeError
 from typing import List, Callable, Optional, Any, Union
 from litellm import completion, completion_cost, token_counter
@@ -11,10 +13,10 @@ from goodai.ltm.agent import LTMAgentConfig, Message
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
-from goodai.ltm.prompts.chronological_ltm import cltm_template_queries_info
 
 from utils.constants import DATA_DIR
-from utils.llm import make_user_message, make_system_message
+from utils.llm import make_user_message, make_assistant_message, make_system_message, LLMContext
+from utils.text import truncate
 
 _debug_dir = DATA_DIR.joinpath("ltm_debug_info")
 _logger = logging.getLogger("exp_agent")
@@ -25,9 +27,6 @@ Current time: {datetime}
 Current information about the user:
 {user_info}
 """.strip()
-_user_info_system_message = (
-    "You are an expert in helping AI assistants manage their knowledge about a user and their operating environment."
-)
 _convo_excerpts_prefix = f"# The following are excerpts from the early part of the conversation "\
                          f"or prior conversations, in chronological order:\n\n"
 
@@ -58,8 +57,9 @@ class LTMAgent:
     config: LTMAgentConfig = field(default_factory=LTMAgentConfig)
     prompt_callback: Callable[[str, str, list[dict], str], Any] = None
     user_info: dict = field(default_factory=dict)
+    user_info_ts: dict[str, float] = field(default_factory=dict)  # Tracks changes in user_info (timestamps)
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
-    debug_level: int = 0
+    debug_level: int = 1
     llm_call_idx: int = None
 
     @property
@@ -105,6 +105,7 @@ class LTMAgent:
             config=self.config,
             convo_mem=self.convo_mem.state_as_text(),
             user_info=self.user_info,
+            user_info_ts=self.user_info_ts,
             session=self.session.state_as_text(),
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
@@ -123,26 +124,28 @@ class LTMAgent:
         self.model = state["model"]
         self.config = state["config"]
         self.user_info = state["user_info"]
+        self.user_info_ts = state["user_info_ts"]
         self.prompt_callback = prompt_callback
         self.convo_mem.set_state(state["convo_mem"])
         self.session = LTMAgentSession.from_state_text(state["session"])
 
-    def system_prompt(self) -> str:
-        return _default_system_message.format(
-            datetime=str(self.now)[:-7],
-            user_info=json.dumps(self.user_info, indent=2),
-        )
+    def count_tokens(
+        self, text: str | list[str] = None, messages: LLMContext = None, count_response_tokens: bool = False,
+    ) -> int:
+        return token_counter(model=self.model, text=text, messages=messages, count_response_tokens=count_response_tokens)
 
     def _build_llm_context(self, m_history: list[Message], user_content: str,
                            cost_callback: Callable[[float], Any]) -> list[dict]:
         target_history_tokens = self.max_prompt_size * (1.0 - self.config.ctx_fraction_for_mem)
-        new_system_content = self.system_prompt()
-        context = []
-        if new_system_content:
-            context.append(make_system_message(new_system_content))
-        context.append(make_user_message(user_content))
-        token_count = token_counter(model=self.model, messages=context)
-        oldest_message_ts = self.now
+        context = [
+            make_system_message(_default_system_message.format(
+                datetime=str(self.now)[:-7],
+                user_info=sp.to_text(self.user_info),
+            )),
+            make_user_message(user_content),
+        ]
+        token_count = self.count_tokens(messages=context)
+        oldest_message_ts = self.now.timestamp()
         for message in reversed(m_history):
             if message.is_user:
                 ts = datetime.datetime.fromtimestamp(message.timestamp)
@@ -150,7 +153,7 @@ class LTMAgent:
                 new_content = f"[{et_descriptor}]\n{message.content}"
                 message = Message(message.role, new_content, message.timestamp)
             message_dict = message.as_llm_dict()
-            new_token_count = token_counter(model=self.model, messages=[message_dict]) + token_count
+            new_token_count = self.count_tokens(messages=[message_dict]) + token_count
             if new_token_count > target_history_tokens:
                 break
             context.insert(1, message_dict)
@@ -195,68 +198,75 @@ class LTMAgent:
         excerpts_text = self.get_mem_excerpts(convo_memories, remain_tokens)
         return user_info, excerpts_text
 
-    def _complete_prepare_user_info(self, prompt_messages: list[dict],
-                                    user_content: str,
-                                    cost_callback: Callable[[float], Any]) -> tuple[list[str], dict]:
-        if self.user_info:
-            user_info_text = json.dumps(self.user_info, indent=2)
-            user_info_description = f"Prior information about the user:\n{user_info_text}"
-        else:
-            user_info_description = f"There is no prior information about the user."
-        sp_content = cltm_template_queries_info.format(
-            user_info_description=user_info_description,
-            user_content=user_content,
-        ).strip()
-        prompt_messages.append({"role": "user", "content": sp_content})
-        query_json = self._completion(prompt_messages, temperature=self.config.mem_temperature,
-                                      label="query-generation", cost_callback=cost_callback)
-        try:
-            queries_and_info = sanitize_and_parse_json(query_json)
-        except (JSONDecodeError, ValueError):
-            _logger.exception(f"Unable to parse JSON: {query_json}")
-            queries_and_info = {}
-        if not isinstance(queries_and_info, dict):
-            _logger.warning("Query generation completion was not a dictionary!")
-            queries_and_info = {}
-        user_info = queries_and_info.get("user", self.user_info)
-        _logger.info(f"New user object: {user_info}")
-        queries = queries_and_info.get("queries", [])
-        return (
-            queries,
-            user_info,
-        )
-
-    def _prepare_mem_info(
-            self, message_history: list[Message], user_content: str, cost_callback: Callable[[float], Any],
-    ) -> tuple[list[str], Union[dict, str, None]]:
-        prompt_messages = [make_system_message(_user_info_system_message)]
-        messages_prefix = (
-            "\n\nFor context, the assistant and the user have previously exchanged these messages:\n"
-            "(prior conversation context omitted)\n\n"
-        )
-        token_count = token_counter(model=self.model, messages=prompt_messages)
-        token_count += token_counter(model=self.model, text=messages_prefix)
+    def _last_messages_preview(self, message_history: list[Message], token_limit: int, max_messages: int = 10) -> str:
         messages = list()
-        token_limit = int(0.8 * self.max_prompt_size)
-        for m in reversed(message_history[-10:]):
-            msg = f"{m.role.upper()}: {m.content}"
-            new_token_count = token_count + token_counter(model=self.model, text=msg)
+        token_count = 0
+        sep_tokens = self.count_tokens(text="\n\n")
+        for m in reversed(message_history[-max_messages:]):
+            msg = f"{m.role.upper()}: {truncate(m.content, 500)}"
+            new_token_count = token_count + sep_tokens + self.count_tokens(text=msg)
             if new_token_count > token_limit:
                 break
             token_count = new_token_count
             messages.append(msg)
-        if len(messages) > 0:
-            prompt_messages[0]["content"] += messages_prefix + "\n\n".join(reversed(messages))
-        return self._complete_prepare_user_info(prompt_messages, user_content, cost_callback)
+        return "\n\n".join(reversed(messages))
+
+    def _generate_extra_queries(
+        self, message_history: list[Message], user_content: str, cost_callback: Callable[[float], Any],
+    ) -> list[str]:
+        # The system prompt includes this intro line, plus up to 10 previous messages in the conversation
+        # TODO: Since user_info is presented in the user message, these past messages should be there too.
+        system_prompt = ("You are an expert in helping AI assistants manage their knowledge about a user and their "
+                         "operating environment.")
+        messages_prefix = (
+            "\n\nFor context, the assistant and the user have previously exchanged these messages:\n"
+            "(prior conversation context omitted)\n\n"
+        )
+        system_tokens = self.count_tokens(text=system_prompt + messages_prefix)
+        msg_preview = self._last_messages_preview(message_history, self.max_prompt_size - system_tokens)
+        if msg_preview != "":
+            system_prompt += messages_prefix + msg_preview
+
+        if self.user_info:
+            user_info_description = f"Prior information about the user:\n{sp.to_text(self.user_info)}"
+        else:
+            user_info_description = f"There is no prior information about the user."
+        context = [
+            make_system_message(system_prompt),
+            make_user_message(sp.query_rewrite_template.format(
+                user_info_description=user_info_description,
+                user_content=user_content,
+            )),
+        ]
+        query_json = self._completion(context, temperature=self.config.mem_temperature,
+                                      label="query-generation", cost_callback=cost_callback)
+        try:
+            queries = sanitize_and_parse_json(query_json)
+        except (JSONDecodeError, ValueError):
+            _logger.exception(f"Unable to parse JSON: {query_json}")
+            queries = {}
+        if not isinstance(queries, dict):
+            _logger.warning("Query generation completion was not a dictionary!")
+            queries = {}
+        return queries.get("queries", [])
+
+    def _prepare_mem_info(
+            self, message_history: list[Message], user_content: str, cost_callback: Callable[[float], Any],
+    ) -> tuple[list[str], dict]:
+
+        queries = self._generate_extra_queries(message_history, user_content, cost_callback)
+        user_info = self._update_scratchpad(message_history, user_content, cost_callback)
+        _logger.info(f"New user object: {user_info}")
+        return queries, user_info
 
     def get_mem_excerpts(self, convo_memories: list[RetrievedMemory], token_limit: int) -> str:
-        token_count = token_counter(model=self.model, text=_convo_excerpts_prefix)
+        token_count = self.count_tokens(text=_convo_excerpts_prefix)
         convo_excerpts: list[tuple[float, str]] = []
         for m in sorted(convo_memories, key=lambda _t: _t.relevance, reverse=True):
             ts = datetime.datetime.fromtimestamp(m.timestamp)
             ts_descriptor = f"{td_format(self.now - ts)} ({str(ts)[:-7]})"
             excerpt = f"# Excerpt from {ts_descriptor}\n{m.passage.strip()}\n\n"
-            new_token_count = token_counter(model=self.model, text=excerpt) + token_count
+            new_token_count = self.count_tokens(text=excerpt) + token_count
             if new_token_count > token_limit:
                 break
             token_count = new_token_count
@@ -291,6 +301,11 @@ class LTMAgent:
             self._add_to_convo_memory(message)
         return response
 
+    def _truncated_completion(self, context: LLMContext, max_messages: int, **kwargs) -> str:
+        while len(context) + 1 > max_messages or self.count_tokens(messages=context) > self.max_prompt_size:
+            context.pop(1)
+        return self._completion(context, **kwargs)
+
     def _completion(self, context: List[dict[str, str]], temperature: float, label: str,
                     cost_callback: Callable[[float], Any]) -> str:
         # TODO: max_tokens is borked: https://github.com/BerriAI/litellm/issues/4439
@@ -312,7 +327,7 @@ class LTMAgent:
         # See if dir exists or create it, and set llm_call_idx
         save_dir = _debug_dir.joinpath(self.save_name)
         if self.llm_call_idx is None:
-            if save_dir.exists():
+            if save_dir.exists() and len(list(save_dir.glob("*.txt"))) > 0:
                 self.llm_call_idx = max(int(p.name.removesuffix(".txt")) for p in save_dir.glob("*.txt")) + 1
             else:
                 self.llm_call_idx = 0
@@ -337,6 +352,75 @@ class LTMAgent:
         self.convo_mem.clear()
         self.user_info = dict()
         self.new_session()
+
+    def _update_scratchpad(
+        self, message_history: list[Message], user_message: str, cost_cb: Callable[[float], None],
+        max_changes: int = 10, max_tries: int = 5, max_messages: int = 10, max_scratchpad_tokens: int = 1024,
+    ) -> dict:
+        """An embodied agent interacts with an extremely simple environment to safely update the scratchpad.
+        A rather small scratchpad (1k tokens) seems to work optimally."""
+        assert 0 < max_scratchpad_tokens < self.max_prompt_size // 2
+        ask_kwargs = dict(label="scratchpad", temperature=0, cost_callback=cost_cb, max_messages=max_messages)
+        scratchpad = deepcopy(self.user_info)
+        scratchpad_timestamps = self.user_info_ts
+        preview_tokens = (self.max_prompt_size // 2) - self.count_tokens(text=sp.to_text(self.user_info))
+        assert 0 < preview_tokens < self.max_prompt_size // 2
+        msg_preview = self._last_messages_preview(message_history, preview_tokens)
+        if msg_preview == "":
+            msg_preview = "This assistant has not exchanged any messages with the user so far."
+        else:
+            msg_preview = (
+                "The assistant has already exchanged some messages with the user:\n"
+                f"(prior conversation context might be missing)\n\n{msg_preview}"
+            )
+        context = [make_system_message(sp.system_prompt_template.format(last_messages=msg_preview, message=user_message))]
+        for _ in range(max_changes):
+
+            # This is how the info looks like, do you wanna make changes?
+            context.append(make_user_message(sp.changes_yesno_template.format(user_info=sp.to_text(scratchpad))))
+            response = self._truncated_completion(context, **ask_kwargs)
+            if "yes" not in response.lower():
+                break
+
+            # Alright, make a single change
+            changed = False
+            context.append(make_assistant_message("yes"))
+            context.append(make_user_message(sp.single_change_template))
+            for _ in range(max_tries):
+                response = self._truncated_completion(context, **ask_kwargs)
+                context.append(make_assistant_message(response))
+                if self.count_tokens(response) > 150:
+                    context.append(make_user_message(
+                        'This update is too large. Make it smaller or set "new_content" to null.'
+                    ))
+                    continue
+                try:
+                    d = sp.extract_json_dict(response)
+                    if not d["new_content"]:
+                        sp.remove_item(scratchpad, d["key"])
+                    else:
+                        sp.add_new_content(scratchpad_timestamps, scratchpad, d["key"], d["new_content"])
+                        changed = True
+                    break
+                except Exception as exc:
+                    context.append(make_user_message(
+                        f"There has been an error:\n\n{str(exc)}\n\nTry again, but take this error into account."
+                    ))
+
+            # Register changes with timestamps and remove items if necessary
+            if changed:
+                keys_ts = None
+                while self.count_tokens(text=sp.to_text(scratchpad)) > max_scratchpad_tokens:
+                    # Older and deeper items (with longer path) go first
+                    if keys_ts is None:
+                        keys_ts = sorted(
+                            [(k, ts) for k, ts in scratchpad_timestamps.items()],
+                            key=lambda t: (t[1], -len(t[0])),
+                        )
+                    keypath, _ = keys_ts.pop(0)
+                    sp.remove_item(scratchpad, keypath)
+                    del scratchpad_timestamps[keypath]
+        return scratchpad
 
 
 class LTMAgentSession:

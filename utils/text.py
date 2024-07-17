@@ -10,3 +10,9 @@ def rouge_l(reference: str, candidate: str) -> float:
 def standardise(text: str) -> str:
     table = str.maketrans("", "", string.punctuation)
     return text.lower().translate(table)
+
+
+def truncate(s: str, length: int = 40) -> str:
+    if len(s) <= length:
+        return s
+    return s[:length - 3].rstrip(string.punctuation) + "..."
