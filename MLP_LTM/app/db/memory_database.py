@@ -103,9 +103,12 @@ class MemoryDatabase:
                 target_memory = db.query(Memory).filter(Memory.id == target_id).first()
                 if source_memory is None or target_memory is None:
                     raise ValueError(f"Invalid memory IDs: {source_id}, {target_id}")
-                source_memory.links.append(target_memory)
-                db.commit()
-                logger.info(f"Link added between memories {source_id} and {target_id}")
+                if target_memory not in source_memory.links:
+                    source_memory.links.append(target_memory)
+                    db.commit()
+                    logger.info(f"Link added between memories {source_id} and {target_id}")
+                else:
+                    logger.debug(f"Link between memories {source_id} and {target_id} already exists")
         except Exception as e:
             logger.error(f"Error adding link between memories: {str(e)}", exc_info=True)
             raise

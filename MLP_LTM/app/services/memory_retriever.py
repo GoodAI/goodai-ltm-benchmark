@@ -3,7 +3,7 @@ from app.db.memory_database import MemoryDatabase, Memory
 from app.services.embedding_service import EmbeddingService
 from app.config import config
 from app.utils.logging import get_logger
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 import numpy as np
 from datetime import datetime
 
@@ -31,18 +31,17 @@ class MemoryRetriever:
                     result = self._include_linked_memories(db, result, query_embedding, current_memory_id)
                 
                 formatted_memories = self._format_memories(result)
+                memory_objects = [m for m, _ in result]
                 
                 total_matching_memories = len(formatted_memories)
                 
-                if top_k is None:
-                    top_k = config.RETRIEVAL['top_k']
-                
                 if top_k is not None:
                     formatted_memories = formatted_memories[:top_k]
+                    memory_objects = memory_objects[:top_k]
                 
                 logger.info(f"Retrieved {len(formatted_memories)} out of {total_matching_memories} relevant unique memories")
                 
-                return formatted_memories
+                return formatted_memories, memory_objects
         except Exception as e:
             logger.error(f"Error retrieving relevant memories: {str(e)}", exc_info=True)
             raise
@@ -94,7 +93,10 @@ class MemoryRetriever:
                 logger.warning(f"Invalid timestamp format for memory ID {memory.id}: {memory.timestamp}")
                 formatted_timestamp = "Unknown Time"
 
-            formatted_memory = f"{formatted_timestamp} {memory.query}:{memory.response}" if memory.response else f"{formatted_timestamp} {memory.query}:"
+            if config.MEMORY_LINKING['query_only_linking']:
+                formatted_memory = f"{formatted_timestamp} {memory.query}"
+            else:
+                formatted_memory = f"{formatted_timestamp} {memory.query}:{memory.response}" if memory.response else f"{formatted_timestamp} {memory.query}:"
             formatted_memories.append(formatted_memory)
         
         return formatted_memories

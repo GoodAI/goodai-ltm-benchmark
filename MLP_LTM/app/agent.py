@@ -46,8 +46,13 @@ class Agent:
 
     async def _retrieve_relevant_memories(self, query: str, memory_id: int) -> List[str]:
         try:
-            relevant_memories = await self.memory_manager.get_relevant_memories(query, memory_id, top_k=config.RETRIEVAL['top_k'])
-            return relevant_memories
+            query_embedding = await self.memory_manager.embedding_service.get_embedding(query)
+            formatted_memories, memory_objects = await self.memory_manager.get_relevant_memories(query, memory_id, top_k=config.RETRIEVAL['top_k'])
+            
+            if config.MEMORY_LINKING['query_only_linking']:
+                self.memory_manager.memory_linker.update_links_for_query(query_embedding, memory_objects)
+            
+            return formatted_memories
         except Exception as e:
             logger.error(f"Error retrieving relevant memories: {str(e)}", exc_info=True)
             raise
@@ -89,7 +94,7 @@ class Agent:
     - Consider multiple perspectives and evaluate the reliability of the provided context.
     - Provide a clear, concise, and well-structured response.
     - If a specific format is required (e.g., list, steps, numerical answer), adhere to it.
-    - You are terse and pithy, not as a personality trait but to be more economical with you token usage.
+    - You are terse and pithy, not as a personality trait but to be more economical with you token usage, but do not let this impact your specificity. 
     - Avoid unnecessary affirmations or filler phrases at the beginning of your response.
 
     3. Memory Management:

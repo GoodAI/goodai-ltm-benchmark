@@ -1,4 +1,5 @@
 # app/services/memory_linker.py
+from datetime import datetime
 from app.db.memory_database import MemoryDatabase, Memory
 from app.services.embedding_service import EmbeddingService
 from app.config import config
@@ -68,13 +69,18 @@ class MemoryLinker:
 
     def update_links_for_query(self, query_embedding: np.ndarray, relevant_memories: List[Memory]):
         logger.debug("Updating links for query-based retrieval")
-        for memory in relevant_memories:
-            similarity = self.embedding_service.cosine_similarity(
-                query_embedding,
-                np.fromstring(memory.query_embedding, sep=',')
-            )
-            if similarity > config.MEMORY_LINKING['similarity_threshold']:
-                # Here you would implement the logic to create links based on the query
-                # This might involve creating a temporary memory object for the query
-                # or updating the links of the retrieved memories
-                pass
+        with self.memory_db.get_db() as db:
+            for i, memory1 in enumerate(relevant_memories):
+                for memory2 in relevant_memories[i+1:]:
+                    similarity = self.embedding_service.cosine_similarity(
+                        np.fromstring(memory1.query_embedding, sep=','),
+                        np.fromstring(memory2.query_embedding, sep=',')
+                    )
+                    if similarity > config.MEMORY_LINKING['similarity_threshold']:
+                        try:
+                            self.memory_db.add_link(memory1.id, memory2.id)
+                            logger.debug(f"Created link between memory ID {memory1.id} and memory ID {memory2.id}")
+                        except ValueError as e:
+                            logger.warning(f"Could not create link: {str(e)}")
+
+        logger.info("Completed updating links for query-based retrieval")
