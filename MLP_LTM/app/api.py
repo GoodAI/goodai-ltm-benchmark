@@ -1,4 +1,3 @@
-# app/api.py
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from app.agent import Agent
@@ -17,8 +16,8 @@ class QueryResponse(BaseModel):
 
 try:
     memory_manager = MemoryManager(config.DATABASE_URL)
-    memory_manager.initialize()
     agent = Agent(config.TOGETHER_API_KEY, memory_manager)
+    logger.info("Application initialized successfully")
 except Exception as e:
     logger.error(f"Error initializing application: {str(e)}", exc_info=True)
     raise

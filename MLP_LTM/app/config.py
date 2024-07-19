@@ -17,12 +17,13 @@ class Config(BaseSettings):
 
     MEMORY_LINKING: dict = {
         'enabled': True,
-        'similarity_threshold': 0.8,
+        'similarity_threshold': 0.6,  # Lowered from 0.8
         'max_links_per_memory': None,  # None means infinite
-        'query_only_linking': True,
+        'query_only_linking': True,  # Changed to False to enable full linking
         'keyword_matching': {
-            'enabled': False,
-            'threshold': 0.7
+            'enabled': True,
+            'embedding_weight': 0.7,
+            'keyword_weight': 0.3,
         }
     }
 
@@ -33,7 +34,7 @@ class Config(BaseSettings):
 
     RETRIEVAL: dict = {
         'top_k': None,  # None means retrieve all relevant memories
-        'min_similarity': 0.65
+        'min_similarity': 0.8
     }
 
     MEMORY_FORMATTING: dict = {

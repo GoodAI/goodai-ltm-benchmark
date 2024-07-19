@@ -1,4 +1,3 @@
-# app/db/memory_database.py
 from sqlalchemy import create_engine, Column, Integer, String, Table, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session

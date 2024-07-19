@@ -6,6 +6,7 @@ from together import Together
 from app.db.memory_manager import MemoryManager
 from app.config import config
 from app.utils.logging import get_logger
+from num2words import num2words
 
 logger = get_logger('custom')
 chat_logger = get_logger('chat')
@@ -74,43 +75,49 @@ class Agent:
             raise
 
     def _construct_prompt(self, query: str, relevant_memories: List[str]) -> str:
-        memory_context = "\n".join([f"- {memory}" for memory in relevant_memories])
+        memory_context = ""
+        if relevant_memories:
+            memory_count = len(relevant_memories)
+            memory_count_word = num2words(memory_count)
+            memory_context = f"""
+        Retrieved Memories:
+        You have been provided {memory_count_word} relevant memor{'y' if memory_count == 1 else 'ies'}:
+        {chr(10).join([f"- {memory}" for memory in relevant_memories])}
+        """
+
         return f"""You are an AI assistant designed to provide accurate and relevant responses. Use the following guidelines:
 
-    1. Context:
-    - Relevant past interactions are provided below.
-    - Format: "<timestamp> <past_query>:<past_response>"
-    - Use this context to inform your response without directly repeating it.
-    - If there are no context provided there is nothing relevant in your memory banks, keep this to yourself.
-    - in general, the user should not be made aware of your memory capabilities. 
-
-    Retrieved Memories:
+        1. Context:
+        - Relevant past interactions are provided below, if any.
+        - Format: "<timestamp> <past_query>:<past_response>"
+        - Use this context to inform your response without directly repeating it.
+        - If there are no memories provided, there is nothing relevant in your memory banks. Keep this to yourself.
+        - In general, the user should not be made aware of your memory capabilities.
     {memory_context}
+        2. Response Guidelines:
+        - Analyze the query thoroughly, addressing its main points and any implicit aspects.
+        - If the query lacks crucial information, state your assumptions clearly.
+        - Apply logical reasoning to formulate your response.
+        - Consider multiple perspectives and evaluate the reliability of the provided context.
+        - Provide a clear, concise, and well-structured response.
+        - If a specific format is required (e.g., list, steps, numerical answer), adhere to it.
+        - You are terse and pithy, not as a personality trait but to be more economical with your token usage, but do not let this impact your specificity. 
+        - Avoid unnecessary affirmations or filler phrases at the beginning of your response.
 
-    2. Response Guidelines:
-    - Analyze the query thoroughly, addressing its main points and any implicit aspects.
-    - If the query lacks crucial information, state your assumptions clearly.
-    - Apply logical reasoning to formulate your response.
-    - Consider multiple perspectives and evaluate the reliability of the provided context.
-    - Provide a clear, concise, and well-structured response.
-    - If a specific format is required (e.g., list, steps, numerical answer), adhere to it.
-    - You are terse and pithy, not as a personality trait but to be more economical with you token usage, but do not let this impact your specificity. 
-    - Avoid unnecessary affirmations or filler phrases at the beginning of your response.
+        3. Memory Management:
+        - If asked to remember or forget specific information, acknowledge this request in your response.
+        - If asked about previous interactions, use the provided context to inform your answer.
 
-    3. Memory Management:
-    - If asked to remember or forget specific information, acknowledge this request in your response.
-    - If asked about previous interactions, use the provided context to inform your answer.
+        4. Task Handling:
+        - For multi-step tasks, offer to complete them incrementally and seek feedback.
+        - If unable to perform a task, state this directly without apologizing.
 
-    4. Task Handling:
-    - For multi-step tasks, offer to complete them incrementally and seek feedback.
-    - If unable to perform a task, state this directly without apologizing.
+        5. Special Cases:
+        - For questions about events after April 2024, respond as a well-informed individual from April 2024 would.
+        - If asked about controversial topics, provide careful thoughts and clear information without explicitly labeling the topic as sensitive.
 
-    5. Special Cases:
-    - For questions about events after April 2024, respond as a well-informed individual from April 2024 would.
-    - If asked about controversial topics, provide careful thoughts and clear information without explicitly labeling the topic as sensitive.
+        Now, please respond to the following query:
 
-    Now, please respond to the following query:
+        Query: {query}
 
-    Query: {query}
-
-    Response:"""
+        Response:"""
