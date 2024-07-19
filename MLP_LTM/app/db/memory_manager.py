@@ -4,7 +4,7 @@ from app.services.memory_linker import MemoryLinker
 from app.services.memory_retriever import MemoryRetriever
 from app.config import config
 from app.utils.logging import get_logger
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 logger = get_logger('custom')
 
@@ -53,7 +53,7 @@ class MemoryManager:
             logger.error(f"Error updating memory with response: {str(e)}", exc_info=True)
             raise
 
-    async def get_relevant_memories(self, query: str, current_memory_id: int, top_k: int = None) -> Tuple[List[str], List[Memory]]:
+    async def get_relevant_memories(self, query: str, current_memory_id: int, top_k: int = None) -> Tuple[List[str], List[Memory], Dict[int, str]]:
         try:
             return await self.memory_retriever.get_relevant_memories(query, current_memory_id, top_k or config.RETRIEVAL['top_k'])
         except Exception as e:

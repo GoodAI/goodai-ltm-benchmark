@@ -1,9 +1,9 @@
 # app/agent.py
 import json
 import re
-from typing import List
+from typing import List, Tuple, Dict
 from together import Together
-from app.db.memory_manager import MemoryManager
+from app.db.memory_manager import MemoryManager, Memory
 from app.config import config
 from app.utils.logging import get_logger
 from num2words import num2words
@@ -23,7 +23,7 @@ class Agent:
             
             memory_id = await self.memory_manager.create_memory_with_query(query)
             
-            relevant_memories = await self._retrieve_relevant_memories(query, memory_id)
+            relevant_memories, memory_objects, retrieval_info = await self._retrieve_relevant_memories(query, memory_id)
             response = await self._generate_response(query, relevant_memories)
             
             await self.memory_manager.update_memory_with_response(memory_id, response)
@@ -45,15 +45,15 @@ class Agent:
             logger.error(f"Error processing trivia request: {str(e)}", exc_info=True)
             raise
 
-    async def _retrieve_relevant_memories(self, query: str, memory_id: int) -> List[str]:
+    async def _retrieve_relevant_memories(self, query: str, memory_id: int) -> Tuple[List[str], List[Memory], Dict[int, str]]:
         try:
             query_embedding = await self.memory_manager.embedding_service.get_embedding(query)
-            formatted_memories, memory_objects = await self.memory_manager.get_relevant_memories(query, memory_id, top_k=config.RETRIEVAL['top_k'])
+            formatted_memories, memory_objects, retrieval_info = await self.memory_manager.get_relevant_memories(query, memory_id, top_k=config.RETRIEVAL['top_k'])
             
             if config.MEMORY_LINKING['query_only_linking']:
                 self.memory_manager.memory_linker.update_links_for_query(query_embedding, memory_objects)
             
-            return formatted_memories
+            return formatted_memories, memory_objects, retrieval_info
         except Exception as e:
             logger.error(f"Error retrieving relevant memories: {str(e)}", exc_info=True)
             raise
