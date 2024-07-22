@@ -27,8 +27,6 @@ Current time: {datetime}
 Current information about the user:
 {user_info}
 """.strip()
-_convo_excerpts_prefix = f"# The following are excerpts from the early part of the conversation "\
-                         f"or prior conversations, in chronological order:\n\n"
 
 
 def td_format(td: datetime.timedelta) -> str:
@@ -87,7 +85,7 @@ class LTMAgent:
         :return: The new session object.
         """
         session_id = str(uuid.uuid4())
-        self.session = LTMAgentSession(session_id=session_id, m_history=[])
+        self.session = LTMAgentSession(session_id=session_id, m_history=[], i_dict={})
         if not self.convo_mem.is_empty():
             self.convo_mem.add_separator()
         return self.session
@@ -160,11 +158,12 @@ class LTMAgent:
             token_count = new_token_count
             oldest_message_ts = message.timestamp
         remaining_tokens = self.max_prompt_size - token_count
-        self.user_info, mem_appendix = self._get_mem_message(
+        self.user_info, recalled_memories = self._get_mem_message(
             m_history, user_content, remaining_tokens, oldest_message_ts, cost_callback,
         )
-        if mem_appendix:
-            context[0]["content"] += "\n\n" + mem_appendix
+        for mem in recalled_memories[::-1]:
+            context.insert(1, mem.as_llm_dict())
+
         return context
 
     def convo_retrieve(
@@ -185,7 +184,7 @@ class LTMAgent:
     def _get_mem_message(
         self, m_history: list[Message], user_content: str, remain_tokens: int,
         before_timestamp: float, cost_callback: Callable[[float], Any], k_per_query=250,
-    ) -> tuple[Union[dict, str], str]:
+    ) -> tuple[Union[dict, str], List[Message]]:
         """
         Gets (1) a new user object, and (2) a context message with
         information from memory if available.
@@ -195,8 +194,8 @@ class LTMAgent:
         queries = queries or []
         queries = [f"USER: {user_content}"] + queries
         convo_memories = self.convo_retrieve(queries, k_per_query, before_timestamp)
-        excerpts_text = self.get_mem_excerpts(convo_memories, remain_tokens)
-        return user_info, excerpts_text
+        interactions = self.get_mem_interactions(convo_memories, remain_tokens)
+        return user_info, interactions
 
     def _last_messages_preview(self, message_history: list[Message], token_limit: int, max_messages: int = 10) -> str:
         messages = list()
@@ -259,22 +258,30 @@ class LTMAgent:
         _logger.info(f"New user object: {user_info}")
         return queries, user_info
 
-    def get_mem_excerpts(self, convo_memories: list[RetrievedMemory], token_limit: int) -> str:
-        token_count = self.count_tokens(text=_convo_excerpts_prefix)
-        convo_excerpts: list[tuple[float, str]] = []
+    def get_mem_interactions(self, convo_memories: list[RetrievedMemory], token_limit: int) -> list[Message]:
+        token_count = 0
+        relevant_interactions: list[Message] = []
         for m in sorted(convo_memories, key=lambda _t: _t.relevance, reverse=True):
-            ts = datetime.datetime.fromtimestamp(m.timestamp)
-            ts_descriptor = f"{td_format(self.now - ts)} ({str(ts)[:-7]})"
-            excerpt = f"# Excerpt from {ts_descriptor}\n{m.passage.strip()}\n\n"
-            new_token_count = self.count_tokens(text=excerpt) + token_count
+            interaction_timestamp = m.timestamp
+            interaction = self.session.interaction_from_timestamp(interaction_timestamp)
+
+            new_token_count = self.count_tokens(messages=[i.as_llm_dict() for i in interaction]) + token_count
             if new_token_count > token_limit:
                 break
+
+            ts = datetime.datetime.fromtimestamp(interaction_timestamp)
+            # Set the relative message timestamps
+            ts_descriptor = f"{td_format(self.now - ts)} ({str(ts)[:-7]}) "
+            for i in interaction:
+                i.content = ts_descriptor + i.content
+
             token_count = new_token_count
-            convo_excerpts.append((m.timestamp, excerpt))
-        if convo_excerpts:
-            convo_excerpts.sort(key=lambda _t: _t[0])
-            return _convo_excerpts_prefix + "\n".join([e for _, e in convo_excerpts])
-        return ""
+            relevant_interactions.extend(interaction)
+
+        by_role = sorted(relevant_interactions, key=lambda a: a.role, reverse=True)
+        by_timestamp = sorted(by_role, key=lambda a: a.timestamp)
+
+        return by_timestamp
 
     def _add_to_convo_memory(self, message: "Message"):
         role = "YOU" if message.role == "assistant" else message.role.upper()
@@ -295,10 +302,13 @@ class LTMAgent:
                                           cost_callback)
         response = self._completion(context, temperature=self.config.llm_temperature, label="reply",
                                     cost_callback=cost_callback)
-        for role, content in [("user", user_content), ("assistant", response)]:
-            message = Message(role=role, content=content, timestamp=self.now.timestamp())
-            session.add(message)
-            self._add_to_convo_memory(message)
+
+        interaction_timestamp = self.now.timestamp()
+        user_message = Message(role="user", content=user_content, timestamp=interaction_timestamp)
+        agent_message = Message(role="assistant", content=response, timestamp=interaction_timestamp)
+        self._add_to_convo_memory(user_message)
+        self._add_to_convo_memory(agent_message)
+        self.session.add_interaction((user_message, agent_message))
         return response
 
     def _truncated_completion(self, context: LLMContext, max_messages: int, **kwargs) -> str:
@@ -427,9 +437,10 @@ class LTMAgentSession:
     """
     An agent session, or a collection of messages.
     """
-    def __init__(self, session_id: str, m_history: list[Message]):
+    def __init__(self, session_id: str, m_history: list[Message], i_dict: dict[float, tuple[Message, Message]]):
         self.session_id = session_id
         self.message_history: list[Message] = m_history or []
+        self.interaction_dict: dict[float, tuple[Message, Message]] = i_dict or {}
 
     @property
     def message_count(self):
@@ -439,11 +450,20 @@ class LTMAgentSession:
         """
         :return: A string that represents the contents of the session.
         """
-        state = dict(session_id=self.session_id, history=self.message_history)
+        state = dict(session_id=self.session_id, history=self.message_history, interactions=self.interaction_dict)
         return json.dumps(state, cls=SimpleJSONEncoder)
 
     def add(self, message: Message):
         self.message_history.append(message)
+
+    def add_interaction(self, interaction: tuple[Message, Message]):
+        self.message_history.extend(interaction)
+        key = interaction[0].timestamp
+        self.interaction_dict[key] = interaction
+
+    def interaction_from_timestamp(self, timestamp: float) -> tuple[Message, Message]:
+        return self.interaction_dict[timestamp]
+
 
     @classmethod
     def from_state_text(cls, state_text: str) -> 'LTMAgentSession':
@@ -455,4 +475,5 @@ class LTMAgentSession:
         state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
         session_id = state["session_id"]
         m_history = state["history"]
-        return cls(session_id, m_history)
+        i_dict = state["interactions"]
+        return cls(session_id, m_history, i_dict)
