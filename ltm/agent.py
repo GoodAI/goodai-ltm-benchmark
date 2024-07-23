@@ -263,7 +263,7 @@ class LTMAgent:
         relevant_interactions: list[Message] = []
         for m in sorted(convo_memories, key=lambda _t: _t.relevance, reverse=True):
             interaction_timestamp = m.timestamp
-            interaction = self.session.interaction_from_timestamp(interaction_timestamp)
+            interaction = deepcopy(self.session.interaction_from_timestamp(interaction_timestamp))
 
             new_token_count = self.count_tokens(messages=[i.as_llm_dict() for i in interaction]) + token_count
             if new_token_count > token_limit:
@@ -272,8 +272,7 @@ class LTMAgent:
             ts = datetime.datetime.fromtimestamp(interaction_timestamp)
             # Set the relative message timestamps
             ts_descriptor = f"{td_format(self.now - ts)} ({str(ts)[:-7]}) "
-            for i in interaction:
-                i.content = ts_descriptor + i.content
+            interaction[0].content = ts_descriptor + interaction[0].content
 
             token_count = new_token_count
             relevant_interactions.extend(interaction)
