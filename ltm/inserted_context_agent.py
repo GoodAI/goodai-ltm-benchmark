@@ -75,13 +75,13 @@ class InsertedContextAgent(ChatSession):
     llm_index: int = 0
     model: str = "gpt-4o"
 
-#     system_message = """
-# You have previously recorded information over your lifetime. This data is an aggregated report of most of the messages up until now:
-# {scratchpad}
-# """
-
     system_message = """
-You are a helpful assistant."""
+You have previously recorded information over your lifetime. This data is an aggregated report of most of the messages up until now:
+{scratchpad}
+"""
+
+#     system_message = """
+# You are a helpful assistant."""
 
     should_update = """{user_info_description}
 
@@ -138,8 +138,8 @@ Write JSON in the following format:
 
         colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
 
-        keywords = self.keywords_for_message(user_message)
-        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=5, keywords=keywords)
+        self.keywords_for_message(user_message)
+        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=5)
 
         fname = f"data/llm_calls/call_{self.llm_index}.json"
         with open(fname, "w") as f:
@@ -172,12 +172,13 @@ Write JSON in the following format:
 
     def keywords_for_message(self, user_message):
 
-        prompt = "Create two keywords to describe the topic of this message:\n{user_message}.\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `[keyword_1, keyword_2]`\nChoose keywords that would aid in retriving this message from memory in the future.\nReuse these keywords if appropriate: {keywords}"
+        prompt = "Create two keywords to describe the topic of this message:\n'{user_message}'.\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `[keyword_1, keyword_2]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}"
 
         context = [make_system_message(prompt.format(user_message=user_message, keywords=self.defined_kws))]
         while True:
             try:
-                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=self.add_cost)
+                print("Keyword gen")
+                response = ask_llm(context, model="gpt-4o", max_overall_tokens=self.max_prompt_size, cost_callback=self.add_cost)
 
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
@@ -190,13 +191,12 @@ Write JSON in the following format:
                 self.defined_kws.append(k)
 
         print(f"Interaction keywords: {keywords}")
-        return keywords
 
-    def create_context(self, user_message, max_prompt_size, previous_interactions, keywords):
+    def create_context(self, user_message, max_prompt_size, previous_interactions):
 
         stamped_user_message = str(datetime.now()) + ": " + user_message
         context = [make_system_message(self.system_message.format(scratchpad=repr(self.scratchpad))), make_user_message(stamped_user_message)]
-        relevant_memories = self.get_relevant_memories(user_message, keywords)
+        relevant_memories = self.get_relevant_memories(user_message)
 
         # for m in relevant_memories:
         #     colour_print("YELLOW", f"Got memory: {m}")
@@ -216,7 +216,7 @@ Write JSON in the following format:
         # Add in memories up to the max prompt size
         current_size = token_counter("gpt-4o", messages=context)
         memory_idx = len(relevant_memories) - 1
-        max_mems_to_show = 20
+        max_mems_to_show = 100
 
         while current_size < max_prompt_size - self.max_message_size and memory_idx >= 0 and max_mems_to_show > 0:
             user_message, assistant_message = self.messages_from_memory(relevant_memories[memory_idx])
@@ -232,10 +232,6 @@ Write JSON in the following format:
         print(f"current context size: {current_size}")
 
         return context
-
-    # def get_relevant_memories(self, user_message):
-    #     relevant_memories = self.semantic_memory.retrieve(user_message, k=20)
-    #     return sorted([x for x in relevant_memories if x.relevance > 0.7], key=lambda x: x.timestamp)
 
     def llm_memory_filter(self, memories, queries, keywords):
         prompt = """Here are a number of interactions, each is given a number:
@@ -302,7 +298,7 @@ Express your answer in this JSON:
                     print("Attempting filter")
                     with open(f"data/llm_calls/filter-{self.llm_index}-{call_count}.txt", "w") as f:
                         f.write(dump_context_s(context))
-                        result = ask_llm(context, model=self.model, max_overall_tokens=16384, cost_callback=self.add_cost)
+                        result = ask_llm(context, model="gpt-4o", max_overall_tokens=16384, cost_callback=self.add_cost)
 
                         f.write(f"\nResponse:\n{result}")
 
@@ -323,7 +319,7 @@ Express your answer in this JSON:
 
         return filtered_mems
 
-    def get_relevant_memories(self, user_message, keywords):
+    def get_relevant_memories(self, user_message):
         prompt ="""Message from user: "{user_message}"
         
 Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
@@ -345,24 +341,6 @@ Write JSON in the following format:
     "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
     "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
 }}"""
-
-        # Get a little potential context using the user query and the queries
-        context_mems = self.semantic_memory.retrieve(user_message, k=3)
-        filtered_context_mems = []
-        for m in context_mems:
-            for k in m.metadata["keywords"]:
-                if k in keywords:
-                    filtered_context_mems.append(m)
-                    break
-
-        # Now retrieve the messages
-        full_context_mems = []
-        for m in filtered_context_mems:
-            key = m.metadata["timestamp"]
-            full_interaction_mem = self.all_messages.get_from_key(key)
-
-            if full_interaction_mem[0] not in full_context_mems:
-                full_context_mems.extend(full_interaction_mem)
 
         # Now create the context for generating the queries
         context = [make_user_message(prompt.format(user_message=user_message, time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"), keywords=self.defined_kws))]
@@ -388,7 +366,7 @@ Write JSON in the following format:
                 continue
 
         # Filter by both relevance and keywords
-        all_keywords = keywords + query_keywords
+        all_keywords = query_keywords
         relevance_filtered_mems = [x for x in all_retrieved_memories if x.relevance > 0.6] + self.retrieve_from_keywords(all_keywords)
         keyword_filtered_mems = []
 
@@ -400,7 +378,7 @@ Write JSON in the following format:
 
         keyword_filtered_mems.extend(self.retrieve_from_keywords(all_keywords))
 
-        if "trivia" in keywords:
+        if "trivia" in all_keywords:
             llm_filtered_mems = keyword_filtered_mems
         else:
             # colour_print("MAGENTA", "\nMEMORIES BEFORE LLM FILTERING:")
@@ -470,12 +448,13 @@ Write JSON in the following format:
             decision = {}
 
         if decision.get("verdict", True):
-
             context.append(make_assistant_message(decision_json))
             context.append(make_user_message(self.update_user_info.format(user_info_description=scratchpad_text, user_content=instruction).strip()))
             _, size = ensure_context_len(context, "gpt-4o", max_len=self.max_prompt_size)
             print(f"Scratchpad Perform Change context size: {size}")
             scratchpad_json = ask_llm(model="gpt-4-turbo", context=context, cost_callback=self.add_cost, max_overall_tokens=16384)
+
+            self.scratchpad = sanitize_and_parse_json(scratchpad_json)
 
     def _update_scratchpad(
             self, message_history: list[Message], user_message: str, cost_cb: Callable[[float], None],
