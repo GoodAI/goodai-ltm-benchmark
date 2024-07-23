@@ -138,7 +138,7 @@ Write JSON in the following format:
 
         colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
 
-        self.keywords_for_message(user_message)
+        keywords = self.keywords_for_message(user_message)
         context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=5)
 
         fname = f"data/llm_calls/call_{self.llm_index}.json"
@@ -191,6 +191,7 @@ Write JSON in the following format:
                 self.defined_kws.append(k)
 
         print(f"Interaction keywords: {keywords}")
+        return keywords
 
     def create_context(self, user_message, max_prompt_size, previous_interactions):
 
