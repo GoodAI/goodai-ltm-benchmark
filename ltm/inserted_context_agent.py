@@ -1,20 +1,19 @@
 import json
+import uuid
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
-from json import JSONDecodeError
 from math import ceil
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 
-from goodai.helpers.json_helper import sanitize_and_parse_json
+from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.config import TextMemoryConfig
 from goodai.ltm.mem.default import DefaultTextMemory
-from litellm import token_counter, completion
+from litellm import token_counter
 import ltm.scratchpad as sp
 from model_interfaces.base_ltm_agent import Message
 
-from model_interfaces.interface import ChatSession
 from utils.llm import LLMContext, make_system_message, make_user_message, make_assistant_message, ensure_context_len, \
     ask_llm
 from utils.text import truncate
@@ -37,140 +36,78 @@ def remove_timestamps(text: str):
     return text
 
 
-class MessageArchive:
-
-    def __init__(self):
-        self.message_list = []
-        self.message_dict = {}
-
-    def add_interaction(self, key, interaction):
-        self.message_list.extend(interaction)
-        self.message_dict[key] = interaction
-
-    def get_from_key(self, key):
-        return self.message_dict[key]
-
-    def length(self):
-        return len(self.message_list)
-
-    def by_index(self, index):
-        return self.message_list[index]
-
-    def as_messages(self):
-        messages = []
-        for m in self.message_list:
-            messages.append(Message(role=m["role"], content=m["content"], timestamp=1))
-
-        return messages
-
 @dataclass
-class InsertedContextAgent(ChatSession):
-    all_messages: MessageArchive = field(default_factory=MessageArchive)
+class InsertedContextAgent:
+    max_prompt_size: int
+    max_completion_tokens: Optional[int] = None
     semantic_memory: DefaultTextMemory = field(default_factory=AutoTextMemory.create)
     max_prompt_size: int = 16384
     is_local: bool = True
     defined_kws: list = field(default_factory=list)
     scratchpad: dict[str, str] = field(default_factory=dict)
-    user_info_ts: dict[str, float] = field(default_factory=dict)  # Tracks changes in user_info (timestamps)
+    scratchpad_ts: dict[str, float] = field(default_factory=dict)  # Tracks changes in user_info (timestamps)
     llm_index: int = 0
-    model: str = "gpt-4o"
+    costs_usd: float = 0.0
+    model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
 
     system_message = """
 You have previously recorded information over your lifetime. This data is an aggregated report of most of the messages up until now:
 {scratchpad}
 """
 
-#     system_message = """
-# You are a helpful assistant."""
-
-    should_update = """{user_info_description}
-
-== New user interaction ==
-{user_content}
-==
-
-Based on prior user information and the above interaction with the user, your task is to decide carefully if you should
-update the scratchpad, and what changes should be made. Ignore all data that looks like general trivia.
-
-Try to answer these questions:
-- Does the interaction contain information that will be useful in future?
-- Is the information unimportant general knowledge, or useful user specific knowledge?
-
-Sketch out some general plan for the data you think should be written to the scratchpad.
-
-Write JSON in the following format:
-
-{{
-    "reasoning": string, // Does the user query/statement contain information relating to the user or something they may expect you to keep track of?
-    "verdict": bool // The decision of whether to write something to the scratchpad.  
-}}"""
-
-    update_user_info = """
-Based on prior user information and the above interaction with the user, your task is to provide 
-a new user object with updated information provided by the user, such as 
-facts about themselves or information they are expecting you to keep track of.
-Consider carefully if the user implicitly or explicitly wishes for you to save the information.
-
-The updated user object should be compact. Avoid storing unimportant general knowledge.
-At the same time, it's important to preserve prior information 
-you're keeping track of for the user. Capture information provided by the user without
-omitting important details. Exercise judgment in determining if new information overrides, 
-deletes or augments existing information. Property names should be descriptive.
-
-Write JSON in the following format:
-
-{{
-    "user": {{ ... }}, // An updated user object containing attributes, facts, world models
-}}"""
+    # system_message = """You are a helpful AI assistant."""
 
     def __post_init__(self):
-        super().__post_init__()
-
         self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
         self.is_local = True
         self.max_message_size = 1000
         self.defined_kws = []
+        self.new_session()
 
-    def add_cost(self, cost):
-        self.costs_usd += cost
+    def new_session(self) -> 'LTMAgentSession':
+        """
+        Creates a new LTMAgentSession object and sets it as the current session.
+        :return: The new session object.
+        """
+        session_id = str(uuid.uuid4())
+        self.session = LTMAgentSession(session_id=session_id, m_history=[], i_dict=[])
+        if not self.semantic_memory.is_empty():
+            self.semantic_memory.add_separator()
+        return self.session
 
-    def reply(self, user_message: str, agent_response: Optional[str] = None) -> str:
+    def reply(self, user_message: str, agent_response: Optional[str] = None, cost_callback: Callable=None) -> str:
 
         colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
 
-        keywords = self.keywords_for_message(user_message)
-        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=5)
+        keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
+        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=5, cost_cb=cost_callback)
 
         fname = f"data/llm_calls/call_{self.llm_index}.json"
         with open(fname, "w") as f:
             colour_print("BlUE", f"Saving to: {fname}")
             f.write(dump_context_s(context))
             response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
-                                    cost_callback=self.add_cost)
+                                    cost_callback=cost_callback)
 
             response_text = remove_timestamps(response_text)
 
             f.write(f"\n\nResponse:\n{response_text}")
             self.llm_index += 1
 
-        response_ts = str(datetime.now()) + ": " + response_text
-
-        timestamp_key = datetime.now()
-        self.all_messages.add_interaction(timestamp_key, [context[-1], make_assistant_message(response_ts)])
-
-        # Save interaction to memoryall_keywords = keywords + query_keywords
+        # Save interaction to memory
         user_ts = context[-1]["content"]
-        self.save_interaction(user_ts, response_ts, timestamp_key, keywords)
+        timestamp_key = datetime.now().timestamp()
+        um = Message(role="user", content=context[-1]["content"], timestamp=timestamp_key)
+        am = Message(role="assistant", content=response_text, timestamp=timestamp_key)
+
+        self.save_interaction(user_ts, response_text, timestamp_key, keywords)
+        self.session.add_interaction((um, am))
 
         # Update scratchpad
-        # self._update_scratchpad(self.all_messages.as_messages(), user_message=user_message, cost_cb=self.add_cost)
-        interaction = "(User) " + user_ts + "\n---\n" + "(Agent) " + response_ts
-        self.update_scratchpad_legacy(interaction)
-
-        colour_print("Magenta", f"Current total cost: {self.costs_usd}")
+        self._update_scratchpad(self.session.message_history, user_message=user_message, cost_cb=cost_callback)
         return response_text
 
-    def keywords_for_message(self, user_message):
+    def keywords_for_message(self, user_message, cost_cb):
 
         prompt = "Create two keywords to describe the topic of this message:\n'{user_message}'.\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `[keyword_1, keyword_2]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}"
 
@@ -178,11 +115,12 @@ Write JSON in the following format:
         while True:
             try:
                 print("Keyword gen")
-                response = ask_llm(context, model="gpt-4o", max_overall_tokens=self.max_prompt_size, cost_callback=self.add_cost)
+                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb)
 
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
-            except:
+            except Exception as e:
+                print(e)
                 continue
 
         # Update known list of keywords
@@ -193,48 +131,61 @@ Write JSON in the following format:
         print(f"Interaction keywords: {keywords}")
         return keywords
 
-    def create_context(self, user_message, max_prompt_size, previous_interactions):
+    def create_context(self, user_message, max_prompt_size, previous_interactions, cost_cb):
 
         stamped_user_message = str(datetime.now()) + ": " + user_message
         context = [make_system_message(self.system_message.format(scratchpad=repr(self.scratchpad))), make_user_message(stamped_user_message)]
-        relevant_memories = self.get_relevant_memories(user_message)
+        relevant_memories = self.get_relevant_memories(user_message, cost_cb)
 
-        # for m in relevant_memories:
-        #     colour_print("YELLOW", f"Got memory: {m}")
+        # Get interactions from the memories
+        full_interactions = []
+        for m in relevant_memories:
+            interaction = self.messages_from_memory(m)
+            if interaction not in full_interactions:
+                full_interactions.append(interaction)
+
+        for m in full_interactions:
+            colour_print("YELLOW", f"Got interaction: {m}")
 
         # Add the previous messages
-        final_idx = self.all_messages.length() - 1
+        final_idx = self.session.message_count - 1
         while previous_interactions > 0 and final_idx > 0:
 
             # Agent reply
-            context.insert(1, self.all_messages.by_index(final_idx))
+            context.insert(1, self.session.by_index(final_idx).as_llm_dict())
             # User message
-            context.insert(1, self.all_messages.by_index(final_idx-1))
+            context.insert(1, self.session.by_index(final_idx-1).as_llm_dict())
 
             final_idx -= 2
             previous_interactions -= 1
 
         # Add in memories up to the max prompt size
-        current_size = token_counter("gpt-4o", messages=context)
-        memory_idx = len(relevant_memories) - 1
-        max_mems_to_show = 100
+        current_size = token_counter(self.model, messages=context)
+        shown_mems = 0
+        target_size = max_prompt_size - self.max_message_size
 
-        while current_size < max_prompt_size - self.max_message_size and memory_idx >= 0 and max_mems_to_show > 0:
-            user_message, assistant_message = self.messages_from_memory(relevant_memories[memory_idx])
+        for interaction in full_interactions[::-1]:
+            user_message, assistant_message = interaction
+            future_size = current_size + token_counter(self.model, messages=[user_message.as_llm_dict(), assistant_message.as_llm_dict()])
 
+            # If this message is going to be too big, then skip it
+            if future_size > target_size or shown_mems == 100:
+                continue
+
+            # Add the interaction and count the tokens
             if user_message not in context:
-                context.insert(1, assistant_message)
-                context.insert(1, user_message)
-                max_mems_to_show -= 1
+                context.insert(1, assistant_message.as_llm_dict())
+                context.insert(1, user_message.as_llm_dict())
+                shown_mems += 1
 
-                current_size = token_counter("gpt-4o", messages=context)
-            memory_idx -= 1
+                current_size = future_size
+                print(f"Added {interaction}")
 
         print(f"current context size: {current_size}")
 
         return context
 
-    def llm_memory_filter(self, memories, queries, keywords):
+    def llm_memory_filter(self, memories, queries, keywords, cost_cb):
         prompt = """Here are a number of interactions, each is given a number:
 {passages}         
 *********
@@ -269,7 +220,7 @@ Express your answer in this JSON:
 
         # Remove memories that map to the same interaction
         for m in memories:
-            timestamp = m.metadata["timestamp"]
+            timestamp = m.timestamp
             if timestamp not in added_timestamps:
                 added_timestamps.append(timestamp)
                 mems_to_filter.append(m)
@@ -285,9 +236,9 @@ Express your answer in this JSON:
             memory_counter = 0
 
             for m in mems_to_filter[start_idx:end_idx]:
-                timestamp = m.metadata["timestamp"]
-                um, am = self.all_messages.get_from_key(timestamp)
-                memories_passages.append(f"{memory_counter}). (User): {um['content']}\n(You): {am['content']}\nKeywords: {m.metadata['keywords']}")
+                timestamp = m.timestamp
+                um, am = self.session.interaction_from_timestamp(timestamp)
+                memories_passages.append(f"{memory_counter}). (User): {um.content}\n(You): {am.content}\nKeywords: {m.metadata['keywords']}")
                 memory_counter += 1
 
             queries_txt = "- " + "\n- ".join(queries)
@@ -299,7 +250,7 @@ Express your answer in this JSON:
                     print("Attempting filter")
                     with open(f"data/llm_calls/filter-{self.llm_index}-{call_count}.txt", "w") as f:
                         f.write(dump_context_s(context))
-                        result = ask_llm(context, model="gpt-4o", max_overall_tokens=16384, cost_callback=self.add_cost)
+                        result = ask_llm(context, model=self.model, max_overall_tokens=16384, cost_callback=cost_cb)
 
                         f.write(f"\nResponse:\n{result}")
 
@@ -314,13 +265,14 @@ Express your answer in this JSON:
                 except:
                     continue
 
+        filtered_mems = sorted(filtered_mems, key=lambda x: x.timestamp)
         print("Memories after LLM filtering")
         for m in filtered_mems:
             colour_print("GREEN", m)
 
         return filtered_mems
 
-    def get_relevant_memories(self, user_message):
+    def get_relevant_memories(self, user_message, cost_cb):
         prompt ="""Message from user: "{user_message}"
         
 Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
@@ -349,7 +301,7 @@ Write JSON in the following format:
         query_keywords = []
         while True:
             print("generating queries")
-            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=self.add_cost)
+            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb)
 
             try:
                 query_dict = sanitize_and_parse_json(response)
@@ -379,13 +331,19 @@ Write JSON in the following format:
 
         keyword_filtered_mems.extend(self.retrieve_from_keywords(all_keywords))
 
-        if "trivia" in all_keywords:
+        # TODO: Trivia skip for speed
+        trivia_skip = False
+        for kw in all_keywords:
+            if "trivia" in kw:
+                trivia_skip = True
+
+        if trivia_skip:
             llm_filtered_mems = keyword_filtered_mems
         else:
             # colour_print("MAGENTA", "\nMEMORIES BEFORE LLM FILTERING:")
             # for m in keyword_filtered_mems:
             #     colour_print("MAGENTA", m)
-            llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords)
+            llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
 
         # Conditional Spreading activations
         if 0 < len(llm_filtered_mems) < 10:
@@ -411,51 +369,29 @@ Write JSON in the following format:
         return False
 
     def save_interaction(self, user_message, response_message, timestamp, keywords):
-        self.semantic_memory.add_text(user_message, metadata={"timestamp": timestamp, "keywords": keywords})
+        self.semantic_memory.add_text(user_message, timestamp=timestamp, metadata={"keywords": keywords})
         self.semantic_memory.add_separator()
-        self.semantic_memory.add_text(response_message, metadata={"timestamp": timestamp, "keywords": keywords})
+        self.semantic_memory.add_text(response_message, timestamp=timestamp, metadata={"keywords": keywords})
         self.semantic_memory.add_separator()
 
     def messages_from_memory(self, memory):
-        timestamp_key = memory.metadata["timestamp"]
+        timestamp_key = memory.timestamp
 
-        interaction = self.all_messages.get_from_key(timestamp_key)
+        interaction = self.session.interaction_from_timestamp(timestamp_key)
         return interaction[0], interaction[1]
 
-    def update_scratchpad_legacy(self, instruction):
-
-        scratchpad_text = json.dumps(self.scratchpad, indent=2)
-
-        # colour_print("lightblue", f"Updating old scratchpad: {scratchpad_text}")
-
-        context = [make_user_message(
-            self.should_update.format(user_info_description=scratchpad_text, user_content=instruction).strip())]
-
-        _, size = ensure_context_len(context, "gpt-4o", max_len=self.max_prompt_size)
-        print(f"Scratchpad change decide context size: {size}")
-        decision_json = ask_llm(model="gpt-4o", context=context, cost_callback=self.add_cost, max_overall_tokens=16384)
-
-
-        # colour_print("yellow", f"\nDecision to update scratchpad: {json.dumps(decision_json, indent=2)}")
-
-        # Parse out decision whether to update the
-        try:
-            decision = sanitize_and_parse_json(decision_json)
-        except (JSONDecodeError, ValueError):
-            colour_print("RED", f"Unable to parse JSON: {decision_json}")
-            decision = {}
-        if not isinstance(decision, dict):
-            colour_print("RED", "Query generation completion was not a dictionary!")
-            decision = {}
-
-        if decision.get("verdict", True):
-            context.append(make_assistant_message(decision_json))
-            context.append(make_user_message(self.update_user_info.format(user_info_description=scratchpad_text, user_content=instruction).strip()))
-            _, size = ensure_context_len(context, "gpt-4o", max_len=self.max_prompt_size)
-            print(f"Scratchpad Perform Change context size: {size}")
-            scratchpad_json = ask_llm(model="gpt-4-turbo", context=context, cost_callback=self.add_cost, max_overall_tokens=16384)
-
-            self.scratchpad = sanitize_and_parse_json(scratchpad_json)
+    def _last_messages_preview(self, message_history: list[Message], token_limit: int, max_messages: int = 10) -> str:
+        messages = list()
+        token_count = 0
+        sep_tokens = self.count_tokens(text="\n\n")
+        for m in reversed(message_history[-max_messages:]):
+            msg = f"{m.role.upper()}: {truncate(m.content, 500)}"
+            new_token_count = token_count + sep_tokens + self.count_tokens(text=msg)
+            if new_token_count > token_limit:
+                break
+            token_count = new_token_count
+            messages.append(msg)
+        return "\n\n".join(reversed(messages))
 
     def _update_scratchpad(
             self, message_history: list[Message], user_message: str, cost_cb: Callable[[float], None],
@@ -466,7 +402,7 @@ Write JSON in the following format:
         assert 0 < max_scratchpad_tokens < self.max_prompt_size // 2
         ask_kwargs = dict(label="scratchpad", temperature=0, cost_callback=cost_cb, max_messages=max_messages)
         scratchpad = deepcopy(self.scratchpad)
-        scratchpad_timestamps = self.user_info_ts
+        scratchpad_timestamps = self.scratchpad_ts
         preview_tokens = (self.max_prompt_size // 2) - self.count_tokens(text=sp.to_text(self.scratchpad))
         assert 0 < preview_tokens < self.max_prompt_size // 2
         msg_preview = self._last_messages_preview(message_history, preview_tokens)
@@ -484,6 +420,7 @@ Write JSON in the following format:
             # This is how the info looks like, do you wanna make changes?
             context.append(make_user_message(sp.changes_yesno_template.format(user_info=sp.to_text(scratchpad))))
             response = self._truncated_completion(context, **ask_kwargs)
+            print(f"Scratchpad verdict: {response}")
             if "yes" not in response.lower():
                 break
 
@@ -493,6 +430,7 @@ Write JSON in the following format:
             context.append(make_user_message(sp.single_change_template))
             for _ in range(max_tries):
                 response = self._truncated_completion(context, **ask_kwargs)
+                print(f"Scratchpad what to change: {response}")
                 context.append(make_assistant_message(response))
                 if self.count_tokens(response) > 150:
                     context.append(make_user_message(
@@ -551,14 +489,87 @@ Write JSON in the following format:
         return token_counter(model=self.model, text=text, messages=messages, count_response_tokens=count_response_tokens)
 
     def reset(self):
-        pass
+        self.semantic_memory.clear()
+        self.scratchpad = dict()
+        self.new_session()
 
-    def save(self):
-        pass
+    def state_as_text(self) -> str:
+        """
+        :return: A string representation of the content of the agent's memories (including
+        embeddings and chunks) in addition to agent configuration information.
+        Note that callback functions are not part of the provided state string.
+        """
+        state = dict(
+            model=self.model,
+            max_prompt_size=self.max_prompt_size,
+            max_completion_tokens=self.max_completion_tokens,
+            convo_mem=self.semantic_memory.state_as_text(),
+            scratchpad=self.scratchpad,
+            scratchpad_ts=self.scratchpad_ts,
+            session=self.session.state_as_text(),
+        )
+        return json.dumps(state, cls=SimpleJSONEncoder)
 
-    def load(self):
-        pass
+    def from_state_text(self, state_text: str, prompt_callback: Callable[[str, str, list[dict], str], Any] = None):
+        """
+        Builds an LTMAgent given a state string previously obtained by
+        calling the state_as_text() method.
+        :param state_text: A string previously obtained by calling the state_as_text() method.
+        :param prompt_callback: Optional function used to get information on prompts sent to the LLM.
+        :return:
+        """
+        state = json.loads(state_text, cls=SimpleJSONDecoder)
+        self.max_prompt_size = state["max_prompt_size"]
+        self.max_completion_tokens = state["max_completion_tokens"]
+        self.model = state["model"]
+        self.scratchpad = state["scratchpad"]
+        self.scratchpad_ts = state["scratchpad_ts"]
+        self.prompt_callback = prompt_callback
+        self.semantic_memory.set_state(state["convo_mem"])
+        self.session = LTMAgentSession.from_state_text(state["session"])
 
 
+class LTMAgentSession:
+    """
+    An agent session, or a collection of messages.
+    """
+    def __init__(self, session_id: str, m_history: list[Message], i_dict: dict[float, tuple[Message, Message]]):
+        self.session_id = session_id
+        self.message_history: list[Message] = m_history or []
+        self.interaction_dict: dict[float, tuple[Message, Message]] = i_dict or {}
 
+    @property
+    def message_count(self):
+        return len(self.message_history)
+
+    def state_as_text(self) -> str:
+        """
+        :return: A string that represents the contents of the session.
+        """
+        state = dict(session_id=self.session_id, history=self.message_history, interactions=self.interaction_dict)
+        return json.dumps(state, cls=SimpleJSONEncoder)
+
+    def add_interaction(self, interaction: tuple[Message, Message]):
+        self.message_history.extend(interaction)
+        key = interaction[0].timestamp
+        self.interaction_dict[key] = interaction
+
+    def interaction_from_timestamp(self, timestamp: float) -> tuple[Message, Message]:
+        return self.interaction_dict[timestamp]
+
+    def by_index(self, idx):
+        return self.message_history[idx]
+
+    @classmethod
+    def from_state_text(cls, state_text: str) -> 'LTMAgentSession':
+        """
+        Builds a session object given state text.
+        :param state_text: Text previously obtained using the state_as_text() method.
+        :return: A session instance.
+        """
+        state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
+        session_id = state["session_id"]
+        m_history = state["history"]
+        i_dict = state["interactions"]
+        return cls(session_id, m_history, i_dict)
 

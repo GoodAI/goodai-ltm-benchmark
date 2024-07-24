@@ -47,8 +47,6 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         if match is None:
             raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
         return LTMAgentWrapper(model=match.groupdict()["model"], **kwargs)
-    if name == "ltm_prototype":
-        return InsertedContextAgent(**kwargs)
 
     if name == "length_bias":
         return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
