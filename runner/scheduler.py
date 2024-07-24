@@ -470,14 +470,12 @@ class TestRunner:
         for example in self.tests:
             example.dataset_generator.cost_callback = cost_callback
 
-    def run(self, interactive):
+    def run(self):
         self.master_log = MasterLog(self.master_log_path)
         self.runstats_path.parent.mkdir(parents=True, exist_ok=True)
         self.agent.save_path.mkdir(parents=True, exist_ok=True)
         self.load()
         self.set_cost_callback()
-        if interactive:
-            self.interactive_session()
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
         self.tests.sort(key=lambda t: t.unique_id)
         self.progress_dialog = ProgressDialog(self.tests, self.config.isolated)
@@ -487,15 +485,6 @@ class TestRunner:
         self.reset_time()
         report_path = generate_report(self.finished_results)
         webbrowser.open_new_tab(report_path.as_uri())
-
-    def interactive_session(self):
-        while True:
-            user_input = input("Write '/test' to start test >>> ")
-            if user_input == "/test":
-                return
-
-            colour_print("CYAN", "User: " + user_input)
-            colour_print("RED", "Agent: " + self.agent.reply(user_input))
 
     def update_result(
         self,

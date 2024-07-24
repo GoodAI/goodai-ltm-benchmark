@@ -50,12 +50,12 @@ class InsertedContextAgent:
     costs_usd: float = 0.0
     model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
 
-    system_message = """
-You have previously recorded information over your lifetime. This data is an aggregated report of most of the messages up until now:
-{scratchpad}
-"""
+#     system_message = """
+# You have previously recorded information over your lifetime. This data is an aggregated report of most of the messages up until now:
+# {scratchpad}
+# """
 
-    # system_message = """You are a helpful AI assistant."""
+    system_message = """You are a helpful AI assistant."""
 
     def __post_init__(self):
         self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
@@ -104,7 +104,7 @@ You have previously recorded information over your lifetime. This data is an agg
         self.session.add_interaction((um, am))
 
         # Update scratchpad
-        self._update_scratchpad(self.session.message_history, user_message=user_message, cost_cb=cost_callback)
+        # self._update_scratchpad(self.session.message_history, user_message=user_message, cost_cb=cost_callback)
         return response_text
 
     def keywords_for_message(self, user_message, cost_cb):
