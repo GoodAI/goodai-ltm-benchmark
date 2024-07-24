@@ -54,12 +54,11 @@ class Agent:
             memories_tokens = self.tokenizer.count_tokens(" ".join(formatted_memories))
             logger.debug(f"Initial memories tokens: {memories_tokens}")
 
-            while memories_tokens > available_tokens:
+            if memories_tokens > available_tokens:
                 logger.debug("Summarization needed")
                 formatted_memories = await self.summarization_agent.summarize_memories(query, formatted_memories, available_tokens)
                 memories_tokens = self.tokenizer.count_tokens(" ".join(formatted_memories))
                 logger.debug(f"After summarization - Memories tokens: {memories_tokens}")
-                available_tokens = int(available_tokens * 0.9)  # Reduce available tokens by 10% each iteration
 
             logger.info(f"Final memory token count: {memories_tokens}")
             return formatted_memories, memory_objects, retrieval_info
@@ -143,3 +142,5 @@ class Agent:
         Query: {query}
 
         Response:"""
+		
+		
