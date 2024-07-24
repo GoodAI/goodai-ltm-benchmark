@@ -39,7 +39,7 @@ class Config(BaseSettings):
 
     RETRIEVAL: dict = {
         'top_k': None,
-        'min_similarity': 0.8
+        'min_similarity': 0.75
     }
 
     MEMORY_FORMATTING: dict = {

@@ -60,9 +60,13 @@ class SummarizationAgent:
                 extracted_memories.append(memory)
                 current_tokens += memory_tokens
             else:
+                # If we can't add any memories, at least include the first one
+                if not extracted_memories:
+                    truncated_memory = self.tokenizer.truncate_text(memory, max_extractive_tokens)
+                    extracted_memories.append(truncated_memory)
                 break
         
-        return extracted_memories
+        return extracted_memories if extracted_memories else [self.tokenizer.truncate_text(memories[0], max_extractive_tokens)]
 
     async def _abstractive_summarization(self, query: str, memories: List[str], max_tokens: int) -> str:
         prompt = self._construct_summarization_prompt(query, memories)
