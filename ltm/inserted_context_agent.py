@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -81,8 +82,10 @@ class InsertedContextAgent:
 
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
         context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=5, cost_cb=cost_callback)
+        if not os.path.exists(f"data/llm_calls/{self.session.session_id}"):
+            os.mkdir(f"data/llm_calls/{self.session.session_id}")
 
-        fname = f"data/llm_calls/call_{self.llm_index}.json"
+        fname = f"data/llm_calls/{self.session.session_id}/call_{self.llm_index}.json"
         with open(fname, "w") as f:
             colour_print("BlUE", f"Saving to: {fname}")
             f.write(dump_context_s(context))
@@ -104,7 +107,7 @@ class InsertedContextAgent:
         self.session.add_interaction((um, am))
 
         # Update scratchpad
-        # self._update_scratchpad(self.session.message_history, user_message=user_message, cost_cb=cost_callback)
+        self._update_scratchpad(self.session.message_history, user_message=user_message, cost_cb=cost_callback)
         return response_text
 
     def keywords_for_message(self, user_message, cost_cb):
@@ -248,7 +251,7 @@ Express your answer in this JSON:
             while True:
                 try:
                     print("Attempting filter")
-                    with open(f"data/llm_calls/filter-{self.llm_index}-{call_count}.txt", "w") as f:
+                    with open(f"data/llm_calls/{self.session.session_id}/filter-{self.llm_index}-{call_count}.txt", "w") as f:
                         f.write(dump_context_s(context))
                         result = ask_llm(context, model=self.model, max_overall_tokens=16384, cost_callback=cost_cb)
 
