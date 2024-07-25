@@ -4,7 +4,7 @@ from models.root_controller import RootController
 from models.nmn_agent import NMNAgent
 from models.memory_needed_agent import MemoryNeededAgent
 from controllers.spawned_controller import SpawnedController
-from config import MAX_TOKENS_PER_AGENT, NMN_MODEL, MEMORY_MODEL, TOGETHER_API_KEY
+from config import MAX_TOKENS_PER_AGENT, NMN_MODEL, MEMORY_MODEL
 import logging
 
 app = FastAPI()

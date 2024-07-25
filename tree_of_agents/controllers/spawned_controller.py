@@ -1,4 +1,8 @@
 from models.leaf_agent import LeafAgent
+import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logger = logging.getLogger(__name__)
 
 class SpawnedController:
     def __init__(self, max_tokens_per_agent):
@@ -6,14 +10,20 @@ class SpawnedController:
         self.max_tokens_per_agent = max_tokens_per_agent
         self.current_uid = 0
 
-    def process_query(self, query, memory_needed_agent):
-        context = self.gather_context(query)
-        response = memory_needed_agent.process_with_context(query, context)
-        self.add_interaction(query, response)
-        return response
-
     def gather_context(self, query):
-        return LeafAgent.get_all_interactions(limit=5)  # Get the 5 most recent interactions
+        relevant_context = []
+        with ThreadPoolExecutor() as executor:
+            future_to_agent = {executor.submit(agent.get_relevant_info, query): agent for agent in self.leaf_agents}
+            for future in as_completed(future_to_agent):
+                agent = future_to_agent[future]
+                try:
+                    result = future.result()
+                    if result:
+                        relevant_context.extend(result)
+                except Exception as e:
+                    logger.error(f"Error getting context from leaf agent {agent.id}: {str(e)}")
+        
+        return relevant_context
 
     def add_interaction(self, prompt, response):
         if not self.leaf_agents or not self.leaf_agents[-1].add_interaction(prompt, response, self.current_uid):

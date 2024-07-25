@@ -1,4 +1,7 @@
 from utils.together_ai_client import TogetherAIClient
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MemoryNeededAgent:
     def __init__(self, model, spawned_controller):
@@ -6,7 +9,14 @@ class MemoryNeededAgent:
         self.spawned_controller = spawned_controller
 
     def process_query(self, query):
-        return self.spawned_controller.process_query(query, self)
+        try:
+            context = self.spawned_controller.gather_context(query)
+            response = self.process_with_context(query, context)
+            self.spawned_controller.add_interaction(query, response)
+            return response
+        except Exception as e:
+            logger.error(f"Error in Memory Needed Agent: {str(e)}", exc_info=True)
+            raise
 
     def process_with_context(self, query, context):
         context_str = "\n".join([f"User: {item['prompt']}\nAssistant: {item['response']}" for item in context])
