@@ -47,7 +47,7 @@ class SummarizationAgent:
 
     def _extractive_summarization(self, memories: List[str], max_tokens: int) -> List[str]:
         extractive_ratio = config.SUMMARIZATION['extractive_ratio']
-        max_extractive_tokens = min(max_tokens, config.SUMMARIZATION['max_extractive_tokens'])
+        max_extractive_tokens = min(max_tokens, int(max_tokens * extractive_ratio))
         
         sorted_memories = sorted(memories, key=lambda x: self.tokenizer.count_tokens(x), reverse=True)
         

@@ -20,6 +20,11 @@ class Config(BaseSettings):
         'max_input_tokens': 31768  # Maximum tokens for input (max_tokens - reserved_tokens - 1)
     }
 
+    FILTER_MODEL: dict = {
+        'model': "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        'temperature': 0
+    }
+
     MEMORY_LINKING: dict = {
         'enabled': True,
         'similarity_threshold': 0.6,
@@ -39,7 +44,7 @@ class Config(BaseSettings):
 
     RETRIEVAL: dict = {
         'top_k': None,
-        'min_similarity': 0.75
+        'min_similarity': 0.74
     }
 
     MEMORY_FORMATTING: dict = {
@@ -47,8 +52,7 @@ class Config(BaseSettings):
     }
 
     SUMMARIZATION: dict = {
-        'extractive_ratio': 0.5,
-        'max_extractive_tokens': 1000,
+        'extractive_ratio': 0.8,  # Use up to 80% of available tokens for extractive summarization
         'min_abstractive_tokens': 100
     }
 

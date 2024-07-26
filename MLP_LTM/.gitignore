@@ -1,0 +1,62 @@
+# Various temporary files
+.idea/*
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+logs/
+scratch/
+
+configurations/test_datasets.yml
+
+# Ignore data directory by default
+data/
+
+# Environment variables
+.env
+
+_historical/
+not_for_github/auto_scorer/Lib/
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*$py.class
+
+# Credentials
+creds/
+
+# Distribution / packaging
+.Python
+env/
+build/
+dist/
+
+#token
+token.json
+
+not_for_github/auto_scorer/logs/*
+not_for_github/auto_scorer/sheet_to_local/*
+# Output reports
+*.html
+
+.venv
+venv
+rag-venv
+venv-rag
+.vscode
+old_versions
+
+# Ignore memory.db file
+MultiAgentRAG/memory.db
+
+# Ignore json_output directory
+MultiAgentRAG/json_output/
+
+MLP_LTM/MLP_venv/
+MLP_LTM/win-MMLP_venv/
+MLP_LTM/_Deprecated/
+MLP_venv/
+win-MMLP_venv/
+_Deprecated/
+*__init__.py
+*.txt
+*.log
+test*

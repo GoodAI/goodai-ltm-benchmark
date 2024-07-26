@@ -7,12 +7,17 @@ from app.utils.logging import get_logger
 
 app = FastAPI()
 logger = get_logger('custom')
+agent = Agent(config.TOGETHER_API_KEY, MemoryManager(config.DATABASE_URL))
+
 
 class QueryRequest(BaseModel):
     query: str
 
 class QueryResponse(BaseModel):
     response: str
+
+class Query(BaseModel):
+    query: str
 
 try:
     memory_manager = MemoryManager(config.DATABASE_URL)
@@ -22,17 +27,14 @@ except Exception as e:
     logger.error(f"Error initializing application: {str(e)}", exc_info=True)
     raise
 
-@app.post("/query", response_model=QueryResponse)
-async def query_endpoint(request: QueryRequest):
+@app.post("/query")
+async def query_endpoint(request: Query):
     try:
-        logger.info(f"Received query: {request.query}")
         response = await agent.process_query(request.query)
-        logger.info(f"Query processed successfully")
-        return QueryResponse(response=response)
+        return {"response": response}
     except Exception as e:
-        logger.error(f"Error processing query: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"An error occurred while processing the query")
-
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+    
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
