@@ -169,7 +169,6 @@ class InsertedContextAgent:
                 shown_mems += 1
 
                 current_size = future_size
-                print(f"Added {interaction}")
 
         print(f"current context size: {current_size}")
 
