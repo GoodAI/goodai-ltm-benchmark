@@ -478,9 +478,7 @@ class TestRunner:
         self.set_cost_callback()
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
         self.tests.sort(key=lambda t: t.unique_id)
-        self.progress_dialog = ProgressDialog(
-            len(self.tests), self.config.num_examples_per_dataset, self.config.isolated
-        )
+        self.progress_dialog = ProgressDialog(self.tests, self.config.isolated)
         self.run_tests()
         self.progress_dialog.close()
         self.save_runstats()

@@ -14,10 +14,9 @@ def blinker_gen():
 
 
 class ProgressDialog(tk.Tk):
-    def __init__(self, num_tests: int, num_repetitions: int, isolated: bool):
+    def __init__(self, tests: list[TestExample], isolated: bool):
         super().__init__()
-        self._num_tests = num_tests
-        self._num_reps = num_repetitions
+        self._num_tests = len(tests)
         self._isolated = isolated
         self._memory_span = None
         self._at = 0
@@ -26,6 +25,9 @@ class ProgressDialog(tk.Tk):
         self._test_info = dict()
         self._scores = defaultdict(lambda: list())
         self._blinker = blinker_gen()
+        self._repetitions = defaultdict(lambda: 0)
+        for t in tests:
+            self._repetitions[t.dataset_generator.name] += 1
 
         self.title("GoodAI LTM Benchmark")
 
@@ -75,9 +77,9 @@ class ProgressDialog(tk.Tk):
         # First row shows the total score so far and the tests completed
         num_finished = 0
         total_score = 0
-        for scores in self._scores.values():
+        for dataset_name, scores in self._scores.items():
             for s in scores:
-                total_score += s / self._num_reps
+                total_score += s / self._repetitions[dataset_name]
                 num_finished += 1
         test_counter = f"{num_finished}/{self._num_tests}"
         self._1st_row.config(text=f"{next(self._blinker)} Score: {total_score:.1f}   Finished: {test_counter}")
