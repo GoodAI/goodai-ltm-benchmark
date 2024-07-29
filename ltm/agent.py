@@ -375,8 +375,13 @@ class LTMAgent:
         context = [make_system_message(sp.system_prompt_template.format(last_messages=msg_preview, message=user_message))]
         for _ in range(max_changes):
 
+            # Perform analysis of the message and current scratchpad.
+            context.append(make_user_message(sp.analysis_template.format(user_info=sp.to_text(scratchpad))))
+            response = self._truncated_completion(context, **ask_kwargs)
+            context.append(make_assistant_message(response))
+
             # This is how the info looks like, do you wanna make changes?
-            context.append(make_user_message(sp.changes_yesno_template.format(user_info=sp.to_text(scratchpad))))
+            context.append(make_user_message(sp.changes_yesno_template))
             response = self._truncated_completion(context, **ask_kwargs)
             if "yes" not in response.lower():
                 break

@@ -28,15 +28,6 @@ def dump_context_s(context):
 
     return "\n".join(messages)
 
-
-def remove_timestamps(text: str):
-
-    for idx, c in enumerate(text):
-        if c.lower() in "abcdefghijklmnopqrstuvwxyz[](){}":
-            return text[idx:]
-    return text
-
-
 @dataclass
 class InsertedContextAgent:
     max_prompt_size: int
@@ -50,12 +41,7 @@ class InsertedContextAgent:
     llm_index: int = 0
     costs_usd: float = 0.0
     model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
-
-#     system_message = """
-# You have previously recorded information over your lifetime. This data is an aggregated report of most of the messages up until now:
-# {scratchpad}
-# """
-
+    temperature: float = 0.01
     system_message = """You are a helpful AI assistant."""
 
     def __post_init__(self):
@@ -71,7 +57,7 @@ class InsertedContextAgent:
         :return: The new session object.
         """
         session_id = str(uuid.uuid4())
-        self.session = LTMAgentSession(session_id=session_id, m_history=[], i_dict=[])
+        self.session = LTMAgentSession(session_id=session_id, m_history=[], i_dict={})
         if not self.semantic_memory.is_empty():
             self.semantic_memory.add_separator()
         return self.session
@@ -81,7 +67,7 @@ class InsertedContextAgent:
         colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
 
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
-        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=5, cost_cb=cost_callback)
+        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
         if not os.path.exists(f"data/llm_calls/{self.session.session_id}"):
             os.mkdir(f"data/llm_calls/{self.session.session_id}")
 
@@ -90,9 +76,7 @@ class InsertedContextAgent:
             colour_print("BlUE", f"Saving to: {fname}")
             f.write(dump_context_s(context))
             response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
-                                    cost_callback=cost_callback)
-
-            response_text = remove_timestamps(response_text)
+                                    cost_callback=cost_callback, temperature=self.temperature)
 
             f.write(f"\n\nResponse:\n{response_text}")
             self.llm_index += 1
@@ -107,7 +91,7 @@ class InsertedContextAgent:
         self.session.add_interaction((um, am))
 
         # Update scratchpad
-        self._update_scratchpad(self.session.message_history, user_message=user_message, cost_cb=cost_callback)
+        # self._update_scratchpad(self.session.message_history, user_message=user_message, cost_cb=cost_callback)
         return response_text
 
     def keywords_for_message(self, user_message, cost_cb):
@@ -118,7 +102,7 @@ class InsertedContextAgent:
         while True:
             try:
                 print("Keyword gen")
-                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb)
+                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
 
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
@@ -148,7 +132,10 @@ class InsertedContextAgent:
                 full_interactions.append(interaction)
 
         for m in full_interactions:
-            colour_print("YELLOW", f"Got interaction: {m}")
+            if "trivia" in m[0].content:
+                colour_print("YELLOW", f"<*** trivia ***>")
+            else:
+                colour_print("YELLOW", f"{m[0].content}")
 
         # Add the previous messages
         final_idx = self.session.message_count - 1
@@ -189,29 +176,33 @@ class InsertedContextAgent:
         return context
 
     def llm_memory_filter(self, memories, queries, keywords, cost_cb):
+
+        situation_prompt = """You are a part of an agent. Another part of the agent is currently searching for memories using the statements below.
+Based on these statements, describe what is currently happening external to the agent in general terms:
+{queries}  
+"""
+
         prompt = """Here are a number of interactions, each is given a number:
 {passages}         
 *********
 
-These interactions are the results of queries given below. The process of retrieving interactions based on the queries casts a wide net, and so some interactions may not nessecarily be reflective of the queries.        
-Your task is to indicate which interactions are related to ANY of the QUERIES or ANY of the KEYWORDS in ANY way, such as: in topic, objects, characters, or concepts.
+Each of these interactions might be related to the general situation below. Your task is to judge if these interaction have any relation to the general situation.
+Filter out interactions that very clearly do not have any relation. But keep in interactions that have any kind of relationship to the situation such as in: topic, characters, locations, setting, etc.
 
-QUERIES:
-{queries}
-
-KEYWORDS:
-{keywords}
+SITUATION:
+{situation}
 
 Express your answer in this JSON: 
 [
     {{
         "number": int  // The number of the interaction.
-        "justification": string  // Why the interaction is or is not related to one of the queries.
-        "related": bool // Whether the interaction is related to one of the queries or not.
+        "justification": string  // Why the interaction is or is not related to the situation.
+        "related": bool // Whether the interaction is related to the situation.
     }},
     ...
 ]
 """
+
         if len(memories) == 0:
             return []
 
@@ -220,6 +211,12 @@ Express your answer in this JSON:
         added_timestamps = []
         mems_to_filter = []  # Memories without duplicates
         filtered_mems = []
+
+        # Get the situation
+        queries_txt = "- " + "\n- ".join(queries)
+        context = [make_user_message(situation_prompt.format(queries=queries_txt))]
+        situation = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+        colour_print("MAGENTA", f"Filtering situation: {situation}")
 
         # Remove memories that map to the same interaction
         for m in memories:
@@ -246,14 +243,15 @@ Express your answer in this JSON:
 
             queries_txt = "- " + "\n- ".join(queries)
             passages = "\n----\n".join(memories_passages)
-            context = [make_system_message(prompt.format(passages=passages, queries=queries_txt, keywords=keywords))]
+            context = [make_user_message(prompt.format(passages=passages, situation=situation))]
+            # context = [make_system_message(prompt.format(passages=passages, queries=queries_txt, keywords=keywords))]
 
             while True:
                 try:
                     print("Attempting filter")
                     with open(f"data/llm_calls/{self.session.session_id}/filter-{self.llm_index}-{call_count}.txt", "w") as f:
                         f.write(dump_context_s(context))
-                        result = ask_llm(context, model=self.model, max_overall_tokens=16384, cost_callback=cost_cb)
+                        result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
 
                         f.write(f"\nResponse:\n{result}")
 
@@ -265,13 +263,14 @@ Express your answer in this JSON:
 
                     call_count += 1
                     break
-                except:
+                except Exception as e:
+                    print(e)
                     continue
 
         filtered_mems = sorted(filtered_mems, key=lambda x: x.timestamp)
-        print("Memories after LLM filtering")
-        for m in filtered_mems:
-            colour_print("GREEN", m)
+        # print("Memories after LLM filtering")
+        # for m in filtered_mems:
+        #     colour_print("GREEN", m)
 
         return filtered_mems
 
@@ -284,7 +283,7 @@ conversation history that may be relevant to a reply to the user.
 The search queries you produce should be compact reformulations of the user question/statement,
 taking context into account. The purpose of the queries is accurate information retrieval. 
 Search is purely semantic. 
-
+g
 Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
 Use up to three of these keywords to help narrow the search:
 {keywords}
@@ -304,7 +303,7 @@ Write JSON in the following format:
         query_keywords = []
         while True:
             print("generating queries")
-            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb)
+            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
 
             try:
                 query_dict = sanitize_and_parse_json(response)
@@ -334,32 +333,28 @@ Write JSON in the following format:
 
         keyword_filtered_mems.extend(self.retrieve_from_keywords(all_keywords))
 
-        # TODO: Trivia skip for speed
-        trivia_skip = False
-        for kw in all_keywords:
-            if "trivia" in kw:
-                trivia_skip = True
+        # Spreading activations
+        print(f"Performing spreading activations with {len(keyword_filtered_mems[:10])} memories.")
+        secondary_memories = []
+        for mem in keyword_filtered_mems[:10]:
+            # print(f"Spreading with: {mem.passage}")
+            for r_mem in self.semantic_memory.retrieve(mem.passage, k=5):
+                if r_mem.relevance > 0.6 and not self.memory_present(r_mem, secondary_memories) and not self.memory_present(r_mem, keyword_filtered_mems):
+                    secondary_memories.append(r_mem)
 
-        if trivia_skip:
-            llm_filtered_mems = keyword_filtered_mems
-        else:
-            # colour_print("MAGENTA", "\nMEMORIES BEFORE LLM FILTERING:")
-            # for m in keyword_filtered_mems:
-            #     colour_print("MAGENTA", m)
-            llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
+        keyword_filtered_mems.extend(secondary_memories)
+        # # TODO: Trivia skip for speed
+        # trivia_skip = False
+        # for kw in all_keywords:
+        #     if "trivia" in kw:
+        #         trivia_skip = True
+        #
+        # if trivia_skip:
+        #     llm_filtered_mems = keyword_filtered_mems
+        # else:
+        #     llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
 
-        # Conditional Spreading activations
-        if 0 < len(llm_filtered_mems) < 10:
-            print(f"Performing spreading activations with {len(llm_filtered_mems)} memories.")
-            secondary_memories = []
-            for first_mem in llm_filtered_mems:
-                print(f"Spreading with: {first_mem.passage}")
-                for mem in self.semantic_memory.retrieve(first_mem.passage, k=5):
-                    if mem.relevance > 0.6 and not self.memory_present(mem, secondary_memories) and not self.memory_present(mem, llm_filtered_mems):
-                        secondary_memories.append(mem)
-
-            llm_filtered_mems.extend(secondary_memories)
-            # filtered_mems.extend(self.llm_memory_filter(secondary_memories, query_dict["queries"]))
+        llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
 
         sorted_mems = sorted(llm_filtered_mems, key=lambda x: x.timestamp)
         return sorted_mems
@@ -420,10 +415,14 @@ Write JSON in the following format:
             make_system_message(sp.system_prompt_template.format(last_messages=msg_preview, message=user_message))]
         for _ in range(max_changes):
 
-            # This is how the info looks like, do you wanna make changes?
-            context.append(make_user_message(sp.changes_yesno_template.format(user_info=sp.to_text(scratchpad))))
+            # Perform analysis of the message and current scratchpad.
+            context.append(make_user_message(sp.analysis_template.format(user_info=sp.to_text(scratchpad))))
             response = self._truncated_completion(context, **ask_kwargs)
-            print(f"Scratchpad verdict: {response}")
+            context.append(make_assistant_message(response))
+
+            # This is how the info looks like, do you wanna make changes?
+            context.append(make_user_message(sp.changes_yesno_template))
+            response = self._truncated_completion(context, **ask_kwargs)
             if "yes" not in response.lower():
                 break
 
@@ -468,6 +467,7 @@ Write JSON in the following format:
                     del scratchpad_timestamps[keypath]
 
         self.scratchpad = scratchpad
+        return scratchpad
 
     def retrieve_from_keywords(self, keywords):
         selected_mems = []
@@ -484,7 +484,7 @@ Write JSON in the following format:
     def _truncated_completion(self, context: LLMContext, max_messages: int, **kwargs) -> str:
         while len(context) + 1 > max_messages or self.count_tokens(messages=context) > self.max_prompt_size:
             context.pop(1)
-        return ask_llm(context=context, model=self.model, cost_callback=kwargs["cost_callback"])
+        return ask_llm(context=context, model=self.model, cost_callback=kwargs["cost_callback"], temperature=self.temperature)
 
     def count_tokens(
         self, text: str | list[str] = None, messages: LLMContext = None, count_response_tokens: bool = False,

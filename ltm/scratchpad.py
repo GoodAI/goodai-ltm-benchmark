@@ -45,15 +45,17 @@ Property names should be descriptive.
 You will address this task in turns. You will be guided through the process.
 """.strip()
 
-changes_yesno_template = """
+analysis_template = """
 This is what the user information looks like now:
 {user_info}
 
 Try to answer these questions:
 - Does the message contain information that will be useful in future?
 - Is the information unimportant general knowledge, or useful user specific knowledge?
+""".strip()
 
-Would you like to add new information or update any part of it? Answer "yes" or "no".
+changes_yesno_template = """
+Given the above analysis, would you like to add new information or update any part of it? Answer "yes" or "no".
 """.strip()
 
 single_change_template = """
