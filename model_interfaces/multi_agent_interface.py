@@ -24,7 +24,7 @@ load_dotenv()  # Load environment variables from .env file
 #         self.costs_usd = 0  # Add an attribute to track costs
 
 class MultiAgentRAGInterface(ChatSession):
-    def __init__(self, api_url: str = "http://localhost:8080"):
+    def __init__(self, api_url: str = "http://localhost:8000"):
         self.api_url = api_url
         self.api_key = os.getenv('TOGETHER_API_KEY')  # Fetch the API key from environment variables
         if not self.api_key:

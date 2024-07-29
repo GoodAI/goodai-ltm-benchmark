@@ -1,11 +1,14 @@
 import logging
+from together import Together
+from config import TOGETHER_API_KEY as api_key
 
 logger = logging.getLogger(__name__)
 
 class RootController:
-    def __init__(self, nmn_agent, memory_needed_agent):
+    def __init__(self, nmn_agent, memory_needed_agent, model):
         self.nmn_agent = nmn_agent
         self.memory_needed_agent = memory_needed_agent
+        self.client = Together(api_key=api_key)
 
     def process_query(self, query):
         try:
@@ -18,5 +21,9 @@ class RootController:
             raise
 
     def requires_memory(self, query):
-        memory_keywords = ['history', 'previous', 'context', 'remember', 'you said']
-        return any(keyword in query.lower() for keyword in memory_keywords)
+        messages = [
+            {"role": "system", "content": "You are an AI tasked with determining if a given query requires access to previous conversation history or additional context to be answered effectively. Respond with 'YES' if the query likely needs additional context, and 'NO' if it can be answered without any prior information. If unsure, default to 'YES'."},
+            {"role": "user", "content": f"Query: {query}\n\nDoes this query require access to previous conversation history or additional context to be answered effectively? Respond with 'YES' or 'NO'."}
+        ]
+        response = self.client.generate_response(messages)
+        return response.strip().upper() == "YES"

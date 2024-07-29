@@ -1,11 +1,12 @@
-from utils.together_ai_client import TogetherAIClient
+from together import Together
+from config import TOGETHER_API_KEY as api_key
 import logging
 
 logger = logging.getLogger(__name__)
 
 class MemoryNeededAgent:
     def __init__(self, model, spawned_controller):
-        self.client = TogetherAIClient(model)
+        self.client = Together(api_key=api_key)
         self.spawned_controller = spawned_controller
 
     def process_query(self, query):
@@ -19,9 +20,9 @@ class MemoryNeededAgent:
             raise
 
     def process_with_context(self, query, context):
-        context_str = "\n".join([f"User: {item['prompt']}\nAssistant: {item['response']}" for item in context])
+        context_str = "\n".join([f"Human: {item['prompt']}\nAssistant: {item['response']}" for item in context])
         messages = [
-            {"role": "system", "content": "You are an AI assistant with access to previous conversations. Use this context to inform your responses."},
-            {"role": "user", "content": f"Context:\n{context_str}\n\nCurrent query: {query}"}
+            {"role": "system", "content": "You are an AI assistant with access to previous conversations. Your task is to provide accurate and helpful responses based on the given context and the current query. Always maintain a professional and friendly tone."},
+            {"role": "user", "content": f"Context:\n{context_str}\n\nCurrent query: {query}\n\nPlease provide a response that addresses the current query while incorporating relevant information from the context. If the context doesn't contain directly relevant information, use your general knowledge to provide the best possible answer."}
         ]
         return self.client.generate_response(messages)

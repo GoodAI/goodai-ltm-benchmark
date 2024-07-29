@@ -1,6 +1,7 @@
 from models.leaf_agent import LeafAgent
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from config import TIMESTAMP_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,12 @@ class SpawnedController:
                 agent = future_to_agent[future]
                 try:
                     result = future.result()
-                    if result:
-                        relevant_context.extend(result)
+                    if result and result != "NO RELEVANT MEMORIES":
+                        relevant_context.extend(result['interactions'])
                 except Exception as e:
                     logger.error(f"Error getting context from leaf agent {agent.id}: {str(e)}")
         
+        relevant_context.sort(key=lambda x: x['timestamp'], reverse=True)
         return relevant_context
 
     def add_interaction(self, prompt, response):

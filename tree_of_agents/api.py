@@ -4,7 +4,7 @@ from models.root_controller import RootController
 from models.nmn_agent import NMNAgent
 from models.memory_needed_agent import MemoryNeededAgent
 from controllers.spawned_controller import SpawnedController
-from config import MAX_TOKENS_PER_AGENT, NMN_MODEL, MEMORY_MODEL
+from config import MAX_TOKENS_PER_AGENT, NMN_MODEL, MEMORY_MODEL, ROOT_MODEL
 import logging
 
 app = FastAPI()
@@ -21,7 +21,7 @@ try:
     spawned_controller = SpawnedController(MAX_TOKENS_PER_AGENT)
     nmn_agent = NMNAgent(NMN_MODEL)
     memory_needed_agent = MemoryNeededAgent(MEMORY_MODEL, spawned_controller)
-    root_controller = RootController(nmn_agent, memory_needed_agent)
+    root_controller = RootController(nmn_agent, memory_needed_agent, ROOT_MODEL)
     logger.info("Application initialized successfully")
 except Exception as e:
     logger.error(f"Error initializing application: {str(e)}", exc_info=True)
