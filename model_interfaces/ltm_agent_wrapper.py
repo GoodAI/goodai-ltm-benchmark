@@ -31,7 +31,7 @@ class LTMAgentWrapper(ChatSession):
         def _cost_fn(amount: float):
             self.costs_usd += amount
 
-        return self.agent.reply(user_message, cost_callback=None if "llama" in self.model else _cost_fn)
+        return self.agent.reply(user_message, cost_callback=_cost_fn)
 
     def reset(self):
         self.agent.reset()

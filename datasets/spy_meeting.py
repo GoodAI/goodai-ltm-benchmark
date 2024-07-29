@@ -38,7 +38,7 @@ CODED_INFO_THING = [
 class SpyMeetingDataset(DatasetInterface):
     name: str = "Spy Meeting"
     description: str = "The agent is given three clandestine messages. Then is asked to recall all of them and decide where and when the meeting is taking place long with what they should bring."
-    question: str = "Given the clandestine messages you have received, tell me as specifically as you can, when and where the meeting is going to happen and what you should bring."
+    question: str = "Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples."
 
     def generate_examples(self, num_examples):
         examples = []

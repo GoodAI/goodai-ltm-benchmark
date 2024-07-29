@@ -9,3 +9,4 @@ class RunConfig:
     debug: bool = False
     incompatibilities: list[set[type]] = field(default_factory=list)
     isolated: bool = False
+    num_examples_per_dataset: int = 1
