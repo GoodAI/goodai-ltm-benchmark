@@ -14,23 +14,63 @@ from goodai.ltm.mem.default import DefaultTextMemory
 from litellm import token_counter
 import ltm.scratchpad as sp
 from model_interfaces.base_ltm_agent import Message
+from utils.constants import DATA_DIR
 
 from utils.llm import LLMContext, make_system_message, make_user_message, make_assistant_message, ensure_context_len, \
     ask_llm
 from utils.text import truncate
 from utils.ui import colour_print
 
+_debug_dir = DATA_DIR.joinpath("ltm_debug_info")
 
-def dump_context_s(context):
-    messages = []
-    for message in context:
-        messages.append(f"---\nRole: {message['role']}\nContent:\n{message['content']}")
 
-    return "\n".join(messages)
+class LTMAgentSession:
+    """
+    An agent session, or a collection of messages.
+    """
+    def __init__(self, session_id: str, m_history: list[Message], i_dict: dict[float, tuple[Message, Message]]):
+        self.session_id = session_id
+        self.message_history: list[Message] = m_history or []
+        self.interaction_dict: dict[float, tuple[Message, Message]] = i_dict or {}
+
+    @property
+    def message_count(self):
+        return len(self.message_history)
+
+    def state_as_text(self) -> str:
+        """
+        :return: A string that represents the contents of the session.
+        """
+        state = dict(session_id=self.session_id, history=self.message_history, interactions=self.interaction_dict)
+        return json.dumps(state, cls=SimpleJSONEncoder)
+
+    def add_interaction(self, interaction: tuple[Message, Message]):
+        self.message_history.extend(interaction)
+        key = interaction[0].timestamp
+        self.interaction_dict[key] = interaction
+
+    def interaction_from_timestamp(self, timestamp: float) -> tuple[Message, Message]:
+        return self.interaction_dict[timestamp]
+
+    def by_index(self, idx):
+        return self.message_history[idx]
+
+    @classmethod
+    def from_state_text(cls, state_text: str) -> 'LTMAgentSession':
+        """
+        Builds a session object given state text.
+        :param state_text: Text previously obtained using the state_as_text() method.
+        :return: A session instance.
+        """
+        state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
+        session_id = state["session_id"]
+        m_history = state["history"]
+        i_dict = state["interactions"]
+        return cls(session_id, m_history, i_dict)
+
 
 @dataclass
 class InsertedContextAgent:
-    max_prompt_size: int
     max_completion_tokens: Optional[int] = None
     semantic_memory: DefaultTextMemory = field(default_factory=AutoTextMemory.create)
     max_prompt_size: int = 16384
@@ -38,18 +78,24 @@ class InsertedContextAgent:
     defined_kws: list = field(default_factory=list)
     scratchpad: dict[str, str] = field(default_factory=dict)
     scratchpad_ts: dict[str, float] = field(default_factory=dict)  # Tracks changes in user_info (timestamps)
-    llm_index: int = 0
+    llm_call_idx: int = 0
     costs_usd: float = 0.0
     model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
     temperature: float = 0.01
     system_message = """You are a helpful AI assistant."""
+    debug_level: int = 1
+    session: LTMAgentSession = None
+
+    @property
+    def save_name(self) -> str:
+        return f"{self.model}-{self.max_prompt_size}-{self.max_completion_tokens}__{self.init_timestamp}"
 
     def __post_init__(self):
         self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
-        self.is_local = True
         self.max_message_size = 1000
         self.defined_kws = []
         self.new_session()
+        self.init_timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
     def new_session(self) -> 'LTMAgentSession':
         """
@@ -68,18 +114,9 @@ class InsertedContextAgent:
 
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
         context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
-        if not os.path.exists(f"data/llm_calls/{self.session.session_id}"):
-            os.mkdir(f"data/llm_calls/{self.session.session_id}")
-
-        fname = f"data/llm_calls/{self.session.session_id}/call_{self.llm_index}.json"
-        with open(fname, "w") as f:
-            colour_print("BlUE", f"Saving to: {fname}")
-            f.write(dump_context_s(context))
-            response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
-                                    cost_callback=cost_callback, temperature=self.temperature)
-
-            f.write(f"\n\nResponse:\n{response_text}")
-            self.llm_index += 1
+        response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
+        debug_actions(context, self.temperature, response_text, self.llm_call_idx, self.debug_level, self.save_name,  name_template="call-{idx}")
+        self.llm_call_idx += 1
 
         # Save interaction to memory
         user_ts = context[-1]["content"]
@@ -118,6 +155,7 @@ class InsertedContextAgent:
         print(f"Interaction keywords: {keywords}")
         return keywords
 
+
     def create_context(self, user_message, max_prompt_size, previous_interactions, cost_cb):
 
         stamped_user_message = str(datetime.now()) + ": " + user_message
@@ -127,7 +165,7 @@ class InsertedContextAgent:
         # Get interactions from the memories
         full_interactions = []
         for m in relevant_memories:
-            interaction = self.messages_from_memory(m)
+            interaction = self.session.interaction_from_timestamp(m.timestamp)
             if interaction not in full_interactions:
                 full_interactions.append(interaction)
 
@@ -156,10 +194,13 @@ class InsertedContextAgent:
 
         for interaction in full_interactions[::-1]:
             user_message, assistant_message = interaction
-            future_size = current_size + token_counter(self.model, messages=[user_message.as_llm_dict(), assistant_message.as_llm_dict()])
+            future_size = token_counter(self.model, messages=context + [user_message.as_llm_dict(), assistant_message.as_llm_dict()])
 
             # If this message is going to be too big, then skip it
-            if future_size > target_size or shown_mems == 100:
+            if shown_mems >= 100:
+                break
+
+            if future_size > target_size:
                 continue
 
             # Add the interaction and count the tokens
@@ -248,14 +289,10 @@ Express your answer in this JSON:
             while True:
                 try:
                     print("Attempting filter")
-                    with open(f"data/llm_calls/{self.session.session_id}/filter-{self.llm_index}-{call_count}.txt", "w") as f:
-                        f.write(dump_context_s(context))
-                        result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
-
-                        f.write(f"\nResponse:\n{result}")
+                    result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+                    debug_actions(context, self.temperature, result, self.llm_call_idx, self.debug_level, self.save_name, name_template="filter-{idx}-" + str(call_count))
 
                     json_list = sanitize_and_parse_json(result)
-
                     for idx, selected_object in enumerate(json_list):
                         if selected_object["related"]:
                             filtered_mems.append(mems_to_filter[idx + start_idx])
@@ -370,12 +407,6 @@ Write JSON in the following format:
         self.semantic_memory.add_separator()
         self.semantic_memory.add_text(response_message, timestamp=timestamp, metadata={"keywords": keywords})
         self.semantic_memory.add_separator()
-
-    def messages_from_memory(self, memory):
-        timestamp_key = memory.timestamp
-
-        interaction = self.session.interaction_from_timestamp(timestamp_key)
-        return interaction[0], interaction[1]
 
     def _last_messages_preview(self, message_history: list[Message], token_limit: int, max_messages: int = 10) -> str:
         messages = list()
@@ -531,47 +562,40 @@ Write JSON in the following format:
         self.session = LTMAgentSession.from_state_text(state["session"])
 
 
-class LTMAgentSession:
-    """
-    An agent session, or a collection of messages.
-    """
-    def __init__(self, session_id: str, m_history: list[Message], i_dict: dict[float, tuple[Message, Message]]):
-        self.session_id = session_id
-        self.message_history: list[Message] = m_history or []
-        self.interaction_dict: dict[float, tuple[Message, Message]] = i_dict or {}
+def debug_actions(context: list[dict[str, str]], temperature: float, response_text: str, llm_call_idx: int, debug_level: int, save_name: str, name_template: str = None):
+    if debug_level < 1:
+        return
 
-    @property
-    def message_count(self):
-        return len(self.message_history)
+    # See if dir exists or create it, and set llm_call_idx
+    save_dir = _debug_dir.joinpath(save_name)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    if llm_call_idx is None:
+        if save_dir.exists() and len(list(save_dir.glob("*.txt"))) > 0:
+            llm_call_idx = max(int(p.name.removesuffix(".txt")) for p in save_dir.glob("*.txt")) + 1
+        else:
+            llm_call_idx = 0
 
-    def state_as_text(self) -> str:
-        """
-        :return: A string that represents the contents of the session.
-        """
-        state = dict(session_id=self.session_id, history=self.message_history, interactions=self.interaction_dict)
-        return json.dumps(state, cls=SimpleJSONEncoder)
+    # Write content of LLM call to file
+    if name_template:
+        save_path = save_dir.joinpath(f"{name_template.format(idx=llm_call_idx)}.txt")
+    else:
+        save_path = save_dir.joinpath(f"{llm_call_idx:06d}.txt")
 
-    def add_interaction(self, interaction: tuple[Message, Message]):
-        self.message_history.extend(interaction)
-        key = interaction[0].timestamp
-        self.interaction_dict[key] = interaction
+    with open(save_path, "w") as fd:
+        fd.write(f"LLM temperature: {temperature}\n")
+        for m in context:
+            fd.write(f"--- {m['role'].upper()}\n{m['content']}\n")
+        fd.write(f"--- Response:\n{response_text}")
 
-    def interaction_from_timestamp(self, timestamp: float) -> tuple[Message, Message]:
-        return self.interaction_dict[timestamp]
+    # Wait for confirmation
+    if debug_level < 2:
+        return
+    print(f"LLM call saved as {save_path.name}")
+    input("Press ENTER to continue...")
 
-    def by_index(self, idx):
-        return self.message_history[idx]
 
-    @classmethod
-    def from_state_text(cls, state_text: str) -> 'LTMAgentSession':
-        """
-        Builds a session object given state text.
-        :param state_text: Text previously obtained using the state_as_text() method.
-        :return: A session instance.
-        """
-        state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
-        session_id = state["session_id"]
-        m_history = state["history"]
-        i_dict = state["interactions"]
-        return cls(session_id, m_history, i_dict)
+
+
+
+
 
