@@ -3,10 +3,9 @@ from typing import Optional
 from pathlib import Path
 import litellm
 
-from ltm.inserted_context_agent import InsertedContextAgent
+from ltm.agent import InsertedContextAgent
 from utils.llm import count_tokens_for_model
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
-from ltm.agent import LTMAgent
 from model_interfaces.interface import ChatSession
 
 
