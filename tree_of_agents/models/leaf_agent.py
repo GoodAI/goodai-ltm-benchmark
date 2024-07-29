@@ -2,8 +2,7 @@ import json
 import os
 from datetime import datetime
 from config import LEAF_AGENT_DATA_DIR, TIMESTAMP_FORMAT
-from together import Together
-from config import TOGETHER_API_KEY as api_key
+from openai_client import OpenAIClient
 
 class LeafAgent:
     def __init__(self, id, max_tokens):
@@ -11,7 +10,7 @@ class LeafAgent:
         self.max_tokens = max_tokens
         self.filename = os.path.join(LEAF_AGENT_DATA_DIR, f"leaf_agent_{id}.json")
         self.data = self.load_data()
-        self.client = self.client = Together(api_key=api_key)
+        self.client = OpenAIClient()
 
     def load_data(self):
         if os.path.exists(self.filename):
