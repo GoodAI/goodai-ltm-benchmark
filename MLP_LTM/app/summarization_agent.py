@@ -1,20 +1,15 @@
-import math
 from typing import List
-from together import Together
 from app.config import config
 from app.utils.logging import get_logger
 from app.utils.llama_tokenizer import LlamaTokenizer
-from app.token_manager import TokenManager
+from app.model_client import ModelClient
 
 logger = get_logger('custom')
 
 class SummarizationAgent:
-    def __init__(self, api_key: str):
-        self.together_client = Together(api_key=api_key)
+    def __init__(self):
+        self.model_client = ModelClient(config.MODEL_CONFIGS['summarization']['provider'])
         self.tokenizer = LlamaTokenizer()
-        self.model_token_limit = config.MODEL["max_tokens"]
-        self.token_manager = TokenManager(self.model_token_limit)
-        self.max_input_tokens = config.MODEL["max_input_tokens"]
 
     async def summarize_memories(self, query: str, memories: List[str], max_tokens: int) -> List[str]:
         try:
@@ -72,19 +67,24 @@ class SummarizationAgent:
         prompt = self._construct_summarization_prompt(query, memories)
         prompt_tokens = self.tokenizer.count_tokens(prompt)
         
-        max_new_tokens = min(max_tokens, self.model_token_limit - prompt_tokens - 1)
+        max_new_tokens = min(
+            max_tokens,
+            config.MODEL_CONFIGS['summarization']['max_tokens'] - prompt_tokens - 1,
+            config.MODEL_CONFIGS['summarization']['max_tokens']  # Ensure we don't exceed the model's limit
+        )
 
         if max_new_tokens <= config.SUMMARIZATION['min_abstractive_tokens']:
             logger.warning("Not enough tokens for abstractive summarization. Returning truncated memories.")
             return self.tokenizer.truncate_text(" ".join(memories), max_tokens)
 
         try:
-            response = self.together_client.chat.completions.create(
+            response = self.model_client.chat_completion(
+                model=config.MODEL_CONFIGS['summarization']['model'],
                 messages=[{"role": "user", "content": prompt}],
-                model=config.MODEL["model"],
-                max_tokens=max_new_tokens
+                max_tokens=max_new_tokens,
+                temperature=config.MODEL_CONFIGS['summarization']['temperature']
             )
-            return response.choices[0].message.content
+            return self.model_client.get_completion_content(response)
         except Exception as e:
             logger.error(f"Error generating abstractive summary: {str(e)}", exc_info=True)
             raise

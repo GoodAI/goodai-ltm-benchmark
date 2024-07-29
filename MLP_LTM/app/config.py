@@ -7,26 +7,77 @@ load_dotenv()
 class Config(BaseSettings):
     TOGETHER_API_KEY: str = Field(..., env="TOGETHER_API_KEY")
     OPENAI_API_KEY: str = Field(..., env="OPENAI_API_KEY")
+    GROQ_API_KEY: str = Field(..., env="GROQ_API_KEY")
     DATABASE_URL: str = 'sqlite:///./data/memories.db'
     LOG_FILE_MAIN: str = './logs/app.log'
     LOG_FILE_CUSTOM: str = './logs/custom.log'
     LOG_FILE_CHAT: str = './logs/chat.log'
     LOG_LEVEL: str = Field(default="DEBUG", env="LOG_LEVEL")
 
-    MODEL: dict = {
-        'model': "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-        'max_tokens': 32768,
-        'reserved_tokens': 1000,
-        'max_input_tokens': 31768  # Maximum tokens for input (max_tokens - reserved_tokens - 1)
-    }
+    # MODEL_CONFIGS: dict = {
+    #     'main': {
+    #         'provider': 'groq',
+    #         'model': 'llama-3.1-70b-versatile',
+    #         'max_tokens': 8000,  # Updated to Groq's limit
+    #         'temperature': 0.7,
+    #     },
+    #     'filter': {
+    #         'provider': 'groq',
+    #         'model': 'llama-3.1-8b-instant',
+    #         'max_tokens': 10,
+    #         'temperature': 0,
+    #     },
+    #     'summarization': {
+    #         'provider': 'groq',
+    #         'model': 'llama-3.1-70b-versatile',
+    #         'max_tokens': 500,
+    #         'temperature': 0.3,
+    #     }
+    # }
+    # MODEL_CONFIGS: dict = {
+    #     'main': {
+    #         'provider': 'together',
+    #         'model': 'meta-llama/Llama-3-70b-chat-hf',
+    #         'max_tokens': 8000,  # Updated to Groq's limit
+    #         'temperature': 0.05,
+    #     },
+    #     'filter': {
+    #         'provider': 'together',
+    #         'model': 'meta-llama/Llama-3-70b-chat-hf',
+    #         'max_tokens': 10,
+    #         'temperature': 0,
+    #     },
+    #     'summarization': {
+    #         'provider': 'together',
+    #         'model': 'meta-llama/Llama-3-70b-chat-hf',
+    #         'max_tokens': 500,
+    #         'temperature': 0,
+    #     }
+    # }
 
-    FILTER_MODEL: dict = {
-        'model': "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-        'temperature': 0
+    MODEL_CONFIGS: dict = {
+        'main': {
+            'provider': 'openai',
+            'model': 'gpt-4o-mini',
+            'max_tokens': 8000,
+            'temperature': 0,
+        },
+        'filter': {
+            'provider': 'openai',
+            'model': 'gpt-4o-mini',
+            'max_tokens': 10,
+            'temperature': 0,
+        },
+        'summarization': {
+            'provider': 'openai',
+            'model': 'gpt-4o-mini',
+            'max_tokens': 500,
+            'temperature': 0,
+        }
     }
 
     MEMORY_LINKING: dict = {
-        'enabled': True,
+        'enabled': False,
         'similarity_threshold': 0.6,
         'max_links_per_memory': None,
         'query_only_linking': True,
@@ -44,7 +95,7 @@ class Config(BaseSettings):
 
     RETRIEVAL: dict = {
         'top_k': None,
-        'min_similarity': 0.74
+        'min_similarity': 0.68
     }
 
     MEMORY_FORMATTING: dict = {
@@ -52,7 +103,7 @@ class Config(BaseSettings):
     }
 
     SUMMARIZATION: dict = {
-        'extractive_ratio': 0.8,  # Use up to 80% of available tokens for extractive summarization
+        'extractive_ratio': 0.8,
         'min_abstractive_tokens': 100
     }
 

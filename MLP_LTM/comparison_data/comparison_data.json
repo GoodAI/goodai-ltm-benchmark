@@ -2,57 +2,77 @@
   {
     "query": "I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?",
     "memories": [],
-    "timestamp": 1721994934
+    "timestamp": 1722246767
   },
   {
     "query": "My favourite colour is Purple.",
     "memories": [],
-    "timestamp": 1721994938
+    "timestamp": 1722246770
   },
   {
     "query": "Atheism is a non-prophet organization",
     "memories": [],
-    "timestamp": 1721994942
+    "timestamp": 1722246774
   },
   {
     "query": "There is a Museum in the center of my hometown.",
     "memories": [],
-    "timestamp": 1721994949
+    "timestamp": 1722246779
   },
   {
     "query": "Callan is what I am called.",
     "memories": [],
-    "timestamp": 1721994957
+    "timestamp": 1722246784
   },
   {
     "query": "'The greatest glory in living lies not in never falling, but in rising every time we fall.' - Nelson Mandela",
     "memories": [],
-    "timestamp": 1721994960
+    "timestamp": 1722246787
   },
   {
     "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
-    "memories": [],
-    "timestamp": 1721994967
+    "memories": [
+      {
+        "id": 5,
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?",
+        "timestamp": "2024-07-29 10:53:03"
+      }
+    ],
+    "timestamp": 1722246793
   },
   {
     "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
     "memories": [],
-    "timestamp": 1721994975
+    "timestamp": 1722246800
   },
   {
     "query": "I require 1 Leek, please put it on the list.",
     "memories": [],
-    "timestamp": 1721994979
+    "timestamp": 1722246804
   },
   {
     "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
-    "memories": [],
-    "timestamp": 1721994990
+    "memories": [
+      {
+        "id": 8,
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
+      },
+      {
+        "id": 1,
+        "query": "I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the responses that you are required to provide. Otherwise, provide just short confirmations. Understood?",
+        "response": "Understood.",
+        "timestamp": "2024-07-29 10:52:47"
+      }
+    ],
+    "timestamp": 1722246809
   },
   {
     "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
     "memories": [],
-    "timestamp": 1721995003
+    "timestamp": 1722246824
   },
   {
     "query": "(On TV) Logan is in the living_room.\n",
@@ -60,11 +80,11 @@
       {
         "id": 8,
         "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
-        "response": "I'm ready to receive updates about the TV program. Please go ahead and share what happens, and I'll take note of the key points. I'll be prepared to answer your question at the end.",
-        "timestamp": "2024-07-26 12:56:11"
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
       }
     ],
-    "timestamp": 1721995025
+    "timestamp": 1722246848
   },
   {
     "query": "I visited Town Hall, which is 1 KM, West from Museum.",
@@ -72,11 +92,11 @@
       {
         "id": 4,
         "query": "There is a Museum in the center of my hometown.",
-        "response": "That's a nice piece of local information. What would you like to know or discuss about the museum? Its history, exhibits, or perhaps its significance to the community?",
-        "timestamp": "2024-07-26 12:55:49"
+        "response": "Could you provide more details about the museum? For example, its name, the type of exhibits it features, or any specific information you're looking for, such as visiting hours or events?",
+        "timestamp": "2024-07-29 10:52:58"
       }
     ],
-    "timestamp": 1721995051
+    "timestamp": 1722246872
   },
   {
     "query": "I require another 3 Leek, please put it on the list.",
@@ -84,16 +104,16 @@
       {
         "id": 9,
         "query": "I require 1 Leek, please put it on the list.",
-        "response": "I've added 1 Leek to the list. \n\nCurrent list: \n1. Leek",
-        "timestamp": "2024-07-26 12:56:19"
+        "response": "1. Leek",
+        "timestamp": "2024-07-29 10:53:23"
       }
     ],
-    "timestamp": 1721995078
+    "timestamp": 1722246886
   },
   {
     "query": "My name is Justine.",
     "memories": [],
-    "timestamp": 1721995113
+    "timestamp": 1722246904
   },
   {
     "query": "(On TV) Emily entered the living_room.\n",
@@ -101,21 +121,427 @@
       {
         "id": 13,
         "query": "(On TV) Logan is in the living_room.\n",
-        "response": "Logan is currently in the living room, as per the latest update on the TV program.",
-        "timestamp": "2024-07-26 12:56:59"
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the show, possibly involving character development or a significant plot twist. Consider what interactions or events might unfold in this setting. If you have specific details about the scene or context, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:54:05"
       },
       {
         "id": 8,
         "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
-        "response": "I'm ready to receive updates about the TV program. Please go ahead and share what happens, and I'll take note of the key points. I'll be prepared to answer your question at the end.",
-        "timestamp": "2024-07-26 12:56:11"
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
       }
     ],
-    "timestamp": 1721995147
+    "timestamp": 1722246919
   },
   {
     "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+    "memories": [
+      {
+        "id": 7,
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood. When you prompt me as the waiter, I will respond as the customer with straightforward answers. Please proceed with your questions.",
+        "timestamp": "2024-07-29 10:53:11"
+      }
+    ],
+    "timestamp": 1722246956
+  },
+  {
+    "query": "Mr. Toby Power: The time we will meet is when the sun is high.",
+    "memories": [
+      {
+        "id": 10,
+        "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+        "response": "Please provide the three messages from Joshua Mcdonald, Casey Peterson, and Mr. Toby Power for me to assist you further.",
+        "timestamp": "2024-07-29 10:53:27"
+      }
+    ],
+    "timestamp": 1722247006
+  },
+  {
+    "query": "(On TV) Oliver entered the living_room.\n",
+    "memories": [
+      {
+        "id": 22,
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room could signify an important moment in the narrative, potentially leading to a key interaction with Logan, who is already present. This setting may serve as a backdrop for character development, conflict, or a revelation. Consider the dynamics between Emily and Logan\u2014are they allies, adversaries, or something more? Their conversation or actions in this space could drive the plot forward or deepen their relationship. If you have more details about the scene, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:55:15"
+      },
+      {
+        "id": 13,
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the show, possibly involving character development or a significant plot twist. Consider what interactions or events might unfold in this setting. If you have specific details about the scene or context, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:54:05"
+      },
+      {
+        "id": 8,
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
+      }
+    ],
+    "timestamp": 1722247054
+  },
+  {
+    "query": "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
     "memories": [],
-    "timestamp": 1721998868
+    "timestamp": 1722247099
+  },
+  {
+    "query": "The name of my favourite colour is Pink.",
+    "memories": [
+      {
+        "id": 2,
+        "query": "My favourite colour is Purple.",
+        "response": "That's great! Purple is often associated with creativity, luxury, and spirituality. If you have any specific questions or topics related to the color purple, feel free to share!",
+        "timestamp": "2024-07-29 10:52:50"
+      }
+    ],
+    "timestamp": 1722247107
+  },
+  {
+    "query": "About 3 km South of the Town Hall there is a Hospital",
+    "memories": [
+      {
+        "id": 16,
+        "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+        "response": "The Town Hall is located 1 kilometer west of the museum in your hometown. If you need information about the Town Hall, such as its functions, visiting hours, or any specific events, please let me know!",
+        "timestamp": "2024-07-29 10:54:32"
+      }
+    ],
+    "timestamp": 1722247112
+  },
+  {
+    "query": "Please remove 3 Leek from my shopping list",
+    "memories": [
+      {
+        "id": 18,
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "2. Leek",
+        "timestamp": "2024-07-29 10:54:44"
+      },
+      {
+        "id": 9,
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "1. Leek",
+        "timestamp": "2024-07-29 10:53:23"
+      }
+    ],
+    "timestamp": 1722247131
+  },
+  {
+    "query": "Please read my mail for me.",
+    "memories": [
+      {
+        "id": 11,
+        "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
+        "response": "Your letter opener is in your office.",
+        "timestamp": "2024-07-29 10:53:41"
+      },
+      {
+        "id": 10,
+        "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+        "response": "Please provide the three messages from Joshua Mcdonald, Casey Peterson, and Mr. Toby Power for me to assist you further.",
+        "timestamp": "2024-07-29 10:53:27"
+      }
+    ],
+    "timestamp": 1722247143
+  },
+  {
+    "query": "Start calling me by my name which is Gary.",
+    "memories": [
+      {
+        "id": 5,
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?",
+        "timestamp": "2024-07-29 10:53:03"
+      }
+    ],
+    "timestamp": 1722247206
+  },
+  {
+    "query": "(On TV) The cap is in the treasure_chest.\n",
+    "memories": [
+      {
+        "id": 8,
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
+      }
+    ],
+    "timestamp": 1722247237
+  },
+  {
+    "query": "Waiter: Here is your lemonade. What would you like to eat?",
+    "memories": [
+      {
+        "id": 25,
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a lemonade, please.",
+        "timestamp": "2024-07-29 10:55:50"
+      },
+      {
+        "id": 7,
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood. When you prompt me as the waiter, I will respond as the customer with straightforward answers. Please proceed with your questions.",
+        "timestamp": "2024-07-29 10:53:11"
+      },
+      {
+        "id": 9,
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "1. Leek",
+        "timestamp": "2024-07-29 10:53:23"
+      },
+      {
+        "id": 42,
+        "query": "Start calling me by my name which is Gary.",
+        "response": "Understood, Gary. How can I assist you today?",
+        "timestamp": "2024-07-29 10:59:58"
+      }
+    ],
+    "timestamp": 1722247308
+  },
+  {
+    "query": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.",
+    "memories": [
+      {
+        "id": 25,
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a lemonade, please.",
+        "timestamp": "2024-07-29 10:55:50"
+      },
+      {
+        "id": 7,
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood. When you prompt me as the waiter, I will respond as the customer with straightforward answers. Please proceed with your questions.",
+        "timestamp": "2024-07-29 10:53:11"
+      }
+    ],
+    "timestamp": 1722247323
+  },
+  {
+    "query": "About 1 km East of the Hospital there is a Park",
+    "memories": [],
+    "timestamp": 1722247376
+  },
+  {
+    "query": "(On TV) Emily exited the living_room.\n",
+    "memories": [
+      {
+        "id": 22,
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room could signify an important moment in the narrative, potentially leading to a key interaction with Logan, who is already present. This setting may serve as a backdrop for character development, conflict, or a revelation. Consider the dynamics between Emily and Logan\u2014are they allies, adversaries, or something more? Their conversation or actions in this space could drive the plot forward or deepen their relationship. If you have more details about the scene, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:55:15"
+      },
+      {
+        "id": 31,
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room introduces a new dynamic to the scene. His arrival could lead to significant interactions with Emily and Logan, who are already present. Consider how Oliver's character traits and motivations might influence the unfolding events. Is he a friend, foe, or a neutral party? His presence may catalyze conflict, reveal secrets, or deepen existing relationships. If you have more context about Oliver or the situation, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:57:30"
+      },
+      {
+        "id": 13,
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the show, possibly involving character development or a significant plot twist. Consider what interactions or events might unfold in this setting. If you have specific details about the scene or context, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:54:05"
+      },
+      {
+        "id": 8,
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
+      }
+    ],
+    "timestamp": 1722247413
+  },
+  {
+    "query": "Casey Peterson: Bring to the meeting a quiet way to open locked doors.",
+    "memories": [],
+    "timestamp": 1722247427
+  },
+  {
+    "query": "Remove 1 Leek.",
+    "memories": [
+      {
+        "id": 9,
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "1. Leek",
+        "timestamp": "2024-07-29 10:53:23"
+      },
+      {
+        "id": 38,
+        "query": "Please remove 3 Leek from my shopping list",
+        "response": "You currently have 4 Leeks on your shopping list (1 from a previous request and 3 from another). Removing 3 will leave you with 1 Leek. Would you like me to proceed with this adjustment?",
+        "timestamp": "2024-07-29 10:58:49"
+      },
+      {
+        "id": 18,
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "2. Leek",
+        "timestamp": "2024-07-29 10:54:44"
+      }
+    ],
+    "timestamp": 1722247440
+  },
+  {
+    "query": "My name has changed to Adrian.",
+    "memories": [
+      {
+        "id": 5,
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?",
+        "timestamp": "2024-07-29 10:53:03"
+      }
+    ],
+    "timestamp": 1722247511
+  },
+  {
+    "query": "(On TV) Logan loves the broccoli\n",
+    "memories": [
+      {
+        "id": 13,
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the show, possibly involving character development or a significant plot twist. Consider what interactions or events might unfold in this setting. If you have specific details about the scene or context, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:54:05"
+      },
+      {
+        "id": 8,
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
+      }
+    ],
+    "timestamp": 1722247550
+  },
+  {
+    "query": "It takes a lot of balls to golf the way I do.",
+    "memories": [
+      {
+        "id": 6,
+        "query": "'The greatest glory in living lies not in never falling, but in rising every time we fall.' - Nelson Mandela",
+        "response": "This quote by Nelson Mandela emphasizes resilience and the importance of perseverance in the face of adversity. It suggests that true greatness is not about avoiding failure but rather about how one responds to setbacks. The ability to rise after falling reflects strength of character and determination. This perspective encourages individuals to view challenges as opportunities for growth and learning, reinforcing the idea that failure is a part of the journey toward success.",
+        "timestamp": "2024-07-29 10:53:07"
+      }
+    ],
+    "timestamp": 1722247615
+  },
+  {
+    "query": "White is my favourite colour.",
+    "memories": [
+      {
+        "id": 2,
+        "query": "My favourite colour is Purple.",
+        "response": "That's great! Purple is often associated with creativity, luxury, and spirituality. If you have any specific questions or topics related to the color purple, feel free to share!",
+        "timestamp": "2024-07-29 10:52:50"
+      }
+    ],
+    "timestamp": 1722247632
+  },
+  {
+    "query": "I visited Library, which is 2 KM, North from Park.",
+    "memories": [
+      {
+        "id": 51,
+        "query": "About 1 km East of the Hospital there is a Park",
+        "response": "The statement indicates that there is a park located approximately 1 kilometer east of a hospital. If you need more specific information about the park, such as its name, features, or directions, please provide additional details.",
+        "timestamp": "2024-07-29 11:02:54"
+      }
+    ],
+    "timestamp": 1722247638
+  },
+  {
+    "query": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?",
+    "memories": [
+      {
+        "id": 25,
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a lemonade, please.",
+        "timestamp": "2024-07-29 10:55:50"
+      },
+      {
+        "id": 7,
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood. When you prompt me as the waiter, I will respond as the customer with straightforward answers. Please proceed with your questions.",
+        "timestamp": "2024-07-29 10:53:11"
+      }
+    ],
+    "timestamp": 1722247680
+  },
+  {
+    "query": "Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.",
+    "memories": [
+      {
+        "id": 25,
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a lemonade, please.",
+        "timestamp": "2024-07-29 10:55:50"
+      },
+      {
+        "id": 7,
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood. When you prompt me as the waiter, I will respond as the customer with straightforward answers. Please proceed with your questions.",
+        "timestamp": "2024-07-29 10:53:11"
+      }
+    ],
+    "timestamp": 1722247696
+  },
+  {
+    "query": "Please add 2 Potato to my shopping list",
+    "memories": [
+      {
+        "id": 18,
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "2. Leek",
+        "timestamp": "2024-07-29 10:54:44"
+      },
+      {
+        "id": 38,
+        "query": "Please remove 3 Leek from my shopping list",
+        "response": "You currently have 4 Leeks on your shopping list (1 from a previous request and 3 from another). Removing 3 will leave you with 1 Leek. Would you like me to proceed with this adjustment?",
+        "timestamp": "2024-07-29 10:58:49"
+      }
+    ],
+    "timestamp": 1722247714
+  },
+  {
+    "query": "Please read my mail for me.",
+    "memories": [
+      {
+        "id": 39,
+        "query": "Please read my mail for me.",
+        "response": "Your letter opener is in your office.",
+        "timestamp": "2024-07-29 10:58:55"
+      },
+      {
+        "id": 11,
+        "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
+        "response": "Your letter opener is in your office.",
+        "timestamp": "2024-07-29 10:53:41"
+      },
+      {
+        "id": 10,
+        "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+        "response": "Please provide the three messages from Joshua Mcdonald, Casey Peterson, and Mr. Toby Power for me to assist you further.",
+        "timestamp": "2024-07-29 10:53:27"
+      }
+    ],
+    "timestamp": 1722247760
+  },
+  {
+    "query": "(On TV) Oliver loves the jeans\n",
+    "memories": [
+      {
+        "id": 31,
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room introduces a new dynamic to the scene. His arrival could lead to significant interactions with Emily and Logan, who are already present. Consider how Oliver's character traits and motivations might influence the unfolding events. Is he a friend, foe, or a neutral party? His presence may catalyze conflict, reveal secrets, or deepen existing relationships. If you have more context about Oliver or the situation, I can help analyze it further.",
+        "timestamp": "2024-07-29 10:57:30"
+      },
+      {
+        "id": 8,
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be here to help with any questions you have about the show once you're ready.",
+        "timestamp": "2024-07-29 10:53:17"
+      }
+    ],
+    "timestamp": 1722247836
   }
 ]

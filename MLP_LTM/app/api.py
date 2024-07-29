@@ -7,7 +7,6 @@ from app.utils.logging import get_logger
 
 app = FastAPI()
 logger = get_logger('custom')
-agent = Agent(config.TOGETHER_API_KEY, MemoryManager(config.DATABASE_URL))
 
 
 class QueryRequest(BaseModel):
@@ -21,7 +20,7 @@ class Query(BaseModel):
 
 try:
     memory_manager = MemoryManager(config.DATABASE_URL)
-    agent = Agent(config.TOGETHER_API_KEY, memory_manager)
+    agent = Agent(memory_manager)
     logger.info("Application initialized successfully")
 except Exception as e:
     logger.error(f"Error initializing application: {str(e)}", exc_info=True)

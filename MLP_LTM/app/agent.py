@@ -3,7 +3,6 @@ import json
 import os
 import time
 from tenacity import retry, stop_after_attempt, wait_exponential
-from together import Together
 from app.db.memory_manager import MemoryManager, Memory
 from app.config import config
 from app.utils.logging import get_logger
@@ -11,48 +10,64 @@ from app.summarization_agent import SummarizationAgent
 from app.utils.llama_tokenizer import LlamaTokenizer
 from app.token_manager import TokenManager
 from app.filter_agent import FilterAgent
+from app.model_client import ModelClient
 
-logger = get_logger('custom')
-chat_logger = get_logger('chat')
+logger = get_logger("custom")
+chat_logger = get_logger("chat")
+
 
 class Agent:
-    def __init__(self, api_key: str, memory_manager: MemoryManager):
-        self.together_client = Together(api_key=api_key)
+    def __init__(self, memory_manager: MemoryManager):
         self.memory_manager = memory_manager
-        self.summarization_agent = SummarizationAgent(api_key)
-        self.filter_agent = FilterAgent(api_key)
+        self.summarization_agent = SummarizationAgent()
+        self.filter_agent = FilterAgent()
         self.tokenizer = LlamaTokenizer()
-        self.token_manager = TokenManager(config.MODEL['max_tokens'])
-        self.model_token_limit = config.MODEL['max_tokens']
-        self.max_input_tokens = config.MODEL['max_input_tokens']
-        self.safety_margin = 1000  # Add a safety margin
+        self.token_manager = TokenManager(config.MODEL_CONFIGS["main"]["max_tokens"])
+        self.model_token_limit = config.MODEL_CONFIGS["main"]["max_tokens"]
+        self.max_input_tokens = self.model_token_limit - 1000  # Reserved tokens
+        self.safety_margin = 1000
+        self.model_client = ModelClient(config.MODEL_CONFIGS["main"]["provider"])
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    async def _generate_response(self, query: str, relevant_memories: List[Memory]) -> str:
+    @retry(
+        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
+    )
+    async def _generate_response(
+        self, query: str, relevant_memories: List[Memory]
+    ) -> str:
         try:
             prompt = self._construct_prompt(query, relevant_memories)
             prompt_tokens = self.tokenizer.count_tokens(prompt)
-            
-            max_new_tokens = self.model_token_limit - prompt_tokens - self.safety_margin - 1
 
-            logger.debug(f"Prompt tokens: {prompt_tokens}, Max new tokens: {max_new_tokens}")
+            max_new_tokens = min(
+                self.model_token_limit - prompt_tokens - self.safety_margin - 1,
+                config.MODEL_CONFIGS["main"]["max_tokens"],
+            )
+
+            logger.debug(
+                f"Prompt tokens: {prompt_tokens}, Max new tokens: {max_new_tokens}"
+            )
             logger.debug(f"Total tokens: {prompt_tokens + max_new_tokens}")
 
             if max_new_tokens <= 0:
-                logger.error(f"Not enough tokens for response. Prompt tokens: {prompt_tokens}")
+                logger.error(
+                    f"Not enough tokens for response. Prompt tokens: {prompt_tokens}"
+                )
                 raise ValueError("Input too long for model to generate a response")
 
             chat_logger.info(f"Generated prompt: {prompt}")
-            chat_logger.info(f"Prompt tokens: {prompt_tokens}, Max new tokens: {max_new_tokens}")
-            
-            response = self.together_client.chat.completions.create(
+            chat_logger.info(
+                f"Prompt tokens: {prompt_tokens}, Max new tokens: {max_new_tokens}"
+            )
+
+            response = self.model_client.chat_completion(
+                model=config.MODEL_CONFIGS['main']['model'],
                 messages=[{"role": "user", "content": prompt}],
-                model=config.MODEL["model"],
-                max_tokens=max_new_tokens
+                max_tokens=max_new_tokens,
+                temperature=config.MODEL_CONFIGS['main']['temperature']
             )
             chat_logger.info(f"API response: {response}")
-            
-            return response.choices[0].message.content
+
+            return self.model_client.get_completion_content(response)
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}", exc_info=True)
             raise
@@ -60,27 +75,37 @@ class Agent:
     async def process_query(self, query: str) -> str:
         try:
             memory_id = await self.memory_manager.create_memory_with_query(query)
-            
-            relevant_memories, memory_objects, retrieval_info = await self._retrieve_relevant_memories(query, memory_id)
-            
-            filtered_memories = await self.filter_agent.filter_process(query, memory_objects)
-            
-            if not query.startswith("Here are some trivia questions and answers for you to process."):
+
+            relevant_memories, memory_objects, retrieval_info = (
+                await self._retrieve_relevant_memories(query, memory_id)
+            )
+
+            filtered_memories = await self.filter_agent.filter_process(
+                query, memory_objects
+            )
+
+            if not query.startswith(
+                "Here are some trivia questions and answers for you to process."
+            ):
                 comparison_data = self._format_comparison_data(query, filtered_memories)
                 self._write_comparison_data(comparison_data)
-            
+
             response = await self._generate_response(query, filtered_memories)
-            
+
             await self.memory_manager.update_memory_with_response(memory_id, response)
-            
+
             return response
         except Exception as e:
             logger.error(f"Error processing query: {str(e)}", exc_info=True)
             return f"An error occurred while processing your query: {str(e)}"
 
-    async def _retrieve_relevant_memories(self, query: str, memory_id: int) -> Tuple[List[str], List[Memory], Dict[int, str]]:
+    async def _retrieve_relevant_memories(
+        self, query: str, memory_id: int
+    ) -> Tuple[List[str], List[Memory], Dict[int, str]]:
         try:
-            return await self.memory_manager.get_relevant_memories(query, memory_id, top_k=config.RETRIEVAL['top_k'])
+            return await self.memory_manager.get_relevant_memories(
+                query, memory_id, top_k=config.RETRIEVAL["top_k"]
+            )
         except Exception as e:
             logger.error(f"Error retrieving relevant memories: {str(e)}", exc_info=True)
             raise
@@ -134,26 +159,27 @@ class Agent:
         Response:"""
 
     def _format_memory_for_prompt(self, memory: Memory) -> str:
-        return f"{memory.timestamp} {memory.query}:{memory.response}" if memory.response else f"{memory.timestamp} {memory.query}:"
+        return (
+            f"{memory.timestamp} {memory.query}:{memory.response}"
+            if memory.response
+            else f"{memory.timestamp} {memory.query}:"
+        )
 
     def _format_comparison_data(self, query: str, memories: List[Memory]) -> Dict:
-        return {
-            "query": query,
-            "memories": [self._format_memory(m) for m in memories]
-        }
+        return {"query": query, "memories": [self._format_memory(m) for m in memories]}
 
     def _format_memory(self, memory: Memory) -> Dict:
         return {
             "id": memory.id,
             "query": memory.query,
             "response": memory.response,
-            "timestamp": memory.timestamp
+            "timestamp": memory.timestamp,
         }
 
     def _write_comparison_data(self, data: Dict):
         os.makedirs("comparison_data", exist_ok=True)
         file_name = "comparison_data/comparison_data.json"
-        
+
         try:
             # If file exists, read existing data
             if os.path.exists(file_name):
@@ -163,7 +189,7 @@ class Agent:
                 existing_data = []
 
             # Add timestamp to the new data
-            data['timestamp'] = int(time.time())
+            data["timestamp"] = int(time.time())
 
             # Append new data
             existing_data.append(data)
@@ -171,7 +197,7 @@ class Agent:
             # Write updated data back to file
             with open(file_name, "w") as f:
                 json.dump(existing_data, f, indent=2)
-            
+
             logger.info(f"Comparison data appended to {file_name}")
         except Exception as e:
             logger.error(f"Error writing comparison data: {str(e)}", exc_info=True)
@@ -179,10 +205,43 @@ class Agent:
     @staticmethod
     def _num2words(num: int) -> str:
         """Convert small numbers to words."""
-        units = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
-        teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
-        tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
-        
+        units = [
+            "",
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine",
+        ]
+        teens = [
+            "ten",
+            "eleven",
+            "twelve",
+            "thirteen",
+            "fourteen",
+            "fifteen",
+            "sixteen",
+            "seventeen",
+            "eighteen",
+            "nineteen",
+        ]
+        tens = [
+            "",
+            "",
+            "twenty",
+            "thirty",
+            "forty",
+            "fifty",
+            "sixty",
+            "seventy",
+            "eighty",
+            "ninety",
+        ]
+
         if num < 10:
             return units[num]
         elif num < 20:
