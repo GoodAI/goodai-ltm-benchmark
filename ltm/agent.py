@@ -11,12 +11,11 @@ from goodai.ltm.mem.config import TextMemoryConfig
 from goodai.ltm.mem.default import DefaultTextMemory
 from litellm import token_counter
 from model_interfaces.base_ltm_agent import Message
-from utils.constants import DATA_DIR
 
-from utils.llm import  make_system_message, make_user_message, ask_llm
+from utils.llm import make_system_message, make_user_message, ask_llm, debug_actions
+from utils.text import td_format
 from utils.ui import colour_print
 
-_debug_dir = DATA_DIR.joinpath("ltm_debug_info")
 
 class LTMAgentSession:
     """
@@ -218,7 +217,7 @@ Based on these statements, describe what is currently happening external to the 
 
         prompt = """Here are a number of interactions, each is given a number:
 {passages}         
-*********
+*****************************************
 
 Each of these interactions might be related to the general situation below. Your task is to judge if these interaction have any relation to the general situation.
 Filter out interactions that very clearly do not have any relation. But keep in interactions that have any kind of relationship to the situation such as in: topic, characters, locations, setting, etc.
@@ -272,10 +271,10 @@ Express your answer in this JSON:
             for m in mems_to_filter[start_idx:end_idx]:
                 timestamp = m.timestamp
                 um, am = self.session.interaction_from_timestamp(timestamp)
-                memories_passages.append(f"{memory_counter}). (User): {um.content}\n(You): {am.content}\nKeywords: {m.metadata['keywords']}")
+                memories_passages.append(f"[MEMORY NUMBER {memory_counter} START].\n (User): {um.content}\n(You): {am.content}\nKeywords: {m.metadata['keywords']}\n[MEMORY NUMBER {memory_counter} END]")
                 memory_counter += 1
 
-            passages = "\n----\n".join(memories_passages)
+            passages = "\n\n------------------------\n\n".join(memories_passages)
             context = [make_user_message(prompt.format(passages=passages, situation=situation))]
 
             while True:
@@ -450,54 +449,8 @@ Write JSON in the following format:
         self.session = LTMAgentSession.from_state_text(state["session"])
 
 
-def td_format(td: datetime.timedelta) -> str:
-    seconds = int(td.total_seconds())
-    periods = [
-        ('year', 3600*24*365), ('month', 3600*24*30), ('day', 3600*24), ('hour', 3600), ('minute', 60), ('second', 1)
-    ]
-    parts = list()
-    for period_name, period_seconds in periods:
-        if seconds > period_seconds:
-            period_value, seconds = divmod(seconds, period_seconds)
-            has_s = 's' if period_value > 1 else ''
-            parts.append("%s %s%s" % (period_value, period_name, has_s))
-    if len(parts) == 0:
-        return "just now"
-    if len(parts) == 1:
-        return f"{parts[0]} ago"
-    return " and ".join([", ".join(parts[:-1])] + parts[-1:]) + " ago"
 
 
-def debug_actions(context: list[dict[str, str]], temperature: float, response_text: str, llm_call_idx: int, debug_level: int, save_name: str, name_template: str = None):
-    if debug_level < 1:
-        return
-
-    # See if dir exists or create it, and set llm_call_idx
-    save_dir = _debug_dir.joinpath(save_name)
-    save_dir.mkdir(parents=True, exist_ok=True)
-    if llm_call_idx is None:
-        if save_dir.exists() and len(list(save_dir.glob("*.txt"))) > 0:
-            llm_call_idx = max(int(p.name.removesuffix(".txt")) for p in save_dir.glob("*.txt")) + 1
-        else:
-            llm_call_idx = 0
-
-    # Write content of LLM call to file
-    if name_template:
-        save_path = save_dir.joinpath(f"{name_template.format(idx=llm_call_idx)}.txt")
-    else:
-        save_path = save_dir.joinpath(f"{llm_call_idx:06d}.txt")
-
-    with open(save_path, "w") as fd:
-        fd.write(f"LLM temperature: {temperature}\n")
-        for m in context:
-            fd.write(f"--- {m['role'].upper()}\n{m['content']}\n")
-        fd.write(f"--- Response:\n{response_text}")
-
-    # Wait for confirmation
-    if debug_level < 2:
-        return
-    print(f"LLM call saved as {save_path.name}")
-    input("Press ENTER to continue...")
 
 
 
