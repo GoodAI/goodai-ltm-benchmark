@@ -22,6 +22,10 @@ from utils.text import td_format
 from utils.ui import colour_print
 
 
+def init_timestamp_factory():
+    return datetime.datetime.now().strftime("%F %T")
+
+
 @dataclass
 class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.config?
     max_completion_tokens: Optional[int] = None
@@ -40,6 +44,7 @@ class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.conf
     run_name: str = ""
     num_tries: int = 5
     task_memory: list = field(default_factory=list)
+    init_timestamp: str = field(default_factory=init_timestamp_factory)
 
     @property
     def save_name(self) -> str:
@@ -478,6 +483,7 @@ Write JSON in the following format:
     def reset(self):
         self.hybrid_memory.clear()
         self.new_session()
+        self.init_timestamp = init_timestamp_factory()
 
     def state_as_text(self) -> str:
         state = dict(
@@ -486,7 +492,8 @@ Write JSON in the following format:
             max_completion_tokens=self.max_completion_tokens,
             hybrid_memory=self.hybrid_memory.state_as_text(),
             defined_kws=self.defined_kws,
-            llm_call_idx=self.llm_call_idx
+            llm_call_idx=self.llm_call_idx,
+            init_timestamp=self.init_timestamp,
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
@@ -498,7 +505,7 @@ Write JSON in the following format:
         self.hybrid_memory.set_state(state["hybrid_memory"])
         self.defined_kws = state["defined_kws"]
         self.llm_call_idx = state["llm_call_idx"]
-
+        self.init_timestamp = state["init_timestamp"]
 
     def ask_llm(self, context, cost_cb, label, model_override=None):
         model = model_override or self.model

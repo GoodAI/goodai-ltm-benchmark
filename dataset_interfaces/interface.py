@@ -1,5 +1,4 @@
 import json
-import math
 from copy import deepcopy
 from random import Random
 from pathlib import Path
@@ -16,6 +15,7 @@ from utils.constants import DATA_DIR
 from utils.context import flatten_context, search_context
 from utils.llm import ask_llm, LLMContext, count_tokens_for_model
 from utils.files import make_testdef_path
+import litellm
 
 _match_system_prompt = """
 You are to evaluate some provided answers, given question(s) and
@@ -349,6 +349,7 @@ class DatasetInterface(ABC):
             temperature=temperature,
             max_response_tokens=max_tokens,
             cost_callback=self.cost_callback,
+            max_overall_tokens=litellm.get_max_tokens(model),
             **kwargs,
         )
 
