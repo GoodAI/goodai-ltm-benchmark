@@ -123,7 +123,7 @@ class InsertedContextAgent:
 
     def keywords_for_message(self, user_message, cost_cb):
 
-        prompt = "Create two keywords to describe the topic of this message:\n'{user_message}'.\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `[keyword_1, keyword_2]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}"
+        prompt = 'Create two keywords to describe the topic of this message:\n"{user_message}".\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}'
 
         context = [make_system_message(prompt.format(user_message=user_message, keywords=self.defined_kws))]
         while True:
@@ -134,7 +134,7 @@ class InsertedContextAgent:
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
             except Exception as e:
-                print(e)
+                print(repr(e) + response)
                 continue
 
         # Update known list of keywords
