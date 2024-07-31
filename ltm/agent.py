@@ -3,10 +3,11 @@ import uuid
 from dataclasses import dataclass, field
 import datetime
 from math import ceil
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, List, Tuple
 
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
 from goodai.ltm.mem.auto import AutoTextMemory
+from goodai.ltm.mem.base import RetrievedMemory
 from goodai.ltm.mem.config import TextMemoryConfig
 from goodai.ltm.mem.default import DefaultTextMemory
 from litellm import token_counter
@@ -148,16 +149,10 @@ class InsertedContextAgent:
 
         stamped_user_message = str(self.now) + ": " + user_message
         context = [make_system_message(self.system_message), make_user_message(stamped_user_message)]
-        relevant_memories = self.get_relevant_memories(user_message, cost_cb)
+        relevant_interactions = self.get_relevant_memories(user_message, cost_cb)
 
         # Get interactions from the memories
-        full_interactions = []
-        for m in relevant_memories:
-            interaction = self.session.interaction_from_timestamp(m.timestamp)
-            if interaction not in full_interactions:
-                full_interactions.append(interaction)
-
-        for m in full_interactions:
+        for m in relevant_interactions:
             if "trivia" in m[0].content:
                 colour_print("YELLOW", f"<*** trivia ***>")
             else:
@@ -180,9 +175,9 @@ class InsertedContextAgent:
         shown_mems = 0
         target_size = max_prompt_size - self.max_message_size
 
-        for interaction in full_interactions[::-1]:
-            user_message, assistant_message = interaction
-            future_size = token_counter(self.model, messages=context + [user_message.as_llm_dict(), assistant_message.as_llm_dict()])
+        for interaction in relevant_interactions[::-1]:
+            user_interaction, assistant_interaction = interaction
+            future_size = token_counter(self.model, messages=context + [user_interaction.as_llm_dict(), assistant_interaction.as_llm_dict()])
 
             # If this message is going to be too big, then skip it
             if shown_mems >= 100:
@@ -192,23 +187,22 @@ class InsertedContextAgent:
                 continue
 
             # Add the interaction and count the tokens
-            if user_message not in context:
-                context.insert(1, assistant_message.as_llm_dict())
+            context.insert(1, assistant_interaction.as_llm_dict())
 
-                ts = datetime.datetime.fromtimestamp(user_message.timestamp)
-                et_descriptor = f"{str(ts)[:-7]} ({td_format(self.now - ts)}) "
-                context.insert(1, user_message.as_llm_dict())
-                context[1]["content"] = et_descriptor + context[1]["content"]
+            ts = datetime.datetime.fromtimestamp(user_interaction.timestamp)
+            et_descriptor = f"{str(ts)[:-7]} ({td_format(self.now - ts)}) "
+            context.insert(1, user_interaction.as_llm_dict())
+            context[1]["content"] = et_descriptor + context[1]["content"]
 
-                shown_mems += 1
+            shown_mems += 1
 
-                current_size = future_size
+            current_size = future_size
 
         print(f"current context size: {current_size}")
 
         return context
 
-    def llm_memory_filter(self, memories, queries, keywords, cost_cb):
+    def llm_memory_filter(self, memories, queries, cost_cb):
 
         situation_prompt = """You are a part of an agent. Another part of the agent is currently searching for memories using the statements below.
 Based on these statements, describe what is currently happening external to the agent in general terms:
@@ -241,9 +235,7 @@ Express your answer in this JSON:
 
         splice_length = 10
 
-        added_timestamps = []
-        mems_to_filter = []  # Memories without duplicates
-        filtered_mems = []
+        filtered_interactions = []
 
         # Get the situation
         queries_txt = "- " + "\n- ".join(queries)
@@ -251,15 +243,11 @@ Express your answer in this JSON:
         situation = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
         colour_print("MAGENTA", f"Filtering situation: {situation}")
 
-        # Remove memories that map to the same interaction
-        for m in memories:
-            timestamp = m.timestamp
-            if timestamp not in added_timestamps:
-                added_timestamps.append(timestamp)
-                mems_to_filter.append(m)
+        # Map retrieved memory fac
+        interactions_to_filter, interaction_keywords = self.interactions_from_retrieved_memories(memories)
 
-        num_splices = ceil(len(mems_to_filter) / splice_length)
-        # Iterate through the mems_to_filter list and create the passage
+        num_splices = ceil(len(interactions_to_filter) / splice_length)
+        # Iterate through the interactions_to_filter list and create the passage
         call_count = 0
         for splice in range(num_splices):
             start_idx = splice * splice_length
@@ -268,10 +256,9 @@ Express your answer in this JSON:
             memories_passages = []
             memory_counter = 0
 
-            for m in mems_to_filter[start_idx:end_idx]:
-                timestamp = m.timestamp
-                um, am = self.session.interaction_from_timestamp(timestamp)
-                memories_passages.append(f"[MEMORY NUMBER {memory_counter} START].\n (User): {um.content}\n(You): {am.content}\nKeywords: {m.metadata['keywords']}\n[MEMORY NUMBER {memory_counter} END]")
+            for interaction, keywords in zip(interactions_to_filter[start_idx:end_idx], interaction_keywords[start_idx:end_idx]):
+                um, am = interaction
+                memories_passages.append(f"[MEMORY NUMBER {memory_counter} START].\n (User): {um.content}\n(You): {am.content}\nKeywords: {keywords}\n[MEMORY NUMBER {memory_counter} END]")
                 memory_counter += 1
 
             passages = "\n\n------------------------\n\n".join(memories_passages)
@@ -286,7 +273,7 @@ Express your answer in this JSON:
                     json_list = sanitize_and_parse_json(result)
                     for idx, selected_object in enumerate(json_list):
                         if selected_object["related"]:
-                            filtered_mems.append(mems_to_filter[idx + start_idx])
+                            filtered_interactions.append(interactions_to_filter[idx + start_idx])
 
                     call_count += 1
                     break
@@ -294,12 +281,11 @@ Express your answer in this JSON:
                     print(e)
                     continue
 
-        filtered_mems = sorted(filtered_mems, key=lambda x: x.timestamp)
         # print("Memories after LLM filtering")
         # for m in filtered_mems:
         #     colour_print("GREEN", m)
 
-        return filtered_mems
+        return filtered_interactions
 
     def get_relevant_memories(self, user_message, cost_cb):
         prompt ="""Message from user: "{user_message}"
@@ -341,8 +327,7 @@ Write JSON in the following format:
                 for q in query_dict["queries"] + [user_message]:
                     print(f"Querying with: {q}")
                     for mem in self.semantic_memory.retrieve(q, k=100):
-                        if not self.memory_present(mem, all_retrieved_memories):
-                            all_retrieved_memories.append(mem)
+                        all_retrieved_memories.append(mem)
                 break
             except Exception:
                 continue
@@ -362,14 +347,11 @@ Write JSON in the following format:
 
         # Spreading activations
         print(f"Performing spreading activations with {len(keyword_filtered_mems[:10])} memories.")
-        secondary_memories = []
         for mem in keyword_filtered_mems[:10]:
             # print(f"Spreading with: {mem.passage}")
             for r_mem in self.semantic_memory.retrieve(mem.passage, k=5):
-                if r_mem.relevance > 0.6 and not self.memory_present(r_mem, secondary_memories) and not self.memory_present(r_mem, keyword_filtered_mems):
-                    secondary_memories.append(r_mem)
-
-        keyword_filtered_mems.extend(secondary_memories)
+                if r_mem.relevance > 0.6:
+                    keyword_filtered_mems.append(r_mem)
 
         # # TODO: Uncomment all this stuff when doing dev stuff
         # trivia_skip = False
@@ -378,22 +360,26 @@ Write JSON in the following format:
         #         trivia_skip = True
         #
         # if trivia_skip:
-        #     llm_filtered_mems = keyword_filtered_mems
+        #     llm_filtered_interactions, _ = self.interactions_from_retrieved_memories(keyword_filtered_mems)
         # else:
-        #     llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
+        #     llm_filtered_interactions = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
 
         # TODO: ....And comment this one out
-        llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
+        llm_filtered_interactions = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
 
-        sorted_mems = sorted(llm_filtered_mems, key=lambda x: x.timestamp)
-        return sorted_mems
+        sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
+        return sorted_interactions
 
-    def memory_present(self, memory, memory_list):
-        # passage_info seems to be unique to memory, regardless of the query
-        for list_mem in memory_list:
-            if memory.passage_info.fromIndex == list_mem.passage_info.fromIndex and memory.passage_info.toIndex == list_mem.passage_info.toIndex:
-                return True
-        return False
+    def interactions_from_retrieved_memories(self, memory_chunks: List[RetrievedMemory]) -> Tuple[List[Tuple[Message, Message]], List[List[str]]]:
+        interactions = []
+        keywords = []
+        for m in memory_chunks:
+            interaction = self.session.interaction_from_timestamp(m.timestamp)
+            if interaction not in interactions:
+                interactions.append(interaction)
+                keywords.append(m.metadata["keywords"])
+
+        return interactions, keywords
 
     def save_interaction(self, user_message, response_message, keywords):
         self.semantic_memory.add_text(user_message, timestamp=self.now.timestamp(), metadata={"keywords": keywords})
@@ -429,6 +415,7 @@ Write JSON in the following format:
             max_completion_tokens=self.max_completion_tokens,
             convo_mem=self.semantic_memory.state_as_text(),
             session=self.session.state_as_text(),
+            defined_kws=self.defined_kws
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
@@ -444,9 +431,9 @@ Write JSON in the following format:
         self.max_prompt_size = state["max_prompt_size"]
         self.max_completion_tokens = state["max_completion_tokens"]
         self.model = state["model"]
-        self.prompt_callback = prompt_callback
         self.semantic_memory.set_state(state["convo_mem"])
         self.session = LTMAgentSession.from_state_text(state["session"])
+        self.defined_kws = state["defined_kws"]
 
 
 
