@@ -108,7 +108,7 @@ class InsertedContextAgent:
         self.now = datetime.datetime.now()
 
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
-        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=3, cost_cb=cost_callback)
+        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
         response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
         log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx }")
         self.llm_call_idx += 1
