@@ -13,7 +13,7 @@ from goodai.ltm.mem.default import DefaultTextMemory
 from litellm import token_counter
 from model_interfaces.base_ltm_agent import Message
 
-from utils.llm import make_system_message, make_user_message, ask_llm, debug_actions
+from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call
 from utils.text import td_format
 from utils.ui import colour_print
 
@@ -59,7 +59,7 @@ class LTMAgentSession:
         state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
         session_id = state["session_id"]
         m_history = state["history"]
-        i_dict = state["interactions"]
+        i_dict = {float(k): v for k, v in state["interactions"].items()}
         return cls(session_id, m_history, i_dict)
 
 
@@ -78,10 +78,11 @@ class InsertedContextAgent:
     debug_level: int = 1
     session: LTMAgentSession = None
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
+    run_name: str = ""
 
     @property
     def save_name(self) -> str:
-        return f"{self.model}-{self.max_prompt_size}-{self.max_completion_tokens}__{self.init_timestamp}"
+        return f"{self.model.replace('/','-')}-{self.max_prompt_size}-{self.init_timestamp}"
 
     def __post_init__(self):
         self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
@@ -109,7 +110,7 @@ class InsertedContextAgent:
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
         context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
         response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
-        debug_actions(context, self.temperature, response_text, self.llm_call_idx, self.debug_level, self.save_name,  name_template="reply-{idx}")
+        log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx }")
         self.llm_call_idx += 1
 
         # Save interaction to memory
@@ -268,7 +269,7 @@ Express your answer in this JSON:
                 try:
                     print("Attempting filter")
                     result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
-                    debug_actions(context, self.temperature, result, self.llm_call_idx, self.debug_level, self.save_name, name_template="reply-{idx}-filter-" + str(call_count))
+                    log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx}-filter-{call_count}")
 
                     json_list = sanitize_and_parse_json(result)
                     for idx, selected_object in enumerate(json_list):

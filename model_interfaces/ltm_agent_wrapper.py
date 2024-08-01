@@ -17,6 +17,7 @@ class LTMAgentWrapper(ChatSession):
     def __post_init__(self):
         self.agent = InsertedContextAgent(
             model=self.model, max_prompt_size=self.max_prompt_size, max_completion_tokens=self.max_message_size,
+            run_name=self.name
         )
 
     @property
