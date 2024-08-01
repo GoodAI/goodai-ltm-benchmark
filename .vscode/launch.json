@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Run Benchmark",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/runner/run_benchmark.py",
+      "args": [
+        "-c",
+        "${workspaceFolder}/configurations/ltm_dev_benchmarks/dev_benchmark_4-1.yml",
+        "-a",
+        "\"ltm_agent\""
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "python": "${workspaceFolder}/win-RDB-venv/Scripts/python.exe",
+      "console": "integratedTerminal"
+    }
+  ]
+}
