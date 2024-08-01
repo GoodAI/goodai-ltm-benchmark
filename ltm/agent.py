@@ -66,12 +66,11 @@ class LTMAgentSession:
 @dataclass
 class InsertedContextAgent:
     max_completion_tokens: Optional[int] = None
-    semantic_memory: DefaultTextMemory = field(default_factory=AutoTextMemory.create)
+    semantic_memory: DefaultTextMemory = None
     max_prompt_size: int = 16384
     is_local: bool = True
     defined_kws: list = field(default_factory=list)
     llm_call_idx: int = 0
-    costs_usd: float = 0.0
     model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
     temperature: float = 0.01
     system_message = """You are a helpful AI assistant."""
@@ -79,6 +78,7 @@ class InsertedContextAgent:
     session: LTMAgentSession = None
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
     run_name: str = ""
+    num_tries: int = 5
 
     @property
     def save_name(self) -> str:
@@ -127,7 +127,7 @@ class InsertedContextAgent:
         prompt = 'Create two keywords to describe the topic of this message:\n"{user_message}".\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}'
 
         context = [make_system_message(prompt.format(user_message=user_message, keywords=self.defined_kws))]
-        while True:
+        for _ in range(self.num_tries):
             try:
                 print("Keyword gen")
                 response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
@@ -148,8 +148,7 @@ class InsertedContextAgent:
 
     def create_context(self, user_message, max_prompt_size, previous_interactions, cost_cb):
 
-        stamped_user_message = str(self.now) + ": " + user_message
-        context = [make_system_message(self.system_message), make_user_message(stamped_user_message)]
+        context = [make_system_message(self.system_message), make_user_message(f"{str(self.now)[:-7]} ({td_format(datetime.timedelta(seconds=1))}) " + user_message)]
         relevant_interactions = self.get_relevant_memories(user_message, cost_cb)
 
         # Get interactions from the memories
@@ -265,7 +264,7 @@ Express your answer in this JSON:
             passages = "\n\n------------------------\n\n".join(memories_passages)
             context = [make_user_message(prompt.format(passages=passages, situation=situation))]
 
-            while True:
+            for _ in range(self.num_tries):
                 try:
                     print("Attempting filter")
                     result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
@@ -315,7 +314,8 @@ Write JSON in the following format:
         context = [make_user_message(prompt.format(user_message=user_message, time=self.now, keywords=self.defined_kws))]
         all_retrieved_memories = []
         query_keywords = []
-        while True:
+
+        for _ in range(self.num_tries):
             print("generating queries")
             response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
 
@@ -416,7 +416,8 @@ Write JSON in the following format:
             max_completion_tokens=self.max_completion_tokens,
             convo_mem=self.semantic_memory.state_as_text(),
             session=self.session.state_as_text(),
-            defined_kws=self.defined_kws
+            defined_kws=self.defined_kws,
+            llm_call_idx=self.llm_call_idx
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
@@ -435,6 +436,7 @@ Write JSON in the following format:
         self.semantic_memory.set_state(state["convo_mem"])
         self.session = LTMAgentSession.from_state_text(state["session"])
         self.defined_kws = state["defined_kws"]
+        self.llm_call_idx = state["llm_call_idx"]
 
 
 
