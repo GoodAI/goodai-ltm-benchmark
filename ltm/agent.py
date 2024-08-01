@@ -24,7 +24,7 @@ class LTMAgentSession:
     """
     def __init__(self, session_id: str, m_history: list[Message], i_dict: dict[float, tuple[Message, Message]]):
         self.session_id = session_id
-        self.message_history: list[Message] = m_history or []
+        self.message_history: list[tuple[Message, Message]] = m_history or []
         self.interaction_dict: dict[float, tuple[Message, Message]] = i_dict or {}
 
     @property
@@ -39,7 +39,7 @@ class LTMAgentSession:
         return json.dumps(state, cls=SimpleJSONEncoder)
 
     def add_interaction(self, interaction: tuple[Message, Message]):
-        self.message_history.extend(interaction)
+        self.message_history.append(interaction)
         key = interaction[0].timestamp
         self.interaction_dict[key] = interaction
 
@@ -108,7 +108,7 @@ class InsertedContextAgent:
         self.now = datetime.datetime.now()
 
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
-        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
+        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=3, cost_cb=cost_callback)
         response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
         log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx }")
         self.llm_call_idx += 1
@@ -159,23 +159,14 @@ class InsertedContextAgent:
                 colour_print("YELLOW", f"{m[0].content}")
 
         # Add the previous messages
-        final_idx = self.session.message_count - 1
-        while previous_interactions > 0 and final_idx > 0:
-
-            # Agent reply
-            context.insert(1, self.session.by_index(final_idx).as_llm_dict())
-            # User message
-            context.insert(1, self.session.by_index(final_idx-1).as_llm_dict())
-
-            final_idx -= 2
-            previous_interactions -= 1
+        relevant_interactions = relevant_interactions + self.session.message_history[-previous_interactions:]
 
         # Add in memories up to the max prompt size
         current_size = token_counter(self.model, messages=context)
         shown_mems = 0
         target_size = max_prompt_size - self.max_message_size
 
-        for interaction in relevant_interactions[::-1]:
+        for interaction in reversed(relevant_interactions):
             user_interaction, assistant_interaction = interaction
             future_size = token_counter(self.model, messages=context + [user_interaction.as_llm_dict(), assistant_interaction.as_llm_dict()])
 
