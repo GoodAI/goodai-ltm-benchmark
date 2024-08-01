@@ -164,14 +164,14 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 ))
 def main(
     configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, local: bool = False,
-    isolated: bool = False,
+    isolated: bool = False
 ):
     _main(configuration, agent_name, max_prompt_size, y, local, isolated)
 
 
 def _main(
     configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local: bool = False,
-    isolated: bool = False,
+    isolated: bool = False
 ):
     config_path = Path(configuration)
     if not config_path.is_absolute():
@@ -184,7 +184,10 @@ def _main(
     incompatibilities = []
     for inc_list in yaml_config.get("incompatibilities", []):
         incompatibilities.append({DATASETS[ds_name] for ds_name in inc_list})
-    conf = RunConfig(incompatibilities=incompatibilities, isolated=isolated, **config)
+    num_repetitions = loaded_yaml["datasets"]["args"]["dataset_examples"]
+    conf = RunConfig(
+        incompatibilities=incompatibilities, isolated=isolated, num_examples_per_dataset=num_repetitions, **config
+    )
     if isolated:
         new_run_name = f"{conf.run_name} (isolated)"
         new_def_path = TESTS_DIR.joinpath(new_run_name, "definitions")

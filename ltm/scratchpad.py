@@ -38,18 +38,24 @@ Now an AI assistant requires your expertise.
 
 This AI assistant has just received the above user question/statement. Based on it, your task is to keep the JSON scratchpad up to date.
 The scratchpad is expected to contain information provided by the user, such as facts about themselves or information they are expecting the AI assistant to keep track of. The scratchpad is specially well suited for quickly-changing or temporal information.
-Avoid storing unimportant general knowledge that any AI assistant should be already aware of.
+Focus on important specific knowledge about the user. Avoid storing unimportant general knowledge.
 Capture information provided by the user without omitting important details.
 Property names should be descriptive.
 
 You will address this task in turns. You will be guided through the process.
 """.strip()
 
-changes_yesno_template = """
+analysis_template = """
 This is what the user information looks like now:
 {user_info}
 
-Would you like to add new information or update any part of it? Answer "yes" or "no".
+Try to answer these questions:
+- Does the message contain information that will be useful in future?
+- Is the information unimportant general knowledge, or useful user specific knowledge?
+""".strip()
+
+changes_yesno_template = """
+Given the above analysis, would you like to add new information or update any part of it? Answer "yes" or "no".
 """.strip()
 
 single_change_template = """

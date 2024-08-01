@@ -1,9 +1,14 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 import litellm
 from litellm import completion, token_counter
 from transformers import AutoTokenizer
-from utils.ui import colour_print
 
+from utils.constants import DATA_DIR
+from utils.ui import colour_print
+from utils.constants import DATA_DIR
+from datetime import datetime
+
+_debug_dir = DATA_DIR.joinpath("ltm_debug_info")
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 claude_adjust_factor = 1.1  # Approximate the real token count given by the API.
 
@@ -18,6 +23,8 @@ litellm.model_alias_map = {
     "claude-3-sonnet": "claude-3-sonnet-20240229",
     "claude-3-opus": "claude-3-opus-20240229",
 }
+_llm_debug_dir = DATA_DIR.joinpath("llm_debug")
+_llm_debug_params: Optional[dict[str, Any]] = None  # Keeps a copy of the LLM call params until debug_actions is called
 
 
 def model_from_alias(model: str):
@@ -73,6 +80,7 @@ def ask_llm(
     max_response_tokens: int = None,
 ) -> str:
     global claude_adjust_factor
+    global _llm_debug_params
 
     # Input checks
     model = model_from_alias(model)
@@ -87,13 +95,15 @@ def ask_llm(
                                      f"but there are {context_tokens}.")
 
     # Actual LLM call
-    response = completion(
+    _llm_debug_params = dict(
         model=model,
         messages=context,
         max_tokens=max_response_tokens,
         temperature=temperature,
         timeout=timeout,
     )
+    response = completion(**_llm_debug_params)
+    _llm_debug_params["response"] = response.choices[0].message.content
 
     # Output checks
     if "claude" in model:
@@ -172,3 +182,36 @@ def create_huggingface_chat_context(model: str, context: LLMContext):
     tokenizer = AutoTokenizer.from_pretrained(model_only)
     c = context[1:] if context[0]["role"] == "system" else context
     return tokenizer.apply_chat_template(c, tokenize=False)
+
+
+def log_llm_call(run_name: str, agent_name: str, debug_level: int, label: str = None):
+    global _llm_debug_params
+    if debug_level < 1:
+        return
+    if _llm_debug_params is None:
+        raise ValueError("log_llm_call has no LLM call to log. Call ask_llm before calling log_llm_call.")
+
+    # See if dir exists or create it, and set llm_call_idx
+    assert "/" not in run_name + agent_name
+    save_dir = _llm_debug_dir.joinpath(run_name, agent_name)
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write content of LLM call to file
+    context = _llm_debug_params.pop("messages")
+    response_text = _llm_debug_params.pop("response")
+    save_path = save_dir.joinpath(f"{datetime.now()}{'-' + label if label is not None else ''}.txt")
+    with open(save_path, "w") as fd:
+        for k, v in _llm_debug_params.items():
+            fd.write(f"{k}: {v}\n")
+
+        for m in context:
+            fd.write(f"--- {m['role'].upper()}\n{m['content']}\n")
+        fd.write(f"--- Response:\n{response_text}")
+
+    _llm_debug_params = None
+
+    # Wait for confirmation
+    if debug_level < 2:
+        return
+    print(f"LLM call saved as {save_path.name}")
+    input("Press ENTER to continue...")
