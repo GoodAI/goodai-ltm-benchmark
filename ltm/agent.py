@@ -637,7 +637,7 @@ class InsertedContextAgent:
         queries: List[str],
         keywords: List[str],
         cost_cb: Callable,
-    ) -> List[Memory]:
+    ) -> List[Memory]: #TODO explore threading
         situation_prompt = """You are a part of an agent. Another part of the agent is currently searching for memories using the statements below.
 Based on these statements, describe what is currently happening external to the agent in general terms:
 {queries}  
@@ -672,7 +672,7 @@ Express your answer in this JSON:
         mems_to_filter = []  # Memories without duplicates
         filtered_mems = []
 
-        # Get the situation
+        # Get the situation #! worth making this a semantic search over situation column?  
         queries_txt = "- " + "\n- ".join(queries)
         context = [
             make_user_message(situation_prompt.format(queries=queries_txt))
@@ -707,7 +707,7 @@ Express your answer in this JSON:
                 interaction = self.dual_db_interface.get_interaction_from_memory(
                     m)
                 if interaction:
-                    um, am = interaction
+                    um, am = interaction #! might be wrong
                     memories_passages.append(
                         f"{memory_counter}). (User): {um.passage}\n(You): {am.passage}\nKeywords: {m.metadata['keywords']}"
                     )

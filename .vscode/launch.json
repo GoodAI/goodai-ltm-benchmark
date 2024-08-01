@@ -10,7 +10,8 @@
         "-c",
         "${workspaceFolder}/configurations/ltm_dev_benchmarks/dev_benchmark_4-1.yml",
         "-a",
-        "\"ltm_agent\""
+        "\"ltm_agent(together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo)\"",
+        "-m 8192"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
