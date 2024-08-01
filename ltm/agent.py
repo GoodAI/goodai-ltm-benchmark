@@ -1,90 +1,95 @@
-import datetime
 import json
-import logging
 import uuid
-import ltm.scratchpad as sp
 from dataclasses import dataclass, field
-from copy import deepcopy
-from json import JSONDecodeError
-from typing import List, Callable, Optional, Any, Union
+import datetime
+from math import ceil
+from typing import Optional, Callable, Any, List, Tuple
+
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
-from goodai.ltm.agent import LTMAgentConfig, Message
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
-from goodai.ltm.mem.config import ChunkExpansionConfig, TextMemoryConfig
+from goodai.ltm.mem.config import TextMemoryConfig
+from goodai.ltm.mem.default import DefaultTextMemory
+from litellm import token_counter
+from model_interfaces.base_ltm_agent import Message
 
-from utils.constants import DATA_DIR
-from utils.llm import make_user_message, make_assistant_message, make_system_message, LLMContext
-from utils.llm import ask_llm, count_tokens_for_model
-from utils.text import truncate
-
-_debug_dir = DATA_DIR.joinpath("ltm_debug_info")
-_logger = logging.getLogger("exp_agent")
-_default_system_message = """
-You are a helpful AI assistant with a long-term memory.
-Prior interactions with the user are tagged with a timestamp.
-Current time: {datetime}
-Current information about the user:
-{user_info}
-""".strip()
-_convo_excerpts_prefix = f"# The following are excerpts from the early part of the conversation "\
-                         f"or prior conversations, in chronological order:\n\n"
+from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call
+from utils.text import td_format
+from utils.ui import colour_print
 
 
-def td_format(td: datetime.timedelta) -> str:
-    seconds = int(td.total_seconds())
-    periods = [
-        ('year', 3600*24*365), ('month', 3600*24*30), ('day', 3600*24), ('hour', 3600), ('minute', 60), ('second', 1)
-    ]
-    parts = list()
-    for period_name, period_seconds in periods:
-        if seconds > period_seconds:
-            period_value, seconds = divmod(seconds, period_seconds)
-            has_s = 's' if period_value > 1 else ''
-            parts.append("%s %s%s" % (period_value, period_name, has_s))
-    if len(parts) == 0:
-        return "just now"
-    if len(parts) == 1:
-        return f"{parts[0]} ago"
-    return " and ".join([", ".join(parts[:-1])] + parts[-1:]) + " ago"
+class LTMAgentSession:
+    """
+    An agent session, or a collection of messages.
+    """
+    def __init__(self, session_id: str, m_history: list[Message], i_dict: dict[float, tuple[Message, Message]]):
+        self.session_id = session_id
+        self.message_history: list[tuple[Message, Message]] = m_history or []
+        self.interaction_dict: dict[float, tuple[Message, Message]] = i_dict or {}
+
+    @property
+    def message_count(self):
+        return len(self.message_history)
+
+    def state_as_text(self) -> str:
+        """
+        :return: A string that represents the contents of the session.
+        """
+        state = dict(session_id=self.session_id, history=self.message_history, interactions=self.interaction_dict)
+        return json.dumps(state, cls=SimpleJSONEncoder)
+
+    def add_interaction(self, interaction: tuple[Message, Message]):
+        self.message_history.append(interaction)
+        key = interaction[0].timestamp
+        self.interaction_dict[key] = interaction
+
+    def interaction_from_timestamp(self, timestamp: float) -> tuple[Message, Message]:
+        return self.interaction_dict[timestamp]
+
+    def by_index(self, idx):
+        return self.message_history[idx]
+
+    @classmethod
+    def from_state_text(cls, state_text: str) -> 'LTMAgentSession':
+        """
+        Builds a session object given state text.
+        :param state_text: Text previously obtained using the state_as_text() method.
+        :return: A session instance.
+        """
+        state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
+        session_id = state["session_id"]
+        m_history = state["history"]
+        i_dict = {float(k): v for k, v in state["interactions"].items()}
+        return cls(session_id, m_history, i_dict)
 
 
 @dataclass
-class LTMAgent:
-    model: str
-    max_prompt_size: int
+class InsertedContextAgent:
     max_completion_tokens: Optional[int] = None
-    config: LTMAgentConfig = field(default_factory=LTMAgentConfig)
-    prompt_callback: Callable[[str, str, list[dict], str], Any] = None
-    user_info: dict = field(default_factory=dict)
-    user_info_ts: dict[str, float] = field(default_factory=dict)  # Tracks changes in user_info (timestamps)
-    now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
+    semantic_memory: DefaultTextMemory = None
+    max_prompt_size: int = 16384
+    is_local: bool = True
+    defined_kws: list = field(default_factory=list)
+    llm_call_idx: int = 0
+    model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+    temperature: float = 0.01
+    system_message = """You are a helpful AI assistant."""
     debug_level: int = 1
-    llm_call_idx: int = None
+    session: LTMAgentSession = None
+    now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
+    run_name: str = ""
+    num_tries: int = 5
 
     @property
     def save_name(self) -> str:
-        model = self.model.replace("/", "-")
-        return f"{model}-{self.max_prompt_size}-{self.max_completion_tokens}"
-
-    @property
-    def max_input_tokens(self) -> int:
-        return int(0.9 * (self.max_prompt_size - self.max_completion_tokens))
+        return f"{self.model.replace('/','-')}-{self.max_prompt_size}-{self.init_timestamp}"
 
     def __post_init__(self):
-        mem_config = TextMemoryConfig(
-            queue_capacity=self.config.chunk_queue_capacity,
-            chunk_capacity=self.config.chunk_size,
-            chunk_overlap_fraction=self.config.chunk_overlap_fraction,
-            redundancy_overlap_threshold=self.config.redundancy_overlap_threshold,
-            chunk_expansion_config=ChunkExpansionConfig.for_line_break(
-                min_extra_side_tokens=self.config.chunk_size // 4,
-                max_extra_side_tokens=self.config.chunk_size * 4
-            ),
-            reranking_k_factor=10,
-        )
-        self.convo_mem = AutoTextMemory.create(emb_model=self.config.emb_model, config=mem_config)
+        self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
+        self.max_message_size = 1000
+        self.defined_kws = []
         self.new_session()
+        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
     def new_session(self) -> 'LTMAgentSession':
         """
@@ -92,10 +97,303 @@ class LTMAgent:
         :return: The new session object.
         """
         session_id = str(uuid.uuid4())
-        self.session = LTMAgentSession(session_id=session_id, m_history=[])
-        if not self.convo_mem.is_empty():
-            self.convo_mem.add_separator()
+        self.session = LTMAgentSession(session_id=session_id, m_history=[], i_dict={})
+        if not self.semantic_memory.is_empty():
+            self.semantic_memory.add_separator()
         return self.session
+
+    def reply(self, user_message: str, agent_response: Optional[str] = None, cost_callback: Callable=None) -> str:
+
+        colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
+        self.now = datetime.datetime.now()
+
+        keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
+        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
+        response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
+        log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx }")
+        self.llm_call_idx += 1
+
+        # Save interaction to memory
+        um = Message(role="user", content=user_message, timestamp=self.now.timestamp())
+        am = Message(role="assistant", content=response_text, timestamp=self.now.timestamp())
+
+        self.save_interaction(user_message, response_text, keywords)
+        self.session.add_interaction((um, am))
+
+        return response_text
+
+    def keywords_for_message(self, user_message, cost_cb):
+
+        prompt = 'Create two keywords to describe the topic of this message:\n"{user_message}".\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}'
+
+        context = [make_system_message(prompt.format(user_message=user_message, keywords=self.defined_kws))]
+        for _ in range(self.num_tries):
+            try:
+                print("Keyword gen")
+                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+
+                keywords = [k.lower() for k in sanitize_and_parse_json(response)]
+                break
+            except Exception as e:
+                print(repr(e) + response)
+                continue
+
+        # Update known list of keywords
+        for k in keywords:
+            if k not in self.defined_kws:
+                self.defined_kws.append(k)
+
+        print(f"Interaction keywords: {keywords}")
+        return keywords
+
+    def create_context(self, user_message, max_prompt_size, previous_interactions, cost_cb):
+
+        context = [make_system_message(self.system_message), make_user_message(f"{str(self.now)[:-7]} ({td_format(datetime.timedelta(seconds=1))}) " + user_message)]
+        relevant_interactions = self.get_relevant_memories(user_message, cost_cb)
+
+        # Get interactions from the memories
+        for m in relevant_interactions:
+            if "trivia" in m[0].content:
+                colour_print("YELLOW", f"<*** trivia ***>")
+            else:
+                colour_print("YELLOW", f"{m[0].content}")
+
+        # Add the previous messages
+        relevant_interactions = relevant_interactions + self.session.message_history[-previous_interactions:]
+
+        # Add in memories up to the max prompt size
+        current_size = token_counter(self.model, messages=context)
+        shown_mems = 0
+        target_size = max_prompt_size - self.max_message_size
+
+        for interaction in reversed(relevant_interactions):
+            user_interaction, assistant_interaction = interaction
+            future_size = token_counter(self.model, messages=context + [user_interaction.as_llm_dict(), assistant_interaction.as_llm_dict()])
+
+            # If this message is going to be too big, then skip it
+            if shown_mems >= 100:
+                break
+
+            if future_size > target_size:
+                continue
+
+            # Add the interaction and count the tokens
+            context.insert(1, assistant_interaction.as_llm_dict())
+
+            ts = datetime.datetime.fromtimestamp(user_interaction.timestamp)
+            et_descriptor = f"{str(ts)[:-7]} ({td_format(self.now - ts)}) "
+            context.insert(1, user_interaction.as_llm_dict())
+            context[1]["content"] = et_descriptor + context[1]["content"]
+
+            shown_mems += 1
+
+            current_size = future_size
+
+        print(f"current context size: {current_size}")
+
+        return context
+
+    def llm_memory_filter(self, memories, queries, cost_cb):
+
+        situation_prompt = """You are a part of an agent. Another part of the agent is currently searching for memories using the statements below.
+Based on these statements, describe what is currently happening external to the agent in general terms:
+{queries}  
+"""
+
+        prompt = """Here are a number of interactions, each is given a number:
+{passages}         
+*****************************************
+
+Each of these interactions might be related to the general situation below. Your task is to judge if these interaction have any relation to the general situation.
+Filter out interactions that very clearly do not have any relation. But keep in interactions that have any kind of relationship to the situation such as in: topic, characters, locations, setting, etc.
+
+SITUATION:
+{situation}
+
+Express your answer in this JSON: 
+[
+    {{
+        "number": int  // The number of the interaction.
+        "justification": string  // Why the interaction is or is not related to the situation.
+        "related": bool // Whether the interaction is related to the situation.
+    }},
+    ...
+]
+"""
+
+        if len(memories) == 0:
+            return []
+
+        splice_length = 10
+
+        filtered_interactions = []
+
+        # Get the situation
+        queries_txt = "- " + "\n- ".join(queries)
+        context = [make_user_message(situation_prompt.format(queries=queries_txt))]
+        situation = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+        colour_print("MAGENTA", f"Filtering situation: {situation}")
+
+        # Map retrieved memory fac
+        interactions_to_filter, interaction_keywords = self.interactions_from_retrieved_memories(memories)
+
+        num_splices = ceil(len(interactions_to_filter) / splice_length)
+        # Iterate through the interactions_to_filter list and create the passage
+        call_count = 0
+        for splice in range(num_splices):
+            start_idx = splice * splice_length
+            end_idx = (splice + 1) * splice_length
+
+            memories_passages = []
+            memory_counter = 0
+
+            for interaction, keywords in zip(interactions_to_filter[start_idx:end_idx], interaction_keywords[start_idx:end_idx]):
+                um, am = interaction
+                memories_passages.append(f"[MEMORY NUMBER {memory_counter} START].\n (User): {um.content}\n(You): {am.content}\nKeywords: {keywords}\n[MEMORY NUMBER {memory_counter} END]")
+                memory_counter += 1
+
+            passages = "\n\n------------------------\n\n".join(memories_passages)
+            context = [make_user_message(prompt.format(passages=passages, situation=situation))]
+
+            for _ in range(self.num_tries):
+                try:
+                    print("Attempting filter")
+                    result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+                    log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx}-filter-{call_count}")
+
+                    json_list = sanitize_and_parse_json(result)
+                    for idx, selected_object in enumerate(json_list):
+                        if selected_object["related"]:
+                            filtered_interactions.append(interactions_to_filter[idx + start_idx])
+
+                    call_count += 1
+                    break
+                except Exception as e:
+                    print(e)
+                    continue
+
+        # print("Memories after LLM filtering")
+        # for m in filtered_mems:
+        #     colour_print("GREEN", m)
+
+        return filtered_interactions
+
+    def get_relevant_memories(self, user_message, cost_cb):
+        prompt ="""Message from user: "{user_message}"
+        
+Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
+conversation history that may be relevant to a reply to the user.
+
+The search queries you produce should be compact reformulations of the user question/statement,
+taking context into account. The purpose of the queries is accurate information retrieval. 
+Search is purely semantic. 
+
+Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
+Use up to three of these keywords to help narrow the search:
+{keywords}
+
+The current time is: {time}. 
+
+Write JSON in the following format:
+
+{{
+    "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
+    "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
+}}"""
+
+        # Now create the context for generating the queries
+        context = [make_user_message(prompt.format(user_message=user_message, time=self.now, keywords=self.defined_kws))]
+        all_retrieved_memories = []
+        query_keywords = []
+
+        for _ in range(self.num_tries):
+            print("generating queries")
+            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+
+            try:
+                query_dict = sanitize_and_parse_json(response)
+                query_keywords = [k.lower() for k in query_dict["keywords"]]
+                print(f"Query keywords: {query_keywords}")
+
+                all_retrieved_memories = []
+                for q in query_dict["queries"] + [user_message]:
+                    print(f"Querying with: {q}")
+                    for mem in self.semantic_memory.retrieve(q, k=100):
+                        all_retrieved_memories.append(mem)
+                break
+            except Exception:
+                continue
+
+        # Filter by both relevance and keywords
+        all_keywords = query_keywords
+        relevance_filtered_mems = [x for x in all_retrieved_memories if x.relevance > 0.6] + self.retrieve_from_keywords(all_keywords)
+        keyword_filtered_mems = []
+
+        for m in relevance_filtered_mems:
+            for kw in m.metadata["keywords"]:
+                if kw in all_keywords:
+                    keyword_filtered_mems.append(m)
+                    break
+
+        keyword_filtered_mems.extend(self.retrieve_from_keywords(all_keywords))
+
+        # Spreading activations
+        print(f"Performing spreading activations with {len(keyword_filtered_mems[:10])} memories.")
+        for mem in keyword_filtered_mems[:10]:
+            # print(f"Spreading with: {mem.passage}")
+            for r_mem in self.semantic_memory.retrieve(mem.passage, k=5):
+                if r_mem.relevance > 0.6:
+                    keyword_filtered_mems.append(r_mem)
+
+        # # TODO: Uncomment all this stuff when doing dev stuff
+        # trivia_skip = False
+        # for kw in all_keywords:
+        #     if "trivia" in kw:
+        #         trivia_skip = True
+        #
+        # if trivia_skip:
+        #     llm_filtered_interactions, _ = self.interactions_from_retrieved_memories(keyword_filtered_mems)
+        # else:
+        #     llm_filtered_interactions = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
+
+        # TODO: ....And comment this one out
+        llm_filtered_interactions = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
+
+        sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
+        return sorted_interactions
+
+    def interactions_from_retrieved_memories(self, memory_chunks: List[RetrievedMemory]) -> Tuple[List[Tuple[Message, Message]], List[List[str]]]:
+        interactions = []
+        keywords = []
+        for m in memory_chunks:
+            interaction = self.session.interaction_from_timestamp(m.timestamp)
+            if interaction not in interactions:
+                interactions.append(interaction)
+                keywords.append(m.metadata["keywords"])
+
+        return interactions, keywords
+
+    def save_interaction(self, user_message, response_message, keywords):
+        self.semantic_memory.add_text(user_message, timestamp=self.now.timestamp(), metadata={"keywords": keywords})
+        self.semantic_memory.add_separator()
+        self.semantic_memory.add_text(response_message, timestamp=self.now.timestamp(), metadata={"keywords": keywords})
+        self.semantic_memory.add_separator()
+
+    def retrieve_from_keywords(self, keywords):
+        selected_mems = []
+        memories = self.semantic_memory.retrieve("", 2000)
+
+        for m in memories:
+            for kw in m.metadata["keywords"]:
+                if kw in keywords:
+                    selected_mems.append(m)
+                    break
+
+        return selected_mems
+
+    def reset(self):
+        self.semantic_memory.clear()
+        self.new_session()
 
     def state_as_text(self) -> str:
         """
@@ -107,11 +405,10 @@ class LTMAgent:
             model=self.model,
             max_prompt_size=self.max_prompt_size,
             max_completion_tokens=self.max_completion_tokens,
-            config=self.config,
-            convo_mem=self.convo_mem.state_as_text(),
-            user_info=self.user_info,
-            user_info_ts=self.user_info_ts,
+            convo_mem=self.semantic_memory.state_as_text(),
             session=self.session.state_as_text(),
+            defined_kws=self.defined_kws,
+            llm_call_idx=self.llm_call_idx
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
@@ -127,331 +424,18 @@ class LTMAgent:
         self.max_prompt_size = state["max_prompt_size"]
         self.max_completion_tokens = state["max_completion_tokens"]
         self.model = state["model"]
-        self.config = state["config"]
-        self.user_info = state["user_info"]
-        self.user_info_ts = state["user_info_ts"]
-        self.prompt_callback = prompt_callback
-        self.convo_mem.set_state(state["convo_mem"])
+        self.semantic_memory.set_state(state["convo_mem"])
         self.session = LTMAgentSession.from_state_text(state["session"])
-
-    def count_tokens(self, text: str | list[str] = None, messages: LLMContext = None) -> int:
-        return count_tokens_for_model(self.model, text=text, context=messages)
-
-    def _build_llm_context(self, m_history: list[Message], user_content: str,
-                           cost_callback: Callable[[float], Any]) -> list[dict]:
-        target_history_tokens = self.max_input_tokens * (1.0 - self.config.ctx_fraction_for_mem)
-        context = [
-            make_system_message(_default_system_message.format(
-                datetime=str(self.now)[:-7],
-                user_info=sp.to_text(self.user_info),
-            )),
-            make_user_message(user_content),
-        ]
-        token_count = self.count_tokens(messages=context)
-        oldest_message_ts = self.now.timestamp()
-        for message in reversed(m_history):
-            if message.is_user:
-                ts = datetime.datetime.fromtimestamp(message.timestamp)
-                et_descriptor = f"{str(ts)[:-7]} ({td_format(self.now - ts)})"
-                new_content = f"[{et_descriptor}]\n{message.content}"
-                message = Message(message.role, new_content, message.timestamp)
-            message_dict = message.as_llm_dict()
-            new_token_count = self.count_tokens(messages=[message_dict]) + token_count
-            if new_token_count > target_history_tokens:
-                break
-            context.insert(1, message_dict)
-            token_count = new_token_count
-            oldest_message_ts = message.timestamp
-        remaining_tokens = self.max_input_tokens - token_count
-        self.user_info, mem_appendix = self._get_mem_message(
-            m_history, user_content, remaining_tokens, oldest_message_ts, cost_callback,
-        )
-        if mem_appendix:
-            context[0]["content"] += "\n\n" + mem_appendix
-        return context
-
-    def convo_retrieve(
-        self, queries: list[str], k_per_query: int, before_timestamp: float,
-    ) -> List[RetrievedMemory]:
-        try:
-            multi_list = self.convo_mem.retrieve_multiple(queries, k=k_per_query)
-        except IndexError:
-            _logger.error(f"Unable to retrieve memories using these queries: {queries}")
-            raise
-        r_memories = [rm for entry in multi_list for rm in entry if rm.timestamp < before_timestamp]
-        r_memories = RetrievedMemory.remove_overlaps(
-            r_memories, overlap_threshold=self.config.redundancy_overlap_threshold,
-        )
-        r_memories.sort(key=lambda _rm: _rm.timestamp)
-        return r_memories
-
-    def _get_mem_message(
-        self, m_history: list[Message], user_content: str, remain_tokens: int,
-        before_timestamp: float, cost_callback: Callable[[float], Any], k_per_query=250,
-    ) -> tuple[Union[dict, str], str]:
-        """
-        Gets (1) a new user object, and (2) a context message with
-        information from memory if available.
-        """
-        queries, user_info = self._prepare_mem_info(m_history, user_content,
-                                                    cost_callback=cost_callback)
-        queries = queries or []
-        queries = [f"USER: {user_content}"] + queries
-        convo_memories = self.convo_retrieve(queries, k_per_query, before_timestamp)
-        excerpts_text = self.get_mem_excerpts(convo_memories, remain_tokens)
-        return user_info, excerpts_text
-
-    def _last_messages_preview(self, message_history: list[Message], token_limit: int, max_messages: int = 10) -> str:
-        messages = list()
-        token_count = 0
-        sep_tokens = self.count_tokens(text="\n\n")
-        for m in reversed(message_history[-max_messages:]):
-            msg = f"{m.role.upper()}: {truncate(m.content, 500)}"
-            new_token_count = token_count + sep_tokens + self.count_tokens(text=msg)
-            if new_token_count > token_limit:
-                break
-            token_count = new_token_count
-            messages.append(msg)
-        return "\n\n".join(reversed(messages))
-
-    def _generate_extra_queries(
-        self, message_history: list[Message], user_content: str, cost_callback: Callable[[float], Any],
-    ) -> list[str]:
-        # The system prompt includes this intro line, plus up to 10 previous messages in the conversation
-        # TODO: Since user_info is presented in the user message, these past messages should be there too.
-        system_prompt = ("You are an expert in helping AI assistants manage their knowledge about a user and their "
-                         "operating environment.")
-        messages_prefix = (
-            "\n\nFor context, the assistant and the user have previously exchanged these messages:\n"
-            "(prior conversation context omitted)\n\n"
-        )
-        system_tokens = self.count_tokens(text=system_prompt + messages_prefix)
-        msg_preview = self._last_messages_preview(message_history, self.max_input_tokens - system_tokens)
-        if msg_preview != "":
-            system_prompt += messages_prefix + msg_preview
-
-        if self.user_info:
-            user_info_description = f"Prior information about the user:\n{sp.to_text(self.user_info)}"
-        else:
-            user_info_description = f"There is no prior information about the user."
-        context = [
-            make_system_message(system_prompt),
-            make_user_message(sp.query_rewrite_template.format(
-                user_info_description=user_info_description,
-                user_content=user_content,
-            )),
-        ]
-        query_json = self._completion(context, temperature=self.config.mem_temperature,
-                                      label="query-generation", cost_callback=cost_callback)
-        try:
-            queries = sanitize_and_parse_json(query_json)
-        except (JSONDecodeError, ValueError):
-            _logger.exception(f"Unable to parse JSON: {query_json}")
-            queries = {}
-        if not isinstance(queries, dict):
-            _logger.warning("Query generation completion was not a dictionary!")
-            queries = {}
-        return queries.get("queries", [])
-
-    def _prepare_mem_info(
-            self, message_history: list[Message], user_content: str, cost_callback: Callable[[float], Any],
-    ) -> tuple[list[str], dict]:
-
-        queries = self._generate_extra_queries(message_history, user_content, cost_callback)
-        user_info = self._update_scratchpad(message_history, user_content, cost_callback)
-        _logger.info(f"New user object: {user_info}")
-        return queries, user_info
-
-    def get_mem_excerpts(self, convo_memories: list[RetrievedMemory], token_limit: int) -> str:
-        token_count = self.count_tokens(text=_convo_excerpts_prefix)
-        convo_excerpts: list[tuple[float, str]] = []
-        for m in sorted(convo_memories, key=lambda _t: _t.relevance, reverse=True):
-            ts = datetime.datetime.fromtimestamp(m.timestamp)
-            ts_descriptor = f"{td_format(self.now - ts)} ({str(ts)[:-7]})"
-            excerpt = f"# Excerpt from {ts_descriptor}\n{m.passage.strip()}\n\n"
-            new_token_count = self.count_tokens(text=excerpt) + token_count
-            if new_token_count > token_limit:
-                break
-            token_count = new_token_count
-            convo_excerpts.append((m.timestamp, excerpt))
-        if convo_excerpts:
-            convo_excerpts.sort(key=lambda _t: _t[0])
-            return _convo_excerpts_prefix + "\n".join([e for _, e in convo_excerpts])
-        return ""
-
-    def _add_to_convo_memory(self, message: "Message"):
-        role = "YOU" if message.role == "assistant" else message.role.upper()
-        text = f"{role}: {message.content}\n"
-        self.convo_mem.add_text(text, timestamp=message.timestamp)
-
-    def reply(self, user_content: str, cost_callback: Callable[[float], Any] = None) -> str:
-        """
-        Asks the LLM to generate a completion from a user question/statement.
-        This method first constructs a prompt from session history and memory excerpts.
-        :param user_content: The user's question or statement.
-        :param cost_callback: An optional function used to track LLM costs.
-        :return: The agent's completion or reply.
-        """
-        self.now = datetime.datetime.now()
-        session = self.session
-        context = self._build_llm_context(session.message_history, user_content,
-                                          cost_callback)
-        response = self._completion(context, temperature=self.config.llm_temperature, label="reply",
-                                    cost_callback=cost_callback)
-        for role, content in [("user", user_content), ("assistant", response)]:
-            message = Message(role=role, content=content, timestamp=self.now.timestamp())
-            session.add(message)
-            self._add_to_convo_memory(message)
-        return response
-
-    def _truncated_completion(self, context: LLMContext, max_messages: int, **kwargs) -> str:
-        while len(context) + 1 > max_messages or self.count_tokens(messages=context) > self.max_input_tokens:
-            context.pop(1)
-        return self._completion(context, **kwargs)
-
-    def _completion(self, context: List[dict[str, str]], temperature: float, label: str,
-                    cost_callback: Callable[[float], Any]) -> str:
-        response_text = ask_llm(
-            context, self.model, temperature=temperature, timeout=self.config.timeout, cost_callback=cost_callback,
-        )
-        if self.prompt_callback:
-            self.prompt_callback(self.session.session_id, label, context, response_text)
-        self._debug_actions(context, temperature, response_text)
-        return response_text
-
-    def _debug_actions(self, context: list[dict[str, str]], temperature: float, response_text: str):
-        if self.debug_level < 1:
-            return
-
-        # See if dir exists or create it, and set llm_call_idx
-        save_dir = _debug_dir.joinpath(self.save_name)
-        if self.llm_call_idx is None:
-            if save_dir.exists() and len(list(save_dir.glob("*.txt"))) > 0:
-                self.llm_call_idx = max(int(p.name.removesuffix(".txt")) for p in save_dir.glob("*.txt")) + 1
-            else:
-                self.llm_call_idx = 0
-                save_dir.mkdir(parents=True, exist_ok=True)
-
-        # Write content of LLM call to file
-        save_path = save_dir.joinpath(f"{self.llm_call_idx:06d}.txt")
-        with open(save_path, "w") as fd:
-            fd.write(f"LLM temperature: {temperature}\n")
-            for m in context:
-                fd.write(f"--- {m['role'].upper()}\n{m['content']}\n")
-            fd.write(f"--- Response:\n{response_text}")
-        self.llm_call_idx += 1
-
-        # Wait for confirmation
-        if self.debug_level < 2:
-            return
-        print(f"LLM call saved as {save_path.name}")
-        input("Press ENTER to continue...")
-
-    def reset(self):
-        self.convo_mem.clear()
-        self.user_info = dict()
-        self.new_session()
-
-    def _update_scratchpad(
-        self, message_history: list[Message], user_message: str, cost_cb: Callable[[float], None],
-        max_changes: int = 10, max_tries: int = 5, max_messages: int = 10, max_scratchpad_tokens: int = 1024,
-    ) -> dict:
-        """An embodied agent interacts with an extremely simple environment to safely update the scratchpad.
-        A rather small scratchpad (1k tokens) seems to work optimally."""
-        assert 0 < max_scratchpad_tokens < self.max_input_tokens // 2
-        ask_kwargs = dict(label="scratchpad", temperature=0, cost_callback=cost_cb, max_messages=max_messages)
-        scratchpad = deepcopy(self.user_info)
-        scratchpad_timestamps = self.user_info_ts
-        preview_tokens = (self.max_input_tokens // 2) - self.count_tokens(text=sp.to_text(self.user_info))
-        assert 0 < preview_tokens < self.max_input_tokens // 2
-        msg_preview = self._last_messages_preview(message_history, preview_tokens)
-        if msg_preview == "":
-            msg_preview = "This assistant has not exchanged any messages with the user so far."
-        else:
-            msg_preview = (
-                "The assistant has already exchanged some messages with the user:\n"
-                f"(prior conversation context might be missing)\n\n{msg_preview}"
-            )
-        context = [make_system_message(sp.system_prompt_template.format(last_messages=msg_preview, message=user_message))]
-        for _ in range(max_changes):
-
-            # This is how the info looks like, do you wanna make changes?
-            context.append(make_user_message(sp.changes_yesno_template.format(user_info=sp.to_text(scratchpad))))
-            response = self._truncated_completion(context, **ask_kwargs)
-            if "yes" not in response.lower():
-                break
-
-            # Alright, make a single change
-            changed = False
-            context.append(make_assistant_message("yes"))
-            context.append(make_user_message(sp.single_change_template))
-            for _ in range(max_tries):
-                response = self._truncated_completion(context, **ask_kwargs)
-                context.append(make_assistant_message(response))
-                if self.count_tokens(response) > 150:
-                    context.append(make_user_message(
-                        'This update is too large. Make it smaller or set "new_content" to null.'
-                    ))
-                    continue
-                try:
-                    d = sp.extract_json_dict(response)
-                    if not d["new_content"]:
-                        sp.remove_item(scratchpad, d["key"])
-                    else:
-                        sp.add_new_content(scratchpad_timestamps, scratchpad, d["key"], d["new_content"])
-                        changed = True
-                    break
-                except Exception as exc:
-                    context.append(make_user_message(
-                        f"There has been an error:\n\n{str(exc)}\n\nTry again, but take this error into account."
-                    ))
-
-            # Register changes with timestamps and remove items if necessary
-            if changed:
-                keys_ts = None
-                while self.count_tokens(text=sp.to_text(scratchpad)) > max_scratchpad_tokens:
-                    # Older and deeper items (with longer path) go first
-                    if keys_ts is None:
-                        keys_ts = sorted(
-                            [(k, ts) for k, ts in scratchpad_timestamps.items()],
-                            key=lambda t: (t[1], -len(t[0])),
-                        )
-                    keypath, _ = keys_ts.pop(0)
-                    sp.remove_item(scratchpad, keypath)
-                    del scratchpad_timestamps[keypath]
-        return scratchpad
+        self.defined_kws = state["defined_kws"]
+        self.llm_call_idx = state["llm_call_idx"]
 
 
-class LTMAgentSession:
-    """
-    An agent session, or a collection of messages.
-    """
-    def __init__(self, session_id: str, m_history: list[Message]):
-        self.session_id = session_id
-        self.message_history: list[Message] = m_history or []
 
-    @property
-    def message_count(self):
-        return len(self.message_history)
 
-    def state_as_text(self) -> str:
-        """
-        :return: A string that represents the contents of the session.
-        """
-        state = dict(session_id=self.session_id, history=self.message_history)
-        return json.dumps(state, cls=SimpleJSONEncoder)
 
-    def add(self, message: Message):
-        self.message_history.append(message)
 
-    @classmethod
-    def from_state_text(cls, state_text: str) -> 'LTMAgentSession':
-        """
-        Builds a session object given state text.
-        :param state_text: Text previously obtained using the state_as_text() method.
-        :return: A session instance.
-        """
-        state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
-        session_id = state["session_id"]
-        m_history = state["history"]
-        return cls(session_id, m_history)
+
+
+
+
+

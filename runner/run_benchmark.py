@@ -164,14 +164,14 @@ def check_result_files(run_name: str, agent_name: str, force_removal: bool = Fal
 ))
 def main(
     configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, local: bool = False,
-    isolated: bool = False,
+    isolated: bool = False
 ):
     _main(configuration, agent_name, max_prompt_size, y, local, isolated)
 
 
 def _main(
     configuration: str, agent_name: str, max_prompt_size: Optional[int], y: bool = False, is_local: bool = False,
-    isolated: bool = False,
+    isolated: bool = False
 ):
     config_path = Path(configuration)
     if not config_path.is_absolute():

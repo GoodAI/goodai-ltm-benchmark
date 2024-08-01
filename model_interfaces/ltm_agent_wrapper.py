@@ -2,9 +2,10 @@ from dataclasses import dataclass
 from typing import Optional
 from pathlib import Path
 import litellm
+
+from ltm.agent import InsertedContextAgent
 from utils.llm import count_tokens_for_model
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
-from ltm.agent import LTMAgent
 from model_interfaces.interface import ChatSession
 
 
@@ -14,8 +15,9 @@ class LTMAgentWrapper(ChatSession):
     max_prompt_size: int = None
 
     def __post_init__(self):
-        self.agent = LTMAgent(
+        self.agent = InsertedContextAgent(
             model=self.model, max_prompt_size=self.max_prompt_size, max_completion_tokens=self.max_message_size,
+            run_name=self.name
         )
 
     @property

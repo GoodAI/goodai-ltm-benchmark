@@ -6,7 +6,7 @@ faker~=20.1.0
 colorama~=0.4.6
 pytest
 time-machine==2.13.0
-tiktoken~=0.5.2
+tiktoken>=0.7.0
 goodai-ltm==0.4.4
 gdown==4.7.1  # For downloading files from google drive (some datasets use it)
 tqdm  # Showing progress bar during some downloads
@@ -16,7 +16,7 @@ Werkzeug==2.2.2  # It's crucial to specify this package's version to make flask 
 flask==2.2.3
 browser-cookie3
 rouge_score==0.1.2
-litellm==1.41.13  # Unifies interface from most LLM APIs
+litellm>=1.41.13  # Unifies interface from most LLM APIs
 zstd==1.5.5.1  # To decompress chapterbreak
 humanize==4.9.0  # Shows data in human-readable form e.g. timedelta as "1 hour and 23 seconds"
 transformers==4.40.2  # Required to load some HuggingFace tokenizers

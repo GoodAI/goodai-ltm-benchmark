@@ -2,10 +2,13 @@ from typing import Optional, Callable, Any
 import litellm
 from litellm import completion, token_counter
 from transformers import AutoTokenizer
+
+from utils.constants import DATA_DIR
 from utils.ui import colour_print
 from utils.constants import DATA_DIR
 from datetime import datetime
 
+_debug_dir = DATA_DIR.joinpath("ltm_debug_info")
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 claude_adjust_factor = 1.1  # Approximate the real token count given by the API.
 
@@ -100,7 +103,7 @@ def ask_llm(
         timeout=timeout,
     )
     response = completion(**_llm_debug_params)
-    _llm_debug_params["response"] = response
+    _llm_debug_params["response"] = response.choices[0].message.content
 
     # Output checks
     if "claude" in model:
@@ -194,12 +197,13 @@ def log_llm_call(run_name: str, agent_name: str, debug_level: int, label: str = 
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # Write content of LLM call to file
-    context = _llm_debug_params.pop("context")
+    context = _llm_debug_params.pop("messages")
     response_text = _llm_debug_params.pop("response")
     save_path = save_dir.joinpath(f"{datetime.now()}{'-' + label if label is not None else ''}.txt")
     with open(save_path, "w") as fd:
         for k, v in _llm_debug_params.items():
             fd.write(f"{k}: {v}\n")
+
         for m in context:
             fd.write(f"--- {m['role'].upper()}\n{m['content']}\n")
         fd.write(f"--- Response:\n{response_text}")
