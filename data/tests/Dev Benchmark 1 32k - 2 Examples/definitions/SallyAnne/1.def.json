@@ -1,0 +1,67 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Logan entered the master_bedroom.",
+    "(On TV) Isla entered the master_bedroom.",
+    "(On TV) Noah entered the master_bedroom.",
+    "(On TV) Logan likes the cucumber",
+    "(On TV) Logan exited the master_bedroom.",
+    "(On TV) The plum is in the cupboard.",
+    "(On TV) Isla loves the strawberry",
+    "(On TV) Noah exited the master_bedroom.",
+    "(On TV) Isla moved the plum to the container.",
+    "The TV program has ended for today. Where was the plum at the beginning?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 9.0
+    },
+    {
+      "percentage_finished": 18.0
+    },
+    {
+      "percentage_finished": 27.0
+    },
+    {
+      "percentage_finished": 36.0
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 54.0
+    },
+    {
+      "percentage_finished": 63.0
+    },
+    {
+      "percentage_finished": 72.0
+    },
+    {
+      "percentage_finished": 81.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "cupboard"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

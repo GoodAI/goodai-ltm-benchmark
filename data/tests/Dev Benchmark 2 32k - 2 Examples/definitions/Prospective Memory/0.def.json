@@ -1,0 +1,26 @@
+{
+  "script": [
+    "'Be yourself; everyone else is already taken.' - Oscar Wilde",
+    "After responding to the following unrelated user prompts, please append the quote from Oscar Wilde, to your 6th response. Count your response to this message as the first response."
+  ],
+  "is_question": [
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "Be yourself; everyone else is already taken.",
+      "Oscar Wilde",
+      6
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": true
+}

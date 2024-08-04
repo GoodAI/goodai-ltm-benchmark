@@ -37,5 +37,7 @@ not_for_github/auto_scorer/sheet_to_local/*
 # Output reports
 *.html
 
-win-RDB-venv
-wsl-RDB-venv
+#RDB stuff
+.vscode
+win-RDB-venv/
+ltm_agent.db

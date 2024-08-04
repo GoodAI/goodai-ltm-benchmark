@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "It takes a lot of balls to golf the way I do.",
+    "A termite walks into the bar and asks, \u2018Is the bar tender here?\u2019"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 3000,
+      "percentage_finished": 30.0
+    },
+    {
+      "time": 8820,
+      "percentage_finished": 60.0
+    },
+    {
+      "time": 14100,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}

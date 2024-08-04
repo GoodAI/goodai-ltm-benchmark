@@ -1,6 +1,6 @@
 import json
 import pyperclip
-from datasets.chapterbreak import ChapterBreakDataset, split_in_pages
+from local_datasets.chapterbreak import ChapterBreakDataset, split_in_pages
 from utils.llm import ask_llm, make_system_message, make_user_message
 from utils.text import token_len
 
@@ -10,7 +10,7 @@ model = "gpt-3.5-turbo-0125"
 ds = ChapterBreakDataset(split="ao3")
 samples = ds.get_samples(ds.load_data())
 s = samples[1]
-llm = lambda ctx: ask_llm(ctx, model, temperature=0, context_length=16384, cost_callback=cost_callback)
+llm = lambda ctx: ask_llm(ctx, model, temperature=0, max_overall_tokens=16384, cost_callback=cost_callback)
 fix_commas = lambda txt: txt.replace("’", "'")
 last_pages = fix_commas(s["ctx"])
 continuation = fix_commas(s["pos"])

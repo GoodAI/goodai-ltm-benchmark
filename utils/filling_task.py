@@ -10,7 +10,7 @@ from utils.constants import DATA_DIR
 TRIVIA_CACHE = None
 
 
-def get_trivia():
+def get_trivia() -> list[dict[str, str]]:
     global TRIVIA_CACHE
     if TRIVIA_CACHE is None:
         with (open(DATA_DIR.joinpath("trivia/trivia.json"), "r", encoding="utf8") as file):
@@ -39,29 +39,49 @@ def filler_no_response_tokens_shakespeare(rnd: Random, num_tokens: int, encoding
     return filler_messages
 
 
-def filler_no_response_tokens_trivia(rnd: Random, num_tokens: int, max_message_size: int, token_len_function: Callable[[str], int]):
+def _generate_trivia_content(rnd: Random, num_tokens: int, token_len_function: Callable[[str], int]):
+    if num_tokens <= 0:
+        return [], []
     data = get_trivia()
-    message = (
+    messages = list()
+    answers = list()
+    token_count = 0
+    while True:
+        new_messages, new_answers = messages[:], answers[:]
+        rnd_state = rnd.getstate()
+        for _ in range(max(1, 2 * len(messages))):
+            trivia = rnd.choice(data)
+            new_messages.append(f"Q: {trivia['Question']}, A: {trivia['AnswerValue']}")
+            new_answers.append(trivia["AnswerValue"])
+        new_token_count = token_len_function("\n".join(new_messages) + "\n" + json.dumps(new_answers))
+        if new_token_count > num_tokens:
+            # Restore state to before generating these entries that we didn't use, so that it generates the exact same
+            # output as the iterative version.
+            rnd.setstate(rnd_state)
+            break
+        token_count = new_token_count
+        messages, answers = new_messages, new_answers
+    if len(messages) <= 1:
+        return messages, answers
+    new_messages, new_answers = _generate_trivia_content(rnd, num_tokens - token_count, token_len_function)
+    return messages + new_messages, answers + new_answers
+
+
+def filler_no_response_tokens_trivia(
+    rnd: Random, num_tokens: int, max_message_size: int, token_len_function: Callable[[str], int]
+) -> tuple[str, str]:
+    intro = (
         "Here are some trivia questions and answers for you to process."
         ' Please extract all of the answers in json form as a single message: E.g ["answer 1", "answer 2", ...]\n'
     )
     tokens_to_return = min(num_tokens, max_message_size)
-    total_tokens = token_len_function(message)
-    messages = [message]
-    answers = []
-    at_least_one_trivia = False
-    est_response_tokens = 0
-
-    while not at_least_one_trivia or (total_tokens + est_response_tokens) < tokens_to_return:
-        trivia = rnd.choice(data)
-        trivia_msg = f"Q: {trivia['Question']}, A: {trivia['AnswerValue']}\n"
-        answers.append(trivia['AnswerValue'])
-        total_tokens += token_len_function(trivia_msg)
-        est_response_tokens = token_len_function(str(answers))
-        messages.append(trivia_msg)
-        at_least_one_trivia = True
-
-    return "".join(messages), str(answers)
+    total_tokens = token_len_function(intro)
+    messages, answers = _generate_trivia_content(rnd, tokens_to_return - total_tokens, token_len_function)
+    if len(messages) == 0:
+        trivia = rnd.choice(get_trivia())
+        messages.append(f"Q: {trivia['Question']}, A: {trivia['AnswerValue']}")
+        answers.append(trivia["AnswerValue"])
+    return intro + "\n".join(messages), json.dumps(answers)
 
 
 def filler_task_characters(rnd: Random, agent: ChatSession, num_characters: int):

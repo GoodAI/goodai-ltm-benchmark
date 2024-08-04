@@ -1,0 +1,26 @@
+{
+  "script": [
+    "'Love your Enemies, for they tell you your Faults.' - Benjamin Franklin",
+    "After responding to the following unrelated user prompts, please append the quote from Benjamin Franklin, to your 8th response. Count your response to this message as the first response."
+  ],
+  "is_question": [
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "Love your Enemies, for they tell you your Faults.",
+      "Benjamin Franklin",
+      8
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": true
+}

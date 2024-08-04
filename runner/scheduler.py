@@ -177,7 +177,7 @@ class TestRunner:
         reply_tokens = self.agent.token_len(action.reply)
         self.agent_token_count += reply_tokens
         self.total_token_count += message_tokens + reply_tokens
-        self.progress_dialog.notify_message(self.total_token_count)
+        self.progress_dialog.notify_message(self.total_token_count, self.agent_benchmark_duration, self.agent.costs_usd)
         return message_tokens + reply_tokens
 
     def get_blocked_test(self, waiting_on: str) -> Optional[str]:
@@ -417,7 +417,6 @@ class TestRunner:
             if example.finished:
                 finished += 1
                 result = self.in_progress_results[example.unique_id]
-                self.progress_dialog.notify_result(result)
 
                 if not skip:
                     if example.reset_message != "":
@@ -433,6 +432,7 @@ class TestRunner:
                     self.agent.save()
 
                 self.finished_results.append(result)
+                self.progress_dialog.notify_result(result)
                 print(result)
                 colour_print("green", f"{finished} of {len(self.tests)} tests finished.")
 
@@ -478,7 +478,7 @@ class TestRunner:
         self.set_cost_callback()
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
         self.tests.sort(key=lambda t: t.unique_id)
-        self.progress_dialog = ProgressDialog(len(self.tests), self.config.isolated)
+        self.progress_dialog = ProgressDialog(self.tests, self.config.isolated)
         self.run_tests()
         self.progress_dialog.close()
         self.save_runstats()

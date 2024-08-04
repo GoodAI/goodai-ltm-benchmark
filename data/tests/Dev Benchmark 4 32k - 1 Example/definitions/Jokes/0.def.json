@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Atheism is a non-prophet organization",
+    "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+    "It takes a lot of balls to golf the way I do."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 1800,
+      "percentage_finished": 30.0
+    },
+    {
+      "time": 6540,
+      "percentage_finished": 60.0
+    },
+    {
+      "time": 8880,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "It takes a lot of balls to golf the way I do."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}
