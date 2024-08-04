@@ -7,17 +7,16 @@
       "request": "launch",
       "program": "${workspaceFolder}/runner/run_benchmark.py",
       "args": [
-        "-c",
-        "${workspaceFolder}/configurations/ltm_dev_benchmarks/dev_benchmark_4-1.yml",
-        "-a",
-        "ltm_agent(gpt-4o-mini)",
-        "-m 8192"
+        "-c", "${workspaceFolder}/configurations/ltm_dev_benchmarks/dev_benchmark_4-1.yml",
+        "-a", "ltm_agent(gpt-4o-mini)",
+        "-m", "8192"
       ],
+      "console": "integratedTerminal",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}",
+        "PATH": "${workspaceFolder}/win-RDB-venv/Scripts:${env:PATH}"
       },
-      "python": "${workspaceFolder}/win-RDB-venv/Scripts/python.exe",
-      "console": "integratedTerminal"
+      "python": "${workspaceFolder}/win-RDB-venv/Scripts/python.exe"
     }
   ]
 }
