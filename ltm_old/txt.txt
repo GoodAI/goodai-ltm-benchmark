@@ -34,7 +34,7 @@ class InsertedContextAgent:
     system_message: str = "You are a helpful AI assistant."
     debug_level: int = 1
     session_id: Optional[str] = None
-    now: datetime.datetime = None
+    now: datetime.datetime = None   # Set in `reply` to keep a consistent "now" timestamp
     run_name: str = ""
     num_tries: int = 5
 
@@ -51,6 +51,9 @@ class InsertedContextAgent:
         self.new_session()
         self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
+    def save_interaction(self, user_message, response_message, keywords):
+        self.hybrid_memory.add_interaction(self.session_id, user_message, response_message, self.now.timestamp(), keywords)        
+  
     def new_session(self) -> str:
         self.session_id = str(uuid.uuid4())
         created_at = datetime.datetime.now().timestamp()
@@ -78,7 +81,7 @@ class InsertedContextAgent:
         self.llm_call_idx += 1
 
         # Save interaction to memory
-        self.hybrid_memory.add_interaction(self.session_id, user_message, sanitized_response, self.now.timestamp(), keywords)
+        self.save_interaction(user_message, sanitized_response, keywords)
 
         return sanitized_response
 
@@ -88,7 +91,15 @@ class InsertedContextAgent:
         return ''.join(ch for ch in s if unicodedata.category(ch)[0] != 'C')
 
     def keywords_for_message(self, user_message, cost_cb):
-        prompt = 'Create two keywords to describe the topic of this message:\n"{user_message}".\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}'
+        
+        prompt = """Create two keywords to describe the topic of this message:
+        "{user_message}".
+
+Focus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`
+
+Choose keywords that would aid in retrieving this message from memory in the future.
+
+Reuse these keywords if appropriate: {keywords}"""
 
         context = [make_system_message(prompt.format(user_message=user_message, keywords=self.defined_kws))]
         for _ in range(self.num_tries):
@@ -158,6 +169,7 @@ class InsertedContextAgent:
         return context
 
     def llm_memory_filter(self, memories, queries, cost_cb):
+
         situation_prompt = """You are a part of an agent. Another part of the agent is currently searching for memories using the statements below.
 Based on these statements, describe what is currently happening external to the agent in general terms:
 {queries}  
@@ -238,28 +250,9 @@ Express your answer in this JSON:
         return filtered_interactions
 
     def get_relevant_memories(self, user_message, cost_cb):
-        prompt ="""Message from user: "{user_message}"
-        
-Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
-conversation history that may be relevant to a reply to the user.
-
-The search queries you produce should be compact reformulations of the user question/statement,
-taking context into account. The purpose of the queries is accurate information retrieval. 
-Search is purely semantic. 
-
-Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
-Use up to three of these keywords to help narrow the search:
-{keywords}
-
-The current time is: {time}. 
-
-Write JSON in the following format:
-
-{{
-    "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
-    "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
-}}"""
-
+        prompt = """Message from user: "{user_message}"
+        ... (rest of the prompt remains the same)
+        """
         context = [make_user_message(prompt.format(user_message=user_message, time=self.now, keywords=self.defined_kws))]
         all_retrieved_memories = []
         query_keywords = []
@@ -286,45 +279,69 @@ Write JSON in the following format:
         all_keywords = query_keywords
         relevance_filtered_mems = [x for x in all_retrieved_memories if x.relevance > 0.6]
         keyword_filtered_mems = self.retrieve_from_keywords(all_keywords)
-
+        
         combined_memories = relevance_filtered_mems + keyword_filtered_mems
+        
+        keyword_filtered_mems = []
+        for m in combined_memories:
+            if isinstance(m, RetrievedMemory):
+                for kw in m.metadata.get("keywords", []):
+                    if kw in all_keywords:
+                        keyword_filtered_mems.append(m)
+                        break
+            elif isinstance(m, tuple) and len(m) == 2:
+                user_message, _ = m
+                for kw in user_message.metadata.get("keywords", []):
+                    if kw in all_keywords:
+                        keyword_filtered_mems.append(m)
+                        break
 
-        # Spreading activations
-        print(f"Performing spreading activations with {len(combined_memories[:10])} memories.")
+        combined_memories = keyword_filtered_mems
+
+        # Spreading activation
         for mem in combined_memories[:10]:
             if isinstance(mem, RetrievedMemory):
-                for r_mem in self.hybrid_memory.semantic_memory.retrieve(mem.passage, k=5):
-                    if r_mem.relevance > 0.6:
-                        combined_memories.append(r_mem)
+                query = mem.passage
             elif isinstance(mem, tuple) and len(mem) == 2:
-                user_message, _ = mem
-                for r_mem in self.hybrid_memory.semantic_memory.retrieve(user_message.content, k=5):
-                    if r_mem.relevance > 0.6:
-                        combined_memories.append(r_mem)
+                query = mem[0].content
+            else:
+                continue
+            
+            for r_mem in self.hybrid_memory.semantic_memory.retrieve(query, k=5):
+                if r_mem.relevance > 0.6 and r_mem not in combined_memories:
+                    combined_memories.append(r_mem)
 
+        # # TODO: Uncomment all this stuff when doing dev stuff
+        # trivia_skip = False
+        # for kw in all_keywords:
+        #     if "trivia" in kw:
+        #         trivia_skip = True
+        #
+        # if trivia_skip:
+        #     llm_filtered_interactions, _ = self.interactions_from_retrieved_memories(keyword_filtered_mems)
+        # else:
+        #     llm_filtered_interactions = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
+
+        # TODO: ....And comment this one out
         llm_filtered_interactions = self.llm_memory_filter(combined_memories, query_dict["queries"], cost_cb)
 
         sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
         return sorted_interactions
+
 
     def interactions_from_retrieved_memories(self, memory_chunks: List[Union[RetrievedMemory, Tuple[Message, Message]]]) -> Tuple[List[Tuple[Message, Message]], List[List[str]]]:
         interactions = []
         keywords = []
         for m in memory_chunks:
             if isinstance(m, RetrievedMemory):
-                # Handle RetrievedMemory objects
-                semantic_key = str(m.textKeys[0])
-                interaction = self.hybrid_memory.get_interaction_by_semantic_key(semantic_key)
+                interaction = self.hybrid_memory.get_interaction_by_semantic_key(str(m.textKeys[0]))
                 if interaction and interaction not in interactions:
                     interactions.append(interaction)
                     keywords.append(m.metadata.get("keywords", []))
             elif isinstance(m, tuple) and len(m) == 2:
                 if m not in interactions:
                     interactions.append(m)
-                    keywords.append([])
-            else:
-                print(f"Unexpected type in memory_chunks: {type(m)}")
-
+                    keywords.append(m[0].metadata.get("keywords", []))
         return interactions, keywords
 
     def retrieve_from_keywords(self, keywords):
@@ -335,19 +352,15 @@ Write JSON in the following format:
         self.new_session()
 
     def state_as_text(self) -> str:
-        try:
-            state = dict(
-                model=self.model,
-                max_prompt_size=self.max_prompt_size,
-                max_completion_tokens=self.max_completion_tokens,
-                hybrid_memory=self.hybrid_memory.state_as_text(),
-                defined_kws=self.defined_kws,
-                llm_call_idx=self.llm_call_idx
-            )
-            return json.dumps(state, cls=SimpleJSONEncoder)
-        except Exception as e:
-            print(f"Error in state_as_text: {e}")
-            return json.dumps({"error": str(e)})
+        state = dict(
+            model=self.model,
+            max_prompt_size=self.max_prompt_size,
+            max_completion_tokens=self.max_completion_tokens,
+            hybrid_memory=self.hybrid_memory.state_as_text(),
+            defined_kws=self.defined_kws,
+            llm_call_idx=self.llm_call_idx
+        )
+        return json.dumps(state, cls=SimpleJSONEncoder)
 
     def from_state_text(self, state_text: str, prompt_callback: Callable[[str, str, list[dict], str], Any] = None):
         state = json.loads(state_text, cls=SimpleJSONDecoder)
@@ -379,64 +392,6 @@ Write JSON in the following format:
         if 0 <= idx < len(messages) - 1:
             return (Message(**messages[idx].__dict__), Message(**messages[idx+1].__dict__))
         return None
-
-### File: contents.py ###
-import os
-
-def read_files_in_directory(directory):
-    file_contents = []
-
-    for root, dirs, files in os.walk(directory):
-        # Exclude '__pycache__' directories
-        dirs[:] = [d for d in dirs if d != '__pycache__']
-        
-        for file in files:
-            # Skip '__init__.py' files
-            if file == '__init__.py':
-                continue
-            
-            file_path = os.path.join(root, file)
-            try:
-                with open(file_path, 'r') as f:
-                    content = f.read()
-                    relative_path = os.path.relpath(file_path, directory)
-                    file_contents.append((relative_path, content))
-                    print(f"Read file: {relative_path}")  # Debug statement
-            except Exception as e:
-                print(f"Failed to read file: {file_path} with error: {e}")  # Debug statement
-    
-    return file_contents
-
-def format_for_llm(file_contents):
-    formatted_output = ""
-    
-    for file_name, content in file_contents:
-        formatted_output += f"### File: {file_name} ###\n"
-        formatted_output += content + "\n\n"
-    
-    return formatted_output
-
-def main():
-    directory = './ltm'
-    file_contents = read_files_in_directory(directory)
-    
-    if not file_contents:
-        print("No file contents read.")  # Debug statement
-    
-    formatted_output = format_for_llm(file_contents)
-    
-    output_file = './ltm/txt.txt'
-    with open(output_file, 'w') as f:
-        f.write(formatted_output)
-    
-    print(f"Output written to: {output_file}")  # Debug statement
-
-if __name__ == "__main__":
-    main()
-
-
-### File: txt.txt ###
-
 
 ### File: database\manager.py ###
 from sqlalchemy import create_engine, desc
@@ -570,8 +525,9 @@ class Message(Base):
 ### File: memory\hybrid_memory.py ###
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.config import TextMemoryConfig
+from goodai.ltm.mem.base import RetrievedMemory
 from ..database.manager import DatabaseManager
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 from model_interfaces.base_ltm_agent import Message
 import json
 
@@ -593,15 +549,40 @@ class HybridMemory:
         self.db_manager.add_message(session_id, "user", user_message, timestamp, str(user_semantic_key))
         self.db_manager.add_message(session_id, "assistant", assistant_message, timestamp, str(assistant_semantic_key))
 
-    def get_relevant_memories(self, session_id: str, query: str, k: int = 5) -> List[Tuple[Message, Message]]:
-        semantic_results = self.semantic_memory.retrieve(query, k=k)
+    def get_relevant_memories(self, query: str, all_keywords: List[str], cost_cb, k: int = 100) -> List[Tuple[Message, Message]]:
+        all_retrieved_memories = []
+        for q in [query]:  # You might want to add more queries here
+            all_retrieved_memories.extend(self.semantic_memory.retrieve(q, k=k))
+        
+        # Relevance and keyword filtering
+        relevance_filtered_mems = [x for x in all_retrieved_memories if x.relevance > 0.6]
+        keyword_filtered_mems = self.retrieve_from_keywords(all_keywords)
+        
+        combined_memories = relevance_filtered_mems + keyword_filtered_mems
+        
+        # Additional keyword filtering
+        keyword_filtered_mems = []
+        for m in combined_memories:
+            if any(kw in m.metadata.get("keywords", []) for kw in all_keywords):
+                keyword_filtered_mems.append(m)
+        
+        # Spreading activation
+        for mem in keyword_filtered_mems[:10]:
+            for r_mem in self.semantic_memory.retrieve(mem.passage, k=5):
+                if r_mem.relevance > 0.6 and r_mem not in keyword_filtered_mems:
+                    keyword_filtered_mems.append(r_mem)
+        
+        # Convert RetrievedMemory objects to Message tuples
         converted_results = []
-        for result in semantic_results:
-            semantic_key = str(result.textKeys[0])
-            interaction = self.db_manager.get_interaction_by_semantic_key(semantic_key)
+        for mem in keyword_filtered_mems:
+            interaction = self.get_interaction_by_semantic_key(str(mem.textKeys[0]))
             if interaction:
-                converted_results.append((Message(**interaction[0].__dict__), Message(**interaction[1].__dict__)))
-        return converted_results
+                converted_results.append(interaction)
+        
+        # Implement LLM memory filter here (you'll need to add this method to the class)
+        filtered_interactions = self.llm_memory_filter(converted_results, [query], cost_cb)
+        
+        return filtered_interactions
 
     def get_interaction_by_semantic_key(self, semantic_key: str) -> Optional[Tuple[Message, Message]]:
         try:
@@ -667,28 +648,17 @@ class HybridMemory:
         except Exception as e:
             print(f"Error setting state: {e}")
 
-    def retrieve_from_keywords(self, keywords: List[str], k: int = 100) -> List[Tuple[Message, Message]]:
-        try:
-            all_memories = self.semantic_memory.retrieve("", k=self.max_retrieve_capacity)
-            keyword_filtered_mems = []
-            for memory in all_memories:
-                if any(kw in memory.metadata.get("keywords", []) for kw in keywords):
-                    keyword_filtered_mems.append(memory)
-            
-            converted_results = []
-            for result in keyword_filtered_mems[:k]:
-                if result.textKeys and len(result.textKeys) > 0:
-                    semantic_key = str(result.textKeys[0])
-                    interaction = self.get_interaction_by_semantic_key(semantic_key)
-                    if interaction:
-                        converted_results.append(interaction)
-            return converted_results
-        except Exception as e:
-            print(f"Error in retrieve_from_keywords: {e}")
-            return []
+    def retrieve_from_keywords(self, keywords: List[str]) -> List[Union[RetrievedMemory, Tuple[Message, Message]]]:
+        all_memories = self.semantic_memory.retrieve("", k=self.max_retrieve_capacity)
+        keyword_filtered_mems = []
+        for memory in all_memories:
+            if any(kw in memory.metadata.get("keywords", []) for kw in keywords):
+                keyword_filtered_mems.append(memory)
+        return keyword_filtered_mems
 
     def get_message_count(self, session_id: str) -> int:
         return self.db_manager.get_message_count(session_id)
+    
 
 ### File: utils\config.py ###
 from goodai.ltm.mem.config import TextMemoryConfig

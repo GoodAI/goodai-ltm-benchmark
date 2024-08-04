@@ -10,7 +10,7 @@
         "-c",
         "${workspaceFolder}/configurations/ltm_dev_benchmarks/dev_benchmark_4-1.yml",
         "-a",
-        "\"ltm_agent(together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo)\"",
+        "ltm_agent(gpt-4o-mini)",
         "-m 8192"
       ],
       "env": {

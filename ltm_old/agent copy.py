@@ -1,280 +1,407 @@
 import json
-import re
 import uuid
 from dataclasses import dataclass, field
 import datetime
 from math import ceil
-from typing import Optional, Callable, Any, List, Tuple, Dict
-from contextlib import contextmanager
-import logging
-
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Table
+from typing import Optional, Callable, Any, Dict
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Text, Table, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from contextlib import contextmanager
 
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.config import TextMemoryConfig
+from goodai.ltm.mem.default import DefaultTextMemory
 from litellm import token_counter
 from model_interfaces.base_ltm_agent import Message
+from utils.constants import DATA_DIR
 
-from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call
-from utils.text import td_format
+from utils.llm import  make_system_message, make_user_message, ask_llm
 from utils.ui import colour_print
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='ltm_agent.log'
-)
-logger = logging.getLogger(__name__)
+_debug_dir = DATA_DIR.joinpath("ltm_debug_info")
 
-# Database setup
 Base = declarative_base()
 
-message_keywords = Table(
-    'message_keywords', Base.metadata,
-    Column('message_id', Integer, ForeignKey('messages.id'), primary_key=True),
-    Column('keyword_id', Integer, ForeignKey('keywords.id'), primary_key=True)
-)
-
-class DBMessage(Base):
-    __tablename__ = 'messages'
-    id = Column(Integer, primary_key=True)
-    timestamp = Column(Float, index=True)
-    role = Column(String)
-    content = Column(String)
-    session_id = Column(String, index=True)
-    keywords = relationship("DBKeyword", secondary=message_keywords, back_populates="messages")
-
-    def to_dict(self):
-        return {
-            "role": self.role,
-            "content": self.content,
-            "timestamp": self.timestamp,
-            "keywords": [kw.keyword for kw in self.keywords]
-        }
-
-class DBKeyword(Base):
-    __tablename__ = 'keywords'
-    id = Column(Integer, primary_key=True)
-    keyword = Column(String, unique=True, index=True)
-    messages = relationship("DBMessage", secondary=message_keywords, back_populates="keywords")
-
 class DatabaseManager:
-    def __init__(self, db_url):
-        self.engine = create_engine(db_url)
-        Base.metadata.create_all(self.engine)
-        self.Session = sessionmaker(bind=self.engine)
+    def __init__(self, engine):
+        self.SessionMaker = sessionmaker(bind=engine)
 
     @contextmanager
     def session_scope(self):
-        session = self.Session()
+        session = self.SessionMaker()
         try:
             yield session
             session.commit()
-        except Exception as e:
+        except:
             session.rollback()
-            logger.error(f"Database error: {str(e)}")
             raise
         finally:
             session.close()
 
-    def add_message(self, message: Message, keywords: List[str], session_id: str):
-        with self.session_scope() as session:
-            db_message = DBMessage(
-                timestamp=message.timestamp,
-                role=message.role,
-                content=message.content,
-                session_id=session_id
-            )
-            for kw in keywords:
-                keyword = session.query(DBKeyword).filter_by(keyword=kw).first()
-                if not keyword:
-                    keyword = DBKeyword(keyword=kw)
-                db_message.keywords.append(keyword)
-            session.add(db_message)
+class DBSession(Base):
+    __tablename__ = 'sessions'
+    session_id = Column(String, primary_key=True)
+    messages = relationship("DBMessage", back_populates="session")
+    keywords = relationship("Keyword", secondary="message_keywords", back_populates="messages")
 
-    def get_messages(self, session_id: str, limit: Optional[int] = None):
-        with self.session_scope() as session:
-            query = session.query(DBMessage).filter_by(session_id=session_id).order_by(DBMessage.timestamp)
-            if limit:
-                query = query.limit(limit)
-            return query.all()
+class DBMessage(Base):
+    __tablename__ = 'messages'
+    timestamp = Column(Float, primary_key=True)
+    session_id = Column(String, ForeignKey('sessions.session_id'), primary_key=True)
+    role = Column(String)
+    content = Column(Text)
+    session = relationship("DBSession", back_populates="messages")
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
-    def get_keywords(self):
-        with self.session_scope() as session:
-            return [kw.keyword for kw in session.query(DBKeyword).all()]
+class DBInteraction(Base):
+    __tablename__ = 'interactions'
+    timestamp = Column(Float, primary_key=True)
+    session_id = Column(String, ForeignKey('sessions.session_id'), primary_key=True)
+    user_message_id = Column(Integer, ForeignKey('messages.id'))
+    assistant_message_id = Column(Integer, ForeignKey('messages.id'))
+    user_message = relationship("DBMessage", foreign_keys=[user_message_id])
+    assistant_message = relationship("DBMessage", foreign_keys=[assistant_message_id])
 
-    def get_messages_by_keywords(self, keywords: List[str], session_id: Optional[str] = None, limit: Optional[int] = None):
-        with self.session_scope() as session:
-            query = session.query(DBMessage).join(DBMessage.keywords).filter(DBKeyword.keyword.in_(keywords))
-            if session_id:
-                query = query.filter(DBMessage.session_id == session_id)
-            if limit:
-                query = query.limit(limit)
-            return query.all()
+class Keyword(Base):
+    __tablename__ = 'keywords'
+    id = Column(Integer, primary_key=True)
+    keyword = Column(String, unique=True)
+    messages = relationship("DBMessage", secondary="message_keywords", back_populates="keywords")
+
+message_keywords = Table('message_keywords', Base.metadata,
+    Column('message_timestamp', Float, primary_key=True),
+    Column('session_id', String, primary_key=True),
+    Column('keyword_id', Integer, ForeignKey('keywords.id'), primary_key=True),
+    ForeignKeyConstraint(['message_timestamp', 'session_id'], ['messages.timestamp', 'messages.session_id'])
+)
+
+@dataclass
+class Memory:
+    passage: str
+    metadata: Dict[str, Any]
+    timestamp: float
+    relevance: float = 1.0
 
 class LTMAgentSession:
+    """
+    An agent session, or a collection of messages.
+    """
     def __init__(self, session_id: str, db_manager: DatabaseManager):
         self.session_id = session_id
         self.db_manager = db_manager
 
+        with self.db_manager.session_scope() as session:
+            # Create a new database session entry
+            db_session = DBSession(session_id=self.session_id)
+            session.add(db_session)
+
     @property
     def message_count(self):
-        return len(self.db_manager.get_messages(self.session_id))
-
-    def add_interaction(self, interaction: Tuple[Message, Message], keywords: List[str]):
-        user_message, assistant_message = interaction
-        self.db_manager.add_message(user_message, keywords, self.session_id)
-        self.db_manager.add_message(assistant_message, keywords, self.session_id)
-
-    def get_messages(self, limit: Optional[int] = None):
-        messages = self.db_manager.get_messages(self.session_id, limit)
-        return [(msg, msg) for msg in messages]
-
-    def by_index(self, idx):
-        messages = self.get_messages()
-        return messages[idx] if idx < len(messages) else None
+        with self.db_manager.session_scope() as session:
+            return session.query(DBMessage).filter_by(session_id=self.session_id).count()
 
     def state_as_text(self) -> str:
-        messages = self.get_messages()
-        state = {
-            "session_id": self.session_id,
-            "messages": [
-                {
-                    "role": msg.role,
-                    "content": msg.content,
-                    "timestamp": msg.timestamp,
-                    "keywords": [kw.keyword for kw in msg.keywords]
-                } for msg in messages
-            ]
-        }
+        """
+        :return: A string that represents the contents of the session.
+        """
+        with self.db_manager.session_scope() as session:
+            messages = session.query(DBMessage).filter_by(session_id=self.session_id).order_by(DBMessage.timestamp).all()
+            interactions = session.query(DBInteraction).filter_by(session_id=self.session_id).order_by(DBInteraction.timestamp).all()
+            
+            state = {
+                "session_id": self.session_id,
+                "history": [Message(role=m.role, content=m.content, timestamp=m.timestamp) for m in messages],
+                "interactions": {
+                    str(i.timestamp): (
+                        Message(role=i.user_message.role, content=i.user_message.content, timestamp=i.user_message.timestamp),
+                        Message(role=i.assistant_message.role, content=i.assistant_message.content, timestamp=i.assistant_message.timestamp)
+                    ) for i in interactions
+                }
+            }
+        
         return json.dumps(state, cls=SimpleJSONEncoder)
+
+    def add_interaction(self, interaction: tuple[Message, Message], keywords: list[str]):
+        with self.db_manager.session_scope() as session:
+            user_message, assistant_message = interaction
+            db_user_message = DBMessage(
+                timestamp=user_message.timestamp,
+                session_id=self.session_id,
+                role=user_message.role,
+                content=user_message.content
+            )
+            db_assistant_message = DBMessage(
+                timestamp=assistant_message.timestamp,
+                session_id=self.session_id,
+                role=assistant_message.role,
+                content=assistant_message.content
+            )
+            session.add(db_user_message)
+            session.add(db_assistant_message)
+            session.flush()  # This will assign ids to the messages
+            
+            db_interaction = DBInteraction(
+                timestamp=user_message.timestamp,
+                session_id=self.session_id,
+                user_message_id=db_user_message.id,
+                assistant_message_id=db_assistant_message.id
+            )
+            session.add(db_interaction)
+            
+            for kw in keywords:
+                keyword = session.query(Keyword).filter_by(keyword=kw).first()
+                if not keyword:
+                    keyword = Keyword(keyword=kw)
+                    session.add(keyword)
+                db_user_message.keywords.append(keyword)
+                db_assistant_message.keywords.append(keyword)
+
+    def interaction_from_timestamp(self, timestamp: float) -> tuple[Message, Message]:
+        with self.db_manager.session_scope() as session:
+            db_interaction = session.query(DBInteraction).filter_by(
+                timestamp=timestamp, session_id=self.session_id
+            ).first()
+            if db_interaction:
+                user_message = Message(
+                    role=db_interaction.user_message.role,
+                    content=db_interaction.user_message.content,
+                    timestamp=db_interaction.user_message.timestamp
+                )
+                assistant_message = Message(
+                    role=db_interaction.assistant_message.role,
+                    content=db_interaction.assistant_message.content,
+                    timestamp=db_interaction.assistant_message.timestamp
+                )
+                return (user_message, assistant_message)
+        return None
+
+    def by_index(self, idx):
+        with self.db_manager.session_scope() as session:
+            message = session.query(DBMessage).filter_by(session_id=self.session_id).order_by(DBMessage.timestamp).offset(idx).first()
+            if message:
+                return Message(role=message.role, content=message.content, timestamp=message.timestamp)
+        return None
 
     @classmethod
     def from_state_text(cls, state_text: str, db_manager: DatabaseManager) -> 'LTMAgentSession':
-        state = json.loads(state_text, cls=SimpleJSONDecoder)
-        session = cls(state["session_id"], db_manager)
-        for msg_data in state["messages"]:
-            message = Message(role=msg_data["role"], content=msg_data["content"], timestamp=msg_data["timestamp"])
-            session.db_manager.add_message(message, msg_data["keywords"], session.session_id)
+        """
+        Builds a session object given state text.
+        :param state_text: Text previously obtained using the state_as_text() method.
+        :param db_manager: DatabaseManager instance for database operations.
+        :return: A session instance.
+        """
+        state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
+        session_id = state["session_id"]
+        
+        session = cls(session_id, db_manager)
+        
+        with db_manager.session_scope() as db_session:
+            for message in state["history"]:
+                db_message = DBMessage(
+                    timestamp=message.timestamp,
+                    session_id=session_id,
+                    role=message.role,
+                    content=message.content
+                )
+                db_session.add(db_message)
+            
+            for timestamp, (user_msg, assistant_msg) in state["interactions"].items():
+                db_interaction = DBInteraction(
+                    timestamp=float(timestamp),
+                    session_id=session_id,
+                    user_message_id=user_msg.id,
+                    assistant_message_id=assistant_msg.id
+                )
+                db_session.add(db_interaction)
+        
         return session
+
+    def get_interaction(self, timestamp: float) -> tuple[Message, Message]:
+        return self.interaction_from_timestamp(timestamp)
 
 @dataclass
 class InsertedContextAgent:
     max_completion_tokens: Optional[int] = None
+    semantic_memory: DefaultTextMemory = field(default_factory=AutoTextMemory.create)
     max_prompt_size: int = 16384
     is_local: bool = True
+    defined_kws: list = field(default_factory=list) #! SHOULD BE FROM DB
     llm_call_idx: int = 0
-    model: str = "gpt-4"
+    costs_usd: float = 0.0
+    model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
     temperature: float = 0.01
-    system_message: str = "You are a helpful AI assistant."
+    system_message = """You are a helpful AI assistant."""
     debug_level: int = 1
-    session: Optional[LTMAgentSession] = None
-    now: Optional[datetime.datetime] = None
+    session: LTMAgentSession = None
+    now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
     db_url: str = "sqlite:///ltm_sessions.db"
-    run_name: str = ""
-    num_tries: int = 5
 
-    def __post_init__(self):
-        self.max_message_size = 1000
-        self.db_manager = DatabaseManager(self.db_url)
-        self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
-        self.new_session()
-        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    def sync_semantic_memory(self):
+        with self.db_manager.session_scope() as session:
+            messages = session.query(DBMessage).order_by(DBMessage.timestamp).all()
+            self.semantic_memory.clear()
+            for message in messages:
+                keywords = [kw.keyword for kw in message.keywords]
+                self.semantic_memory.add_text(message.content, timestamp=message.timestamp, metadata={"keywords": keywords})
+                self.semantic_memory.add_separator()
 
     @property
     def save_name(self) -> str:
-        return sanitize_filename(f"{self.model.replace('/', '-')}-{self.max_prompt_size}-{self.max_completion_tokens}__{self.init_timestamp}")
+        return f"{self.model}-{self.max_prompt_size}-{self.max_completion_tokens}__{self.init_timestamp}"
 
+    def __post_init__(self):
+        self.semantic_memory = AutoTextMemory.create(config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
+        self.max_message_size = 1000
+        self.defined_kws = [] #! SHOULD BE FROM DB
+        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        
+        # Initialize database
+        self.db_manager = DatabaseManager(self.engine)
+        
+        self.new_session()
+        
     def new_session(self) -> 'LTMAgentSession':
+        """
+        Creates a new LTMAgentSession object and sets it as the current session.
+        :return: The new session object.
+        """
         session_id = str(uuid.uuid4())
-        self.session = LTMAgentSession(session_id=session_id, db_manager=self.db_manager)
+        self.session = LTMAgentSession(session_id=session_id, m_history=[], i_dict={}, db_manager=self.db_manager)
+        if not self.semantic_memory.is_empty():
+            self.semantic_memory.add_separator()
         return self.session
 
-    def reply(self, user_message: str, agent_response: Optional[str] = None, cost_callback: Callable = None) -> str:
-        logger.info(f"Received user message: {user_message}")
+    def reply(self, user_message: str, agent_response: Optional[str] = None, cost_callback: Callable=None) -> str:
+
         colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
         self.now = datetime.datetime.now()
 
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
         context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
         response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
-        log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx}")
+        debug_actions(context, self.temperature, response_text, self.llm_call_idx, self.debug_level, self.save_name,  name_template="reply-{idx}")
         self.llm_call_idx += 1
 
-        self.save_interaction(user_message, response_text, keywords)
+        # Save interaction to memory
+        um = Message(role="user", content=user_message, timestamp=self.now.timestamp())
+        am = Message(role="assistant", content=response_text, timestamp=self.now.timestamp())
 
-        logger.info(f"Agent response: {response_text}")
+        self.save_interaction(user_message, response_text, keywords)
+        self.session.add_interaction((um, am), keywords)
+
         return response_text
 
-    def keywords_for_message(self, user_message: str, cost_cb: Callable) -> List[str]:
-        prompt = '''Create two keywords to describe the topic of this message:
-"{user_message}".
+    def keywords_for_message(self, user_message, cost_cb):
 
-Focus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`
+        prompt = 'Create two keywords to describe the topic of this message:\n"{user_message}".\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}'
 
-Choose keywords that would aid in retrieving this message from memory in the future.
-
-Reuse these keywords if appropriate: {keywords}'''
-
-        context = [make_system_message(prompt.format(user_message=user_message, keywords=self.db_manager.get_keywords()))]
-        for _ in range(self.num_tries):
+        context = [make_system_message(prompt.format(user_message=user_message, keywords=self.defined_kws))]
+        while True:
             try:
-                logger.debug("Generating keywords")
+                print("Keyword gen")
                 response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
             except Exception as e:
-                logger.error(f"Error in keyword generation: {str(e)}")
+                print(repr(e) + response)
                 continue
 
-        logger.info(f"Generated keywords: {keywords}")
-        colour_print("YELLOW", f"Interaction keywords: {keywords}")
+        # Update known list of keywords
+        for k in keywords:
+            if k not in self.defined_kws:
+                self.defined_kws.append(k)
+
+        print(f"Interaction keywords: {keywords}")
         return keywords
+    
+    def get_message_keywords(self, timestamp: float, session_id: str) -> list[str]:
+        message = self.db_session.query(DBMessage).filter_by(timestamp=timestamp, session_id=session_id).first() #! should be interactions
+        return [kw.keyword for kw in message.keywords] if message else []
 
-    def create_context(self, user_message: str, max_prompt_size: int, previous_interactions: int, cost_cb: Callable) -> List[Dict[str, str]]:
-        context = [make_system_message(self.system_message), make_user_message(f"{str(self.now)[:-7]} ({td_format(datetime.timedelta(seconds=1))}) {user_message}")]
-        relevant_interactions = self.get_relevant_memories(user_message, cost_cb)
+    def create_context(self, user_message, max_prompt_size, previous_interactions, cost_cb):
 
-        for m in relevant_interactions:
+        stamped_user_message = str(self.now) + ": " + user_message
+        context = [make_system_message(self.system_message), make_user_message(stamped_user_message)]
+        relevant_memories = self.get_relevant_memories(user_message, cost_cb)
+
+        # Get interactions from the memories
+        with self.db_manager.session_scope() as session:
+            relevant_interactions = session.query(DBInteraction).filter(
+                DBInteraction.session_id == self.session.session_id,
+                DBInteraction.timestamp.in_([m.timestamp for m in relevant_memories])
+            ).all()
+
+            full_interactions = []
+            for interaction in relevant_interactions: #? NEEDS REVIEWED
+                timestamp = interaction.user_message.timestamp
+                user_message = Message(
+                    # role=interaction.user_message.role,
+                    content=interaction.user_message.content,
+                    # timestamp=interaction.user_message.timestamp
+                )
+                assistant_message = Message(
+                    # role=interaction.assistant_message.role,
+                    content=interaction.assistant_message.content,
+                    # timestamp=interaction.assistant_message.timestamp
+                )
+                full_interactions.append((timestamp, user_message, assistant_message))
+
+        for m in full_interactions:
             if "trivia" in m[0].content:
-                colour_print("YELLOW", "<*** trivia ***>")
+                colour_print("YELLOW", f"<*** trivia ***>")
             else:
                 colour_print("YELLOW", f"{m[0].content}")
 
-        relevant_interactions = relevant_interactions + self.session.get_messages(previous_interactions)
+        # Add the previous messages
+        final_idx = self.session.message_count - 1
+        while previous_interactions > 0 and final_idx > 0:
 
+            # Agent reply
+            context.insert(1, self.session.by_index(final_idx).as_llm_dict())
+            # User message
+            context.insert(1, self.session.by_index(final_idx-1).as_llm_dict())
+
+            final_idx -= 2
+            previous_interactions -= 1
+
+        # Add in memories up to the max prompt size
         current_size = token_counter(self.model, messages=context)
         shown_mems = 0
         target_size = max_prompt_size - self.max_message_size
 
-        for user_interaction, assistant_interaction in reversed(relevant_interactions):
-            future_size = token_counter(self.model, messages=context + [
-                user_interaction.to_dict(),
-                assistant_interaction.to_dict()
-            ])
+        for interaction in full_interactions[::-1]:
+            user_message, assistant_message = interaction
+            future_size = token_counter(self.model, messages=context + [user_message.as_llm_dict(), assistant_message.as_llm_dict()])
 
-            if shown_mems >= 100 or future_size > target_size:
+            # If this message is going to be too big, then skip it
+            if shown_mems >= 100:
                 break
 
-            context.insert(1, assistant_interaction.to_dict())
+            if future_size > target_size:
+                continue
 
-            ts = datetime.datetime.fromtimestamp(user_interaction.timestamp)
-            et_descriptor = f"{str(ts)[:-7]} ({td_format(self.now - ts)}) "
-            user_dict = user_interaction.to_dict()
-            user_dict["content"] = et_descriptor + user_dict["content"]
-            context.insert(1, user_dict)
+            # Add the interaction and count the tokens
+            if user_message not in context:
+                context.insert(1, assistant_message.as_llm_dict())
 
-            shown_mems += 1
-            current_size = future_size
+                ts = datetime.datetime.fromtimestamp(user_message.timestamp)
+                et_descriptor = f"{str(ts)[:-7]} ({td_format(self.now - ts)}) "
+                context.insert(1, user_message.as_llm_dict())
+                context[1]["content"] = et_descriptor + context[1]["content"]
 
-        logger.debug(f"Current context size: {current_size}")
+                shown_mems += 1
+
+                current_size = future_size
+
+        print(f"current context size: {current_size}")
+
         return context
 
-    def llm_memory_filter(self, memories: List[Tuple[DBMessage, DBMessage]], queries: List[str], cost_cb: Callable) -> List[Tuple[DBMessage, DBMessage]]:
+    def llm_memory_filter(self, memories, queries, keywords, cost_cb):
+
         situation_prompt = """You are a part of an agent. Another part of the agent is currently searching for memories using the statements below.
 Based on these statements, describe what is currently happening external to the agent in general terms:
 {queries}  
@@ -282,7 +409,7 @@ Based on these statements, describe what is currently happening external to the 
 
         prompt = """Here are a number of interactions, each is given a number:
 {passages}         
-*****************************************
+*********
 
 Each of these interactions might be related to the general situation below. Your task is to judge if these interaction have any relation to the general situation.
 Filter out interactions that very clearly do not have any relation. But keep in interactions that have any kind of relationship to the situation such as in: topic, characters, locations, setting, etc.
@@ -301,237 +428,299 @@ Express your answer in this JSON:
 ]
 """
 
-        if not memories:
+        if len(memories) == 0:
             return []
 
         splice_length = 10
-        filtered_interactions = []
 
+        added_timestamps = []
+        mems_to_filter = []  # Memories without duplicates
+        filtered_mems = []
+
+        # Get the situation
         queries_txt = "- " + "\n- ".join(queries)
         context = [make_user_message(situation_prompt.format(queries=queries_txt))]
         situation = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
         colour_print("MAGENTA", f"Filtering situation: {situation}")
-        logger.info(f"Filtering situation: {situation}")
 
-        num_splices = ceil(len(memories) / splice_length)
+        # Remove memories that map to the same interaction
+        with self.db_manager.session_scope() as session:
+            for m in mems_to_filter:
+                interaction = session.query(DBInteraction).filter_by(
+                    timestamp=m.timestamp,
+                    session_id=self.session.session_id
+                ).first()
+                
+                if interaction:
+                    um = Message(
+                        role=interaction.user_message.role,
+                        content=interaction.user_message.content,
+                        timestamp=interaction.user_message.timestamp
+                    )
+                    am = Message(
+                        role=interaction.assistant_message.role,
+                        content=interaction.assistant_message.content,
+                        timestamp=interaction.assistant_message.timestamp
+                    )
+                    memories_passages.append(f"{memory_counter}). (User): {um.content}\n(You): {am.content}\nKeywords: {m.metadata['keywords']}")
+                    memory_counter += 1
+
+        num_splices = ceil(len(mems_to_filter) / splice_length)
+        # Iterate through the mems_to_filter list and create the passage
         call_count = 0
         for splice in range(num_splices):
             start_idx = splice * splice_length
             end_idx = (splice + 1) * splice_length
 
             memories_passages = []
-            for idx, (um, _) in enumerate(memories[start_idx:end_idx], start=start_idx):
-                memories_passages.append(f"[MEMORY NUMBER {idx} START].\n (User): {um.content}\n(You): {um.content}\nKeywords: {[kw.keyword for kw in um.keywords]}\n[MEMORY NUMBER {idx} END]")
+            memory_counter = 0
 
-                passages = "\n\n------------------------\n\n".join(memories_passages)
-                context = [make_user_message(prompt.format(passages=passages, situation=situation))]
+            for m in mems_to_filter[start_idx:end_idx]:
+                timestamp = m.timestamp
+                um, am = self.session.interaction_from_timestamp(timestamp)
+                memories_passages.append(f"{memory_counter}). (User): {um.content}\n(You): {am.content}\nKeywords: {m.metadata['keywords']}")
+                memory_counter += 1
 
-                for _ in range(self.num_tries):
-                    try:
-                        logger.debug("Attempting memory filter")
-                        result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
-                        log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx}-filter-{call_count}")
+            passages = "\n----\n".join(memories_passages)
+            context = [make_user_message(prompt.format(passages=passages, situation=situation))]
 
-                        json_list = sanitize_and_parse_json(result)
-                        for selected_object in json_list:
-                            if selected_object["related"]:
-                                filtered_interactions.append(memories[selected_object["number"]])
+            while True:
+                try:
+                    print("Attempting filter")
+                    result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+                    debug_actions(context, self.temperature, result, self.llm_call_idx, self.debug_level, self.save_name, name_template="reply-{idx}-filter-" + str(call_count))
 
-                        call_count += 1
-                        break
-                    except Exception as e:
-                        logger.error(f"Error in memory filtering: {str(e)}")
-                        continue
+                    json_list = sanitize_and_parse_json(result)
+                    for idx, selected_object in enumerate(json_list):
+                        if selected_object["related"]:
+                            filtered_mems.append(mems_to_filter[idx + start_idx])
 
-        logger.info(f"Memory filtering complete. {len(filtered_interactions)} interactions selected.")
-        return filtered_interactions
+                    call_count += 1
+                    break
+                except Exception as e:
+                    print(e)
+                    continue
 
-    def get_relevant_memories(self, user_message: str, cost_cb: Callable) -> List[Tuple[DBMessage, DBMessage]]:
-        logger.info(f"Starting get_relevant_memories for message: {user_message}")
-        colour_print("CYAN", f"Starting get_relevant_memories for message: {user_message}")
+        filtered_mems = sorted(filtered_mems, key=lambda x: x.timestamp)
+        # print("Memories after LLM filtering")
+        # for m in filtered_mems:
+        #     colour_print("GREEN", m)
+
+        return filtered_mems
+
+    def get_relevant_memories(self, user_message, cost_cb):
+        prompt ="""Message from user: "{user_message}"
         
-        query_dict = self._generate_queries(user_message, cost_cb)
-        all_retrieved_memories = self._retrieve_memories(query_dict, user_message)
-        
-        relevance_filtered_mems = self._filter_by_relevance(all_retrieved_memories, query_dict["keywords"])
-        keyword_filtered_mems = self._filter_by_keywords(relevance_filtered_mems, query_dict["keywords"])
-        
-        keyword_filtered_mems = self._perform_spreading_activations(keyword_filtered_mems)
-        
+Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
+conversation history that may be relevant to a reply to the user.
+
+The search queries you produce should be compact reformulations of the user question/statement,
+taking context into account. The purpose of the queries is accurate information retrieval. 
+Search is purely semantic. 
+
+Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
+Use up to three of these keywords to help narrow the search:
+{keywords}
+
+The current time is: {time}. 
+
+Write JSON in the following format:
+
+{{
+    "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
+    "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
+}}"""
+
+        # Now create the context for generating the queries
+        context = [make_user_message(prompt.format(user_message=user_message, time=self.now, keywords=self.defined_kws))]
+        all_retrieved_memories = []
+        query_keywords = []
+        while True:
+            print("generating queries")
+            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
+
+            try:
+                query_dict = sanitize_and_parse_json(response)
+                query_keywords = [k.lower() for k in query_dict["keywords"]]
+                print(f"Query keywords: {query_keywords}")
+
+                all_retrieved_memories = []
+                for q in query_dict["queries"] + [user_message]:
+                    print(f"Querying with: {q}")
+                    for mem in self.semantic_memory.retrieve(q, k=100):
+                        if not self.memory_present(mem, all_retrieved_memories):
+                            all_retrieved_memories.append(mem)
+                break
+            except Exception:
+                continue
+
+        # Filter by both relevance and keywords
+        all_keywords = query_keywords
+        relevance_filtered_mems = [x for x in all_retrieved_memories if x.relevance > 0.6] + self.retrieve_from_keywords(all_keywords)
+        keyword_filtered_mems = []
+
+        for m in relevance_filtered_mems:
+            for kw in m.metadata["keywords"]:
+                if kw in all_keywords:
+                    keyword_filtered_mems.append(m)
+                    break
+
+        keyword_filtered_mems.extend(self.retrieve_from_keywords(all_keywords))
+
+        # Spreading activations
+        print(f"Performing spreading activations with {len(keyword_filtered_mems[:10])} memories.")
+        secondary_memories = []
+        for mem in keyword_filtered_mems[:10]:
+            # print(f"Spreading with: {mem.passage}")
+            for r_mem in self.semantic_memory.retrieve(mem.passage, k=5):
+                if r_mem.relevance > 0.6 and not self.memory_present(r_mem, secondary_memories) and not self.memory_present(r_mem, keyword_filtered_mems):
+                    secondary_memories.append(r_mem)
+
+        keyword_filtered_mems.extend(secondary_memories)
+
         # # TODO: Uncomment all this stuff when doing dev stuff
         # trivia_skip = False
-        # for kw in query_dict["keywords"]:
+        # for kw in all_keywords:
         #     if "trivia" in kw:
         #         trivia_skip = True
         #
         # if trivia_skip:
         #     llm_filtered_mems = keyword_filtered_mems
         # else:
-        #     llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
+        #     llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
 
         # TODO: ....And comment this one out
-        llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
-        colour_print("GREEN", f"Memories after LLM filtering: {len(llm_filtered_mems)}")
-        logger.info(f"Memories after LLM filtering: {len(llm_filtered_mems)}")
-        
-        sorted_mems = sorted(llm_filtered_mems, key=lambda x: x[0].timestamp)
-        colour_print("CYAN", f"Returning {len(sorted_mems)} sorted memories")
-        logger.info(f"Returning {len(sorted_mems)} sorted memories")
+        llm_filtered_mems = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], all_keywords, cost_cb)
+
+        sorted_mems = sorted(llm_filtered_mems, key=lambda x: x.timestamp)
         return sorted_mems
 
-    def _generate_queries(self, user_message: str, cost_cb: Callable) -> Dict[str, List[str]]:
-        prompt = """Message from user: "{user_message}"
-        
-        Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
-        conversation history that may be relevant to a reply to the user.
+    def memory_present(self, memory, memory_list):
+        # passage_info seems to be unique to memory, regardless of the query
+        for list_mem in memory_list:
+            if memory.passage_info.fromIndex == list_mem.passage_info.fromIndex and memory.passage_info.toIndex == list_mem.passage_info.toIndex:
+                return True
+        return False
 
-        The search queries you produce should be compact reformulations of the user question/statement,
-        taking context into account. The purpose of the queries is accurate information retrieval. 
-        Search is purely semantic. 
-
-        Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
-        Use up to three of these keywords to help narrow the search:
-        {keywords}
-
-        The current time is: {time}. 
-
-        Write JSON in the following format:
-
-        {{
-            "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
-            "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
-        }}"""
-
-        context = [make_user_message(prompt.format(user_message=user_message, time=self.now, keywords=self.db_manager.get_keywords()))]
-        logger.debug(f"Context created with prompt and keywords")
-        colour_print("YELLOW", f"Context created with prompt and keywords")
-        
-        for _ in range(self.num_tries):
-            logger.debug("Generating queries")
-            colour_print("YELLOW", "Generating queries")
-            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb, temperature=self.temperature)
-            logger.debug(f"LLM response received: {response[:100]}...")
-            colour_print("GREEN", f"LLM response received: {response[:100]}...")  # Print first 100 chars
-
-            try:
-                query_dict = sanitize_and_parse_json(response)
-                query_dict["keywords"] = [k.lower() for k in query_dict["keywords"]]
-                logger.info(f"Query keywords: {query_dict['keywords']}")
-                colour_print("GREEN", f"Query keywords: {query_dict['keywords']}")
-                return query_dict
-            except Exception as e:
-                logger.error(f"Error occurred: {str(e)}")
-                colour_print("RED", f"Error occurred: {str(e)}")
-                colour_print("YELLOW", "Retrying query generation")
-
-    def _retrieve_memories(self, query_dict: Dict[str, List[str]], user_message: str) -> List[Tuple[DBMessage, DBMessage]]:
-        all_retrieved_memories = []
-        for q in query_dict["queries"] + [user_message]:
-            logger.debug(f"Querying with: {q}")
-            colour_print("YELLOW", f"Querying with: {q}")
-            memories = self.semantic_memory.retrieve(q, k=100)
-            db_messages = self._get_db_messages_from_semantic_results(memories)
-            logger.info(f"Retrieved {len(db_messages)} memories for query: {q}")
-            colour_print("GREEN", f"Retrieved {len(db_messages)} memories for query: {q}")
-            all_retrieved_memories.extend(db_messages)
-        
-        logger.info(f"Total retrieved memories: {len(all_retrieved_memories)}")
-        colour_print("GREEN", f"Total retrieved memories: {len(all_retrieved_memories)}")
-        return all_retrieved_memories
-
-    def _get_db_messages_from_semantic_results(self, semantic_results):
-        db_messages = []
-        with self.db_manager.session_scope() as session:
-            for result in semantic_results:
-                user_message = session.query(DBMessage).filter(DBMessage.timestamp == result.timestamp, DBMessage.role == "user").first()
-                if user_message:
-                    assistant_message = session.query(DBMessage).filter(
-                        DBMessage.session_id == user_message.session_id,
-                        DBMessage.timestamp > user_message.timestamp,
-                        DBMessage.role == "assistant"
-                    ).order_by(DBMessage.timestamp).first()
-                    if assistant_message:
-                        db_messages.append((user_message, assistant_message))
-        return db_messages
-
-    def _filter_by_relevance(self, memories: List[Tuple[DBMessage, DBMessage]], keywords: List[str]) -> List[Tuple[DBMessage, DBMessage]]:
-        relevance_filtered_mems = [
-            x for x in memories if self.semantic_memory.calculate_relevance(x[0].content, " ".join(keywords)) > 0.6
-        ]
-        keyword_messages = self.db_manager.get_messages_by_keywords(keywords, self.session.session_id)
-        keyword_tuples = [(msg, msg) for msg in keyword_messages]
-        relevance_filtered_mems.extend(keyword_tuples)
-        logger.info(f"Memories after relevance filtering: {len(relevance_filtered_mems)}")
-        colour_print("GREEN", f"Memories after relevance filtering: {len(relevance_filtered_mems)}")
-        return relevance_filtered_mems
-
-    def _filter_by_keywords(self, memories: List[Tuple[DBMessage, DBMessage]], keywords: List[str]) -> List[Tuple[DBMessage, DBMessage]]:
-        keyword_filtered_mems = [
-            m for m in memories
-            if any(kw.keyword in keywords for kw in m[0].keywords)
-        ]
-        logger.info(f"Memories after keyword filtering: {len(keyword_filtered_mems)}")
-        colour_print("GREEN", f"Memories after keyword filtering: {len(keyword_filtered_mems)}")
-        return keyword_filtered_mems
-
-    def _perform_spreading_activations(self, memories: List[Tuple[DBMessage, DBMessage]]) -> List[Tuple[DBMessage, DBMessage]]:
-        logger.info(f"Performing spreading activations with {len(memories[:10])} memories.")
-        colour_print("YELLOW", f"Performing spreading activations with {len(memories[:10])} memories.")
-        secondary_memories = []
-        for um, _ in memories[:10]:
-            for r_mem in self.semantic_memory.retrieve(um.content, k=5):
-                db_message = self._get_db_messages_from_semantic_results([r_mem])
-                if db_message and self.semantic_memory.calculate_relevance(db_message[0][0].content, um.content) > 0.6:
-                    if db_message[0] not in secondary_memories and db_message[0] not in memories:
-                        secondary_memories.append(db_message[0])
-
-        memories.extend(secondary_memories)
-        logger.info(f"Memories after spreading activations: {len(memories)}")
-        colour_print("GREEN", f"Memories after spreading activations: {len(memories)}")
-        return memories
-
-    def save_interaction(self, user_message: str, response_message: str, keywords: List[str]):
-        user_msg = Message(role="user", content=user_message, timestamp=self.now.timestamp())
-        assistant_msg = Message(role="assistant", content=response_message, timestamp=self.now.timestamp())
-        
-        self.session.add_interaction((user_msg, assistant_msg), keywords)
-        
+    def save_interaction(self, user_message, response_message, keywords):
         self.semantic_memory.add_text(user_message, timestamp=self.now.timestamp(), metadata={"keywords": keywords})
         self.semantic_memory.add_separator()
         self.semantic_memory.add_text(response_message, timestamp=self.now.timestamp(), metadata={"keywords": keywords})
         self.semantic_memory.add_separator()
 
+    def retrieve_from_keywords(self, keywords):
+        db_messages = self.session.db_session.query(DBMessage).join(DBMessage.keywords).filter(Keyword.keyword.in_(keywords)).all()
+        
+        # Convert DB messages to memory format
+        selected_mems = []
+        for db_message in db_messages:
+            mem = self.db_message_to_memory(db_message)
+            if mem not in selected_mems:
+                selected_mems.append(mem)
+        
+        return selected_mems
+    
+    def db_message_to_memory(self, db_message):
+        return Memory(
+            passage=db_message.content,
+            metadata={"keywords": [kw.keyword for kw in db_message.keywords]},
+            timestamp=db_message.timestamp,
+            relevance=1.0  # You might want to calculate this based on some criteria
+        )
+
     def reset(self):
         self.semantic_memory.clear()
-        self.db_manager.session_scope().__enter__().query(DBMessage).delete()
-        self.db_manager.session_scope().__enter__().query(DBKeyword).delete()
         self.new_session()
 
     def state_as_text(self) -> str:
-        state = {
-            "model": self.model,
-            "max_prompt_size": self.max_prompt_size,
-            "max_completion_tokens": self.max_completion_tokens,
-            "semantic_memory": self.semantic_memory.state_as_text(),
-            "session": self.session.state_as_text(),
-            "llm_call_idx": self.llm_call_idx
-        }
+        """
+        :return: A string representation of the content of the agent's memories (including
+        embeddings and chunks) in addition to agent configuration information.
+        Note that callback functions are not part of the provided state string.
+        """
+        state = dict(
+            model=self.model,
+            max_prompt_size=self.max_prompt_size,
+            max_completion_tokens=self.max_completion_tokens,
+            convo_mem=self.semantic_memory.state_as_text(),
+            session=self.session.state_as_text(),
+        )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
-    def from_state_text(self, state_text: str, prompt_callback: Optional[Callable[[str, str, List[Dict], str], Any]] = None):
+    def from_state_text(self, state_text: str, prompt_callback: Callable[[str, str, list[dict], str], Any] = None):
+        """
+        Builds an LTMAgent given a state string previously obtained by
+        calling the state_as_text() method.
+        :param state_text: A string previously obtained by calling the state_as_text() method.
+        :param prompt_callback: Optional function used to get information on prompts sent to the LLM.
+        :return:
+        """
         state = json.loads(state_text, cls=SimpleJSONDecoder)
         self.max_prompt_size = state["max_prompt_size"]
         self.max_completion_tokens = state["max_completion_tokens"]
         self.model = state["model"]
-        self.semantic_memory.set_state(state["semantic_memory"])
-        self.session = LTMAgentSession.from_state_text(state["session"], self.db_manager)
-        self.llm_call_idx = state["llm_call_idx"]
+        self.prompt_callback = prompt_callback
+        self.semantic_memory.set_state(state["convo_mem"])
+        self.session = LTMAgentSession.from_state_text(state["session"])
 
-# Helper function for logging LLM calls
-def log_llm_call(run_name: str, save_name: str, debug_level: int, label: str):
-    logger.debug(f"LLM call: {run_name} - {save_name} - {label}")
-    # Implement additional logging logic if needed
+    def close(self):
+        if self.session:
+            self.session.close_db_session()
+        if hasattr(self, 'SessionMaker'):
+            self.SessionMaker.close_all()
 
-def sanitize_filename(filename: str) -> str:
-    # Remove or replace characters that are unsafe for file names
-    return re.sub(r'[<>:"/\\|?*]', '-', filename)
+
+def td_format(td: datetime.timedelta) -> str: #? Will be part of utils.text.py
+    seconds = int(td.total_seconds())
+    periods = [
+        ('year', 3600*24*365), ('month', 3600*24*30), ('day', 3600*24), ('hour', 3600), ('minute', 60), ('second', 1)
+    ]
+    parts = list()
+    for period_name, period_seconds in periods:
+        if seconds > period_seconds:
+            period_value, seconds = divmod(seconds, period_seconds)
+            has_s = 's' if period_value > 1 else ''
+            parts.append("%s %s%s" % (period_value, period_name, has_s))
+    if len(parts) == 0:
+        return "just now"
+    if len(parts) == 1:
+        return f"{parts[0]} ago"
+    return " and ".join([", ".join(parts[:-1])] + parts[-1:]) + " ago"
+
+
+def debug_actions(context: list[dict[str, str]], temperature: float, response_text: str, llm_call_idx: int, debug_level: int, save_name: str, name_template: str = None):
+    if debug_level < 1:
+        return
+
+    # See if dir exists or create it, and set llm_call_idx
+    save_dir = _debug_dir.joinpath(save_name)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    if llm_call_idx is None:
+        if save_dir.exists() and len(list(save_dir.glob("*.txt"))) > 0:
+            llm_call_idx = max(int(p.name.removesuffix(".txt")) for p in save_dir.glob("*.txt")) + 1
+        else:
+            llm_call_idx = 0
+
+    # Write content of LLM call to file
+    if name_template:
+        save_path = save_dir.joinpath(f"{name_template.format(idx=llm_call_idx)}.txt")
+    else:
+        save_path = save_dir.joinpath(f"{llm_call_idx:06d}.txt")
+
+    with open(save_path, "w") as fd:
+        fd.write(f"LLM temperature: {temperature}\n")
+        for m in context:
+            fd.write(f"--- {m['role'].upper()}\n{m['content']}\n")
+        fd.write(f"--- Response:\n{response_text}")
+
+    # Wait for confirmation
+    if debug_level < 2:
+        return
+    print(f"LLM call saved as {save_path.name}")
+    input("Press ENTER to continue...")
+
+
+
+
+
+
