@@ -1,5 +1,5 @@
 import json
-from datasets.chapterbreak import ChapterBreakDataset
+from local_datasets.chapterbreak import ChapterBreakDataset
 from utils.llm import make_system_message, make_user_message, make_assistant_message, LLMContext, ask_llm
 from utils.ui import colour_print
 from random import Random

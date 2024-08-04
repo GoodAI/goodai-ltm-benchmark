@@ -2,24 +2,23 @@ click
 anthropic
 pymemgpt
 openai
-faker~=20.1.0
-colorama~=0.4.6
+faker
+colorama
 pytest
-time-machine==2.13.0
-tiktoken>=0.7.0
-goodai-ltm==0.4.4
-gdown==4.7.1  # For downloading files from google drive (some datasets use it)
+time-machine
+tiktoken
+goodai-ltm
+gdown  # For downloading files from google drive (some datasets use it)
 tqdm  # Showing progress bar during some downloads
-pyyaml~=6.0.1
-jinja2~=3.1.2
-Werkzeug==2.2.2  # It's crucial to specify this package's version to make flask work
-flask==2.2.3
+pyyaml
+jinja2
+Werkzeug  # It's crucial to specify this package's version to make flask work
+flask
 browser-cookie3
-rouge_score==0.1.2
-litellm>=1.41.13  # Unifies interface from most LLM APIs
-zstd==1.5.5.1  # To decompress chapterbreak
-humanize==4.9.0  # Shows data in human-readable form e.g. timedelta as "1 hour and 23 seconds"
-transformers==4.40.2  # Required to load some HuggingFace tokenizers
-matplotlib==3.8.4  # To run plotting scripts under dev_scripts
-google-generativeai==0.4.1  # Gemini API
-
+rouge_score
+litellm  # Unifies interface from most LLM APIs
+zstd # To decompress chapterbreak
+humanize  # Shows data in human-readable form e.g. timedelta as "1 hour and 23 seconds"
+transformers  # Required to load some HuggingFace tokenizers
+matplotlib  # To run plotting scripts under dev_scripts
+google-generativeai  # Gemini API
