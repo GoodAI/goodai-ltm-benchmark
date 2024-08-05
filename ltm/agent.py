@@ -5,11 +5,10 @@ from dataclasses import dataclass, field
 import datetime
 from math import ceil
 import unicodedata
-from typing import Optional, Callable, Any, List, Tuple, Union
+from typing import Optional, Callable, Any, List, Tuple
 
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
 from goodai.ltm.mem.base import RetrievedMemory
-from goodai.ltm.mem.config import TextMemoryConfig #? Not used
 from litellm import token_counter
 from model_interfaces.base_ltm_agent import Message
 
@@ -18,9 +17,6 @@ from utils.text import td_format
 from utils.ui import colour_print
 from .memory.hybrid_memory import HybridMemory
 from .utils.config import Config
-
-#TODO setup logging. Improve error handling. Make type hinting consistent. Remove redundant code.
-#! Still getting codec error: "'charmap' codec can't encode character '\x91' in position 13824: character maps to <undefined>"
 
 @dataclass
 class InsertedContextAgent: #? worth adding most of this to the ltm.utils.config?
@@ -39,7 +35,6 @@ class InsertedContextAgent: #? worth adding most of this to the ltm.utils.config
     now: datetime.datetime = None   # Set in `reply` to keep a consistent "now" timestamp
     run_name: str = ""
     num_tries: int = 5
-    Config.set_encoding()
 
     @property
     def save_name(self) -> str:
@@ -84,7 +79,7 @@ class InsertedContextAgent: #? worth adding most of this to the ltm.utils.config
         self.llm_call_idx += 1
 
         # Save interaction to memory
-        self.save_interaction(user_message, sanitized_response, keywords)
+        self.hybrid_memory.add_interaction(self.session_id, user_message, sanitized_response, self.now.timestamp(), keywords)        
 
         return sanitized_response
 
@@ -353,9 +348,6 @@ Write JSON in the following format:
                 keywords.append(m.metadata.get("keywords", []))
         return interactions, keywords
 
-    def retrieve_from_keywords(self, keywords):
-        return self.hybrid_memory.retrieve_from_keywords(keywords)
-
     def reset(self):
         self.hybrid_memory.clear()
         self.new_session()
@@ -379,25 +371,4 @@ Write JSON in the following format:
         self.hybrid_memory.set_state(state["hybrid_memory"])
         self.defined_kws = state["defined_kws"]
         self.llm_call_idx = state["llm_call_idx"]
-
-    def get_message_history(self):
-        return self.hybrid_memory.get_all_messages(self.session_id)
-
-    def get_session(self):
-        return self.hybrid_memory.get_session(self.session_id)
-
-    def add_separator(self):
-        self.hybrid_memory.semantic_memory.add_separator()
-
-    @property
-    def message_count(self):
-        return self.hybrid_memory.get_message_count(self.session_id)
-
-    def interaction_from_timestamp(self, timestamp: float) -> Tuple[Message, Message]:
-        return self.hybrid_memory.get_interaction_by_timestamp(self.session_id, timestamp)
-
-    def by_index(self, idx):
-        messages = self.get_message_history()
-        if 0 <= idx < len(messages) - 1:
-            return (Message(**messages[idx].__dict__), Message(**messages[idx+1].__dict__))
-        return None
+        

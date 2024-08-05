@@ -1,4 +1,3 @@
-import os
 from goodai.ltm.mem.config import TextMemoryConfig
 
 class Config:
@@ -7,8 +6,3 @@ class Config:
         chunk_capacity=50,
         chunk_overlap_fraction=0.0,
     )
-    ENCODING = 'utf-8'
-
-    @classmethod
-    def set_encoding(cls):
-        os.environ['PYTHONIOENCODING'] = cls.ENCODING
