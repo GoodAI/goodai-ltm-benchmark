@@ -159,7 +159,11 @@ class InsertedContextAgent:
                 colour_print("YELLOW", f"{m[0].content}")
 
         # Add the previous messages
-        relevant_interactions = relevant_interactions + self.session.message_history[-previous_interactions:]
+        prev_messages = []
+        for _, interaction in zip(range(previous_interactions), reversed(self.session.message_history)):
+            prev_messages.append(interaction)
+
+        relevant_interactions = relevant_interactions + prev_messages[::-1]
 
         # Add in memories up to the max prompt size
         current_size = token_counter(self.model, messages=context)
