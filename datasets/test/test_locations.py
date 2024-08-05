@@ -1,4 +1,4 @@
-from local_datasets.locations import LocationsDataset
+from datasets.locations import LocationsDataset
 
 
 def apply_move(current_location, move):

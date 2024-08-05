@@ -1,5 +1,5 @@
 import json
-from local_datasets.colours import ColourDataset
+from datasets.colours import ColourDataset
 
 
 def test_colours():

@@ -1,6 +1,6 @@
 import json
 import pyperclip
-from local_datasets.chapterbreak import ChapterBreakDataset, split_in_pages
+from datasets.chapterbreak import ChapterBreakDataset, split_in_pages
 from utils.llm import ask_llm, make_system_message, make_user_message
 
 
