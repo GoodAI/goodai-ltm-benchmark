@@ -2,7 +2,6 @@ from typing import List, Tuple, Dict
 import json
 import os
 import time
-from tenacity import retry, stop_after_attempt, wait_exponential
 from app.db.memory_manager import MemoryManager, Memory
 from app.config import config
 from app.utils.logging import get_logger
@@ -11,6 +10,7 @@ from app.utils.llama_tokenizer import LlamaTokenizer
 from app.token_manager import TokenManager
 from app.filter_agent import FilterAgent
 from app.model_client import ModelClient
+
 
 logger = get_logger("custom")
 chat_logger = get_logger("chat")
@@ -28,12 +28,7 @@ class Agent:
         self.safety_margin = 1000
         self.model_client = ModelClient(config.MODEL_CONFIGS["main"]["provider"])
 
-    @retry(
-        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
-    )
-    async def _generate_response(
-        self, query: str, relevant_memories: List[Memory]
-    ) -> str:
+    async def _generate_response(self, query: str, relevant_memories: List[Memory]) -> str:
         try:
             prompt = self._construct_prompt(query, relevant_memories)
             prompt_tokens = self.tokenizer.count_tokens(prompt)
@@ -43,34 +38,27 @@ class Agent:
                 config.MODEL_CONFIGS["main"]["max_tokens"],
             )
 
-            logger.debug(
-                f"Prompt tokens: {prompt_tokens}, Max new tokens: {max_new_tokens}"
-            )
+            logger.debug(f"Prompt tokens: {prompt_tokens}, Max new tokens: {max_new_tokens}")
             logger.debug(f"Total tokens: {prompt_tokens + max_new_tokens}")
 
             if max_new_tokens <= 0:
-                logger.error(
-                    f"Not enough tokens for response. Prompt tokens: {prompt_tokens}"
-                )
+                logger.error(f"Not enough tokens for response. Prompt tokens: {prompt_tokens}")
                 raise ValueError("Input too long for model to generate a response")
 
-            chat_logger.info(f"Generated prompt: {prompt}")
-            chat_logger.info(
-                f"Prompt tokens: {prompt_tokens}, Max new tokens: {max_new_tokens}"
-            )
-
-            response = self.model_client.chat_completion(
+            response = await self.model_client.chat_completion(
                 model=config.MODEL_CONFIGS['main']['model'],
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_new_tokens,
                 temperature=config.MODEL_CONFIGS['main']['temperature']
             )
-            chat_logger.info(f"API response: {response}")
 
             return self.model_client.get_completion_content(response)
+        except ValueError as ve:
+            logger.error(f"ValueError in _generate_response: {str(ve)}")
+            raise  # Re-raise the error to trigger a retry
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}", exc_info=True)
-            raise
+            return "I apologize, but I encountered an unexpected error while processing your request. Please try again later."
 
     async def process_query(self, query: str) -> str:
         try:
@@ -181,8 +169,8 @@ class Agent:
         file_name = "comparison_data/comparison_data.json"
 
         try:
-            # If file exists, read existing data
-            if os.path.exists(file_name):
+            # If file exists and is not empty, read existing data
+            if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
                 with open(file_name, "r") as f:
                     existing_data = json.load(f)
             else:
@@ -199,6 +187,11 @@ class Agent:
                 json.dump(existing_data, f, indent=2)
 
             logger.info(f"Comparison data appended to {file_name}")
+        except json.JSONDecodeError:
+            logger.warning(f"Error reading existing JSON data from {file_name}. Starting with empty list.")
+            existing_data = [data]
+            with open(file_name, "w") as f:
+                json.dump(existing_data, f, indent=2)
         except Exception as e:
             logger.error(f"Error writing comparison data: {str(e)}", exc_info=True)
 

@@ -59,7 +59,7 @@ class Config(BaseSettings):
         'main': {
             'provider': 'openai',
             'model': 'gpt-4o-mini',
-            'max_tokens': 8000,
+            'max_tokens': 4096,
             'temperature': 0,
         },
         'filter': {
