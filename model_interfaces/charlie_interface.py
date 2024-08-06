@@ -8,8 +8,8 @@ from model_interfaces.interface import ChatSession
 
 @dataclass
 class CharlieMnemonic(ChatSession):
-    max_prompt_size: int = 4160  # match with input_tokens in update_memory_settings
-    chat_id: str = "Benchmark Chat"
+    max_prompt_size: int = 9913  # match with input_tokens in update_memory_settings
+    chat_id: str = "benchmarkchat"
     endpoint: str = "http://localhost:8002"  # default local endpoint
     username: str = "admin"  # default username
     password: str = "admin"  # default password
@@ -19,6 +19,7 @@ class CharlieMnemonic(ChatSession):
     system_prompt: str = (
         "You are answering questions for an automated benchmark, don't ask the user if you should save information, just save it."
     )
+    reset_on_start: bool = True
 
     @property
     def name(self):
@@ -28,11 +29,8 @@ class CharlieMnemonic(ChatSession):
         super().__post_init__()
         self.session = requests.Session()
         self.login()
-        self.create_chat_tab()
-        self.update_memory_settings()
-        self.update_max_tokens()
-        self.load_initial_settings()
-        self.update_system_prompt(self.system_prompt)
+        if self.reset_on_start:
+            self.reset()
 
     def login(self):
         login_url = f"{self.endpoint}/login/"
@@ -50,7 +48,9 @@ class CharlieMnemonic(ChatSession):
         }
         response = self.session.post(update_settings_url, json=update_data)
         if response.status_code != 200:
-            raise ValueError("Failed to update system prompt setting.")
+            raise ValueError(
+                f"Failed to update system prompt setting. Status code: {response.status_code}, Response: {response.text}\ndata: {json.dumps(update_data)}"
+            )
         self.system_prompt = new_system_prompt
 
     def create_chat_tab(self):
@@ -64,40 +64,34 @@ class CharlieMnemonic(ChatSession):
         if response.status_code != 200:
             raise ValueError(f"Failed to create chat tab '{self.chat_id}'.")
 
-    def update_max_tokens(self):
-        update_settings_url = f"{self.endpoint}/update_settings/"
-        update_data = {
-            "username": self.username,
-            "category": "memory",
-            "setting": {"max_tokens": self.max_prompt_size},
-        }
-        response = self.session.post(update_settings_url, json=update_data)
-        if response.status_code != 200:
-            raise ValueError("Failed to update max_tokens setting.")
-
     # Charlie mnemonic has a lot of memory settings that need to be updated, performance varies greatly based on these settings
     def update_memory_settings(self):
         update_settings_url = f"{self.endpoint}/update_settings/"
         memory_settings = {
             "functions": 500,
-            "ltm1": 960,  # active memory
-            "ltm2": 960,  # category memory
-            "episodic": 960,  # episodic memory
-            "recent": 2380,  # recent messages
-            "notes": 2080,  # notes/scratchpad
+            "ltm1": 2288,  # active memory
+            "ltm2": 2288,  # category memory
+            "episodic": 2288,  # episodic memory
+            "recent": 5670,  # recent messages
+            "notes": 4957,  # notes/scratchpad
             "input": 4160,  # input tokens
-            "output": 4000,  # output tokens
-            "max_tokens": 16000,  # max tokens (all of the above combined)
-            "min_tokens": 500,
+            "output": 9913,  # output tokens
+            "max_tokens": 32000,  # max tokens (all of the above combined)
         }
+
         update_data = {
             "username": self.username,
             "category": "memory",
             "setting": memory_settings,
         }
+
         response = self.session.post(update_settings_url, json=update_data)
         if response.status_code != 200:
-            raise ValueError("Failed to update memory settings.")
+            raise ValueError(
+                f"Failed to update memory settings. Status code: {response.status_code}, Response: {response.text}"
+            )
+
+        print("Memory settings updated successfully.")
 
     def load_initial_settings(self):
         load_settings_url = f"{self.endpoint}/load_settings/"
@@ -121,7 +115,7 @@ class CharlieMnemonic(ChatSession):
         if response.status_code == 200:
             response_json = response.json()
             self.update_costs()
-            return response_json["content"]
+            return str(response_json["content"])
         else:
             raise ValueError("Failed to send message.")
 
@@ -136,10 +130,18 @@ class CharlieMnemonic(ChatSession):
             raise ValueError("Failed to update costs.")
 
     def reset(self):
-        delete_data_url = f"{self.endpoint}/delete_data_keep_settings/"
+        self.delete_all_data()
+        self.load_initial_settings()
+        self.update_memory_settings()
+        self.update_system_prompt(self.system_prompt)
+        self.create_chat_tab()
+
+    def delete_all_data(self):
+        delete_data_url = f"{self.endpoint}/delete_data/"
         response = self.session.post(delete_data_url)
         if response.status_code != 200:
-            raise ValueError("Failed to reset user data.")
+            raise ValueError("Failed to delete all user data.")
+        print("All user data has been deleted.")
 
     def load(self):
         # Charlie mnemonic is web based and so doesn't need to be manually told to resume a conversation
