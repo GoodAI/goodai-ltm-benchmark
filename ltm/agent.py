@@ -151,7 +151,7 @@ Contains instructions for a future task which is not already in the list of futu
 - Does the user tell the agent that it should perform some kind of task in the future, along with some trigger condition for that task?
 - Is the task already in the list?
 
-Respond with your reasoning as to whether there has been a new future task discussed and then with either "Yes." or "No." written exactly."""
+Respond with your reasoning as to whether there has been a new future task discussed and with either "Should Update: Yes." or "Should Update: No." written exactly at the very end of your response."""
 
         new_task_def = """Create a new task in JSON format.
 A task contains two things, a trigger condition and a payload.
@@ -180,7 +180,9 @@ Follow this format:
         log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"should_update-{self.llm_call_idx}")
         colour_print("YELLOW", f"Should update: {response_text}")
 
-        if "No." in response_text:
+        if "Should Update: No." in response_text:
+            return
+        elif "Should Update: Yes." not in response_text:
             return
 
         # Produce a new one
@@ -228,7 +230,7 @@ Follow this format:
         if cond == "MESSAGE_COUNT":
             # Decrement the message counter and ready it to be triggered
             task["trigger_details"]["trigger_value"] -= 1
-            task["trigger_details"]["triggered"] = val <= 0
+            task["trigger_details"]["triggered"] = task["trigger_details"]["trigger_value"] <= 0
 
         elif cond == "MESSAGE_CONTENT":
             user_message = context[-1]["content"].lower()
