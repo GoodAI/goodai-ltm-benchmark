@@ -2,7 +2,7 @@ import datetime
 import json
 import logging
 import uuid
-import ltm.scratchpad as sp
+import ltm.archived.scratchpad as sp
 from dataclasses import dataclass, field
 from copy import deepcopy
 from json import JSONDecodeError

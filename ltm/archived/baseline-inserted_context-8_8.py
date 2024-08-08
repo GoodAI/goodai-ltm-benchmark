@@ -1,18 +1,16 @@
 import json
-import re
 import uuid
 from dataclasses import dataclass, field
 import datetime
 from math import ceil
-import unicodedata
 from typing import Optional, Callable, Any, List, Tuple
 
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
+from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.base import RetrievedMemory
+from goodai.ltm.mem.config import TextMemoryConfig
+from goodai.ltm.mem.default import DefaultTextMemory
 from litellm import token_counter
-
-from ltm.memory.hybrid_memory import HybridMemory
-from ltm.utils.config import Config
 from model_interfaces.base_ltm_agent import Message
 
 from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call
@@ -20,52 +18,94 @@ from utils.text import td_format
 from utils.ui import colour_print
 
 
+class LTMAgentSession:
+    """
+    An agent session, or a collection of messages.
+    """
+
+    def __init__(self, session_id: str, m_history: list[Message], i_dict: dict[float, tuple[Message, Message]]):
+        self.session_id = session_id
+        self.message_history: list[tuple[Message, Message]] = m_history or []
+        self.interaction_dict: dict[float, tuple[Message, Message]] = i_dict or {}
+
+    @property
+    def message_count(self):
+        return len(self.message_history)
+
+    def state_as_text(self) -> str:
+        """
+        :return: A string that represents the contents of the session.
+        """
+        state = dict(session_id=self.session_id, history=self.message_history, interactions=self.interaction_dict)
+        return json.dumps(state, cls=SimpleJSONEncoder)
+
+    def add_interaction(self, interaction: tuple[Message, Message]):
+        self.message_history.append(interaction)
+        key = interaction[0].timestamp
+        self.interaction_dict[key] = interaction
+
+    def interaction_from_timestamp(self, timestamp: float) -> tuple[Message, Message]:
+        return self.interaction_dict[timestamp]
+
+    def by_index(self, idx):
+        return self.message_history[idx]
+
+    @classmethod
+    def from_state_text(cls, state_text: str) -> 'LTMAgentSession':
+        """
+        Builds a session object given state text.
+        :param state_text: Text previously obtained using the state_as_text() method.
+        :return: A session instance.
+        """
+        state: dict = json.loads(state_text, cls=SimpleJSONDecoder)
+        session_id = state["session_id"]
+        m_history = state["history"]
+        i_dict = {float(k): v for k, v in state["interactions"].items()}
+        return cls(session_id, m_history, i_dict)
+
 
 @dataclass
-class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.config?
+class InsertedContextAgent:
     max_completion_tokens: Optional[int] = None
-    hybrid_memory: HybridMemory = None
+    semantic_memory: DefaultTextMemory = None
     max_prompt_size: int = 16384
     is_local: bool = True
-    defined_kws: list = field(default_factory=list)  # ? Switch to use sets?
+    defined_kws: list = field(default_factory=list)
     llm_call_idx: int = 0
-    # model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
-    model: str = "gpt-4o-mini",
+    model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
     temperature: float = 0.01
-    system_message: str = "You are a helpful AI assistant."
+    system_message = """You are a helpful AI assistant."""
     debug_level: int = 1
-    session_id: Optional[str] = None
+    session: LTMAgentSession = None
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
     run_name: str = ""
     num_tries: int = 5
 
     @property
     def save_name(self) -> str:
-        sanitized_model = re.sub(r'[<>:"/\\|?*]', '_', self.model.replace('/', '-'))
-        sanitized_timestamp = re.sub(r'[<>:"/\\|?*]', '_', self.init_timestamp.replace(':', '_'))
-        return f"{sanitized_model}-{self.max_prompt_size}-{sanitized_timestamp}"
+        return f"{self.model.replace('/', '-')}-{self.max_prompt_size}-{self.init_timestamp}"
 
     def __post_init__(self):
-        self.hybrid_memory = HybridMemory(Config.DATABASE_URL, Config.SEMANTIC_MEMORY_CONFIG,
-                                          max_retrieve_capacity=2000)
-        self.max_message_size = 1000  # ? Add to config?
-        self.defined_kws = []  # ? Set?
-        self.session_id = self.new_session()
+        self.semantic_memory = AutoTextMemory.create(
+            config=TextMemoryConfig(chunk_capacity=50, chunk_overlap_fraction=0.0))
+        self.max_message_size = 1000
+        self.defined_kws = []
+        self.new_session()
         self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-    def save_interaction(self, user_message, response_message, keywords):
-        self.hybrid_memory.add_interaction(self.session_id, user_message, response_message, self.now.timestamp(),
-                                           keywords)
-
-    def new_session(self) -> str:
+    def new_session(self) -> 'LTMAgentSession':
+        """
+        Creates a new LTMAgentSession object and sets it as the current session.
+        :return: The new session object.
+        """
         session_id = str(uuid.uuid4())
-        created_at = datetime.datetime.now().timestamp()
-        self.hybrid_memory.create_session(session_id, created_at)
-        if not self.hybrid_memory.is_empty():
-            self.hybrid_memory.semantic_memory.add_separator()
-        return session_id
+        self.session = LTMAgentSession(session_id=session_id, m_history=[], i_dict={})
+        if not self.semantic_memory.is_empty():
+            self.semantic_memory.add_separator()
+        return self.session
 
     def reply(self, user_message: str, agent_response: Optional[str] = None, cost_callback: Callable = None) -> str:
+
         colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
         self.now = datetime.datetime.now()
 
@@ -74,38 +114,23 @@ class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.conf
                                       cost_cb=cost_callback)
         response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
                                 cost_callback=cost_callback, temperature=self.temperature)
-
-        # Sanitize the response text
-        sanitized_response = self.sanitize_string(response_text)
-
-        try:
-            log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx}")
-        except UnicodeEncodeError:
-            print(f"Warning: Unable to log LLM call due to encoding issues. LLM call index: {self.llm_call_idx}")
-
+        log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx}")
         self.llm_call_idx += 1
 
         # Save interaction to memory
-        self.hybrid_memory.add_interaction(self.session_id, user_message, sanitized_response, self.now.timestamp(),
-                                           keywords)
+        um = Message(role="user", content=user_message, timestamp=self.now.timestamp())
+        am = Message(role="assistant", content=response_text, timestamp=self.now.timestamp())
 
-        return sanitized_response
+        self.save_interaction(user_message, response_text, keywords)
+        self.session.add_interaction((um, am))
 
-    @staticmethod
-    def sanitize_string(s: str) -> str:
-        """Remove or replace problematic characters."""
-        return ''.join(ch for ch in s if unicodedata.category(ch)[0] != 'C')
+        return response_text
 
     def keywords_for_message(self, user_message, cost_cb):
 
-        prompt = """Create two keywords to describe the topic of this message:
-        "{user_message}".
-Focus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`
-Choose keywords that would aid in retrieving this message from memory in the future.
-Reuse these keywords if appropriate: {keywords}"""
+        prompt = 'Create two keywords to describe the topic of this message:\n"{user_message}".\n\nFocus on the topic and tone of the message. Produce the keywords in JSON like: `["keyword_1", "keyword_2"]`\n\nChoose keywords that would aid in retriving this message from memory in the future.\n\nReuse these keywords if appropriate: {keywords}'
 
         context = [make_system_message(prompt.format(user_message=user_message, keywords=self.defined_kws))]
-        keywords = []
         for _ in range(self.num_tries):
             try:
                 print("Keyword gen")
@@ -115,12 +140,8 @@ Reuse these keywords if appropriate: {keywords}"""
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
             except Exception as e:
-                print(f"Keyword generation failed: {e}")
+                print(repr(e) + response)
                 continue
-
-        # If keyword generation fails, use a default keyword
-        if not keywords:
-            keywords = ["general"]
 
         # Update known list of keywords
         for k in keywords:
@@ -131,6 +152,7 @@ Reuse these keywords if appropriate: {keywords}"""
         return keywords
 
     def create_context(self, user_message, max_prompt_size, previous_interactions, cost_cb):
+
         context = [make_system_message(self.system_message), make_user_message(
             f"{str(self.now)[:-7]} ({td_format(datetime.timedelta(seconds=1))}) " + user_message)]
         relevant_interactions = self.get_relevant_memories(user_message, cost_cb)
@@ -143,8 +165,11 @@ Reuse these keywords if appropriate: {keywords}"""
                 colour_print("YELLOW", f"{m[0].content}")
 
         # Add the previous messages
-        recent_messages = self.hybrid_memory.get_recent_messages(self.session_id, limit=previous_interactions)
-        relevant_interactions.extend([(Message(**msg.__dict__), Message(**msg.__dict__)) for msg in recent_messages])
+        prev_messages = []
+        for _, interaction in zip(range(previous_interactions), reversed(self.session.message_history)):
+            prev_messages.append(interaction)
+
+        relevant_interactions = relevant_interactions + prev_messages[::-1]
 
         # Add in memories up to the max prompt size
         current_size = token_counter(self.model, messages=context)
@@ -189,10 +214,13 @@ Based on these statements, describe what is currently happening external to the 
         prompt = """Here are a number of interactions, each is given a number:
 {passages}         
 *****************************************
+
 Each of these interactions might be related to the general situation below. Your task is to judge if these interaction have any relation to the general situation.
 Filter out interactions that very clearly do not have any relation. But keep in interactions that have any kind of relationship to the situation such as in: topic, characters, locations, setting, etc.
+
 SITUATION:
 {situation}
+
 Express your answer in this JSON: 
 [
     {{
@@ -271,18 +299,24 @@ Express your answer in this JSON:
 
 Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
 conversation history that may be relevant to a reply to the user.
+
 The search queries you produce should be compact reformulations of the user question/statement,
 taking context into account. The purpose of the queries is accurate information retrieval. 
 Search is purely semantic. 
+
 Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
 Use up to three of these keywords to help narrow the search:
 {keywords}
+
 The current time is: {time}. 
+
 Write JSON in the following format:
+
 {{
     "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
     "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
 }}"""
+
         # Now create the context for generating the queries
         context = [
             make_user_message(prompt.format(user_message=user_message, time=self.now, keywords=self.defined_kws))]
@@ -302,35 +336,35 @@ Write JSON in the following format:
                 all_retrieved_memories = []
                 for q in query_dict["queries"] + [user_message]:
                     print(f"Querying with: {q}")
-                    for mem in self.hybrid_memory.semantic_memory.retrieve(q, k=100):  # ? Add k to config?
+                    for mem in self.semantic_memory.retrieve(q, k=100):
                         all_retrieved_memories.append(mem)
                 break
-            except Exception as e:
-                print(f"Query generation failed: {e}")
+            except Exception:
                 continue
 
+        # Filter by both relevance and keywords
         all_keywords = query_keywords
         relevance_filtered_mems = [x for x in all_retrieved_memories if
-                                   x.relevance > 0.6] + self.hybrid_memory.retrieve_from_keywords(
-            all_keywords)  # ? Add relevance score to the config?
+                                   x.relevance > 0.6] + self.retrieve_from_keywords(all_keywords)
         keyword_filtered_mems = []
 
         for m in relevance_filtered_mems:
-            for kw in m.metadata.get("keywords", []):  # ? Sets
+            for kw in m.metadata["keywords"]:
                 if kw in all_keywords:
                     keyword_filtered_mems.append(m)
                     break
 
-        keyword_filtered_mems.extend(self.hybrid_memory.retrieve_from_keywords(all_keywords))
+        keyword_filtered_mems.extend(self.retrieve_from_keywords(all_keywords))
 
-        # Spreading activation
+        # Spreading activations
         print(f"Performing spreading activations with {len(keyword_filtered_mems[:10])} memories.")
         for mem in keyword_filtered_mems[:10]:
-            for r_mem in self.hybrid_memory.semantic_memory.retrieve(mem.passage, k=5):
+            # print(f"Spreading with: {mem.passage}")
+            for r_mem in self.semantic_memory.retrieve(mem.passage, k=5):
                 if r_mem.relevance > 0.6:
                     keyword_filtered_mems.append(r_mem)
 
-        # # TODO: Uncomment all this stuff when doing dev stuff #!! Untested on RDB version
+        # # TODO: Uncomment all this stuff when doing dev stuff
         # trivia_skip = False
         # for kw in all_keywords:
         #     if "trivia" in kw:
@@ -352,32 +386,76 @@ Write JSON in the following format:
         interactions = []
         keywords = []
         for m in memory_chunks:
-            interaction = self.hybrid_memory.get_interaction_by_timestamp(self.session_id, m.timestamp)
-            if interaction and interaction not in interactions:
+            interaction = self.session.interaction_from_timestamp(m.timestamp)
+            if interaction not in interactions:
                 interactions.append(interaction)
-                keywords.append(m.metadata.get("keywords", []))
+                keywords.append(m.metadata["keywords"])
+
         return interactions, keywords
 
+    def save_interaction(self, user_message, response_message, keywords):
+        self.semantic_memory.add_text(user_message, timestamp=self.now.timestamp(), metadata={"keywords": keywords})
+        self.semantic_memory.add_separator()
+        self.semantic_memory.add_text(response_message, timestamp=self.now.timestamp(), metadata={"keywords": keywords})
+        self.semantic_memory.add_separator()
+
+    def retrieve_from_keywords(self, keywords):
+        selected_mems = []
+        memories = self.semantic_memory.retrieve("", 2000)
+
+        for m in memories:
+            for kw in m.metadata["keywords"]:
+                if kw in keywords:
+                    selected_mems.append(m)
+                    break
+
+        return selected_mems
+
     def reset(self):
-        self.hybrid_memory.clear()
+        self.semantic_memory.clear()
         self.new_session()
 
     def state_as_text(self) -> str:
+        """
+        :return: A string representation of the content of the agent's memories (including
+        embeddings and chunks) in addition to agent configuration information.
+        Note that callback functions are not part of the provided state string.
+        """
         state = dict(
             model=self.model,
             max_prompt_size=self.max_prompt_size,
             max_completion_tokens=self.max_completion_tokens,
-            hybrid_memory=self.hybrid_memory.state_as_text(),
+            convo_mem=self.semantic_memory.state_as_text(),
+            session=self.session.state_as_text(),
             defined_kws=self.defined_kws,
             llm_call_idx=self.llm_call_idx
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
     def from_state_text(self, state_text: str, prompt_callback: Callable[[str, str, list[dict], str], Any] = None):
+        """
+        Builds an LTMAgent given a state string previously obtained by
+        calling the state_as_text() method.
+        :param state_text: A string previously obtained by calling the state_as_text() method.
+        :param prompt_callback: Optional function used to get information on prompts sent to the LLM.
+        :return:
+        """
         state = json.loads(state_text, cls=SimpleJSONDecoder)
         self.max_prompt_size = state["max_prompt_size"]
         self.max_completion_tokens = state["max_completion_tokens"]
         self.model = state["model"]
-        self.hybrid_memory.set_state(state["hybrid_memory"])
+        self.semantic_memory.set_state(state["convo_mem"])
+        self.session = LTMAgentSession.from_state_text(state["session"])
         self.defined_kws = state["defined_kws"]
         self.llm_call_idx = state["llm_call_idx"]
+
+
+
+
+
+
+
+
+
+
+
