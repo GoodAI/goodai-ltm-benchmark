@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
+
 class Session(Base):
     __tablename__ = 'sessions'
 
@@ -15,6 +16,7 @@ class Session(Base):
 
     def __repr__(self):
         return f"<Session(id={self.id}, session_id={self.session_id}, created_at={self.created_at})>"
+
 
 class Message(Base):
     __tablename__ = 'messages'

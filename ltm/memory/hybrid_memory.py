@@ -1,10 +1,12 @@
 from goodai.ltm.mem.auto import AutoTextMemory
 from goodai.ltm.mem.config import TextMemoryConfig
 from goodai.ltm.mem.base import RetrievedMemory
-from ..database.manager import DatabaseManager
 from typing import List, Tuple, Optional
+
+from ltm.database.manager import DatabaseManager
 from model_interfaces.base_ltm_agent import Message
 import json
+
 
 class HybridMemory:
     def __init__(self, db_url: str, semantic_memory_config: TextMemoryConfig, max_retrieve_capacity: int = 2000):

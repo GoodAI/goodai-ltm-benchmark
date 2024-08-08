@@ -1,5 +1,6 @@
 from goodai.ltm.mem.config import TextMemoryConfig
 
+
 class Config:
     DATABASE_URL = "sqlite:///ltm_agent.db"
     SEMANTIC_MEMORY_CONFIG = TextMemoryConfig(
