@@ -196,10 +196,13 @@ def log_llm_call(run_name: str, agent_name: str, debug_level: int, label: str = 
     save_dir = _llm_debug_dir.joinpath(run_name, agent_name)
     save_dir.mkdir(parents=True, exist_ok=True)
 
+    # Sanitize timestamp
+    sanitized_timestamp = datetime.now().strftime("%Y-%m-%d_%H_%M_%S_%f")
+
     # Write content of LLM call to file
     context = _llm_debug_params.pop("messages")
     response_text = _llm_debug_params.pop("response")
-    save_path = save_dir.joinpath(f"{datetime.now()}{'-' + label if label is not None else ''}.txt")
+    save_path = save_dir.joinpath(f"{sanitized_timestamp}{'-' + label if label is not None else ''}.txt")
     with open(save_path, "w") as fd:
         for k, v in _llm_debug_params.items():
             fd.write(f"{k}: {v}\n")

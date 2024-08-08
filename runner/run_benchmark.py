@@ -16,7 +16,6 @@ from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
 from model_interfaces.llm_interface import LLMChatSession, TimestampLLMChatSession
 from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
-from model_interfaces.memgpt_interface import MemGPTChatSession
 from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from model_interfaces.huggingface_interface import HFChatSession
@@ -37,9 +36,6 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
 
     if name == "gemini":
         return GeminiProInterface(run_name=run_name)
-
-    if name == "memgpt":
-        return MemGPTChatSession(run_name=run_name)
 
     if name.startswith("ltm_agent"):
         match = re.match(r"^ltm_agent\((?P<model>.+)\)$", name)
