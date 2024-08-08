@@ -33,7 +33,7 @@ class LTMAgentWrapper(ChatSession):
         def _cost_fn(amount: float):
             self.costs_usd += amount
 
-        return self.agent.reply(user_message, cost_callback=_cost_fn)
+        return self.agent.reply(user_message, agent_response=agent_response, cost_callback=_cost_fn)
 
     def reset(self):
         self.agent.reset()

@@ -1,6 +1,8 @@
 import json
 import re
+import time
 import uuid
+from copy import deepcopy
 from dataclasses import dataclass, field
 import datetime
 from math import ceil
@@ -15,7 +17,7 @@ from ltm.memory.hybrid_memory import HybridMemory
 from ltm.utils.config import Config
 from model_interfaces.base_ltm_agent import Message
 
-from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call
+from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call, make_assistant_message
 from utils.text import td_format
 from utils.ui import colour_print
 
@@ -38,6 +40,7 @@ class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.conf
     now: datetime.datetime = None  # Set in `reply` to keep a consistent "now" timestamp
     run_name: str = ""
     num_tries: int = 5
+    task_memory: list = field(default_factory=list)
 
     @property
     def save_name(self) -> str:
@@ -66,15 +69,39 @@ class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.conf
         return session_id
 
     def reply(self, user_message: str, agent_response: Optional[str] = None, cost_callback: Callable = None) -> str:
+        perform_task = """
+
+Here are some additional tasks which you are to perform right now:
+{task}
+
+These tasks contains two things: a trigger condition, and a payload.
+The trigger conditions have been met for all task. So they can be safely disregarded. Now all you need to do is perform the tasks described in the "payload" fields. 
+
+You should append the result of your task to your reply to the query above
+
+Append the results of your tasks to your current response.
+"""
+
         colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
         self.now = datetime.datetime.now()
 
         keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
-        context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0,
-                                      cost_cb=cost_callback)
-        response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
-                                cost_callback=cost_callback, temperature=self.temperature)
 
+        if not agent_response:
+            context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
+
+        else:
+            context = [make_user_message(user_message)]
+
+        # Update task memory
+        self.add_task(deepcopy(context), cost_callback, user_message)
+
+        # Get any tasks that might be due now.
+        extra_tasks = self.progress_and_get_extra_tasks(context)
+        if len(extra_tasks) > 0:
+            context[-1]["content"] += perform_task.format(task=json.dumps(extra_tasks, indent=2))
+
+        response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
         # Sanitize the response text
         sanitized_response = self.sanitize_string(response_text)
 
@@ -84,6 +111,9 @@ class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.conf
             print(f"Warning: Unable to log LLM call due to encoding issues. LLM call index: {self.llm_call_idx}")
 
         self.llm_call_idx += 1
+
+        # Remove outdated tasks
+        self.remove_completed_tasks()
 
         # Save interaction to memory
         self.hybrid_memory.add_interaction(self.session_id, user_message, sanitized_response, self.now.timestamp(),
@@ -95,6 +125,122 @@ class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.conf
     def sanitize_string(s: str) -> str:
         """Remove or replace problematic characters."""
         return ''.join(ch for ch in s if unicodedata.category(ch)[0] != 'C')
+
+    def progress_and_get_extra_tasks(self, context):
+
+        extra_tasks = []
+
+        for task in self.task_memory:
+            triggered = self.update_task(task, context)
+
+            if triggered:
+                extra_tasks.append(task["task_details"])
+
+        return extra_tasks
+
+    def add_task(self, context, cost_callback, user_message): # given some trigger condition
+        task_should_add = """Here is the current list of future tasks:
+{future_tasks}
+
+----------
+You are to decide if this message:
+{user_message}
+ 
+Contains instructions for a future task which is not already in the list of future tasks, and has very concrete conditions (either a number of messages, a specific date/time, or a 'trigger phrase').
+- Does the description of the task imply that the thing that the agent has to do something given some future trigger?
+- Does the user tell the agent that it should perform some kind of task in the future, along with some trigger condition for that task?
+- Is the task already in the list?
+
+Respond with your reasoning as to whether there has been a new future task discussed and then with either "Yes." or "No." written exactly."""
+
+        new_task_def = """Create a new task in JSON format.
+A task contains two things, a trigger condition and a payload.
+
+Be very precise in how you define the task and record all relevant information about it including:
+- The trigger condition should describe precisely and only the condition for the triggering of the task.
+- The payload should describe precisely and only what should be done once the trigger condition is met.
+- The trigger value should accurately state the value stated in the trigger condition.
+
+Follow this format:
+{
+    "description": str, // A high level description of the task
+    "task_details": {
+        "trigger_condition": str // A precise description of the condition that should be met for the task to execute.
+        "payload": str, // An exact description of what should be done when the trigger condition is met. Do not mention the trigger
+        // Any other details that might be relevant
+    }
+    "trigger_details": {
+        "trigger_condition": str, // Either MESSAGE_COUNT, MESSAGE_CONTENT, or TIME
+        "trigger_value": str, // For MESSAGE_COUNT, the number of messages to wait. For TIME, a timestamp in the form `YYYY-mm-dd_HH:MM`. For MESSAGE_CONTENT, the exact text that will trigger the task.
+    }
+}"""
+
+        context.append(make_user_message(task_should_add.format(future_tasks=json.dumps(self.task_memory, indent=2), user_message=user_message)))
+        response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
+        log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"should_update-{self.llm_call_idx}")
+        colour_print("YELLOW", f"Should update: {response_text}")
+
+        if "No." in response_text:
+            return
+
+        # Produce a new one
+        context.append(make_assistant_message(response_text))
+        context.append(make_user_message(new_task_def))
+
+        while True:
+            try:
+                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
+                log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"do_update-{self.llm_call_idx}")
+
+                new_task = sanitize_and_parse_json(response)
+                self.process_new_task(new_task)
+
+                print(f"Added Task:\n{json.dumps(new_task, indent=2)}\n")
+                break
+
+            except Exception as e:
+                print(e)
+                continue
+
+    def process_new_task(self, new_task: dict):
+        new_task["trigger_details"]["triggered"] = False
+        if new_task["trigger_details"]["trigger_condition"] == "MESSAGE_COUNT":
+            new_task["trigger_details"]["trigger_value"] = int(new_task["trigger_details"]["trigger_value"])
+
+        if new_task["trigger_details"]["trigger_condition"] == "MESSAGE_CONTENT":
+            new_task["trigger_details"]["trigger_value"] = new_task["trigger_details"]["trigger_value"].lower()
+
+        if new_task["trigger_details"]["trigger_condition"] == "TIME":
+            new_task["trigger_details"]["trigger_value"] = time.mktime(datetime.datetime.strptime(new_task["trigger_details"]["trigger_value"], "%Y-%m-%d_%H:%M").timetuple())
+
+        self.task_memory.append(new_task)
+
+    def remove_completed_tasks(self):
+
+        for task in self.task_memory:
+            if task["trigger_details"]["triggered"]:
+                self.task_memory.remove(task)
+
+    def update_task(self, task, context):
+
+        cond = task["trigger_details"]["trigger_condition"]
+        val = task["trigger_details"]["trigger_value"]
+        if cond == "MESSAGE_COUNT":
+            # Decrement the message counter and ready it to be triggered
+            task["trigger_details"]["trigger_value"] -= 1
+            task["trigger_details"]["triggered"] = val <= 0
+
+        elif cond == "MESSAGE_CONTENT":
+            user_message = context[-1]["content"].lower()
+            task["trigger_details"]["triggered"] = val in user_message
+
+        elif cond == "TIME":
+            task["trigger_details"]["triggered"] = self.now.timestamp() > val
+
+        if task["trigger_details"]["triggered"]:
+            print(f"{cond}: Task triggered: {json.dumps(task, indent=2)}")
+
+        return task["trigger_details"]["triggered"]
 
     def keywords_for_message(self, user_message, cost_cb):
 
@@ -181,8 +327,10 @@ Reuse these keywords if appropriate: {keywords}"""
 
     def llm_memory_filter(self, memories, queries, cost_cb):
 
-        situation_prompt = """You are a part of an agent. Another part of the agent is currently searching for memories using the statements below.
-Based on these statements, describe what is currently happening external to the agent in general terms:
+        situation_prompt = """You are a part of an agent which is undergoing an exchange of messages with a user or multiple users.
+Another part of the agent which is in direct contact with the user is currently searching for memories using the statements below in reaction to a message from the user.
+
+Based on these statements, describe in general terms the topic of the current message. Try to call out some specific details but also don't overanalyze what is going on:
 {queries}  
 """
 
@@ -310,39 +458,18 @@ Write JSON in the following format:
                 continue
 
         all_keywords = query_keywords
-        relevance_filtered_mems = [x for x in all_retrieved_memories if
-                                   x.relevance > 0.6] + self.hybrid_memory.retrieve_from_keywords(
-            all_keywords)  # ? Add relevance score to the config?
-        keyword_filtered_mems = []
+        relevance_filtered_mems = [x for x in all_retrieved_memories if x.relevance > 0.6] + self.hybrid_memory.retrieve_from_keywords(all_keywords)  # ? Add relevance score to the config?
 
-        for m in relevance_filtered_mems:
-            for kw in m.metadata.get("keywords", []):  # ? Sets
-                if kw in all_keywords:
-                    keyword_filtered_mems.append(m)
-                    break
-
-        keyword_filtered_mems.extend(self.hybrid_memory.retrieve_from_keywords(all_keywords))
+        relevance_filtered_mems.extend(self.hybrid_memory.retrieve_from_keywords(all_keywords))
 
         # Spreading activation
-        print(f"Performing spreading activations with {len(keyword_filtered_mems[:10])} memories.")
-        for mem in keyword_filtered_mems[:10]:
+        print(f"Performing spreading activations with {len(relevance_filtered_mems[:10])} memories.")
+        for mem in relevance_filtered_mems[:10]:
             for r_mem in self.hybrid_memory.semantic_memory.retrieve(mem.passage, k=5):
                 if r_mem.relevance > 0.6:
-                    keyword_filtered_mems.append(r_mem)
+                    relevance_filtered_mems.append(r_mem)
 
-        # # TODO: Uncomment all this stuff when doing dev stuff #!! Untested on RDB version
-        # trivia_skip = False
-        # for kw in all_keywords:
-        #     if "trivia" in kw:
-        #         trivia_skip = True
-        #
-        # if trivia_skip:
-        #     llm_filtered_interactions, _ = self.interactions_from_retrieved_memories(keyword_filtered_mems)
-        # else:
-        #     llm_filtered_interactions = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
-
-        # TODO: ....And comment this one out
-        llm_filtered_interactions = self.llm_memory_filter(keyword_filtered_mems, query_dict["queries"], cost_cb)
+        llm_filtered_interactions = self.llm_memory_filter(relevance_filtered_mems, query_dict["queries"], cost_cb)
 
         sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
         return sorted_interactions
