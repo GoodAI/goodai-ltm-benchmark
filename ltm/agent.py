@@ -22,7 +22,6 @@ from utils.text import td_format
 from utils.ui import colour_print
 
 
-
 @dataclass
 class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.config?
     max_completion_tokens: Optional[int] = None
@@ -189,20 +188,17 @@ Follow this format:
         context.append(make_assistant_message(response_text))
         context.append(make_user_message(new_task_def))
 
-        while True:
-            try:
-                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
-                log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"do_update-{self.llm_call_idx}")
+        try:
+            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
+            log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"do_update-{self.llm_call_idx}")
 
-                new_task = sanitize_and_parse_json(response)
-                self.process_new_task(new_task)
+            new_task = sanitize_and_parse_json(response)
+            self.process_new_task(new_task)
 
-                print(f"Added Task:\n{json.dumps(new_task, indent=2)}\n")
-                break
+            print(f"Added Task:\n{json.dumps(new_task, indent=2)}\n")
 
-            except Exception as e:
-                print(e)
-                continue
+        except Exception as e:
+            print("Encountered exception when creating task: " + repr(e))
 
     def process_new_task(self, new_task: dict):
         new_task["trigger_details"]["triggered"] = False
@@ -332,17 +328,28 @@ Reuse these keywords if appropriate: {keywords}"""
         situation_prompt = """You are a part of an agent which is undergoing an exchange of messages with a user or multiple users.
 Another part of the agent which is in direct contact with the user is currently searching for memories using the statements below in reaction to a message from the user.
 
-Based on these statements, describe in general terms the topic of the current message. Try to call out some specific details but also don't overanalyze what is going on:
+Based on these statements, describe in general terms the topic of the current message. 
+- Do not speculate on the reasons that the user may have for sending the message.
+- Try to call out some specific details.
+
+**********
+STATEMENTS:
 {queries}  
 """
 
         prompt = """Here are a number of interactions, each is given a number:
 {passages}         
 *****************************************
-Each of these interactions might be related to the general situation below. Your task is to judge if these interaction have any relation to the general situation.
+Each of these interactions might be related to the general situation below. Your task is to judge if these interactions have any relation to the general situation.
 Filter out interactions that very clearly do not have any relation. But keep in interactions that have any kind of relationship to the situation such as in: topic, characters, locations, setting, etc.
+- Does the topic of the interaction have any relationship to the situation?
+- Does the interaction contain any of the details of the situation?
+
+*****************************************
 SITUATION:
 {situation}
+
+*****************************************
 Express your answer in this JSON: 
 [
     {{
