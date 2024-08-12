@@ -1,5 +1,8 @@
+import time
+
+import time_machine
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Tuple, Optional
 from dataclasses import dataclass
 from utils.constants import PERSISTENCE_DIR
@@ -12,6 +15,8 @@ class ChatSession(ABC):
     costs_usd: float = 0
     is_local: bool = False
     max_message_size: int = 4096
+    time_travel: bool = True
+    traveller: Optional[time_machine.travel] = None
 
     def message_to_agent(self, user_message: str, agent_response: Optional[str] = None) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
@@ -64,3 +69,26 @@ class ChatSession(ABC):
 
     def token_len(self, text: str) -> int:
         return count_tokens_for_model(text=text)
+
+    def forward_time(self, seconds: float):
+
+        if not self.time_travel:
+            print(f"Time travels are deactivated. Waiting for {seconds} seconds.")
+            while seconds > 0:
+                print(f"\r{seconds} seconds left.     ", end="")
+                time.sleep(min(seconds, 1))
+                seconds -= 1
+            print("\rWait ended.")
+            return
+
+        t_jump = timedelta(seconds=seconds)
+        target_date = datetime.now() + t_jump
+        assert target_date > datetime.now(), "Can only move forward in time. Going back is problematic."
+        self.reset_time()
+        self.traveller = time_machine.travel(target_date.astimezone(timezone.utc))
+        self.traveller.start()
+
+    def reset_time(self):
+        if self.traveller is not None:
+            self.traveller.stop()
+            self.traveller = None
