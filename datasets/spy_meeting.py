@@ -5,6 +5,7 @@ from typing import Tuple, List
 from faker import Faker
 
 from dataset_interfaces.interface import DatasetInterface, TestExample
+from utils.llm import make_user_message
 
 PLACE_TEMPLATE = "{}: We will rendezvous {}."
 TIME_TEMPLATE = "{}: The time we will meet is {}."
@@ -92,7 +93,7 @@ class SpyMeetingDataset(DatasetInterface):
         correct_score = 0
         incorrect_set = self.get_answers_for_others(expected_answers)
 
-        for potential_answers in expected_answers:
+        for statement, potential_answers in zip(questions, expected_answers):
             found = False
             for pa in potential_answers:
                 regex = re.compile(rf"\b{pa}\b")
@@ -100,7 +101,33 @@ class SpyMeetingDataset(DatasetInterface):
                     found = True
                     break
             if not found:
-                reasoning.append(f"{potential_answers} not found in answer.")
+                # Use an LLM to evaluate here
+                prompt = """
+You are evaluating whether the interpretation of a statement matches with the expected interpretation.
+Here is the original statement:
+{statement}
+
+**********************************
+Here is the interpretation:
+{interpretation} 
+
+**********************************
+An expected interpretation should contain something that is synonymous to at least one of these items:
+{expected}
+
+**********************************
+Respond with a single word. Either "Valid." for a valid interpretation, or "Invalid." for an invalid interpretation. 
+A verbatim restatement of the original statement is always invalid.
+""".strip()
+
+                context = [make_user_message(prompt.format(statement=statement, interpretation=response, expected=potential_answers))]
+                response_text = self.ask_llm(context=context, model="gpt-4-turbo", temperature=0.01)
+
+                if response_text == "Valid.":
+                    reasoning.append("Answer contains expected interpretation")
+                    correct_score += 1
+                else:
+                    reasoning.append(f"{potential_answers} not found in answer.")
             else:
                 reasoning.append("Answer contains expected keyword(s)")
                 correct_score += 1
@@ -132,3 +159,12 @@ class SpyMeetingDataset(DatasetInterface):
                 other_answers.discard(e)
 
         return other_answers
+
+
+
+if __name__ == '__main__':
+    ds = SpyMeetingDataset()
+    ex = ds.generate_examples(1)
+
+    ex[0].script = []
+    answer = """Based on the clandestine messages received, here is the deciphered content:1. **Frederick Ramos:** "Bring to the meeting a quiet way to open locked doors."2. **Mr. Terence Girvan:** "We will rendezvous where the sea cargo is stored."3. **Rachelle Cunny-Sheil:** "The time we will meet is when the sun is high."### Deciphered Meeting Details:**Time:**- "When the sun is high" typically refers to midday, around 12:00 PM.**Place:**- "Where the sea cargo is stored" suggests a location such as a port, dock, or warehouse near the sea where cargo is kept.**Item to Bring:**- A "quiet way to open locked doors" implies bringing a lock-picking set or a similar tool that can open locks discreetly.### Summary:- **Time:** Around 12:00 PM (midday)- **Place:** A port, dock, or warehouse where sea cargo is stored- **Item to Bring:** A lock-picking set or a similar discreet tool for opening locksIf you need further clarification or additional assistance, please let me know!"""
