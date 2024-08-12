@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Iterator, List, Tuple, Callable
 from random import Random
 
+import time_machine
+
 from dataset_interfaces.interface import (
     TestExample,
     DynamicExample,
@@ -51,6 +53,7 @@ class TestRunner:
     tests: list[TestExample]
     finished_results: list[TestResult] = field(default_factory=list)
     in_progress_results: dict[str, TestResult] = field(default_factory=dict)
+    traveller: Optional[time_machine.travel] = None
     wait_list: dict[str, dict[str, int | datetime]] = field(default_factory=dict)
     agent_token_count: int = 0
     total_token_count: int = 0
@@ -107,7 +110,17 @@ class TestRunner:
     def forward_time(self, seconds: float):
         if self.config.debug:
             colour_print("green", f"Time jump by {seconds} seconds.")
+        target_date = datetime.now() + timedelta(seconds=seconds)
         self.agent.forward_time(seconds)
+        self.reset_time()
+        self.traveller = time_machine.travel(target_date.astimezone(timezone.utc))
+        self.traveller.start()
+
+    def reset_time(self):
+        self.agent.reset_time()
+        if self.traveller is not None:
+            self.traveller.stop()
+            self.traveller = None
 
     def set_to_wait(self, example: TestExample, action: WaitAction, log_this: bool = True, now: datetime = None):
         unique_id = example.unique_id
@@ -302,7 +315,7 @@ class TestRunner:
         # Check if the last event in the log is after the current time, then travel to that time if it is.
         if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
             wait_seconds = (self.master_log.log[-1].timestamp - datetime.now()).total_seconds()
-            self.agent.forward_time(wait_seconds)
+            self.forward_time(wait_seconds)
 
         # Add a reset event to the log if it has indeed been reset
         if len(self.master_log.log) > 0:
@@ -467,7 +480,7 @@ class TestRunner:
         self.run_tests()
         self.progress_dialog.close()
         self.save_runstats()
-        self.agent.reset_time()
+        self.reset_time()
         report_path = generate_report(self.finished_results)
         webbrowser.open_new_tab(report_path.as_uri())
 
