@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Whenever I write 'hppy' instead of 'happy' then say: \"You misspelled 'happy' as 'hppy'\"",
+    "I am hppy today!",
+    "I am hppy today!",
+    "I am hppy today!"
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "You misspelled 'happy' as 'hppy'",
+    "You misspelled 'happy' as 'hppy'",
+    "You misspelled 'happy' as 'hppy'"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

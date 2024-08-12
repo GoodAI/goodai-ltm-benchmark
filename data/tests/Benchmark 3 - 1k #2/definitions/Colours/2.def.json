@@ -1,0 +1,32 @@
+{
+  "script": [
+    "My favourite colour is Red.",
+    "The name of my favourite colour is Khaki.",
+    "My favourite colour is Yellow.",
+    "What is my favourite colour?"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Yellow"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

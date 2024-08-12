@@ -1,0 +1,62 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Evelyn entered the dining_room.",
+    "(On TV) Evelyn loves the corn",
+    "(On TV) Mia entered the closet.",
+    "(On TV) Evelyn hates the spinach",
+    "(On TV) Owen entered the closet.",
+    "(On TV) The lettuce is in the treasure_chest.",
+    "(On TV) Owen exited the closet.",
+    "(On TV) Mia moved the lettuce to the drawer.",
+    "The TV program has ended for today. Where does Mia think that Owen searches for the lettuce?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 10.0
+    },
+    {
+      "percentage_finished": 20.0
+    },
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 40.0
+    },
+    {
+      "percentage_finished": 50.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 70.0
+    },
+    {
+      "percentage_finished": 80.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "treasure_chest"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

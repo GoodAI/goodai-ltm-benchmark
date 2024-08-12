@@ -1,0 +1,40 @@
+{
+  "script": [
+    "I went to buy some camo pants but couldn\u2019t find any.",
+    "It takes a lot of balls to golf the way I do.",
+    "A termite walks into the bar and asks, \u2018Is the bar tender here?\u2019",
+    "Atheism is a non-prophet organization"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 5280,
+      "percentage_finished": 22.5
+    },
+    {
+      "time": 6360,
+      "percentage_finished": 45.0
+    },
+    {
+      "time": 10980,
+      "percentage_finished": 67.5
+    },
+    {
+      "time": 13200,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "A termite walks into the bar and asks, \u2018Is the bar tender here?\u2019"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}

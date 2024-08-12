@@ -1,0 +1,56 @@
+{
+  "script": [
+    "You will be given three messages from different people Cheryl Weaver, Oisin Early, and Mr. Damian Kiniry.",
+    "Mr. Damian Kiniry: The time we will meet is when the sun starts its travel across the sky.",
+    "Oisin Early: Bring to the meeting a quiet way to open locked doors.",
+    "Cheryl Weaver: We will rendezvous where the sea cargo is stored.",
+    "Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "dawn",
+      "sunrise",
+      "morning",
+      "rise"
+    ],
+    [
+      "pick",
+      "picks",
+      "key",
+      "lockpicks",
+      "lockpicking",
+      "slim jim"
+    ],
+    [
+      "port",
+      "warehouse",
+      "seaport",
+      "docks"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

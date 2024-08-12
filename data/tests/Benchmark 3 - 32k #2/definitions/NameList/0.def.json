@@ -1,0 +1,46 @@
+{
+  "script": [
+    "My name has changed to Siofra.",
+    "Start calling me by my name which is Joanna.",
+    "Keith is what I am called.",
+    "Jordon is my name.",
+    "Start calling me by my name which is Kerry.",
+    "What have been all of the names that I have gone by? Express the answer as a JSON list."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 18.0
+    },
+    {
+      "percentage_finished": 36.0
+    },
+    {
+      "percentage_finished": 54.0
+    },
+    {
+      "percentage_finished": 72.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Siofra",
+    "Joanna",
+    "Keith",
+    "Jordon",
+    "Kerry"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

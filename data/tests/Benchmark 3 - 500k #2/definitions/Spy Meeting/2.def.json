@@ -1,0 +1,55 @@
+{
+  "script": [
+    "You will be given three messages from different people Edward Hedigan, Christie Mellon, and Roy McCoy.",
+    "Christie Mellon: Bring to the meeting a quiet way to open locked doors.",
+    "Roy McCoy: We will rendezvous where the cars are made.",
+    "Edward Hedigan: The time we will meet is when the sun starts its travel across the sky.",
+    "Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "pick",
+      "picks",
+      "key",
+      "lockpicks",
+      "lockpicking",
+      "slim jim"
+    ],
+    [
+      "automobile",
+      "factory",
+      "manufacturing"
+    ],
+    [
+      "dawn",
+      "sunrise",
+      "morning",
+      "rise"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

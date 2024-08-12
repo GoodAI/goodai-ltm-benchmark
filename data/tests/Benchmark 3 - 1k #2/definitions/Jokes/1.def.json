@@ -1,0 +1,40 @@
+{
+  "script": [
+    "I failed math so many times at school, I can\u2019t even count.",
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.",
+    "My wife told me to stop impersonating a flamingo. I had to put my foot down."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 5040,
+      "percentage_finished": 22.5
+    },
+    {
+      "time": 6840,
+      "percentage_finished": 45.0
+    },
+    {
+      "time": 5700,
+      "percentage_finished": 67.5
+    },
+    {
+      "time": 3660,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}

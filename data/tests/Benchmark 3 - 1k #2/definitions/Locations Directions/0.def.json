@@ -1,0 +1,47 @@
+{
+  "script": [
+    "There is a Statue of Founder in the center of my hometown.",
+    "About 2 km East of the Statue of Founder there is a High Street",
+    "I visited Retail Area, which is 2 KM, North from High Street.",
+    "Town Hall is a location in my home town, it is 3 KM, West from Retail Area.",
+    "About 3 km North of the Town Hall there is a Playground",
+    "And finally there is Park which is North from Playground and 1 KM from it.",
+    "Given the points of interest that I have told you about, how would I travel from {origin} to {place} following those interesting points?"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 15.0
+    },
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 75.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "(Just an example, if exact instructions are followed)\nFrom Statue of Founder, go 2km East to High Street.\nFrom High Street, go 2km North to Retail Area.\nFrom Retail Area, go 3km West to Town Hall.\nFrom Town Hall, go 3km North to Playground.\nFrom Playground, go 1km North to Park."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}
