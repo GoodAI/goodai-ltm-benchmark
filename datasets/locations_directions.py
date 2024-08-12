@@ -19,7 +19,7 @@ DirectionDict = dict[str, str | int]
 class LocationsDirectionsDataset(LocationsDataset):
     name: str = "Locations Directions"
     question: str = (
-        "Given the points of interest that I have told you about, how would I travel from {{origin}} to {{place}} "
+        "Given the points of interest that I have told you about, how would I travel from {origin} to {place} "
         "following those interesting points?"
     )
 
