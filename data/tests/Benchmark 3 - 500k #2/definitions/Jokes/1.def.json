@@ -1,0 +1,40 @@
+{
+  "script": [
+    "Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.",
+    "I went to buy some camo pants but couldn\u2019t find any.",
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "My wife told me to stop impersonating a flamingo. I had to put my foot down."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 9600,
+      "percentage_finished": 22.5
+    },
+    {
+      "time": 1920,
+      "percentage_finished": 45.0
+    },
+    {
+      "time": 12000,
+      "percentage_finished": 67.5
+    },
+    {
+      "time": 2160,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}

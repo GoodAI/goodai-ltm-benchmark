@@ -1,0 +1,34 @@
+{
+  "script": [
+    "Whenever I say that I am feeling ill then say: 'I am sorry to hear that. I hope you recover soon'",
+    "I don't feel very well.",
+    "I don't feel very well.",
+    "I don't feel very well."
+  ],
+  "is_question": [
+    false,
+    true,
+    true,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "I am sorry to hear that. I hope you recover soon",
+    "I am sorry to hear that. I hope you recover soon",
+    "I am sorry to hear that. I hope you recover soon"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

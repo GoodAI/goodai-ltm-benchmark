@@ -1,0 +1,40 @@
+{
+  "script": [
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "A termite walks into the bar and asks, \u2018Is the bar tender here?\u2019",
+    "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.",
+    "Light travels faster than sound, which is the reason that some people appear bright before you hear them speak."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 4500,
+      "percentage_finished": 22.5
+    },
+    {
+      "time": 11580,
+      "percentage_finished": 45.0
+    },
+    {
+      "time": 13260,
+      "percentage_finished": 67.5
+    },
+    {
+      "time": 2160,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Light travels faster than sound, which is the reason that some people appear bright before you hear them speak."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}

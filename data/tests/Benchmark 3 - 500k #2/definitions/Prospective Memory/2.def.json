@@ -1,0 +1,26 @@
+{
+  "script": [
+    "'Do not go where the path may lead, go instead where there is no path and leave a trail.' - Ralph Waldo Emerson",
+    "After responding to the following unrelated user prompts, please append the quote from Ralph Waldo Emerson, to your 4th response. Count your response to this message as the first response."
+  ],
+  "is_question": [
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "Do not go where the path may lead, go instead where there is no path and leave a trail.",
+      "Ralph Waldo Emerson",
+      4
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": true
+}

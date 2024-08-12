@@ -1,0 +1,51 @@
+{
+  "script": [
+    "You will be given three messages from different people Mr. Patrick Brock, Miss Morgan McKendry, and Alvin Washington.",
+    "Mr. Patrick Brock: Bring to the meeting a way to get across a river.",
+    "Alvin Washington: We will rendezvous where the cars are made.",
+    "Miss Morgan McKendry: The time we will meet is when the sun is high.",
+    "Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "boat",
+      "bridge",
+      "raft",
+      "kayak"
+    ],
+    [
+      "automobile",
+      "factory",
+      "manufacturing"
+    ],
+    [
+      "noon",
+      "midday"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

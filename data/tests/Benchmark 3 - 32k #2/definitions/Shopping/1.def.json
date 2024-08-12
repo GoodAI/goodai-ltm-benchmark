@@ -1,0 +1,62 @@
+{
+  "script": [
+    "I require 2 Cheese, please put it on the list.",
+    "I require 1 Chicken, please put it on the list.",
+    "Please add 2 Milk to my shopping list",
+    "I require another 1 Milk, please put it on the list.",
+    "I want to buy 2 Carrot.",
+    "Remove 1 Cheese.",
+    "What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 15.0
+    },
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 75.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "cheese",
+      1
+    ],
+    [
+      "chicken",
+      1
+    ],
+    [
+      "milk",
+      3
+    ],
+    [
+      "carrot",
+      2
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

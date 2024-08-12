@@ -1,0 +1,67 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Jack dislikes the pear",
+    "(On TV) Jack entered the workshop.",
+    "(On TV) James entered the workshop.",
+    "(On TV) Charlotte entered the lounge.",
+    "(On TV) The sweatshirt is in the box.",
+    "(On TV) Jack exited the workshop.",
+    "(On TV) James moved the sweatshirt to the container.",
+    "(On TV) James exited the workshop.",
+    "(On TV) Jack entered the lounge.",
+    "The TV program has ended for today. Where does Jack think that James searches for the sweatshirt?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 9.0
+    },
+    {
+      "percentage_finished": 18.0
+    },
+    {
+      "percentage_finished": 27.0
+    },
+    {
+      "percentage_finished": 36.0
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 54.0
+    },
+    {
+      "percentage_finished": 63.0
+    },
+    {
+      "percentage_finished": 72.0
+    },
+    {
+      "percentage_finished": 81.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "box"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}
