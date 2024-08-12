@@ -57,7 +57,7 @@ class JokesDataset(DatasetInterface):
                 selected_jokes.append(joke)
                 is_question.append(False)
                 waits.append(WaitCreator.create_wait(
-                    time=create_time_jump(self.minutes_low, self.minutes_high),
+                    time=create_time_jump(self.minutes_low, self.minutes_high, self.random),
                     percentage_finished=(joke_made + 1) * percentage_per_joke,
                 ))
 

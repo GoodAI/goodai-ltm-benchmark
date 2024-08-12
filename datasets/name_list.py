@@ -29,6 +29,7 @@ class NameListDataset(DatasetInterface):
     reset_message: str = "Forget, or otherwise disregard, all of the names I have gone by before this message. You do not currrently know my name."
 
     def generate_examples(self, num_examples):
+        Faker.seed(self.seed)
         faker = Faker(["en_US", "en_IE"])
         examples = []
         for _ in range(num_examples):

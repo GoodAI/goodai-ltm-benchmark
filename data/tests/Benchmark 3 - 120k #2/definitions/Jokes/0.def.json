@@ -1,9 +1,9 @@
 {
   "script": [
     "I went to buy some camo pants but couldn\u2019t find any.",
-    "Atheism is a non-prophet organization",
-    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
-    "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap."
+    "It takes a lot of balls to golf the way I do.",
+    "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.",
+    "I failed math so many times at school, I can\u2019t even count."
   ],
   "is_question": [
     false,
@@ -14,25 +14,25 @@
   ],
   "waits": [
     {
-      "time": 8100,
+      "time": 8760,
       "percentage_finished": 22.5
     },
     {
-      "time": 13740,
+      "time": 6840,
       "percentage_finished": 45.0
     },
     {
-      "time": 12300,
+      "time": 13440,
       "percentage_finished": 67.5
     },
     {
-      "time": 4320,
+      "time": 9540,
       "percentage_finished": 90.0
     },
     {}
   ],
   "expected_responses": [
-    "Atheism is a non-prophet organization"
+    "I failed math so many times at school, I can\u2019t even count."
   ],
   "can_be_interleaved": true,
   "is_temporal": true,
