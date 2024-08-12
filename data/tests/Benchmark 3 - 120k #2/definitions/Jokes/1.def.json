@@ -1,0 +1,40 @@
+{
+  "script": [
+    "A termite walks into the bar and asks, \u2018Is the bar tender here?\u2019",
+    "It takes a lot of balls to golf the way I do.",
+    "Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "time": 5520,
+      "percentage_finished": 22.5
+    },
+    {
+      "time": 9300,
+      "percentage_finished": 45.0
+    },
+    {
+      "time": 11760,
+      "percentage_finished": 67.5
+    },
+    {
+      "time": 12000,
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": true,
+  "uses_callback": false
+}

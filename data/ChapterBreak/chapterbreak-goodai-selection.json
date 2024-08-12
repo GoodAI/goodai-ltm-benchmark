@@ -105,6 +105,54 @@
   ],
   "chapter_cleanup": "^\\t8\\. (?:\\w+ )+ \\*\\*(\\d+)(?:\\\\)?\\.(?: \\w+)+\\*\\*"
 },
+
+{
+  "id": "67135467_0",
+  "solvable": true,
+  "pos": [
+    "More mentions of why to buy",
+    "Mentioning wands"
+  ],
+  "ctx": [
+    "Buying shit in Diagon Alley",
+    "Wands"
+  ]
+},
+{
+  "id": "97564151_0",
+  "solvable": true,
+  "pos": [
+    "The next morning"
+  ],
+  "ctx": [
+    "leaning against his leg, drifts to sleep."
+  ],
+  "chapter_cleanup": "^\\t4\\. Chapter (\\d+)"
+},
+{
+  "id": "36042898_0",
+  "solvable": true,
+  "pos": [
+    "Last appointment with doctor about foot, and to keep with the training "
+  ],
+  "ctx": [
+    "Still injured foot, but slowly ramping up the training"
+  ],
+  "chapter_cleanup": "(.+?(?=    ))"
+},
+{
+  "id": "97788079_0",
+  "solvable": true,
+  "pos": [
+    "Reporter on television",
+    "John and Sherlock at home"
+  ],
+  "ctx": [
+    "Both John and Sherlock head home after a case"
+  ],
+  "chapter_cleanup": "(.+?(?=  ))",
+  "notes": "Most relevant stuff is at the end."
+},
 {
   "id": "49539878_0",
   "solvable": null,
