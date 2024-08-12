@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Tuple, Optional
@@ -12,6 +13,7 @@ class ChatSession(ABC):
     costs_usd: float = 0
     is_local: bool = False
     max_message_size: int = 4096
+    time_travel: bool = True
 
     def message_to_agent(self, user_message: str, agent_response: Optional[str] = None) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
@@ -64,3 +66,17 @@ class ChatSession(ABC):
 
     def token_len(self, text: str) -> int:
         return count_tokens_for_model(text=text)
+
+    def forward_time(self, seconds: float):
+        """Override this method only if your agent runs remotely or requires additional actions in order to simulate
+        time forwards. Do not attempt to alter the system's clock."""
+        if not self.time_travel:
+            print(f"Time travels are deactivated. Waiting for {seconds} seconds.")
+            while seconds > 0:
+                print(f"\r{seconds} seconds left.     ", end="")
+                time.sleep(min(seconds, 1))
+                seconds -= 1
+            print("\rWait ended.")
+
+    def reset_time(self):
+        pass
