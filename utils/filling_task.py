@@ -74,7 +74,7 @@ def filler_no_response_tokens_trivia(
         "Here are some trivia questions and answers for you to process."
         ' Please extract all of the answers in json form as a single message: E.g ["answer 1", "answer 2", ...]\n'
     )
-    tokens_to_return = min(num_tokens, max_message_size)
+    tokens_to_return = min(num_tokens + 64, max_message_size)
     total_tokens = token_len_function(intro)
     messages, answers = _generate_trivia_content(rnd, tokens_to_return - total_tokens, token_len_function)
     if len(messages) == 0:
