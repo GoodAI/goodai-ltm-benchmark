@@ -302,14 +302,23 @@ def generate_summary_report(
     )
 
 
-def load_results_file(filename):
-    full_file = "data" + os.sep + "results" + os.sep + filename
-    results_list = []
-    with open(full_file, "r", encoding="utf-8") as f:
-        line = f.readline()
-        while line != "":
-            args = json.loads(line)
-            results_list.append(TestResult(**args))
-            line = f.readline()
+def get_sorted_scores(run_name: str, agent_name: str) -> dict[str, list[float]]:
 
-    return results_list
+    def start_timestamp(result: TestResult) -> str:
+        first_msg = result.task_log[0]
+        i = first_msg.find("(")
+        j = first_msg.find(")")
+        return first_msg[i:j + 1]
+
+    results = dict()
+    result_files = gather_result_files(run_name, agent_name)
+    for file in result_files:
+        result = TestResult.from_file(file)
+        assert 0 <= result.score <= 1
+        if result.dataset_name not in results:
+            results[result.dataset_name] = dict()
+        results[result.dataset_name][start_timestamp(result)] = result.score
+    return {
+        dataset_name: [dataset_scores[ts] for ts in sorted(dataset_scores.keys())]
+        for dataset_name, dataset_scores in results.items()
+    }
