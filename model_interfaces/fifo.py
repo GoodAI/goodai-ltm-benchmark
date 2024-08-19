@@ -19,8 +19,7 @@ class FifoAgentInterface(ChatSession):
         self.is_local = self.receive()["is_local"]
 
     def __del__(self):
-        if self.fifo_file.exists():
-            os.remove(self.fifo_file)
+        self.send(method="end")
 
     def receive(self) -> dict:
         with open(self.fifo_file) as fd:
