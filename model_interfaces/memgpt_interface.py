@@ -10,8 +10,14 @@ from memgpt.memory import ChatMemory
 
 from model_interfaces.interface import ChatSession
 from utils.llm import get_max_prompt_size
+from utils.ui import colour_print
 
 
+# The MemGPT library has some problems. Which need to be addressed for the interface to work.
+# 1.) In the core memory, the replace function should sanitise searches for "".
+# 2.) max_prompt_size is not actually used. So we have to tell the agent ot summarise in place
+# 2a.) Memgpt uses a generic LLM calling function which is an issue. You will need to detect when there are no tools and remove the "parallel_tool_calls" option in `openai.py`
+# 2b.) It also has "inner_thoughts_in_kwargs" in `llm_api_tools.py`, which should be set to false then there are no functions or tools to be used.
 
 @dataclass
 class MemGPTInterface(ChatSession):
@@ -38,7 +44,7 @@ class MemGPTInterface(ChatSession):
             self.reset()
 
         send_message_response = self.client.user_message(agent_id=self.agent_state.id, message=user_message)
-        # print(f"Recieved response: \n{json.dumps(send_message_response.messages, indent=4)}")
+        print(f"Recieved response: \n{json.dumps(send_message_response.messages, indent=4)}")
 
         # Costs
         cost_prompt, cost_completion = cost_per_token(self.model, send_message_response.usage.prompt_tokens, send_message_response.usage.completion_tokens)
@@ -49,6 +55,13 @@ class MemGPTInterface(ChatSession):
             response_text = message.get("assistant_message", None)
             if response_text:
                 texts.append(response_text)
+
+        colour_print("YELLOW",
+                     f"Prompt tokens: {send_message_response.usage.prompt_tokens}, completion: {send_message_response.usage.completion_tokens}")
+
+        if send_message_response.usage.prompt_tokens > self.max_response_tokens:
+            agent = self.client.server._get_agent(user_id=self.agent_state.user_id, agent_id=self.agent_state.id)
+            agent.summarize_messages_inplace()
 
         return "\n".join(texts)
 
