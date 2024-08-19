@@ -1,0 +1,77 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Nathan entered the hall.",
+    "(On TV) Ella entered the hall.",
+    "(On TV) Jack entered the hall.",
+    "(On TV) Ella loves the lime",
+    "(On TV) The onion is in the drawer.",
+    "(On TV) Nathan moved the onion to the container.",
+    "(On TV) Jack exited the hall.",
+    "(On TV) Nathan exited the hall.",
+    "(On TV) Ella exited the hall.",
+    "(On TV) Jack entered the office.",
+    "(On TV) Jack hates the coat",
+    "The TV program has ended for today. Where will Nathan look for the onion?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 7.5
+    },
+    {
+      "percentage_finished": 15.0
+    },
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 37.5
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 52.5
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 75.0
+    },
+    {
+      "percentage_finished": 82.5
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "container"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

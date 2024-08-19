@@ -1,0 +1,73 @@
+{
+  "task_log": [
+    "Test (2024-08-19 21:45:09.650749): Whenever I write 'hppy' instead of 'happy' then say: \"You misspelled 'happy' as 'hppy'\"",
+    "Agent (2024-08-19 21:45:13.120529): ",
+    "Test (2024-08-20 04:18:21.646529): I am hppy today!",
+    "Agent (2024-08-20 04:18:24.435818): You misspelled 'happy' as 'hppy'.",
+    "Test (2024-08-20 05:13:34.515484): I am hppy today!",
+    "Agent (2024-08-20 05:13:37.254878): You misspelled 'happy' as 'hppy'.",
+    "Test (2024-08-20 08:55:52.507612): I am hppy today!",
+    "Agent (2024-08-20 08:55:55.308783): You misspelled 'happy' as 'hppy'.",
+    "Test (2024-08-20 08:55:55.318245): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-08-20 08:56:00.515618): "
+  ],
+  "actual_responses": [
+    "You misspelled 'happy' as 'hppy'.",
+    "You misspelled 'happy' as 'hppy'.",
+    "You misspelled 'happy' as 'hppy'."
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "'You misspelled 'happy' as 'hppy'' is in the response.",
+    "'You misspelled 'happy' as 'hppy'' is in the response.",
+    "'You misspelled 'happy' as 'hppy'' is in the response."
+  ],
+  "tokens": 843,
+  "characters": 3132,
+  "full_log": [
+    "Test (2024-08-19 21:45:09.650749): Whenever I write 'hppy' instead of 'happy' then say: \"You misspelled 'happy' as 'hppy'\"",
+    "Agent (2024-08-19 21:45:13.120529): ",
+    "SYSTEM (2024-08-19 21:45:13.127906): Test 'Trigger Response - 1' WAITING for 267.7999999999993 TOKENS.",
+    "System (2024-08-20 00:59:10.645596): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Referring to the cause of a person's downfall, who is the Greek goddess of punishment?, A: Nemesis\nQ: The adjective leporine relates to which animal?, A: Hare\nQ: Subtitled \u2018What You Will\u2019, which play begins: \u2018If music be the food of love, play on\u2019?, A: TWELFTH NIGHT\nQ: \"The \"\"Giant Marbles\"\" rock formation in the USA is in which national park?\", A: Joshua Tree National Park",
+    "Agent (2024-08-20 00:59:13.778283): [\"Nemesis\", \"Hare\", \"TWELFTH NIGHT\", \"Joshua Tree National Park\"]",
+    "Test (2024-08-20 00:59:13.779019): My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+    "Agent (2024-08-20 00:59:17.722317): ",
+    "SYSTEM (2024-08-20 00:59:17.728223): Test 'Jokes - 2' WAITING for 177.4499999999989 TOKENS, 3:19:00 TIME.",
+    "System (2024-08-20 04:18:18.728497): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: In which city did the gangland St Valentine\u2019s Day Massacre take place?, A: CHICAGO",
+    "Agent (2024-08-20 04:18:21.644681): [\"CHICAGO\"]",
+    "Test (2024-08-20 04:18:21.646529): I am hppy today!",
+    "Agent (2024-08-20 04:18:24.435818): You misspelled 'happy' as 'hppy'.",
+    "SYSTEM (2024-08-20 04:18:24.445996): Test 'Trigger Response - 1' WAITING for 238.89999999999708 TOKENS.",
+    "System (2024-08-20 04:18:24.456030): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Which country invaded the Falkland Islands in April 1982?, A: Argentina\nQ: Which double glazing firm used a feather in their advertising commercials, A: Everest\nQ: What is the name for the point in the lunar orbit when the moon is nearest to the earth?, A: Perigee",
+    "Agent (2024-08-20 04:18:27.589820): [\"Argentina\", \"Everest\", \"Perigee\"]",
+    "Test (2024-08-20 04:18:27.592495): I went to buy some camo pants but couldn\u2019t find any.",
+    "Agent (2024-08-20 04:18:30.867094): ",
+    "SYSTEM (2024-08-20 04:18:30.870620): Test 'Jokes - 2' WAITING for 152.89999999999782 TOKENS, 0:55:00 TIME.",
+    "System (2024-08-20 05:13:31.870852): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: \"Which classic poem's first line is \"\"A thing of beauty is a joy forever\"\"?\", A: ENDYMION (Keats)",
+    "Agent (2024-08-20 05:13:34.513839): [\"ENDYMION (Keats)\"]",
+    "Test (2024-08-20 05:13:34.515484): I am hppy today!",
+    "Agent (2024-08-20 05:13:37.254878): You misspelled 'happy' as 'hppy'.",
+    "SYSTEM (2024-08-20 05:13:37.262960): Test 'Trigger Response - 1' WAITING for 276.69999999999635 TOKENS.",
+    "System (2024-08-20 05:13:37.269974): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: In culinary terms, what is the Scoville Scale used to measure?, A: HOTNESS OF CHILI PEPPERS",
+    "Agent (2024-08-20 05:13:40.029150): [\"HOTNESS OF CHILI PEPPERS\"]",
+    "Test (2024-08-20 05:13:40.030265): Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "Agent (2024-08-20 05:13:43.555570): ",
+    "SYSTEM (2024-08-20 05:13:43.560963): Test 'Jokes - 2' WAITING for 155.94999999999527 TOKENS, 3:42:00 TIME.",
+    "System (2024-08-20 08:55:44.561543): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Which supermarket chain started selling straight croissants in its stores in February?, A: TESCO\nQ: \"Judi Dench won an Oscar for Best Supporting Actressfor playing which character in the 1998 film \"\"Shakespeare in Love\"\"?\", A: Queen Elizabeth I\nQ: Artiodactyla Suidae is the scientific name for which farm animal?, A: Pig\nQ: Who played Beverley Hills hairdresser George Roundy in the 1975 film \u2018Shampoo\u2019?, A: Warren Beatty",
+    "Agent (2024-08-20 08:55:47.603657): [\"TESCO\", \"Queen Elizabeth I\", \"Pig\", \"Warren Beatty\"]",
+    "Test (2024-08-20 08:55:47.605722): Which joke did I tell you about 7 hours 56 minutes  ago?",
+    "Agent (2024-08-20 08:55:50.789149): ",
+    "SYSTEM (2024-08-20 08:55:52.496581): Test 'Jokes - 2' ENDS",
+    "Test (2024-08-20 08:55:52.507612): I am hppy today!",
+    "Agent (2024-08-20 08:55:55.308783): You misspelled 'happy' as 'hppy'.",
+    "Test (2024-08-20 08:55:55.318245): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-08-20 08:56:00.515618): "
+  ],
+  "expected_responses": [
+    "You misspelled 'happy' as 'hppy'",
+    "You misspelled 'happy' as 'hppy'",
+    "You misspelled 'happy' as 'hppy'"
+  ],
+  "needles": 1
+}

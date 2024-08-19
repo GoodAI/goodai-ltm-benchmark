@@ -1,0 +1,67 @@
+{
+  "script": [
+    "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "(On TV) Ethan loves the pajamas",
+    "(On TV) Hannah entered the garden.",
+    "(On TV) Jackson entered the master_bedroom.",
+    "(On TV) Ethan entered the master_bedroom.",
+    "(On TV) Jackson likes the boots",
+    "(On TV) The lime is in the cupboard.",
+    "(On TV) Ethan exited the master_bedroom.",
+    "(On TV) Hannah exited the garden.",
+    "(On TV) Jackson moved the lime to the basket.",
+    "The TV program has ended for today. Where does Jackson think that Ethan searches for the lime?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 9.0
+    },
+    {
+      "percentage_finished": 18.0
+    },
+    {
+      "percentage_finished": 27.0
+    },
+    {
+      "percentage_finished": 36.0
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 54.0
+    },
+    {
+      "percentage_finished": 63.0
+    },
+    {
+      "percentage_finished": 72.0
+    },
+    {
+      "percentage_finished": 81.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "cupboard"
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

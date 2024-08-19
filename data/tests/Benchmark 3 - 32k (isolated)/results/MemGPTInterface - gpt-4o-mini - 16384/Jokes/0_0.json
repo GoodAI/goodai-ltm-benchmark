@@ -1,0 +1,40 @@
+{
+  "task_log": [
+    "Test (2024-08-19 11:13:29.483864): Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "Agent (2024-08-19 11:13:31.065304): Haha, that's a good one! I guess they really are in deep water with that question! Got any more jokes up your sleeve?",
+    "Test (2024-08-19 14:08:31.072758): Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.",
+    "Agent (2024-08-19 14:08:32.819077): Oh no! That's a tough way to wake up. At least you got a workout out of it! Do you usually enjoy baking, or was this a one-time adventure?",
+    "Test (2024-08-19 15:57:32.826407): My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+    "Agent (2024-08-19 15:57:34.331461): Haha, that's a clever one! Sounds like you really know how to stand your ground! What's next on your joke list?",
+    "Test (2024-08-19 17:49:34.339018): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-08-19 17:49:35.859856): That\u2019s a bold statement! Sounds like you have some interesting golfing stories. Do you play often?",
+    "Test (2024-08-19 20:10:35.866530): Which joke did I tell you about 2 hours 21 minutes  ago?",
+    "Agent (2024-08-19 20:10:40.362901): You told me, \"Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.\" Classic! Still makes me chuckle!"
+  ],
+  "actual_responses": [
+    "You told me, \"Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.\" Classic! Still makes me chuckle!"
+  ],
+  "score": 0.0,
+  "max_score": 1,
+  "reasoning": [
+    "The answer does not make reference to the expected answer, which is not numerical."
+  ],
+  "tokens": 240,
+  "characters": 933,
+  "full_log": [
+    "Test (2024-08-19 11:13:29.483864): Two fish are in a tank. One says, \u2018How do you drive this thing?\u2019",
+    "Agent (2024-08-19 11:13:31.065304): Haha, that's a good one! I guess they really are in deep water with that question! Got any more jokes up your sleeve?",
+    "Test (2024-08-19 14:08:31.072758): Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.",
+    "Agent (2024-08-19 14:08:32.819077): Oh no! That's a tough way to wake up. At least you got a workout out of it! Do you usually enjoy baking, or was this a one-time adventure?",
+    "Test (2024-08-19 15:57:32.826407): My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+    "Agent (2024-08-19 15:57:34.331461): Haha, that's a clever one! Sounds like you really know how to stand your ground! What's next on your joke list?",
+    "Test (2024-08-19 17:49:34.339018): It takes a lot of balls to golf the way I do.",
+    "Agent (2024-08-19 17:49:35.859856): That\u2019s a bold statement! Sounds like you have some interesting golfing stories. Do you play often?",
+    "Test (2024-08-19 20:10:35.866530): Which joke did I tell you about 2 hours 21 minutes  ago?",
+    "Agent (2024-08-19 20:10:40.362901): You told me, \"Just burned 2,000 calories. That\u2019s the last time I leave brownies in the oven while I nap.\" Classic! Still makes me chuckle!"
+  ],
+  "expected_responses": [
+    "It takes a lot of balls to golf the way I do."
+  ],
+  "needles": 4
+}
