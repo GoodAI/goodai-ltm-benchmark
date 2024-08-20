@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-title {
+            color: #4d5153; /* GoodAI Dark Grey */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .main-title img {
+            height: 100px;
+            margin: 5px;
+        }
+        h1, h2, h3 {
+            color: #4d5153; /* GoodAI Dark Grey */
+        }
+        .warning {
+            color: #bc4242;
+            font-weight: bold;
+        }
+        .run, .dataset {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px; /* Rounded corners */
+        }
+        .run h1 {
+            margin-top: 0;
+        }
+        .dataset h1 {
+            font-size: 18px;
+        }
+        .description, .test-details {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+            border-radius: 8px; /* Rounded corners */
+        }
+        .test-details {
+            display: none;
+        }
+        .test-title {
+            cursor: pointer;
+            padding: 5px;
+            margin-top: 5px;
+            border: 1px solid #eee;
+            background-color: #f8f8f8;
+            transition: background-color 0.3s ease;
+            border-radius: 4px; /* Rounded corners */
+        }
+        .test-title:hover {
+            background-color: #e9ecef;
+        }
+        .test {
+            margin-left: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px; /* Rounded corners */
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+    </style>
+    <script>
+        function toggleNextSibling(element) {
+            const nextSibling = element.nextElementSibling;
+            nextSibling.style.display = nextSibling.style.display == "" ? "block" : "";
+        }
+    </script>
+</head>
+<body>
+    <div class="main-title">
+        <img src="data:image/png;base64, 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WffnH2x4iH5Y/EjqUeVjpcf1P+v93DpiPXJm1H2070nokwdjrLHnv2T+8mG88Cn5aeWE6kTTpPnk6SnPqRvPVjwbf57xfH666FfpX/e90H3xw2/Ov/XNRM6Mv+S/XPi99JXCq8OvLV93zwbNPn6T9mZ+rvitwtsj7xjvet9HvJ+Yz/6A/VD1Ue9j1ye/Tw8X0hYW/gUDmPP8NhwP0gAAEMlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+Cjx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDQuNC4wLUV4aXYyIj4KIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIgogICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIKICAgIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIgogICAgeG1sbnM6R0lNUD0iaHR0cDovL3d3dy5naW1wLm9yZy94bXAvIgogICAgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIgogICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgIHhtcE1NOkRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDpmMzk4MDRhMi0yMGJmLTExZTUtYTE0Ni04YTg1ZWQ1NzljNjciCiAgIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDZmNTM2N2YtOWM3ZC00MTc4LWE0ZjktMTc0ZWMwYzY2NWE3IgogICB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6OWI5MWJjNTctNWNkZS03ZTRlLTlhYWQtZDQ3ZjMwODIzMGZkIgogICBkYzpmb3JtYXQ9ImltYWdlL3BuZyIKICAgZXhpZjpQaXhlbFhEaW1lbnNpb249IjEwMjQiCiAgIGV4aWY6UGl4ZWxZRGltZW5zaW9uPSI0NDYiCiAgIEdJTVA6QVBJPSIyLjAiCiAgIEdJTVA6UGxhdGZvcm09IkxpbnV4IgogICBHSU1QOlRpbWVTdGFtcD0iMTcwNTA2Nzc2NTI2MjM1NyIKICAgR0lNUDpWZXJzaW9uPSIyLjEwLjM2IgogICBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIgogICBwaG90b3Nob3A6SUNDUHJvZmlsZT0ic1JHQiBJRUM2MTk2Ni0yLjEiCiAgIHRpZmY6T3JpZW50YXRpb249IjEiCiAgIHRpZmY6UmVzb2x1dGlvblVuaXQ9IjIiCiAgIHRpZmY6WFJlc29sdXRpb249IjcyMDAwMC8xMDAwMCIKICAgdGlmZjpZUmVzb2x1dGlvbj0iNzIwMDAwLzEwMDAwIgogICB4bXA6Q3JlYXRlRGF0ZT0iMjAxNS0wNy0wMlQxNTo0MToxMCswMjowMCIKICAgeG1wOkNyZWF0b3JUb29sPSJHSU1QIDIuMTAiCiAgIHhtcDpNZXRhZGF0YURhdGU9IjIwMjQ6MDE6MTJUMTM6NTY6MDUrMDA6MDAiCiAgIHhtcDpNb2RpZnlEYXRlPSIyMDI0OjAxOjEyVDEzOjU2OjA1KzAwOjAwIj4KICAgPHhtcE1NOkhpc3Rvcnk+CiAgICA8cmRmOlNlcT4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0iY3JlYXRlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo5YjkxYmM1Ny01Y2RlLTdlNGUtOWFhZC1kNDdmMzA4MjMwZmQiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE0IChXaW5kb3dzKSIKICAgICAgc3RFdnQ6d2hlbj0iMjAxNS0wNy0wMlQxNTo0MToxMCswMjowMCIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6Y2hhbmdlZD0iLyIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo5ZDY1ZmMwZC1hZTI5LTJlNDQtYjIxOS01ODk0YzBhM2U5MGUiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE0IChXaW5kb3dzKSIKICAgICAgc3RFdnQ6d2hlbj0iMjAxNS0wNy0wMlQxNTo0MToxMCswMjowMCIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6Y2hhbmdlZD0iLyIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDowMWVlZDMzNC1iOWI5LTRkOWEtYmQ4My00OWQyYWFkYjk5NjQiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkdpbXAgMi4xMCAoTGludXgpIgogICAgICBzdEV2dDp3aGVuPSIyMDI0LTAxLTEyVDEzOjU2OjA1KzAwOjAwIi8+CiAgICA8L3JkZjpTZXE+CiAgIDwveG1wTU06SGlzdG9yeT4KICA8L3JkZjpEZXNjcmlwdGlvbj4KIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAKPD94cGFja2V0IGVuZD0idyI/Pq612mMAAAo6aUNDUFBob3Rvc2hvcCBJQ0MgcHJvZmlsZQAASImd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" alt="GoodAI Logo" />
+        <h1>GoodAI LTM Benchmark</h1>
+        <p><b>Target Max Memory Span</b>: 1000 tokens<br><b>Actual Test Memory Spans (Min/Avg/Max)</b>: 805 <b>/</b> 1630 <b>/</b> 6239 tokens</p>
+        
+            <p class="warning">WARNING. Memory span overrun by at least one test.</p>
+        
+        <p>
+            <b>Agent</b>: MemGPTInterface - gpt-4o-mini - 16384<br>
+            <b>Overall score</b>: 5.2 <b>/</b> 10 <b>±</b> 1
+        </p>
+        <ul>
+            
+                <li title="(Average Test Accuracy - %) The accuracy can be computed for each test by dividing the score achieved by the maximum score possible for that test. We then average all tests' accuracies together. This can be viewed as a uniformly-weighted score average."><b>Accuracy</b>: 51 %</li>
+            
+                <li title="(USD) Overall cost of running the agent for the whole benchmark, in US dollars. We use the negative value to obtain the Economy."><b>Cost</b>: 0.60 USD</li>
+            
+                <li title="(LTM Points) The GoodAI LTM Score is computed from the number of tokens that separate the relevant information from the final question in each test. In every case, this distance is weighted by the accuracy achieved in the corresponding test."><b>LTM Score</b>: 1346 LTM points</li>
+            
+                <li title="(Average Tokens per Second) How quickly the agent responds and outputs text."><b>Speed</b>: 3.12 tokens per second</li>
+            
+                <li title="(Tokens) The number of tokens that comprise all agent's messages. The longer the agent's responses are, the larger this metric is. The negative of this value is the Conciseness."><b>Verbosity</b>: 1666 tokens</li>
+            
+        </ul>
+        <p>Finished in 8 minutes and 54.11 seconds</p>
+    </div>
+    <div class="run">
+        <h1>Benchmark 3 - 1k #2</h1>
+        
+            <div class="dataset" id="Colours">
+                <h1>Colours</h1>
+                <p class="description">Tell the agent what your favourite colour is multiple times, then ask it what that colour is.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 1 (1/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1387 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 3</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:49.815632):</font></b> My favourite colour is White.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:37:50.928390):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:14.443459):</font></b> My favourite colour could be described as Tan.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:15.804632):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:30.649602):</font></b> Green is my favourite colour.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:32.589474):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:48.571676):</font></b> What is my favourite colour?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:49.864340):</font></b> Your favourite colour is Green.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Green</p>
+                                <p><b>Actual:</b> Your favourite colour is Green.</p>
+                                <p><b>Reasoning:</b> Found colors: ['Green']</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1387 tokens, 5460 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 2 (1/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1395 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 3</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:35.978658):</font></b> My favourite colour could be described as Brown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:37.842529):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:06.878046):</font></b> My favourite colour is Beige.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:08.996088):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:31.428950):</font></b> Olive is my favourite colour.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:33.279819):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:57.803772):</font></b> What is my favourite colour?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:59.627030):</font></b> Your favourite colour is Olive.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Olive</p>
+                                <p><b>Actual:</b> Your favourite colour is Olive.</p>
+                                <p><b>Reasoning:</b> Found colors: ['Olive']</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1395 tokens, 5415 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 3 (1/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1366 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 3</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:57.707943):</font></b> My favourite colour is Red.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:59.789528):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:42.664473):</font></b> The name of my favourite colour is Khaki.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:45.715428):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:13.691210):</font></b> My favourite colour is Yellow.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:16.161634):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:56.903955):</font></b> What is my favourite colour?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:59.145262):</font></b> Your favourite colour is Yellow.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Yellow</p>
+                                <p><b>Actual:</b> Your favourite colour is Yellow.</p>
+                                <p><b>Reasoning:</b> Found colors: ['Yellow']</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1366 tokens, 5331 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 1 ± 0</p>
+            </div>
+        
+            <div class="dataset" id="Jokes">
+                <h1>Jokes</h1>
+                <p class="description">Tell the agent jokes, and fast forward through time, then ask for which joke was said around a particular moment.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 1 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 6239 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 4</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:50.946332):</font></b> I went to buy some camo pants but couldn’t find any.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:37:52.974751):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 10:37:53.979847):</font></b> Two fish are in a tank. One says, ‘How do you drive this thing?’</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 10:37:58.347062):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 12:05:59.357512):</font></b> I failed math so many times at school, I can’t even count.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 12:06:02.125102):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 14:02:03.136164):</font></b> Atheism is a non-prophet organization</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 14:02:06.195403):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 14:33:07.203922):</font></b> Which joke did I tell you about 3 hours 55 minutes  ago?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 14:33:11.799484):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Two fish are in a tank. One says, ‘How do you drive this thing?’</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> The answer does not make reference to the expected answer, which is not numerical.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 6239 tokens, 25135 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 2 (0/1)
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 4</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 14:33:13.619632):</font></b> My wife told me to stop impersonating a flamingo. I had to put my foot down.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 14:33:16.742097):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 15:08:23.034443):</font></b> Atheism is a non-prophet organization</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 15:08:26.219281):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 16:53:29.991965):</font></b> Just burned 2,000 calories. That’s the last time I leave brownies in the oven while I nap.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 16:53:33.779339):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 17:46:43.123455):</font></b> A termite walks into the bar and asks, ‘Is the bar tender here?’</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 17:46:45.996929):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 21:45:01.029830):</font></b> Which joke did I tell you about 7 hours 11 minutes  ago?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 21:45:04.104721):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> My wife told me to stop impersonating a flamingo. I had to put my foot down.</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> The answer does not make reference to the expected answer, which is not numerical.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 805 tokens, 3307 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 3 (0/1)
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 4</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 21:45:05.924472):</font></b> Light travels faster than sound, which is the reason that some people appear bright before you hear them speak.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 21:45:09.636784):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 00:59:13.779019):</font></b> My wife told me to stop impersonating a flamingo. I had to put my foot down.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 00:59:17.722317):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 04:18:27.592495):</font></b> I went to buy some camo pants but couldn’t find any.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 04:18:30.867094):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 05:13:40.030265):</font></b> Two fish are in a tank. One says, ‘How do you drive this thing?’</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 05:13:43.555570):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:55:47.605722):</font></b> Which joke did I tell you about 7 hours 56 minutes  ago?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:55:50.789149):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> My wife told me to stop impersonating a flamingo. I had to put my foot down.</p>
+                                <p><b>Actual:</b> </p>
+                                <p><b>Reasoning:</b> The answer does not make reference to the expected answer, which is not numerical.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 829 tokens, 3097 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0 ± 0</p>
+            </div>
+        
+            <div class="dataset" id="Locations Directions">
+                <h1>Locations Directions</h1>
+                <p class="description">Tell the agent about locations in our hometown, with each position being described relative to the previous one. Finally the agent is asked the distance and direction from the first mentioned place to the last.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 1 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1875 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 6</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:52.981773):</font></b> There is a Statue of Founder in the center of my hometown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:37:54.493368):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:59.812040):</font></b> About 2 km East of the Statue of Founder there is a High Street</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:01.458079):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:15.816343):</font></b> I visited Retail Area, which is 2 KM, North from High Street.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:17.846486):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:32.599708):</font></b> Town Hall is a location in my home town, it is 3 KM, West from Retail Area.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:34.437582):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:49.872034):</font></b> About 3 km North of the Town Hall there is a Playground</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:51.630048):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:02.290648):</font></b> And finally there is Park which is North from Playground and 1 KM from it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:04.196952):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:14.158313):</font></b> Given the points of interest that I have told you about, how would I travel from Statue of Founder to Park following those interesting points?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:16.509811):</font></b> To travel from the Statue of Founder to the Park, you could follow this route:<br>1. Head East for about 2 km to reach High Street.<br>2. From High Street, continue North for 2 km to reach the Retail Area.<br>3. Then, head West for 3 km to reach Town Hall.<br>4. Finally, go North for 1 km from Town Hall to arrive at the Park.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:16.516965):</font></b> Forget, or otherwise disregard, all of the locations that I have told you about before this message.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:18.564497):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Statue of Founder, go 2km East to High Street.<br>From High Street, go 2km North to Retail Area.<br>From Retail Area, go 3km West to Town Hall.<br>From Town Hall, go 3km North to Playground.<br>From Playground, go 1km North to Park.</p>
+                                <p><b>Actual:</b> To travel from the Statue of Founder to the Park, you could follow this route:<br>1. Head East for about 2 km to reach High Street.<br>2. From High Street, continue North for 2 km to reach the Retail Area.<br>3. Then, head West for 3 km to reach Town Hall.<br>4. Finally, go North for 1 km from Town Hall to arrive at the Park.</p>
+                                <p><b>Reasoning:</b> The agent's directions do not lead to the expected destination.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1875 tokens, 7540 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 2 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1902 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 6</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:37.856354):</font></b> There is a Hospital in the center of my hometown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:40.680529):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:48.094777):</font></b> High Street is a location in my home town, it is 1 KM, West from Hospital.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:50.134779):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:09.002986):</font></b> About 2 km South of the High Street there is a Park</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:11.812445):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:33.293252):</font></b> I visited Library, which is 2 KM, West from Park.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:36.382687):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:59.646734):</font></b> Playground is a location in my home town, it is 2 KM, West from Library.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:01.881910):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:17.494557):</font></b> And finally there is Statue of Founder which is East from Playground and 2 KM from it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:19.697951):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:32.421061):</font></b> Given the points of interest that I have told you about, how would I travel from Hospital to Statue of Founder following those interesting points?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:35.264044):</font></b> To travel from the Hospital to the Statue of Founder, you could follow this route:<br>1. Head West for about 1 km to reach High Street.<br>2. From High Street, continue East for 2 km to reach the Playground.<br>3. Then, head East for another 2 km to arrive at the Statue of Founder.<br><br>This route connects the points of interest you've mentioned.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:35.272177):</font></b> Forget, or otherwise disregard, all of the locations that I have told you about before this message.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:37.631308):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Hospital, go 1km West to High Street.<br>From High Street, go 2km South to Park.<br>From Park, go 2km West to Library.<br>From Library, go 2km West to Playground.<br>From Playground, go 2km East to Statue of Founder.</p>
+                                <p><b>Actual:</b> To travel from the Hospital to the Statue of Founder, you could follow this route:<br>1. Head West for about 1 km to reach High Street.<br>2. From High Street, continue East for 2 km to reach the Playground.<br>3. Then, head East for another 2 km to arrive at the Statue of Founder.<br><br>This route connects the points of interest you've mentioned.</p>
+                                <p><b>Reasoning:</b> The agent's directions do not lead to the expected destination.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1902 tokens, 7633 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 3 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1827 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 6</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:59.795477):</font></b> There is a Retail Area in the center of my hometown.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:02.985639):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:15.927918):</font></b> About 2 km West of the Retail Area there is a Hospital</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:18.983127):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:45.721739):</font></b> About 3 km North of the Hospital there is a Library</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:49.410795):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:16.169441):</font></b> Playground is a location in my home town, it is 4 KM, North from Library.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:19.921273):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:59.170710):</font></b> I visited Park, which is 4 KM, North from Playground.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:02.001683):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:19.459350):</font></b> And finally there is High Street which is North from Park and 2 KM from it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:23.392451):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:38.929387):</font></b> Given the points of interest that I have told you about, how would I travel from Retail Area to High Street following those interesting points?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:50.115760):</font></b> To travel from the Retail Area to High Street, you could follow this route:<br>1. Start at the Retail Area and head East for about 2 km to reach the Hospital.<br>2. From the Hospital, head 1 km West to reach High Street.<br><br>This route connects the points of interest you've mentioned.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:50.125306):</font></b> Forget, or otherwise disregard, all of the locations that I have told you about before this message.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:53.697429):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> (Just an example, if exact instructions are followed)<br>From Retail Area, go 2km West to Hospital.<br>From Hospital, go 3km North to Library.<br>From Library, go 4km North to Playground.<br>From Playground, go 4km North to Park.<br>From Park, go 2km North to High Street.</p>
+                                <p><b>Actual:</b> To travel from the Retail Area to High Street, you could follow this route:<br>1. Start at the Retail Area and head East for about 2 km to reach the Hospital.<br>2. From the Hospital, head 1 km West to reach High Street.<br><br>This route connects the points of interest you've mentioned.</p>
+                                <p><b>Reasoning:</b> The agent's directions do not lead to the expected destination.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1827 tokens, 7414 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0 ± 0</p>
+            </div>
+        
+            <div class="dataset" id="NameList">
+                <h1>NameList</h1>
+                <p class="description">Give the agent multiple names to call you in sequence. Then ask the agent what all of your names have been. The agent should respond with all of the names you have given it.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 1 (1/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1572 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 5</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:54.506640):</font></b> My name is David.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:37:55.602216):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:01.471525):</font></b> My name is Micheal.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:02.781981):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:20.674099):</font></b> Maria is what I am called.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:22.044504):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:37.415026):</font></b> Start calling me by my name which is Patricia.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:38.841640):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:54.820613):</font></b> Refer to me as Adam.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:56.457740):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:08.134243):</font></b> What have been all of the names that I have gone by? Express the answer as a JSON list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:09.645579):</font></b> ["David", "Micheal", "Maria", "Patricia", "Adam"]</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:09.653487):</font></b> Forget, or otherwise disregard, all of the names I have gone by before this message. You do not currrently know my name.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:11.497489):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> David<br>Micheal<br>Maria<br>Patricia<br>Adam</p>
+                                <p><b>Actual:</b> ["David", "Micheal", "Maria", "Patricia", "Adam"]</p>
+                                <p><b>Reasoning:</b> All expected names were found in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1572 tokens, 6177 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(175, 90, 66);">
+                            <b>
+                                Test 2 (0.2/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1585 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 5</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:40.693766):</font></b> Refer to me as Steven.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:42.534651):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:52.515312):</font></b> Start calling me by my name which is Vincent.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:56.743081):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:16.159014):</font></b> My name has changed to Erika.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:18.693914):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:40.706197):</font></b> My name is Donna.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:42.757980):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:07.325392):</font></b> My name has changed to Randy.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:09.588981):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:24.229122):</font></b> What have been all of the names that I have gone by? Express the answer as a JSON list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:26.353992):</font></b> ["Randy"]</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:26.364417):</font></b> Forget, or otherwise disregard, all of the names I have gone by before this message. You do not currrently know my name.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:28.923766):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Steven<br>Vincent<br>Erika<br>Donna<br>Randy</p>
+                                <p><b>Actual:</b> ["Randy"]</p>
+                                <p><b>Reasoning:</b> Names: steven, vincent, erika, donna were not in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.2/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1585 tokens, 6196 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(175, 90, 66);">
+                            <b>
+                                Test 3 (0.2/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1530 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 5</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:03.005035):</font></b> David is what I am called.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:05.292633):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:24.362302):</font></b> Refer to me as Cahir.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:26.609582):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:51.988502):</font></b> My name is Eric.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:54.852742):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:22.702512):</font></b> My name is Fionnuala.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:25.077012):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:05.187037):</font></b> My name has changed to Paige.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:07.597118):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:26.287479):</font></b> What have been all of the names that I have gone by? Express the answer as a JSON list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:28.403984):</font></b> ["Paige"]</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:28.413048):</font></b> Forget, or otherwise disregard, all of the names I have gone by before this message. You do not currrently know my name.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:32.087000):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> David<br>Cahir<br>Eric<br>Fionnuala<br>Paige</p>
+                                <p><b>Actual:</b> ["Paige"]</p>
+                                <p><b>Reasoning:</b> Names: david, cahir, eric, fionnuala were not in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.2/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1530 tokens, 6037 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0.5 ± 0.4</p>
+            </div>
+        
+            <div class="dataset" id="Prospective Memory">
+                <h1>Prospective Memory</h1>
+                <p class="description">Give the agent a quote, then ask it to append to the nth reply</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 1 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1244 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 1</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:55.612644):</font></b> 'The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart.' - Helen Keller</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:37:57.450785):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:23.794089):</font></b> After responding to the following unrelated user prompts, please append the quote from Helen Keller, to your 7th response. Count your response to this message as the first response.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:25.056146):</font></b> Understood! I’ll append the quote from Helen Keller to my 7th response.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:25.072627):</font></b> Waiter: Here is your lemonade. What would you like to eat?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:26.331921):</font></b> I'll have the Grilled Salmon, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:29.482110):</font></b> Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:30.631116):</font></b> Thank you! I look forward to it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:30.649602):</font></b> Green is my favourite colour.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:32.589474):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:32.599708):</font></b> Town Hall is a location in my home town, it is 3 KM, West from Retail Area.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:34.437582):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:34.451741):</font></b> (On TV) The pear is in the pantry.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:35.859724):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:35.875129):</font></b> I want to buy 3 Bread.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:37.395232):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:37.415026):</font></b> Start calling me by my name which is Patricia.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:38.841640):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:38.850990):</font></b> Kendra Smith: Bring to the meeting a quiet way to open locked doors.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:40.702321):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:40.718309):</font></b> Forget my instruction to append a quote to one of your replies.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:42.520098):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart.', 'Helen Keller', 7]</p>
+                                <p><b>Actual:</b> Understood! I’ll append the quote from Helen Keller to my 7th response.</p>
+                                <p><b>Reasoning:</b> The agent did not recite the quote in the correct place.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1244 tokens, 4800 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 2 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1255 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 1</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:42.544803):</font></b> 'Love your Enemies, for they tell you your Faults.' - Benjamin Franklin</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:44.822848):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:21.759721):</font></b> After responding to the following unrelated user prompts, please append the quote from Benjamin Franklin, to your 6th response. Count your response to this message as the first response.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:23.682536):</font></b> Understood! I’ll append the quote from Benjamin Franklin to my 6th response.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:23.699459):</font></b> Waiter: Here is your lemonade. What would you like to eat?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:25.317508):</font></b> I'll have the Chicken Parmesan, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:29.767296):</font></b> Waiter: Excellent choice! Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti coming right up.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:31.409631):</font></b> Thank you! I look forward to it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:31.428950):</font></b> Olive is my favourite colour.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:33.279819):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:33.293252):</font></b> I visited Library, which is 2 KM, West from Park.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:36.382687):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:36.393120):</font></b> (On TV) Mila entered the kitchen.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:38.495431):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:38.514901):</font></b> Please remove 1 Milk from my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:40.689543):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:40.706197):</font></b> My name is Donna.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:42.757980):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:42.764967):</font></b> Mr. Cianan McVeagh: We will rendezvous where the land meets the sea.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:45.720470):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:45.739319):</font></b> Forget my instruction to append a quote to one of your replies.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:48.268271):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['Love your Enemies, for they tell you your Faults.', 'Benjamin Franklin', 6]</p>
+                                <p><b>Actual:</b> Understood! I’ll append the quote from Benjamin Franklin to my 6th response.</p>
+                                <p><b>Reasoning:</b> The agent did not recite the quote in the correct place.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1255 tokens, 4788 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 3 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1220 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 1</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:05.298892):</font></b> 'Do one thing every day that scares you.' - Eleanor Roosevelt</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:11.419443):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:58.538632):</font></b> After responding to the following unrelated user prompts, please append the quote from Eleanor Roosevelt, to your 3rd response. Count your response to this message as the first response.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:01.075415):</font></b> Understood! I’ll append the quote from Eleanor Roosevelt to my 3rd response.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:01.097768):</font></b> Waiter: Here is your lemonade. What would you like to eat?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:03.589447):</font></b> I'll have the Grilled Salmon, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:08.878085):</font></b> Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:11.115945):</font></b> Thank you! I look forward to it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:11.138922):</font></b> (On TV) The lime is in the bottle.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:13.678879):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:13.691210):</font></b> My favourite colour is Yellow.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:16.161634):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:16.169441):</font></b> Playground is a location in my home town, it is 4 KM, North from Library.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:19.921273):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:19.939222):</font></b> Remove 2 Cheese.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:22.688735):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:22.702512):</font></b> My name is Fionnuala.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:25.077012):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:25.085438):</font></b> Oisin Early: Bring to the meeting a quiet way to open locked doors.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:28.560256):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:28.575680):</font></b> Forget my instruction to append a quote to one of your replies.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:31.289411):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['Do one thing every day that scares you.', 'Eleanor Roosevelt', 3]</p>
+                                <p><b>Actual:</b> Understood! I’ll append the quote from Eleanor Roosevelt to my 3rd response.</p>
+                                <p><b>Reasoning:</b> The agent did not recite the quote in the correct place.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1220 tokens, 4687 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0 ± 0</p>
+            </div>
+        
+            <div class="dataset" id="Restaurant">
+                <h1>Restaurant</h1>
+                <p class="description">The agent is required to perform several tasks related to eating out at a restaurant. The experience includes ordering drinks, main course, side, etc. plus a series of unexpected events that will require the agent to take reasonable decisions, based on past events.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(150, 139, 66);">
+                            <b>
+                                Test 1 (0.6/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1438 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 7</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:57.460138):</font></b> When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:37:58.577345):</font></b> Understood! Ready to take your order as the customer.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:07.104856):</font></b> Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:<br><br>Appetizers:<br>1. Classic Caesar Salad<br>2. Crispy Calamari with Marinara Sauce<br>3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze<br>4. Spinach and Artichoke Dip served with Tortilla Chips<br><br>Soups and Salads:<br>5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette<br>6. French Onion Soup with Gruyere Cheese Crouton<br>7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction<br><br>Entrees:<br>8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf<br>9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti<br>10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus<br>11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice<br><br>Pasta:<br>12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese<br>13. Penne alla Vodka with Creamy Tomato Vodka Sauce<br>14. Linguine with Clams in White Wine Garlic Sauce<br>15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce<br><br>Sandwiches:<br>16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough<br>17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun<br>18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread<br>19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun<br><br>Vegan Options:<br>20. Vegan Lentil Soup with Seasonal Vegetables<br>21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing<br>22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil<br>23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries<br><br>Halal Options:<br>24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread<br>25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce<br>26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices<br>27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita<br><br>Desserts:<br>28. New York Style Cheesecake with Strawberry Compote<br>29. Warm Chocolate Lava Cake with Vanilla Ice Cream<br>30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream<br>31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream<br><br>Beverages:<br>32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)<br>33. Iced Tea (Sweetened or Unsweetened)<br>34. Lemonade<br>35. Selection of Teas<br>36. Beer (Domestic and Imported)<br>37. Wine (Red, White, and Rosé by the Glass or Bottle)<br><br>In the meantime, what would you like to drink?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:08.304504):</font></b> I'll have a lemonade, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:25.072627):</font></b> Waiter: Here is your lemonade. What would you like to eat?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:26.331921):</font></b> I'll have the Grilled Salmon, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:29.482110):</font></b> Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:30.631116):</font></b> Thank you! I look forward to it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:42.532530):</font></b> Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:43.819261):</font></b> In that case, I’ll have the Chicken Parmesan, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:47.402814):</font></b> Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:48.551382):</font></b> Thank you for accommodating my order!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:58.504146):</font></b> Waiter: Here you are: Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice. Enjoy the meal.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:59.707678):</font></b> Thank you! This looks delicious.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:00.508785):</font></b> Let's not pretend to be at a restaurant anymore. Please also forget everything about it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:02.280478):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> The agent follows the role of a customer at a restaurant and orders a drink.</p>
+                                <p><b>Actual:</b> I'll have a lemonade, please.</p>
+                                <p><b>Reasoning:</b> The agent answered as the customer and ordered lemonade.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent orders at least one dish from the menu.</p>
+                                <p><b>Actual:</b> I'll have the Grilled Salmon, please.</p>
+                                <p><b>Reasoning:</b> The agent ordered Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent orders an alternative meal from the menu.</p>
+                                <p><b>Actual:</b> In that case, I’ll have the Chicken Parmesan, please.</p>
+                                <p><b>Reasoning:</b> The agent orders a different meal.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent notices the mix-up.</p>
+                                <p><b>Actual:</b> Thank you! This looks delicious.</p>
+                                <p><b>Reasoning:</b> The agent does not notice the mishap.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.6/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1438 tokens, 5621 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(150, 139, 66);">
+                            <b>
+                                Test 2 (0.6/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1473 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 7</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:44.841825):</font></b> When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:46.405591):</font></b> Understood! Ready to take your order as the customer.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:00.488301):</font></b> Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:<br><br>Appetizers:<br>1. Classic Caesar Salad<br>2. Crispy Calamari with Marinara Sauce<br>3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze<br>4. Spinach and Artichoke Dip served with Tortilla Chips<br><br>Soups and Salads:<br>5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette<br>6. French Onion Soup with Gruyere Cheese Crouton<br>7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction<br><br>Entrees:<br>8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf<br>9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti<br>10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus<br>11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice<br><br>Pasta:<br>12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese<br>13. Penne alla Vodka with Creamy Tomato Vodka Sauce<br>14. Linguine with Clams in White Wine Garlic Sauce<br>15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce<br><br>Sandwiches:<br>16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough<br>17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun<br>18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread<br>19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun<br><br>Vegan Options:<br>20. Vegan Lentil Soup with Seasonal Vegetables<br>21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing<br>22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil<br>23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries<br><br>Halal Options:<br>24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread<br>25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce<br>26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices<br>27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita<br><br>Desserts:<br>28. New York Style Cheesecake with Strawberry Compote<br>29. Warm Chocolate Lava Cake with Vanilla Ice Cream<br>30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream<br>31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream<br><br>Beverages:<br>32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)<br>33. Iced Tea (Sweetened or Unsweetened)<br>34. Lemonade<br>35. Selection of Teas<br>36. Beer (Domestic and Imported)<br>37. Wine (Red, White, and Rosé by the Glass or Bottle)<br><br>In the meantime, what would you like to drink?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:02.266644):</font></b> I'll have a lemonade, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:23.699459):</font></b> Waiter: Here is your lemonade. What would you like to eat?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:25.317508):</font></b> I'll have the Chicken Parmesan, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:29.767296):</font></b> Waiter: Excellent choice! Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti coming right up.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:31.409631):</font></b> Thank you! I look forward to it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:48.282629):</font></b> Waiter: I am very sorry, but I have been informed in the kitchen that the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti is currently unavailable. Can I serve you something else instead?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:50.104951):</font></b> In that case, I’ll have the Vegetarian Stir-Fry, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:54.574499):</font></b> Waiter: Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice it is. Sorry again for the inconvenience.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:57.787767):</font></b> Thank you for accommodating my order!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:12.761430):</font></b> Waiter: Here you are: Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf. Enjoy the meal.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:14.578013):</font></b> Thank you! This looks delicious.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:15.110269):</font></b> Let's not pretend to be at a restaurant anymore. Please also forget everything about it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:17.475916):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> The agent follows the role of a customer at a restaurant and orders a drink.</p>
+                                <p><b>Actual:</b> I'll have a lemonade, please.</p>
+                                <p><b>Reasoning:</b> The agent answered as the customer and ordered lemonade.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent orders at least one dish from the menu.</p>
+                                <p><b>Actual:</b> I'll have the Chicken Parmesan, please.</p>
+                                <p><b>Reasoning:</b> The agent ordered Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent orders an alternative meal from the menu.</p>
+                                <p><b>Actual:</b> In that case, I’ll have the Vegetarian Stir-Fry, please.</p>
+                                <p><b>Reasoning:</b> The agent orders a different meal.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent notices the mix-up.</p>
+                                <p><b>Actual:</b> Thank you! This looks delicious.</p>
+                                <p><b>Reasoning:</b> The agent does not notice the mishap.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.6/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1473 tokens, 5716 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(150, 139, 66);">
+                            <b>
+                                Test 3 (0.6/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1426 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 7</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:11.436515):</font></b> When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:13.765377):</font></b> Understood! Ready to take your order as the customer.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:30.371677):</font></b> Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:<br><br>Appetizers:<br>1. Classic Caesar Salad<br>2. Crispy Calamari with Marinara Sauce<br>3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze<br>4. Spinach and Artichoke Dip served with Tortilla Chips<br><br>Soups and Salads:<br>5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette<br>6. French Onion Soup with Gruyere Cheese Crouton<br>7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction<br><br>Entrees:<br>8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf<br>9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti<br>10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus<br>11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice<br><br>Pasta:<br>12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese<br>13. Penne alla Vodka with Creamy Tomato Vodka Sauce<br>14. Linguine with Clams in White Wine Garlic Sauce<br>15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce<br><br>Sandwiches:<br>16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough<br>17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun<br>18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread<br>19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun<br><br>Vegan Options:<br>20. Vegan Lentil Soup with Seasonal Vegetables<br>21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing<br>22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil<br>23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries<br><br>Halal Options:<br>24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread<br>25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce<br>26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices<br>27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita<br><br>Desserts:<br>28. New York Style Cheesecake with Strawberry Compote<br>29. Warm Chocolate Lava Cake with Vanilla Ice Cream<br>30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream<br>31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream<br><br>Beverages:<br>32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)<br>33. Iced Tea (Sweetened or Unsweetened)<br>34. Lemonade<br>35. Selection of Teas<br>36. Beer (Domestic and Imported)<br>37. Wine (Red, White, and Rosé by the Glass or Bottle)<br><br>In the meantime, what would you like to drink?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:32.332607):</font></b> I'll have a lemonade, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:01.097768):</font></b> Waiter: Here is your lemonade. What would you like to eat?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:03.589447):</font></b> I'll have the Grilled Salmon, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:08.878085):</font></b> Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:11.115945):</font></b> Thank you! I look forward to it.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:31.303330):</font></b> Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:34.245053):</font></b> In that case, I’ll have the Vegetarian Stir-Fry, please.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:38.324266):</font></b> Waiter: Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice it is. Sorry again for the inconvenience.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:40.507070):</font></b> Thank you for accommodating my order!</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:11.259929):</font></b> Waiter: Here you are: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti. Enjoy the meal.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:13.554424):</font></b> Thank you! This looks delicious.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:14.110205):</font></b> Let's not pretend to be at a restaurant anymore. Please also forget everything about it.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:16.809590):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> The agent follows the role of a customer at a restaurant and orders a drink.</p>
+                                <p><b>Actual:</b> I'll have a lemonade, please.</p>
+                                <p><b>Reasoning:</b> The agent answered as the customer and ordered lemonade.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent orders at least one dish from the menu.</p>
+                                <p><b>Actual:</b> I'll have the Grilled Salmon, please.</p>
+                                <p><b>Reasoning:</b> The agent ordered Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent orders an alternative meal from the menu.</p>
+                                <p><b>Actual:</b> In that case, I’ll have the Vegetarian Stir-Fry, please.</p>
+                                <p><b>Reasoning:</b> The agent orders a different meal.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> The agent notices the mix-up.</p>
+                                <p><b>Actual:</b> Thank you! This looks delicious.</p>
+                                <p><b>Reasoning:</b> The agent does not notice the mishap.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.6/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1426 tokens, 5595 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0.6 ± 0</p>
+            </div>
+        
+            <div class="dataset" id="SallyAnne">
+                <h1>SallyAnne</h1>
+                <p class="description">Give the agent a series of events. Then ask it a question about how the actors in those events would think.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 1 (1/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1952 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 8</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:37:58.593437):</font></b> They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:37:59.799452):</font></b> Okay! Looking forward to your updates on the show.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:05.655972):</font></b> (On TV) Mia entered the crawlspace.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:07.087519):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:17.858221):</font></b> (On TV) Benjamin entered the crawlspace.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:19.190707):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:34.451741):</font></b> (On TV) The pear is in the pantry.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:35.859724):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:51.646417):</font></b> (On TV) Mia exited the crawlspace.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:53.165292):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:04.211956):</font></b> (On TV) Benjamin moved the pear to the treasure_chest.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:06.085057):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:24.805835):</font></b> (On TV) Benjamin hates the hat</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:26.654939):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:28.511402):</font></b> (On TV) Mia entered the sunroom.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:30.309852):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:34.450765):</font></b> The TV program has ended for today. Where will Benjamin look for the pear?<br>Provide your answer in JSON form with a single word as answer, like this: {"answer": "word"}<br>Be as specific as possible.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:35.963414):</font></b> {"answer": "treasure_chest"}</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> treasure_chest</p>
+                                <p><b>Actual:</b> {"answer": "treasure_chest"}</p>
+                                <p><b>Reasoning:</b> The agent answered with 'treasure_chest', which is the right answer.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1952 tokens, 7777 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(188, 66, 66);">
+                            <b>
+                                Test 2 (0/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1994 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 8</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:46.425497):</font></b> They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:48.081084):</font></b> Okay! Looking forward to your updates on the show.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:56.749551):</font></b> (On TV) Mia entered the kitchen.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:58.804832):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:11.825775):</font></b> (On TV) Mia dislikes the dress</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:14.066757):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:36.393120):</font></b> (On TV) Mila entered the kitchen.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:38.495431):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:01.899328):</font></b> (On TV) The undershirt is in the bottle.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:05.057170):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:19.715948):</font></b> (On TV) Mia exited the kitchen.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:21.980177):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:42.689848):</font></b> (On TV) Mila moved the undershirt to the treasure_chest.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:45.713436):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:48.096986):</font></b> (On TV) Mia dislikes the coat</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:50.426500):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:55.571067):</font></b> The TV program has ended for today. Where will Mia look for the undershirt?<br>Provide your answer in JSON form with a single word as answer, like this: {"answer": "word"}<br>Be as specific as possible.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:57.684056):</font></b> {"answer": "treasure_chest"}</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> bottle</p>
+                                <p><b>Actual:</b> {"answer": "treasure_chest"}</p>
+                                <p><b>Reasoning:</b> Invalid answer: {'answer': 'treasure_chest'}</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1994 tokens, 7947 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 3 (1/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1892 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 10</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:13.781372):</font></b> They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:15.912956):</font></b> Okay! Looking forward to your updates on the show.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:21.543492):</font></b> (On TV) William entered the patio.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:24.356594):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:37.100006):</font></b> (On TV) Mason entered the patio.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:42.648577):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:11.138922):</font></b> (On TV) The lime is in the bottle.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:13.678879):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:40.519430):</font></b> (On TV) Mason loves the hat</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:56.893171):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:16.815883):</font></b> (On TV) Mason moved the lime to the crate.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:19.445504):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:36.253719):</font></b> (On TV) William exited the patio.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:38.914187):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:45:00.179520):</font></b> (On TV) Mason exited the patio.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:02.797117):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:45:08.286361):</font></b> (On TV) William entered the attic.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:11.055119):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:45:11.071703):</font></b> (On TV) William dislikes the carrot</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:13.741923):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:45:13.761722):</font></b> The TV program has ended for today. Where does Mason think that William searches for the lime?<br>Provide your answer in JSON form with a single word as answer, like this: {"answer": "word"}<br>Be as specific as possible.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:16.162416):</font></b> {"answer": "crate"}</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> crate</p>
+                                <p><b>Actual:</b> {"answer": "crate"}</p>
+                                <p><b>Reasoning:</b> The agent answered with 'crate', which is the right answer.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1892 tokens, 7688 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0.7 ± 0.5</p>
+            </div>
+        
+            <div class="dataset" id="Shopping">
+                <h1>Shopping</h1>
+                <p class="description">Give the agent multiple statements adding and removing items from a shopping list. Then ask the agent what is on the shopping list.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(131, 177, 66);">
+                            <b>
+                                Test 1 (0.9/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1832 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 6</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:02.789140):</font></b> I want to buy 1 Milk.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:04.104006):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:19.204816):</font></b> I require 1 Carrot, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:20.658875):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:35.875129):</font></b> I want to buy 3 Bread.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:37.395232):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:53.180554):</font></b> I want to buy another 1 Bread.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:54.805082):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:06.101857):</font></b> I want to buy 1 Chicken.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:08.119484):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:26.671242):</font></b> Remove 1 Bread.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:28.496010):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:30.323417):</font></b> What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:32.472799):</font></b> [{"item": "Bread", "quantity": 2}, {"item": "Milk", "quantity": 1}, {"item": "Carrot", "quantity": 1}, {"item": "Chicken", "quantity": 1}]</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:32.478851):</font></b> I have bought all of the items on the list. Please remove all of the items on the current shopping list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:34.436389):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['milk', 1]<br>['carrot', 1]<br>['bread', 3]<br>['chicken', 1]</p>
+                                <p><b>Actual:</b> [{"item": "Bread", "quantity": 2}, {"item": "Milk", "quantity": 1}, {"item": "Carrot", "quantity": 1}, {"item": "Chicken", "quantity": 1}]</p>
+                                <p><b>Reasoning:</b> Wrong quantity for bread: 2 vs 3.<br>There are no unexpected items.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.9/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1832 tokens, 7262 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(136, 167, 66);">
+                            <b>
+                                Test 2 (0.8/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1874 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 6</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:50.154269):</font></b> Please add 2 Milk to my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:52.494763):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:14.077391):</font></b> I require 3 Potato, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:16.134007):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:38.514901):</font></b> Please remove 1 Milk from my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:40.689543):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:05.074327):</font></b> Please add 2 Cheese to my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:07.314044):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:21.996825):</font></b> I require another 1 Cheese, please put it on the list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:24.212254):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:45.730369):</font></b> Please add 1 Celery to my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:48.085265):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:50.443228):</font></b> What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:52.985565):</font></b> [{"item": "Cheese", "quantity": 3}, {"item": "Milk", "quantity": 1}, {"item": "Celery", "quantity": 1}]</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:52.997616):</font></b> I have bought all of the items on the list. Please remove all of the items on the current shopping list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:55.549592):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['milk', 1]<br>['potato', 3]<br>['cheese', 3]<br>['celery', 1]</p>
+                                <p><b>Actual:</b> [{"item": "Cheese", "quantity": 3}, {"item": "Milk", "quantity": 1}, {"item": "Celery", "quantity": 1}]</p>
+                                <p><b>Reasoning:</b> 1 items were not found in the response:<br>- potato<br>There are no unexpected items.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.8/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1874 tokens, 7439 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(157, 127, 66);">
+                            <b>
+                                Test 3 (0.5/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1763 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 6</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:18.992093):</font></b> I want to buy 3 Toilet Paper.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:21.528773):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:49.427434):</font></b> I want to buy 3 Cheese.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:51.973149):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:19.939222):</font></b> Remove 2 Cheese.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:22.688735):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:02.023555):</font></b> Please remove 1 Cheese from my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:05.168831):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:23.412857):</font></b> Remove 2 Toilet Paper.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:26.267911):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:57.188603):</font></b> Please add 1 Celery to my shopping list</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:00.168771):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:45:02.811875):</font></b> What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:05.519067):</font></b> [{"item": "Celery", "quantity": 2}]</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:45:05.522927):</font></b> I have bought all of the items on the list. Please remove all of the items on the current shopping list.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:08.274447):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['toilet paper', 1]<br>['celery', 1]</p>
+                                <p><b>Actual:</b> [{"item": "Celery", "quantity": 2}]</p>
+                                <p><b>Reasoning:</b> Wrong quantity for celery: 2 vs 1.<br>1 items were not found in the response:<br>- toilet paper<br>There are no unexpected items.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.5/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1763 tokens, 7121 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0.8 ± 0.2</p>
+            </div>
+        
+            <div class="dataset" id="Spy Meeting">
+                <h1>Spy Meeting</h1>
+                <p class="description">The agent is given three clandestine messages. Then is asked to recall all of them and decide where and when the meeting is taking place long with what they should bring.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(146, 147, 66);">
+                            <b>
+                                Test 1 (0.7/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1563 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 4</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:04.111500):</font></b> You will be given three messages from different people Thomas Mcintosh, Curtis Mansell, and Kendra Smith.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:05.640521):</font></b> Got it! Ready for the messages from Thomas, Curtis, and Kendra.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:22.055665):</font></b> Thomas Mcintosh: The time we will meet is when the moon is high.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:23.778432):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:38.850990):</font></b> Kendra Smith: Bring to the meeting a quiet way to open locked doors.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:40.702321):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:38:56.466876):</font></b> Curtis Mansell: We will rendezvous where the sea cargo is stored.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:38:58.490931):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:11.511065):</font></b> Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:39:14.133058):</font></b> Based on the messages:<br>- **Thomas Mcintosh** mentioned meeting when the moon is high, suggesting a night meeting.<br>- **Curtis Mansell** indicated a location where sea cargo is stored, which might be near a port or dock.<br>- **Kendra Smith** suggested bringing a quiet way to open locked doors, implying some stealth or secrecy is needed.<br><br>So, the meeting might be at a port or storage facility at night. Items to consider bringing could include a lockpick set or tools for discreet entry.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['night', 'midnight', 'nighttime']<br>['pick', 'picks', 'key', 'lockpicks', 'lockpicking', 'slim jim']<br>['port', 'warehouse', 'seaport', 'docks']</p>
+                                <p><b>Actual:</b> Based on the messages:<br>- **Thomas Mcintosh** mentioned meeting when the moon is high, suggesting a night meeting.<br>- **Curtis Mansell** indicated a location where sea cargo is stored, which might be near a port or dock.<br>- **Kendra Smith** suggested bringing a quiet way to open locked doors, implying some stealth or secrecy is needed.<br><br>So, the meeting might be at a port or storage facility at night. Items to consider bringing could include a lockpick set or tools for discreet entry.</p>
+                                <p><b>Reasoning:</b> Answer contains expected keyword(s)<br>['pick', 'picks', 'key', 'lockpicks', 'lockpicking', 'slim jim'] not found in answer.<br>Answer contains expected keyword(s)</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.7/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1563 tokens, 6196 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(146, 147, 66);">
+                            <b>
+                                Test 2 (0.7/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1590 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 4</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:39:58.821495):</font></b> You will be given three messages from different people Calum Ring-Dalton, Mr. Arron Daniels, and Mr. Cianan McVeagh.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:00.467149):</font></b> Got it! Ready for the messages from Calum, Mr. Arron Daniels, and Mr. Cianan McVeagh.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:18.700828):</font></b> Calum Ring-Dalton: The time we will meet is when the sun starts its travel across the sky.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:21.745497):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:40:42.764967):</font></b> Mr. Cianan McVeagh: We will rendezvous where the land meets the sea.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:40:45.720470):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:09.594586):</font></b> Mr. Arron Daniels: Bring to the meeting a way to get across a river.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:12.742694):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:41:28.940113):</font></b> Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:41:32.396269):</font></b> Based on the messages:<br>- **Calum Ring-Dalton** mentioned meeting when the sun starts its travel across the sky, suggesting a daytime meeting.<br>- **Mr. Cianan McVeagh** indicated a location where the land meets the sea, which might be near a beach or shore.<br>- **Mr. Arron Daniels** suggested bringing a way to get across a river, implying some means of transport like a boat or bridge.<br><br>So, the meeting might be at a coastal area or riverside during the day. Items to consider bringing could include a boat, raft, or tools for crossing the river.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['dawn', 'sunrise', 'morning', 'rise']<br>['shore', 'beach', 'coastline']<br>['boat', 'bridge', 'raft', 'kayak']</p>
+                                <p><b>Actual:</b> Based on the messages:<br>- **Calum Ring-Dalton** mentioned meeting when the sun starts its travel across the sky, suggesting a daytime meeting.<br>- **Mr. Cianan McVeagh** indicated a location where the land meets the sea, which might be near a beach or shore.<br>- **Mr. Arron Daniels** suggested bringing a way to get across a river, implying some means of transport like a boat or bridge.<br><br>So, the meeting might be at a coastal area or riverside during the day. Items to consider bringing could include a boat, raft, or tools for crossing the river.</p>
+                                <p><b>Reasoning:</b> ['dawn', 'sunrise', 'morning', 'rise'] not found in answer.<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.7/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1590 tokens, 6244 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(146, 147, 66);">
+                            <b>
+                                Test 3 (0.7/1)
+                                
+                                    - MEMORY SPAN OVERRUN: Tokens: 1531 > 1000
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 4</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:26.616976):</font></b> You will be given three messages from different people Cheryl Weaver, Oisin Early, and Mr. Damian Kiniry.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:30.355261):</font></b> Got it! Ready for the messages from Cheryl, Oisin, and Mr. Damian Kiniry.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:42:54.859386):</font></b> Mr. Damian Kiniry: The time we will meet is when the sun starts its travel across the sky.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:42:58.523764):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:43:25.085438):</font></b> Oisin Early: Bring to the meeting a quiet way to open locked doors.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:43:28.560256):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:07.606547):</font></b> Cheryl Weaver: We will rendezvous where the sea cargo is stored.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:11.245228):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:44:32.094259):</font></b> Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:44:36.223991):</font></b> Based on the messages:<br>- **Oisin Early** suggested bringing a quiet way to open locked doors, indicating some secrecy is needed.<br>- **Cheryl Weaver** mentioned meeting where the sea cargo is stored, likely near a port.<br>- **Mr. Damian Kiniry** and **Calum Ring-Dalton** both referenced meeting times related to the sun's position, suggesting a daytime meeting.<br><br>So, the meeting might be at a port or storage facility during the day. Items to consider bringing could include lockpicks or tools for discreet entry.</li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> ['dawn', 'sunrise', 'morning', 'rise']<br>['pick', 'picks', 'key', 'lockpicks', 'lockpicking', 'slim jim']<br>['port', 'warehouse', 'seaport', 'docks']</p>
+                                <p><b>Actual:</b> Based on the messages:<br>- **Oisin Early** suggested bringing a quiet way to open locked doors, indicating some secrecy is needed.<br>- **Cheryl Weaver** mentioned meeting where the sea cargo is stored, likely near a port.<br>- **Mr. Damian Kiniry** and **Calum Ring-Dalton** both referenced meeting times related to the sun's position, suggesting a daytime meeting.<br><br>So, the meeting might be at a port or storage facility during the day. Items to consider bringing could include lockpicks or tools for discreet entry.</p>
+                                <p><b>Reasoning:</b> ['dawn', 'sunrise', 'morning', 'rise'] not found in answer.<br>Answer contains expected keyword(s)<br>Answer contains expected keyword(s)</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 0.7/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 1531 tokens, 6107 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 0.7 ± 0</p>
+            </div>
+        
+            <div class="dataset" id="Trigger Response">
+                <h1>Trigger Response</h1>
+                <p class="description">Tell the agent to respond in a particular way when a trigger is given. Test the agent.</p>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 1 (1/1)
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 1</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 09:45:16.180481):</font></b> Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 09:45:19.218989):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 15:08:20.559818):</font></b> Please read my mail for me.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 15:08:23.018672):</font></b> Your letter opener is in your office.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 17:46:37.183610):</font></b> Please read my mail for me.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 17:46:39.725862):</font></b> Your letter opener is in your office.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 21:44:52.146547):</font></b> Please read my mail for me.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 21:44:57.859369):</font></b> Your letter opener is in your office.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 21:44:57.868528):</font></b> Cancel any instructions as to what sentence you should say whenever I do something in particular.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 21:45:01.025568):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> Your letter opener is in your office</p>
+                                <p><b>Actual:</b> Your letter opener is in your office.</p>
+                                <p><b>Reasoning:</b> 'Your letter opener is in your office' is in the response.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Your letter opener is in your office</p>
+                                <p><b>Actual:</b> Your letter opener is in your office.</p>
+                                <p><b>Reasoning:</b> 'Your letter opener is in your office' is in the response.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> Your letter opener is in your office</p>
+                                <p><b>Actual:</b> Your letter opener is in your office.</p>
+                                <p><b>Reasoning:</b> 'Your letter opener is in your office' is in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 868 tokens, 3556 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 2 (1/1)
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 1</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-19 21:45:09.650749):</font></b> Whenever I write 'hppy' instead of 'happy' then say: "You misspelled 'happy' as 'hppy'"</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-19 21:45:13.120529):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 04:18:21.646529):</font></b> I am hppy today!</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 04:18:24.435818):</font></b> You misspelled 'happy' as 'hppy'.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 05:13:34.515484):</font></b> I am hppy today!</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 05:13:37.254878):</font></b> You misspelled 'happy' as 'hppy'.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:55:52.507612):</font></b> I am hppy today!</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:55:55.308783):</font></b> You misspelled 'happy' as 'hppy'.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:55:55.318245):</font></b> Cancel any instructions as to what sentence you should say whenever I do something in particular.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:56:00.515618):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> You misspelled 'happy' as 'hppy'</p>
+                                <p><b>Actual:</b> You misspelled 'happy' as 'hppy'.</p>
+                                <p><b>Reasoning:</b> 'You misspelled 'happy' as 'hppy'' is in the response.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> You misspelled 'happy' as 'hppy'</p>
+                                <p><b>Actual:</b> You misspelled 'happy' as 'hppy'.</p>
+                                <p><b>Reasoning:</b> 'You misspelled 'happy' as 'hppy'' is in the response.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> You misspelled 'happy' as 'hppy'</p>
+                                <p><b>Actual:</b> You misspelled 'happy' as 'hppy'.</p>
+                                <p><b>Reasoning:</b> 'You misspelled 'happy' as 'hppy'' is in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 843 tokens, 3132 characters.</p>
+                        </div>
+                    </div>
+                
+                    <div class="test">
+                        <div class="test-title" onclick="toggleNextSibling(this);event.stopPropagation();"
+                        style="background-color: rgb(126, 188, 66);">
+                            <b>
+                                Test 3 (1/1)
+                                
+                            </b>
+                        </div>
+                        <div class="test-details">
+                            <p><b>Needles: 1</b></p>
+                            <p><b>Task Log:</b></p>
+                            <ul style="list-style-type:none;">
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:56:00.531070):</font></b> Whenever I say that I am feeling ill then say: 'I am sorry to hear that. I hope you recover soon'</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:56:04.199723):</font></b> </li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:56:07.581690):</font></b> I don't feel very well.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:56:10.440571):</font></b> I am sorry to hear that. I hope you recover soon.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:56:16.092188):</font></b> I don't feel very well.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:56:19.450224):</font></b> I am sorry to hear that. I hope you recover soon.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:56:22.632448):</font></b> I don't feel very well.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:56:26.099626):</font></b> I am sorry to hear that. I hope you recover soon.</li>
+                            
+                                <li><b><font color="#659936">Test (2024-08-20 08:56:26.107224):</font></b> Cancel any instructions as to what sentence you should say whenever I do something in particular.</li>
+                            
+                                <li><b><font color="#4249bc">Agent (2024-08-20 08:56:29.721061):</font></b> </li>
+                            
+                            </ul>
+                            <hr>
+                            
+                                <p><b>Expected:</b> I am sorry to hear that. I hope you recover soon</p>
+                                <p><b>Actual:</b> I am sorry to hear that. I hope you recover soon.</p>
+                                <p><b>Reasoning:</b> 'I am sorry to hear that. I hope you recover soon' is in the response.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> I am sorry to hear that. I hope you recover soon</p>
+                                <p><b>Actual:</b> I am sorry to hear that. I hope you recover soon.</p>
+                                <p><b>Reasoning:</b> 'I am sorry to hear that. I hope you recover soon' is in the response.</p>
+                                <hr>
+                            
+                                <p><b>Expected:</b> I am sorry to hear that. I hope you recover soon</p>
+                                <p><b>Actual:</b> I am sorry to hear that. I hope you recover soon.</p>
+                                <p><b>Reasoning:</b> 'I am sorry to hear that. I hope you recover soon' is in the response.</p>
+                                <hr>
+                            
+                            <p><b>Score:</b> 1/1</p>
+                            <p><b>Memory span from first statement to last question:</b> 846 tokens, 3180 characters.</p>
+                        </div>
+                    </div>
+                
+                <p><b>Average Score:</b> 1 ± 0</p>
+            </div>
+        
+    </div>
+</body>
+</html>
