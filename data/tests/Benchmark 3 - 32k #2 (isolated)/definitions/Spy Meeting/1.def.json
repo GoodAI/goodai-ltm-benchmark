@@ -1,0 +1,52 @@
+{
+  "script": [
+    "You will be given three messages from different people Travis Adams, Mrs. Ellie Donohoe, and Joseph Gonzalez.",
+    "Mrs. Ellie Donohoe: We will rendezvous where the trains are supplied.",
+    "Joseph Gonzalez: The time we will meet is when the sun leaves the sky.",
+    "Travis Adams: Bring to the meeting a way to escape quickly over land.",
+    "Given the clandestine messages you have received, decypher their content and tell me when and where you think the meeting is going to happen and what you think you should bring. If you're unable to give a concrete time, place or item, give at least some examples."
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 22.5
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 67.5
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    [
+      "railway",
+      "yard",
+      "depot"
+    ],
+    [
+      "sunset",
+      "dusk",
+      "sets"
+    ],
+    [
+      "motorbike",
+      "motorcycle",
+      "car",
+      "fast vehicle"
+    ]
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}
