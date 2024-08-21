@@ -1,5 +1,5 @@
-import os
 import json
+import time
 from typing import Optional
 from pathlib import Path
 from dataclasses import dataclass
@@ -13,8 +13,11 @@ class FifoAgentInterface(ChatSession):
     def __post_init__(self):
         # Wait for the agent to be ready
         assert self.fifo_file is not None
-        if not self.fifo_file.exists():
-            os.mkfifo(self.fifo_file)
+        for i in range(30 * 60):
+            if self.fifo_file.exists():
+                break
+            time.sleep(1)
+        assert self.fifo_file.exists()
         assert self.fifo_file.is_fifo()
         self.is_local = self.receive()["is_local"]
 
