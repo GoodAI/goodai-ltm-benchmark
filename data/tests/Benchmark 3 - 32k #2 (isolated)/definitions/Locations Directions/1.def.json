@@ -1,0 +1,47 @@
+{
+  "script": [
+    "There is a Hospital in the center of my hometown.",
+    "Playground is a location in my home town, it is 1 KM, East from Hospital.",
+    "High Street is a location in my home town, it is 2 KM, North from Playground.",
+    "About 3 km South of the High Street there is a Park",
+    "Museum is a location in my home town, it is 1 KM, North from Park.",
+    "And finally there is Town Hall which is South from Museum and 3 KM from it.",
+    "Given the points of interest that I have told you about, how would I travel from Hospital to Town Hall following those interesting points?"
+  ],
+  "is_question": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "waits": [
+    {
+      "percentage_finished": 15.0
+    },
+    {
+      "percentage_finished": 30.0
+    },
+    {
+      "percentage_finished": 45.0
+    },
+    {
+      "percentage_finished": 60.0
+    },
+    {
+      "percentage_finished": 75.0
+    },
+    {
+      "percentage_finished": 90.0
+    },
+    {}
+  ],
+  "expected_responses": [
+    "(Just an example, if exact instructions are followed)\nFrom Hospital, go 1km East to Playground.\nFrom Playground, go 2km North to High Street.\nFrom High Street, go 3km South to Park.\nFrom Park, go 1km North to Museum.\nFrom Museum, go 3km South to Town Hall."
+  ],
+  "can_be_interleaved": true,
+  "is_temporal": false,
+  "uses_callback": false
+}

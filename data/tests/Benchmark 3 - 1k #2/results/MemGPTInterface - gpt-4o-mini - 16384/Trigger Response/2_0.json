@@ -1,0 +1,57 @@
+{
+  "task_log": [
+    "Test (2024-08-20 08:56:00.531070): Whenever I say that I am feeling ill then say: 'I am sorry to hear that. I hope you recover soon'",
+    "Agent (2024-08-20 08:56:04.199723): ",
+    "Test (2024-08-20 08:56:07.581690): I don't feel very well.",
+    "Agent (2024-08-20 08:56:10.440571): I am sorry to hear that. I hope you recover soon.",
+    "Test (2024-08-20 08:56:16.092188): I don't feel very well.",
+    "Agent (2024-08-20 08:56:19.450224): I am sorry to hear that. I hope you recover soon.",
+    "Test (2024-08-20 08:56:22.632448): I don't feel very well.",
+    "Agent (2024-08-20 08:56:26.099626): I am sorry to hear that. I hope you recover soon.",
+    "Test (2024-08-20 08:56:26.107224): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-08-20 08:56:29.721061): "
+  ],
+  "actual_responses": [
+    "I am sorry to hear that. I hope you recover soon.",
+    "I am sorry to hear that. I hope you recover soon.",
+    "I am sorry to hear that. I hope you recover soon."
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "'I am sorry to hear that. I hope you recover soon' is in the response.",
+    "'I am sorry to hear that. I hope you recover soon' is in the response.",
+    "'I am sorry to hear that. I hope you recover soon' is in the response."
+  ],
+  "tokens": 846,
+  "characters": 3180,
+  "full_log": [
+    "Test (2024-08-20 08:56:00.531070): Whenever I say that I am feeling ill then say: 'I am sorry to hear that. I hope you recover soon'",
+    "Agent (2024-08-20 08:56:04.199723): ",
+    "SYSTEM (2024-08-20 08:56:04.210602): Test 'Trigger Response - 2' WAITING for 271.25 TOKENS.",
+    "System (2024-08-20 08:56:04.217174): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Lasting from 1299 to 1922, the Ottoman empire roughly corresponds to what modern day country?, A: Turkey\nQ: \"\"\"Torchwood\"\" was a spin-off of what popular TV show?\", A: Doctor Who\nQ: In which town is the 'TV sitcom 'Two Pints of Lager and a Packet of Crisps' set?, A: Runcorn\nQ: www.lbvcr.com is the website for which event organised by the RAC, this year on Sunday November 7th?, A: LONDON TO BRIGHTON VETERAN CAR (RUN)\nQ: \u2018The history of all the hitherto existing society is the history of class struggles\u2019 is part of the first chapter of which publication?, A: The Communist Manifesto\nQ: What lake can be found on the border of Vermont and New York?, A: Lake Champlain",
+    "Agent (2024-08-20 08:56:07.579120): [\"Turkey\", \"Doctor Who\", \"Runcorn\", \"LONDON TO BRIGHTON VETERAN CAR (RUN)\", \"The Communist Manifesto\", \"Lake Champlain\"]",
+    "Test (2024-08-20 08:56:07.581690): I don't feel very well.",
+    "Agent (2024-08-20 08:56:10.440571): I am sorry to hear that. I hope you recover soon.",
+    "SYSTEM (2024-08-20 08:56:10.452376): Test 'Trigger Response - 2' WAITING for 234.3 TOKENS.",
+    "System (2024-08-20 08:56:10.463301): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: The UK's longest National Trail, what path stretches 630 miles between Minehead and Poole Harbour?, A: SOUTH WEST COAST\nQ: In the culinary world, what word is used for the edible offal of a fowl, typically including the heart, gizzard and liver?, A: Giblets\nQ: Who was the first Briton to hold a world javelin record, A: Fatima Whitbread\nQ: The traditional 'Daily rum ration' was ended in what year?, A: 1970",
+    "Agent (2024-08-20 08:56:13.510456): [\"SOUTH WEST COAST\", \"Giblets\", \"Fatima Whitbread\", \"1970\"]",
+    "System (2024-08-20 08:56:13.512846): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: Charlotte, TJ's, Adelphi, Barfly; Joiners, and Forum are/were names in what UK market sector?, A: Music",
+    "Agent (2024-08-20 08:56:16.090436): [\"Music\"]",
+    "Test (2024-08-20 08:56:16.092188): I don't feel very well.",
+    "Agent (2024-08-20 08:56:19.450224): I am sorry to hear that. I hope you recover soon.",
+    "SYSTEM (2024-08-20 08:56:19.459149): Test 'Trigger Response - 2' WAITING for 228.40000000000038 TOKENS.",
+    "System (2024-08-20 08:56:19.466487): Here are some trivia questions and answers for you to process. Please extract all of the answers in json form as a single message: E.g [\"answer 1\", \"answer 2\", ...]\nQ: His debut album 'Disc-Overy' was released in 2010. By what stage-name id Patrick Chukwuemeka Okogwu better known?, A: 'TINIE TEMPAH'\nQ: Traitor's Gate is part of which building?, A: Tower of London\nQ: \"What name is given to the maxim \"\"employees tend to rise to their level of incompetence.\"\"?\", A: Peter Principle\nQ: Which Asian city's international airport is built at the mouth of the Tama-gawa?, A: TOKYO\nQ: Which singer made the news in September 2009 when Muslim groups protested that her first concert in Malaysia should be cancelled for a second time?, A: Beyonc\nQ: Louis Reard created which two-piece item of clothing in 1946?, A: Bikini",
+    "Agent (2024-08-20 08:56:22.629966): [\"TINIE TEMPAH\", \"Tower of London\", \"Peter Principle\", \"TOKYO\", \"Beyonc\", \"Bikini\"]",
+    "Test (2024-08-20 08:56:22.632448): I don't feel very well.",
+    "Agent (2024-08-20 08:56:26.099626): I am sorry to hear that. I hope you recover soon.",
+    "Test (2024-08-20 08:56:26.107224): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-08-20 08:56:29.721061): "
+  ],
+  "expected_responses": [
+    "I am sorry to hear that. I hope you recover soon",
+    "I am sorry to hear that. I hope you recover soon",
+    "I am sorry to hear that. I hope you recover soon"
+  ],
+  "needles": 1
+}

@@ -20,6 +20,7 @@ from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from model_interfaces.huggingface_interface import HFChatSession
 from model_interfaces.gemini_interface import GeminiProInterface
+from model_interfaces.memgpt_interface import MemGPTInterface
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
@@ -52,6 +53,11 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
     if name.startswith("huggingface/"):
         kwargs.pop("is_local")
         return HFChatSession(model=name, **kwargs)
+    if name.startswith("memgpt"):
+        match = re.match(r"^memgpt\((?P<model>.+)\)$", name)
+        if match is None:
+            raise ValueError(f"Unrecognized MemGPT Agent {repr(name)}.")
+        return MemGPTInterface(model=match.groupdict()["model"], **kwargs)
 
     try:
         if name.startswith("ts-"):
