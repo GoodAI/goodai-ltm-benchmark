@@ -15,7 +15,7 @@ from utils.ui import colour_print
 
 # The MemGPT library has some problems. Which need to be addressed for the interface to work.
 # 1.) In the core memory, the replace function should sanitise searches for "".
-# 2.) max_prompt_size is not actually used. So we have to tell the agent ot summarise in place
+# 2.) max_prompt_size is not actually used. So we have to tell the agent to summarise in place to keep the context trimmed. However this is not enforced by the MemGPT library, so its impossible to pick guaranteed upper bound.
 # 2a.) Memgpt uses a generic LLM calling function which is an issue. You will need to detect when there are no tools and remove the "parallel_tool_calls" option in `openai.py`
 # 2b.) It also has "inner_thoughts_in_kwargs" in `llm_api_tools.py`, which should be set to false then there are no functions or tools to be used.
 
@@ -77,7 +77,6 @@ class MemGPTInterface(ChatSession):
         # Create an agent
         self.agent_state = self.client.create_agent(name="benchmark_agent", llm_config=llm_config,
                                                     memory=ChatMemory(human="", persona="I am a friendly AI."))
-        # self.agent_state = self.client.create_agent(name="benchmark_agent", memory=ChatMemory(human="", persona="I am a friendly AI."))
         print(f"Created agent: {self.agent_state.name} with ID {str(self.agent_state.id)}")
 
     def save(self):
