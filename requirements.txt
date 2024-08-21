@@ -6,6 +6,7 @@ colorama~=0.4.6
 pytest
 time-machine==2.13.0
 tiktoken>=0.7.0
+sentence-transformers==2.7.0  # Solves dependency conflict in goodai-ltm. TODO fix source
 goodai-ltm==0.4.4
 gdown==4.7.1  # For downloading files from google drive (some datasets use it)
 tqdm  # Showing progress bar during some downloads
