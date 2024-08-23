@@ -388,8 +388,9 @@ Express your answer in this JSON:
                     result = self.ask_llm(context, cost_cb, label=f"reply-{self.llm_call_idx}-filter-{call_count}")
 
                     json_list = sanitize_and_parse_json(result)
-                    for idx, selected_object in enumerate(json_list):
+                    for selected_object in json_list:
                         if selected_object["related"]:
+                            idx = int(selected_object["number"])
                             filtered_interactions.append(interactions_to_filter[idx + start_idx])
 
                     call_count += 1
