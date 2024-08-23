@@ -100,30 +100,17 @@ Append the results of your tasks to your current response.
         if len(extra_tasks) > 0:
             context[-1]["content"] += perform_task.format(task=json.dumps(extra_tasks, indent=2))
 
-        response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
-        # Sanitize the response text
-        sanitized_response = self.sanitize_string(response_text)
-
-        try:
-            log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"reply-{self.llm_call_idx}")
-        except UnicodeEncodeError:
-            print(f"Warning: Unable to log LLM call due to encoding issues. LLM call index: {self.llm_call_idx}")
-
+        response_text = self.ask_llm(context, cost_callback, label=f"reply-{self.llm_call_idx}")
         self.llm_call_idx += 1
 
         # Remove outdated tasks
         self.remove_completed_tasks()
 
         # Save interaction to memory
-        self.hybrid_memory.add_interaction(self.session_id, user_message, sanitized_response, self.now.timestamp(),
+        self.hybrid_memory.add_interaction(self.session_id, user_message, response_text, self.now.timestamp(),
                                            keywords)
 
-        return sanitized_response
-
-    @staticmethod
-    def sanitize_string(s: str) -> str:
-        """Remove or replace problematic characters."""
-        return ''.join(ch for ch in s if unicodedata.category(ch)[0] != 'C')
+        return response_text
 
     def progress_and_get_extra_tasks(self, context):
 
@@ -175,8 +162,7 @@ Follow this format:
 }"""
 
         context.append(make_user_message(task_should_add.format(future_tasks=json.dumps(self.task_memory, indent=2), user_message=user_message)))
-        response_text = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
-        log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"should_update-{self.llm_call_idx}")
+        response_text = self.ask_llm(context, cost_callback, label=f"should_update-{self.llm_call_idx}")
         colour_print("YELLOW", f"Should update: {response_text}")
 
         if "Should Update: No." in response_text:
@@ -189,8 +175,7 @@ Follow this format:
         context.append(make_user_message(new_task_def))
 
         try:
-            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_callback, temperature=self.temperature)
-            log_llm_call(self.run_name, self.save_name, self.debug_level, label=f"do_update-{self.llm_call_idx}")
+            response = self.ask_llm(context, cost_callback, label=f"do_update-{self.llm_call_idx}")
 
             new_task = sanitize_and_parse_json(response)
             self.process_new_task(new_task)
@@ -202,43 +187,44 @@ Follow this format:
 
     def process_new_task(self, new_task: dict):
         new_task["trigger_details"]["triggered"] = False
-        if new_task["trigger_details"]["trigger_condition"] == "MESSAGE_COUNT":
+        condition = new_task["trigger_details"]["trigger_condition"]
+
+        if condition == "MESSAGE_COUNT":
             new_task["trigger_details"]["trigger_value"] = int(new_task["trigger_details"]["trigger_value"])
 
-        if new_task["trigger_details"]["trigger_condition"] == "MESSAGE_CONTENT":
+        elif condition == "MESSAGE_CONTENT":
             new_task["trigger_details"]["trigger_value"] = new_task["trigger_details"]["trigger_value"].lower()
 
-        if new_task["trigger_details"]["trigger_condition"] == "TIME":
+        elif condition == "TIME":
             new_task["trigger_details"]["trigger_value"] = time.mktime(datetime.datetime.strptime(new_task["trigger_details"]["trigger_value"], "%Y-%m-%d_%H:%M").timetuple())
 
         self.task_memory.append(new_task)
 
     def remove_completed_tasks(self):
-
-        for task in self.task_memory:
-            if task["trigger_details"]["triggered"]:
-                self.task_memory.remove(task)
+        # Remove all tasks that have been triggered
+        self.task_memory = [t for t in self.task_memory if not t["trigger_details"]["triggered"]]
 
     def update_task(self, task, context):
 
-        cond = task["trigger_details"]["trigger_condition"]
-        val = task["trigger_details"]["trigger_value"]
+        details = task["trigger_details"]
+        cond = details["trigger_condition"]
+        val = details["trigger_value"]
         if cond == "MESSAGE_COUNT":
             # Decrement the message counter and ready it to be triggered
-            task["trigger_details"]["trigger_value"] -= 1
-            task["trigger_details"]["triggered"] = task["trigger_details"]["trigger_value"] <= 0
+            details["trigger_value"] -= 1
+            details["triggered"] = details["trigger_value"] <= 0
 
         elif cond == "MESSAGE_CONTENT":
             user_message = context[-1]["content"].lower()
-            task["trigger_details"]["triggered"] = val in user_message
+            details["triggered"] = val in user_message
 
         elif cond == "TIME":
-            task["trigger_details"]["triggered"] = self.now.timestamp() > val
+            details["triggered"] = self.now.timestamp() > val
 
-        if task["trigger_details"]["triggered"]:
+        if details["triggered"]:
             print(f"{cond}: Task triggered: {json.dumps(task, indent=2)}")
 
-        return task["trigger_details"]["triggered"]
+        return details["triggered"]
 
     def keywords_for_message(self, user_message, cost_cb):
 
@@ -253,8 +239,7 @@ Reuse these keywords if appropriate: {keywords}"""
         for _ in range(self.num_tries):
             try:
                 print("Keyword gen")
-                response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
-                                   cost_callback=cost_cb, temperature=self.temperature)
+                response = self.ask_llm(context, cost_cb, label=f"keyword-gen-{self.llm_call_idx}")
 
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
@@ -371,8 +356,7 @@ Express your answer in this JSON:
         # Get the situation
         queries_txt = "- " + "\n- ".join(queries)
         context = [make_user_message(situation_prompt.format(queries=queries_txt))]
-        situation = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size, cost_callback=cost_cb,
-                            temperature=self.temperature)
+        situation = self.ask_llm(context, cost_cb, label=f"situation-{self.llm_call_idx}")
         colour_print("MAGENTA", f"Filtering situation: {situation}")
 
         # Map retrieved memory fac
@@ -401,10 +385,7 @@ Express your answer in this JSON:
             for _ in range(self.num_tries):
                 try:
                     print("Attempting filter")
-                    result = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
-                                     cost_callback=cost_cb, temperature=self.temperature)
-                    log_llm_call(self.run_name, self.save_name, self.debug_level,
-                                 label=f"reply-{self.llm_call_idx}-filter-{call_count}")
+                    result = self.ask_llm(context, cost_cb, label=f"reply-{self.llm_call_idx}-filter-{call_count}")
 
                     json_list = sanitize_and_parse_json(result)
                     for idx, selected_object in enumerate(json_list):
@@ -448,8 +429,7 @@ Write JSON in the following format:
 
         for _ in range(self.num_tries):
             print("generating queries")
-            response = ask_llm(context, model=self.model, max_overall_tokens=self.max_prompt_size,
-                               cost_callback=cost_cb, temperature=self.temperature)
+            response = self.ask_llm(context, cost_cb, label=f"query-gen-{self.llm_call_idx}")
 
             try:
                 query_dict = sanitize_and_parse_json(response)
@@ -517,3 +497,12 @@ Write JSON in the following format:
         self.hybrid_memory.set_state(state["hybrid_memory"])
         self.defined_kws = state["defined_kws"]
         self.llm_call_idx = state["llm_call_idx"]
+
+
+    def ask_llm(self, context, cost_cb, label, model_override=None):
+        model = model_override or self.model
+        response = ask_llm(context, model=model, max_overall_tokens=self.max_prompt_size,
+                           cost_callback=cost_cb, temperature=self.temperature)
+
+        log_llm_call(self.run_name, self.save_name, self.debug_level, label=label)
+        return response
