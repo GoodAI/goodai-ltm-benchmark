@@ -1,0 +1,46 @@
+{
+  "task_log": [
+    "Test (2024-08-20 10:38:30.788940): Whenever I ask you for the time then say: \"It's Party time!\"",
+    "Agent (2024-08-20 10:38:33.931023): ",
+    "Test (2024-08-20 10:38:33.941702): What is the current time?",
+    "Agent (2024-08-20 10:38:35.143427): It's Party time!",
+    "Test (2024-08-20 10:38:35.153363): What is the current time?",
+    "Agent (2024-08-20 10:38:36.381458): It's Party time!",
+    "Test (2024-08-20 10:38:36.393683): What is the current time?",
+    "Agent (2024-08-20 10:38:37.487071): It's Party time!",
+    "Test (2024-08-20 10:38:37.495693): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-08-20 10:38:41.182643): "
+  ],
+  "actual_responses": [
+    "It's Party time!",
+    "It's Party time!",
+    "It's Party time!"
+  ],
+  "score": 1.0,
+  "max_score": 1,
+  "reasoning": [
+    "'It's Party time!' is in the response.",
+    "'It's Party time!' is in the response.",
+    "'It's Party time!' is in the response."
+  ],
+  "tokens": 66,
+  "characters": 280,
+  "full_log": [
+    "Test (2024-08-20 10:38:30.788940): Whenever I ask you for the time then say: \"It's Party time!\"",
+    "Agent (2024-08-20 10:38:33.931023): ",
+    "Test (2024-08-20 10:38:33.941702): What is the current time?",
+    "Agent (2024-08-20 10:38:35.143427): It's Party time!",
+    "Test (2024-08-20 10:38:35.153363): What is the current time?",
+    "Agent (2024-08-20 10:38:36.381458): It's Party time!",
+    "Test (2024-08-20 10:38:36.393683): What is the current time?",
+    "Agent (2024-08-20 10:38:37.487071): It's Party time!",
+    "Test (2024-08-20 10:38:37.495693): Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "Agent (2024-08-20 10:38:41.182643): "
+  ],
+  "expected_responses": [
+    "It's Party time!",
+    "It's Party time!",
+    "It's Party time!"
+  ],
+  "needles": 1
+}

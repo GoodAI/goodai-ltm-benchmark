@@ -21,6 +21,8 @@ from model_interfaces.human import HumanChatSession
 from model_interfaces.huggingface_interface import HFChatSession
 from model_interfaces.gemini_interface import GeminiProInterface
 from model_interfaces.memorybank_interface import MemoryBankInterface #Memory Bank
+from model_interfaces.memgpt_interface import MemGPTInterface
+from model_interfaces.fifo import FifoAgentInterface
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
@@ -37,7 +39,8 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
 
     if name == "gemini":
         return GeminiProInterface(run_name=run_name)
-
+    if (match := re.match(r"^fifo\((?P<file>.+)\)$", name)) is not None:
+        return FifoAgentInterface(fifo_file=Path(match.groupdict()["file"]), **kwargs)
     if name.startswith("ltm_agent"):
         match = re.match(r"^ltm_agent\((?P<model>.+)\)$", name)
         if match is None:
@@ -55,6 +58,11 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         return HFChatSession(model=name, **kwargs)
     if name == "memory_bank":
         return MemoryBankInterface(api_url="http://localhost:5000")
+    if name.startswith("memgpt"):
+        match = re.match(r"^memgpt\((?P<model>.+)\)$", name)
+        if match is None:
+            raise ValueError(f"Unrecognized MemGPT Agent {repr(name)}.")
+        return MemGPTInterface(model=match.groupdict()["model"], **kwargs)
 
     try:
         if name.startswith("ts-"):
