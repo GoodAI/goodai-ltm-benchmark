@@ -27,7 +27,8 @@ from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from model_interfaces.huggingface_interface import HFChatSession
 from model_interfaces.gemini_interface import GeminiProInterface
-from model_interfaces.multi_agent_interface import MultiAgentRAGInterface
+from model_interfaces.multi_agent_interface import MultiAgentRAGInterface #Fin prototype
+from model_interfaces.memorybank_interface import MemoryBankInterface #Memory Bank
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
@@ -77,6 +78,8 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
         return HFChatSession(model=name, **kwargs)
     if name == "fin_prototype":
         return MultiAgentRAGInterface(api_url="http://localhost:8080")
+    if name == "memory_bank":
+        return MemoryBankInterface(api_url="http://localhost:5000")
 
     try:
         if name.startswith("ts-"):

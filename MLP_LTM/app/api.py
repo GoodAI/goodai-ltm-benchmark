@@ -8,7 +8,6 @@ from app.utils.logging import get_logger
 app = FastAPI()
 logger = get_logger('custom')
 
-
 class QueryRequest(BaseModel):
     query: str
 
@@ -30,10 +29,18 @@ except Exception as e:
 async def query_endpoint(request: Query):
     try:
         response = await agent.process_query(request.query)
-        return {"response": response}
+        return {"response": response["response"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-    
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/get_cost")
+async def get_cost():
+    try:
+        cost_info = agent._aggregate_costs()
+        return {"cost_info": cost_info}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

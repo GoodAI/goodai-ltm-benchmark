@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Dict
 import asyncio
 from app.db.memory_database import Memory
 from app.config import config
 from app.utils.logging import get_logger
 from app.model_client import ModelClient
+from app.utils.cost_tracker import ReplyCostTracker
 
 logger = get_logger('custom')
 
@@ -11,6 +12,7 @@ class FilterAgent:
     def __init__(self):
         self.model_client = ModelClient(config.MODEL_CONFIGS['filter']['provider'])
         self.relevance_threshold = 1  # Lowered to include more remotely relevant memories
+        self.cost_tracker = ReplyCostTracker(cost_per_token=0.150, cost_per_request=0.6)  # per million
 
     async def calculate_relevance_score(self, query: str, memory: Memory) -> float:
         try:
@@ -74,10 +76,14 @@ OUTPUT INSTRUCTION: Provide ONLY the numerical score (0-5) as the final answer. 
             )
 
             result = self.model_client.get_completion_content(response)
+            tokens_used = self.model_client.get_tokens_used(response)
             score = float(result.strip())
-            
+
+            # Log the cost for this call
+            self.cost_tracker.log_reply(tokens_used)
+
             # Ensure the score is within the valid range
-            return max(0, min(10, score))
+            return max(0, min(5, score))
 
         except ValueError:
             logger.error("Failed to parse relevance score from the model")
@@ -96,9 +102,17 @@ OUTPUT INSTRUCTION: Provide ONLY the numerical score (0-5) as the final answer. 
                 logger.debug(f"Relevance score for memory {memory.id}: {score}")
                 if score >= self.relevance_threshold:
                     filtered_memories.append(memory)
-            
+
             logger.info(f"Filtered {len(retrieved_memories)} memories down to {len(filtered_memories)}")
+            logger.info(f"Total Cost: ${self.cost_tracker.get_total_cost():.4f}")
+            logger.info(f"Cost per Reply: ${self.cost_tracker.get_cost_per_reply():.4f}")
             return filtered_memories
         except Exception as e:
             logger.error(f"Error in filter_process: {str(e)}", exc_info=True)
             return retrieved_memories  # Return all memories in case of an error
+        
+    def get_cost_info(self) -> Dict:
+        return {
+            "total_cost": self.cost_tracker.get_total_cost(),
+            "cost_per_reply": self.cost_tracker.get_cost_per_reply()
+        }

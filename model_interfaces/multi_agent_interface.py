@@ -4,6 +4,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from model_interfaces.interface import ChatSession
+import asyncio
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -36,9 +37,20 @@ class MultiAgentRAGInterface(ChatSession):
         payload = {"query": user_message}
         response = requests.post(f"{self.api_url}/query", json=payload, headers=headers)
         response.raise_for_status()
-        # Example of incrementing costs (this should be replaced with actual cost calculation)
-        self.costs_usd += 0.01
-        return response.json()["response"]
+        response_data = response.json()
+        agent_response = response_data["response"]
+        
+        # Get the latest cost information
+        cost_info_response = requests.get(f"{self.api_url}/get_cost", headers=headers)
+        cost_info_response.raise_for_status()
+        cost_info = cost_info_response.json()["cost_info"]
+        
+        # Aggregate the costs from the response data
+        self.costs_usd = sum(
+            agent["total_cost"] for agent in cost_info.values()
+        )
+
+        return agent_response
 
     def reset(self):
         # Implement reset functionality if needed
@@ -58,4 +70,4 @@ class MultiAgentRAGInterface(ChatSession):
 
     def get_costs(self):
         # Method to return the current costs
-        return self.costs_usd
+        return self.costs_usd / 1,000,000

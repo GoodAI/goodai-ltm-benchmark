@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Dict
 from app.config import config
 from app.utils.logging import get_logger
 from app.utils.llama_tokenizer import LlamaTokenizer
 from app.model_client import ModelClient
+from app.utils.cost_tracker import ReplyCostTracker  # Import the cost tracker
 
 logger = get_logger('custom')
 
@@ -10,6 +11,7 @@ class SummarizationAgent:
     def __init__(self):
         self.model_client = ModelClient(config.MODEL_CONFIGS['summarization']['provider'])
         self.tokenizer = LlamaTokenizer()
+        self.cost_tracker = ReplyCostTracker(cost_per_token=0.150, cost_per_request=0.6)  # per million
 
     async def summarize_memories(self, query: str, memories: List[str], max_tokens: int) -> List[str]:
         try:
@@ -78,12 +80,16 @@ class SummarizationAgent:
             return self.tokenizer.truncate_text(" ".join(memories), max_tokens)
 
         try:
-            response = self.model_client.chat_completion(
+            response = await self.model_client.chat_completion(
                 model=config.MODEL_CONFIGS['summarization']['model'],
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_new_tokens,
                 temperature=config.MODEL_CONFIGS['summarization']['temperature']
             )
+
+            tokens_used = self.model_client.get_tokens_used(response)
+            self.cost_tracker.log_reply(tokens_used)
+
             return self.model_client.get_completion_content(response)
         except Exception as e:
             logger.error(f"Error generating abstractive summary: {str(e)}", exc_info=True)
@@ -102,3 +108,9 @@ class SummarizationAgent:
         {memories_text}
 
         Summary:"""
+        
+    def get_cost_info(self) -> Dict:
+        return {
+            "total_cost": self.cost_tracker.get_total_cost(),
+            "cost_per_reply": self.cost_tracker.get_cost_per_reply()
+        }

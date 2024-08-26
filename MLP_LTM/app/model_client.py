@@ -65,6 +65,11 @@ class ModelClient:
         logger.error(f"Unexpected completion format: {completion}")
         raise ValueError(f"Unexpected completion format: {completion}")
 
+    def get_tokens_used(self, completion):
+        if isinstance(completion, dict) and 'usage' in completion:
+            return completion['usage'].get('total_tokens', 0)
+        return 0
+
     async def aclose(self):
         if hasattr(self.client, 'aclose'):
             await self.client.aclose()
