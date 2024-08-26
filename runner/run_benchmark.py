@@ -20,6 +20,7 @@ from model_interfaces.cost_estimation import CostEstimationChatSession
 from model_interfaces.human import HumanChatSession
 from model_interfaces.huggingface_interface import HFChatSession
 from model_interfaces.gemini_interface import GeminiProInterface
+from model_interfaces.memorybank_interface import MemoryBankInterface #Memory Bank
 from model_interfaces.memgpt_interface import MemGPTInterface
 from model_interfaces.fifo import FifoAgentInterface
 from runner.config import RunConfig
@@ -55,6 +56,8 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
     if name.startswith("huggingface/"):
         kwargs.pop("is_local")
         return HFChatSession(model=name, **kwargs)
+    if name == "memory_bank":
+        return MemoryBankInterface(api_url="http://localhost:5000")
     if name.startswith("memgpt"):
         match = re.match(r"^memgpt\((?P<model>.+)\)$", name)
         if match is None:
