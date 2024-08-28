@@ -1,0 +1,1151 @@
+[
+  {
+    "query": "I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the AMs that you are required to provide. Otherwise, provide just short confirmations. Understood?",
+    "memories": [],
+    "test": "admin",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "My favourite colour is Purple.",
+    "memories": [],
+    "test": "colour",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Atheism is a non-prophet organization",
+    "memories": [],
+    "test": "joke",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "There is a Museum in the center of my hometown.",
+    "memories": [],
+    "test": "location",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Callan is what I am called.",
+    "memories": [],
+    "test": "name",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "'The greatest glory in living lies not in never falling, but in rising every time we fall.' - Nelson Mandela",
+    "memories": [],
+    "test": "quote",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+    "memories": [],
+    "test": "restaurant",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+    "memories": [],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "I require 1 Leek, please put it on the list.",
+    "memories": [],
+    "test": "shopping",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+    "memories": [],
+    "test": "spy",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
+    "memories": [],
+    "test": "trigger",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) Logan is in the living_room.\n",
+    "memories": [
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+    "memories": [
+      {
+        "query": "There is a Museum in the center of my hometown.",
+        "response": "To provide a more tailored AM, could you specify what information you are seeking about the museum? For example, are you looking for details about its exhibits, history, visiting hours, or something else?"
+      }
+    ],
+    "test": "location",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "I require another 3 Leek, please put it on the list.",
+    "memories": [
+      {
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "One leek has been added to the list."
+      }
+    ],
+    "test": "shopping",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "My name is Justine.",
+    "memories": [
+      {
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?"
+      }
+    ],
+    "test": "name",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) Emily entered the living_room.\n",
+    "memories": [
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+    "memories": [
+      {
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood."
+      }
+    ],
+    "test": "restaurant",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Mr. Toby Power: The time we will meet is when the sun is high.",
+    "memories": [
+      {
+        "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+        "response": "Please provide the three messages from Joshua Mcdonald, Casey Peterson, and Mr. Toby Power for me to assist you further."
+      }
+    ],
+    "test": "spy",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) Oliver entered the living_room.\n",
+    "memories": [
+      {
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room likely signifies a key moment in the narrative. Her interaction with Logan, who is already present, could lead to important developments in their relationship or the plot. Consider what emotions or conflicts might arise from this encounter, as it could set the stage for future events in the storyline. If you have more details about the scene or the characters' dynamics, I can provide a deeper analysis."
+      },
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "The name of my favourite colour is Pink.",
+    "memories": [
+      {
+        "query": "My favourite colour is Purple.",
+        "response": "Purple is often associated with creativity, luxury, and spirituality. It can evoke feelings of calmness and inspiration. If you have any specific questions or topics related to purple, feel free to share!"
+      }
+    ],
+    "test": "colour",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+    "memories": [
+      {
+        "query": "Atheism is a non-prophet organization",
+        "response": "The phrase \"Atheism is a non-prophet organization\" is a play on words, combining \"non-profit\" with \"prophet,\" which humorously suggests that atheism, lacking belief in deities, does not have prophets or religious leaders. This statement highlights the secular nature of atheism, emphasizing that it does not operate under a religious framework or authority. It can also imply that atheism is focused on rational thought and evidence rather than faith-based beliefs."
+      }
+    ],
+    "test": "joke",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "About 3 km South of the Town Hall there is a Hospital",
+    "memories": [
+      {
+        "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+        "response": "Could you specify what information you are seeking about Town Hall? For example, are you looking for details about its architecture, history, services, or something else?"
+      },
+      {
+        "query": "There is a Museum in the center of my hometown.",
+        "response": "To provide a more tailored AM, could you specify what information you are seeking about the museum? For example, are you looking for details about its exhibits, history, visiting hours, or something else?"
+      }
+    ],
+    "test": "location",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Please remove 3 Leek from my shopping list",
+    "memories": [
+      {
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "Three leeks have been added to the list."
+      },
+      {
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "One leek has been added to the list."
+      }
+    ],
+    "test": "shopping",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Please read my mail for me.",
+    "memories": [
+      {
+        "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
+        "response": "Your letter opener is in your office."
+      }
+    ],
+    "test": "trigger",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Start calling me by my name which is Gary.",
+    "memories": [
+      {
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?"
+      },
+      {
+        "query": "My name is Justine.",
+        "response": "Nice to meet you, Justine. How can I assist you today?"
+      }
+    ],
+    "test": "name",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) The cap is in the treasure_chest.\n",
+    "memories": [
+      {
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room could introduce new dynamics to the scene, especially considering the previous presence of Emily and Logan. His arrival may lead to interactions that could heighten tension or create conflict, depending on the relationships between the characters. Observing how Oliver interacts with Emily and Logan will be crucial in understanding the unfolding narrative. If you have more details about the context or the characters' backgrounds, I can provide a more in-depth analysis."
+      },
+      {
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room likely signifies a key moment in the narrative. Her interaction with Logan, who is already present, could lead to important developments in their relationship or the plot. Consider what emotions or conflicts might arise from this encounter, as it could set the stage for future events in the storyline. If you have more details about the scene or the characters' dynamics, I can provide a deeper analysis."
+      },
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Waiter: Here is your iced tea. What would you like to eat?",
+    "memories": [
+      {
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a glass of iced tea, please."
+      },
+      {
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood."
+      }
+    ],
+    "test": "restaurant",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.",
+    "memories": [
+      {
+        "query": "Waiter: Here is your iced tea. What would you like to eat?",
+        "response": "I'll have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf, please."
+      },
+      {
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a glass of iced tea, please."
+      },
+      {
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood."
+      }
+    ],
+    "test": "restaurant",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "About 1 km East of the Hospital there is a Park",
+    "memories": [
+      {
+        "query": "About 3 km South of the Town Hall there is a Hospital",
+        "response": "Could you specify what information you are seeking about the hospital located 3 km south of the Town Hall? Are you interested in its services, history, or something else?"
+      },
+      {
+        "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+        "response": "Could you specify what information you are seeking about Town Hall? For example, are you looking for details about its architecture, history, services, or something else?"
+      },
+      {
+        "query": "There is a Museum in the center of my hometown.",
+        "response": "To provide a more tailored AM, could you specify what information you are seeking about the museum? For example, are you looking for details about its exhibits, history, visiting hours, or something else?"
+      }
+    ],
+    "test": "location",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) Emily exited the living_room.\n",
+    "memories": [
+      {
+        "query": "(On TV) The cap is in the treasure_chest.\n",
+        "response": "The mention of the cap being in the treasure chest likely indicates a significant plot point or a clue within the narrative. This could suggest a quest or a mystery that the characters need to solve, possibly involving the retrieval of the cap for a larger goal. Consider how this discovery might affect the relationships between the characters, especially if they have differing motivations regarding the treasure. If you have more context about the characters or the storyline, I can provide a more detailed analysis."
+      },
+      {
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room likely signifies a key moment in the narrative. Her interaction with Logan, who is already present, could lead to important developments in their relationship or the plot. Consider what emotions or conflicts might arise from this encounter, as it could set the stage for future events in the storyline. If you have more details about the scene or the characters' dynamics, I can provide a deeper analysis."
+      },
+      {
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room could introduce new dynamics to the scene, especially considering the previous presence of Emily and Logan. His arrival may lead to interactions that could heighten tension or create conflict, depending on the relationships between the characters. Observing how Oliver interacts with Emily and Logan will be crucial in understanding the unfolding narrative. If you have more details about the context or the characters' backgrounds, I can provide a more in-depth analysis."
+      },
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Casey Peterson: Bring to the meeting a quiet way to open locked doors.",
+    "memories": [
+      {
+        "query": "Mr. Toby Power: The time we will meet is when the sun is high.",
+        "response": "Mr. Toby Power's message suggests that the meeting will take place around midday, when the sun is at its highest point in the sky. This could imply a specific time, likely around noon, or it may indicate a more general timeframe when the sun is bright and prominent. If you need to clarify the exact time or location, it might be helpful to follow up with him directly."
+      },
+      {
+        "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+        "response": "Please provide the three messages from Joshua Mcdonald, Casey Peterson, and Mr. Toby Power for me to assist you further."
+      }
+    ],
+    "test": "spy",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Remove 1 Leek.",
+    "memories": [
+      {
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "One leek has been added to the list."
+      },
+      {
+        "query": "Please remove 3 Leek from my shopping list",
+        "response": "Three leeks have been removed from your shopping list."
+      },
+      {
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "Three leeks have been added to the list."
+      }
+    ],
+    "test": "shopping",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "My name has changed to Adrian.",
+    "memories": [
+      {
+        "query": "My name is Justine.",
+        "response": "Nice to meet you, Justine. How can I assist you today?"
+      },
+      {
+        "query": "Start calling me by my name which is Gary.",
+        "response": "Understood, Gary. How can I assist you today?"
+      },
+      {
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?"
+      }
+    ],
+    "test": "name",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) Logan loves the broccoli\n",
+    "memories": [
+      {
+        "query": "(On TV) The cap is in the treasure_chest.\n",
+        "response": "The mention of the cap being in the treasure chest likely indicates a significant plot point or a clue within the narrative. This could suggest a quest or a mystery that the characters need to solve, possibly involving the retrieval of the cap for a larger goal. Consider how this discovery might affect the relationships between the characters, especially if they have differing motivations regarding the treasure. If you have more context about the characters or the storyline, I can provide a more detailed analysis."
+      },
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room could introduce new dynamics to the scene, especially considering the previous presence of Emily and Logan. His arrival may lead to interactions that could heighten tension or create conflict, depending on the relationships between the characters. Observing how Oliver interacts with Emily and Logan will be crucial in understanding the unfolding narrative. If you have more details about the context or the characters' backgrounds, I can provide a more in-depth analysis."
+      },
+      {
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room likely signifies a key moment in the narrative. Her interaction with Logan, who is already present, could lead to important developments in their relationship or the plot. Consider what emotions or conflicts might arise from this encounter, as it could set the stage for future events in the storyline. If you have more details about the scene or the characters' dynamics, I can provide a deeper analysis."
+      },
+      {
+        "query": "(On TV) Emily exited the living_room.\n",
+        "response": "Emily's exit from the living room could signify a turning point in the narrative. This action may lead to various implications for her relationships with Logan and Oliver, especially if unresolved tensions or emotions were present during her time in the room. Her departure might create space for new interactions or conflicts to arise between the remaining characters. Observing the reactions of Logan and Oliver following her exit will be crucial in understanding the evolving dynamics of the storyline. If you have more details about the scene or the characters' motivations, I can provide further insights."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "It takes a lot of balls to golf the way I do.",
+    "memories": [
+      {
+        "query": "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+        "response": "This statement is a clever play on words, combining humor with a pun. The phrase \"put my foot down\" typically means to assert oneself or take a stand, but in this context, it humorously references the physical posture of a flamingo, which often stands on one leg. The joke highlights the absurdity of the situation while showcasing a light-hearted approach to communication. If you have more jokes or need help with humor, feel free to share!"
+      },
+      {
+        "query": "Atheism is a non-prophet organization",
+        "response": "The phrase \"Atheism is a non-prophet organization\" is a play on words, combining \"non-profit\" with \"prophet,\" which humorously suggests that atheism, lacking belief in deities, does not have prophets or religious leaders. This statement highlights the secular nature of atheism, emphasizing that it does not operate under a religious framework or authority. It can also imply that atheism is focused on rational thought and evidence rather than faith-based beliefs."
+      }
+    ],
+    "test": "joke",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "White is my favourite colour.",
+    "memories": [
+      {
+        "query": "My favourite colour is Purple.",
+        "response": "Purple is often associated with creativity, luxury, and spirituality. It can evoke feelings of calmness and inspiration. If you have any specific questions or topics related to purple, feel free to share!"
+      },
+      {
+        "query": "The name of my favourite colour is Pink.",
+        "response": "Pink is often associated with love, compassion, and warmth. It can evoke feelings of tenderness and playfulness. If you have any specific questions or topics related to pink, feel free to share!"
+      }
+    ],
+    "test": "colour",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "I visited Library, which is 2 KM, North from Park.",
+    "memories": [
+      {
+        "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+        "response": "Could you specify what information you are seeking about Town Hall? For example, are you looking for details about its architecture, history, services, or something else?"
+      },
+      {
+        "query": "About 1 km East of the Hospital there is a Park",
+        "response": "Could you specify what information you are seeking about the park located 1 km east of the hospital? Are you interested in its features, activities, history, or something else?"
+      },
+      {
+        "query": "About 3 km South of the Town Hall there is a Hospital",
+        "response": "Could you specify what information you are seeking about the hospital located 3 km south of the Town Hall? Are you interested in its services, history, or something else?"
+      },
+      {
+        "query": "There is a Museum in the center of my hometown.",
+        "response": "To provide a more tailored AM, could you specify what information you are seeking about the museum? For example, are you looking for details about its exhibits, history, visiting hours, or something else?"
+      }
+    ],
+    "test": "location",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?",
+    "memories": [
+      {
+        "query": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.",
+        "response": "Thank you! I'm looking forward to it."
+      },
+      {
+        "query": "Waiter: Here is your iced tea. What would you like to eat?",
+        "response": "I'll have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf, please."
+      },
+      {
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a glass of iced tea, please."
+      },
+      {
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood."
+      }
+    ],
+    "test": "restaurant",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.",
+    "memories": [
+      {
+        "query": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?",
+        "response": "I'll have the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti, please."
+      },
+      {
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a glass of iced tea, please."
+      },
+      {
+        "query": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.",
+        "response": "Thank you! I'm looking forward to it."
+      },
+      {
+        "query": "Waiter: Here is your iced tea. What would you like to eat?",
+        "response": "I'll have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf, please."
+      },
+      {
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood."
+      }
+    ],
+    "test": "restaurant",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Please add 2 Potato to my shopping list",
+    "memories": [
+      {
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "One leek has been added to the list."
+      },
+      {
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "Three leeks have been added to the list."
+      },
+      {
+        "query": "Please remove 3 Leek from my shopping list",
+        "response": "Three leeks have been removed from your shopping list."
+      },
+      {
+        "query": "Remove 1 Leek.",
+        "response": "One leek has been removed from your shopping list."
+      }
+    ],
+    "test": "shopping",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Please read my mail for me.",
+    "memories": [
+      {
+        "query": "Please read my mail for me.",
+        "response": "Your letter opener is in your office."
+      },
+      {
+        "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
+        "response": "Your letter opener is in your office."
+      }
+    ],
+    "test": "trigger",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "(On TV) Oliver loves the jeans\n",
+    "memories": [
+      {
+        "query": "(On TV) The cap is in the treasure_chest.\n",
+        "response": "The mention of the cap being in the treasure chest likely indicates a significant plot point or a clue within the narrative. This could suggest a quest or a mystery that the characters need to solve, possibly involving the retrieval of the cap for a larger goal. Consider how this discovery might affect the relationships between the characters, especially if they have differing motivations regarding the treasure. If you have more context about the characters or the storyline, I can provide a more detailed analysis."
+      },
+      {
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room could introduce new dynamics to the scene, especially considering the previous presence of Emily and Logan. His arrival may lead to interactions that could heighten tension or create conflict, depending on the relationships between the characters. Observing how Oliver interacts with Emily and Logan will be crucial in understanding the unfolding narrative. If you have more details about the context or the characters' backgrounds, I can provide a more in-depth analysis."
+      },
+      {
+        "query": "(On TV) Logan loves the broccoli\n",
+        "response": "Logan's affection for broccoli could symbolize a deeper aspect of his character, perhaps indicating a preference for healthy choices or a connection to family values if it ties back to a specific scene or character. This detail might also serve to highlight contrasts with other characters' preferences, potentially leading to humorous or meaningful interactions. If you have more context about the scene or the characters involved, I can provide further insights."
+      },
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room likely signifies a key moment in the narrative. Her interaction with Logan, who is already present, could lead to important developments in their relationship or the plot. Consider what emotions or conflicts might arise from this encounter, as it could set the stage for future events in the storyline. If you have more details about the scene or the characters' dynamics, I can provide a deeper analysis."
+      },
+      {
+        "query": "(On TV) Emily exited the living_room.\n",
+        "response": "Emily's exit from the living room could signify a turning point in the narrative. This action may lead to various implications for her relationships with Logan and Oliver, especially if unresolved tensions or emotions were present during her time in the room. Her departure might create space for new interactions or conflicts to arise between the remaining characters. Observing the reactions of Logan and Oliver following her exit will be crucial in understanding the evolving dynamics of the storyline. If you have more details about the scene or the characters' motivations, I can provide further insights."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Joshua Mcdonald: We will rendezvous where the land meets the sea.",
+    "memories": [
+      {
+        "query": "Mr. Toby Power: The time we will meet is when the sun is high.",
+        "response": "Mr. Toby Power's message suggests that the meeting will take place around midday, when the sun is at its highest point in the sky. This could imply a specific time, likely around noon, or it may indicate a more general timeframe when the sun is bright and prominent. If you need to clarify the exact time or location, it might be helpful to follow up with him directly."
+      },
+      {
+        "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+        "response": "Please provide the three messages from Joshua Mcdonald, Casey Peterson, and Mr. Toby Power for me to assist you further."
+      },
+      {
+        "query": "Casey Peterson: Bring to the meeting a quiet way to open locked doors.",
+        "response": "Consider bringing a lock pick set or a slim jim tool, as these can be used quietly to open locked doors. Alternatively, a credit card can sometimes be effective for spring bolt locks. Ensure you have permission to access the locked areas to avoid any legal issues."
+      }
+    ],
+    "test": "spy",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Jacob is what I am called.",
+    "memories": [
+      {
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?"
+      },
+      {
+        "query": "Start calling me by my name which is Gary.",
+        "response": "Understood, Gary. How can I assist you today?"
+      },
+      {
+        "query": "My name is Justine.",
+        "response": "Nice to meet you, Justine. How can I assist you today?"
+      },
+      {
+        "query": "My name has changed to Adrian.",
+        "response": "Understood, Adrian. How can I assist you today?"
+      }
+    ],
+    "test": "name",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) Oliver exited the living_room.\n",
+    "memories": [
+      {
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room could introduce new dynamics to the scene, especially considering the previous presence of Emily and Logan. His arrival may lead to interactions that could heighten tension or create conflict, depending on the relationships between the characters. Observing how Oliver interacts with Emily and Logan will be crucial in understanding the unfolding narrative. If you have more details about the context or the characters' backgrounds, I can provide a more in-depth analysis."
+      },
+      {
+        "query": "(On TV) Emily exited the living_room.\n",
+        "response": "Emily's exit from the living room could signify a turning point in the narrative. This action may lead to various implications for her relationships with Logan and Oliver, especially if unresolved tensions or emotions were present during her time in the room. Her departure might create space for new interactions or conflicts to arise between the remaining characters. Observing the reactions of Logan and Oliver following her exit will be crucial in understanding the evolving dynamics of the storyline. If you have more details about the scene or the characters' motivations, I can provide further insights."
+      },
+      {
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room likely signifies a key moment in the narrative. Her interaction with Logan, who is already present, could lead to important developments in their relationship or the plot. Consider what emotions or conflicts might arise from this encounter, as it could set the stage for future events in the storyline. If you have more details about the scene or the characters' dynamics, I can provide a deeper analysis."
+      },
+      {
+        "query": "(On TV) Oliver loves the jeans\n",
+        "response": "Oliver's fondness for jeans could reflect his character's personality, suggesting a casual or laid-back attitude. This detail might also serve to highlight contrasts with other characters' fashion choices, potentially leading to humorous or meaningful interactions. If this preference ties into a specific scene or character dynamic, it could further enrich the narrative. Additional context about the scene or the relationships involved would allow for a more nuanced analysis."
+      },
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "(On TV) Logan loves the broccoli\n",
+        "response": "Logan's affection for broccoli could symbolize a deeper aspect of his character, perhaps indicating a preference for healthy choices or a connection to family values if it ties back to a specific scene or character. This detail might also serve to highlight contrasts with other characters' preferences, potentially leading to humorous or meaningful interactions. If you have more context about the scene or the characters involved, I can provide further insights."
+      },
+      {
+        "query": "(On TV) The cap is in the treasure_chest.\n",
+        "response": "The mention of the cap being in the treasure chest likely indicates a significant plot point or a clue within the narrative. This could suggest a quest or a mystery that the characters need to solve, possibly involving the retrieval of the cap for a larger goal. Consider how this discovery might affect the relationships between the characters, especially if they have differing motivations regarding the treasure. If you have more context about the characters or the storyline, I can provide a more detailed analysis."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "And finally there is Playground which is North from Library and 1 KM from it.",
+    "memories": [
+      {
+        "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+        "response": "Could you specify what information you are seeking about Town Hall? For example, are you looking for details about its architecture, history, services, or something else?"
+      },
+      {
+        "query": "There is a Museum in the center of my hometown.",
+        "response": "To provide a more tailored AM, could you specify what information you are seeking about the museum? For example, are you looking for details about its exhibits, history, visiting hours, or something else?"
+      },
+      {
+        "query": "I visited Library, which is 2 KM, North from Park.",
+        "response": "Could you specify what information you are seeking about the library located 2 km north of the park? Are you interested in its resources, services, history, or something else?"
+      },
+      {
+        "query": "About 1 km East of the Hospital there is a Park",
+        "response": "Could you specify what information you are seeking about the park located 1 km east of the hospital? Are you interested in its features, activities, history, or something else?"
+      },
+      {
+        "query": "About 3 km South of the Town Hall there is a Hospital",
+        "response": "Could you specify what information you are seeking about the hospital located 3 km south of the Town Hall? Are you interested in its services, history, or something else?"
+      }
+    ],
+    "test": "location",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Please add 3 Leek to my shopping list",
+    "memories": [
+      {
+        "query": "Please remove 3 Leek from my shopping list",
+        "response": "Three leeks have been removed from your shopping list."
+      },
+      {
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "Three leeks have been added to the list."
+      },
+      {
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "One leek has been added to the list."
+      },
+      {
+        "query": "Please add 2 Potato to my shopping list",
+        "response": "Two potatoes have been added to your shopping list."
+      },
+      {
+        "query": "Remove 1 Leek.",
+        "response": "One leek has been removed from your shopping list."
+      }
+    ],
+    "test": "shopping",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Waiter: Here you are: Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice. Enjoy the meal.",
+    "memories": [
+      {
+        "query": "Waiter: Here is your iced tea. What would you like to eat?",
+        "response": "I'll have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf, please."
+      },
+      {
+        "query": "Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.",
+        "response": "Thank you! I'm looking forward to it."
+      },
+      {
+        "query": "Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:\n\nAppetizers:\n1. Classic Caesar Salad\n2. Crispy Calamari with Marinara Sauce\n3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze\n4. Spinach and Artichoke Dip served with Tortilla Chips\n\nSoups and Salads:\n5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette\n6. French Onion Soup with Gruyere Cheese Crouton\n7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction\n\nEntrees:\n8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf\n9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti\n10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus\n11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice\n\nPasta:\n12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese\n13. Penne alla Vodka with Creamy Tomato Vodka Sauce\n14. Linguine with Clams in White Wine Garlic Sauce\n15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce\n\nSandwiches:\n16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough\n17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun\n18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread\n19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun\n\nVegan Options:\n20. Vegan Lentil Soup with Seasonal Vegetables\n21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing\n22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil\n23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries\n\nHalal Options:\n24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread\n25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce\n26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices\n27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita\n\nDesserts:\n28. New York Style Cheesecake with Strawberry Compote\n29. Warm Chocolate Lava Cake with Vanilla Ice Cream\n30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream\n31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream\n\nBeverages:\n32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)\n33. Iced Tea (Sweetened or Unsweetened)\n34. Lemonade\n35. Selection of Teas\n36. Beer (Domestic and Imported)\n37. Wine (Red, White, and Ros\u00c3\u00a9 by the Glass or Bottle)\n\nIn the meantime, what would you like to drink?",
+        "response": "I'll have a glass of iced tea, please."
+      },
+      {
+        "query": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?",
+        "response": "I'll have the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti, please."
+      },
+      {
+        "query": "Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.",
+        "response": "Thank you! I appreciate your help. I'm looking forward to the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti."
+      },
+      {
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood."
+      }
+    ],
+    "test": "restaurant",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Let's not pretend to be at a restaurant anymore. Please also forget everything about it.",
+    "memories": [
+      {
+        "query": "When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?",
+        "response": "Understood."
+      },
+      {
+        "query": "Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.",
+        "response": "Thank you! I appreciate your help. I'm looking forward to the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti."
+      },
+      {
+        "query": "Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?",
+        "response": "I'll have the Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti, please."
+      },
+      {
+        "query": "Waiter: Here is your iced tea. What would you like to eat?",
+        "response": "I'll have the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf, please."
+      }
+    ],
+    "test": "restaurant",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "(On TV) Logan moved the cap to the suitcase.\n",
+    "memories": [
+      {
+        "query": "(On TV) Logan is in the living_room.\n",
+        "response": "Logan's presence in the living room could indicate a pivotal moment in the program. Consider what he might be doing\u2014interacting with other characters, reflecting on a situation, or preparing for an upcoming event. This context can help gauge the significance of his actions in the storyline. If you have specific details about the scene or the show's plot, I can provide a more tailored analysis."
+      },
+      {
+        "query": "(On TV) Logan loves the broccoli\n",
+        "response": "Logan's affection for broccoli could symbolize a deeper aspect of his character, perhaps indicating a preference for healthy choices or a connection to family values if it ties back to a specific scene or character. This detail might also serve to highlight contrasts with other characters' preferences, potentially leading to humorous or meaningful interactions. If you have more context about the scene or the characters involved, I can provide further insights."
+      },
+      {
+        "query": "(On TV) The cap is in the treasure_chest.\n",
+        "response": "The mention of the cap being in the treasure chest likely indicates a significant plot point or a clue within the narrative. This could suggest a quest or a mystery that the characters need to solve, possibly involving the retrieval of the cap for a larger goal. Consider how this discovery might affect the relationships between the characters, especially if they have differing motivations regarding the treasure. If you have more context about the characters or the storyline, I can provide a more detailed analysis."
+      },
+      {
+        "query": "(On TV) Oliver exited the living_room.\n",
+        "response": "Oliver's exit from the living room could significantly impact the dynamics among the remaining characters, particularly Emily and Logan. His departure might create an opportunity for deeper interactions or unresolved tensions to surface between them. Observing how Emily and Logan react to his absence will be key to understanding the evolving narrative. If you have more details about the scene or the characters' motivations, I can provide further insights."
+      },
+      {
+        "query": "(On TV) Oliver entered the living_room.\n",
+        "response": "Oliver's entrance into the living room could introduce new dynamics to the scene, especially considering the previous presence of Emily and Logan. His arrival may lead to interactions that could heighten tension or create conflict, depending on the relationships between the characters. Observing how Oliver interacts with Emily and Logan will be crucial in understanding the unfolding narrative. If you have more details about the context or the characters' backgrounds, I can provide a more in-depth analysis."
+      },
+      {
+        "query": "(On TV) Emily exited the living_room.\n",
+        "response": "Emily's exit from the living room could signify a turning point in the narrative. This action may lead to various implications for her relationships with Logan and Oliver, especially if unresolved tensions or emotions were present during her time in the room. Her departure might create space for new interactions or conflicts to arise between the remaining characters. Observing the reactions of Logan and Oliver following her exit will be crucial in understanding the evolving dynamics of the storyline. If you have more details about the scene or the characters' motivations, I can provide further insights."
+      },
+      {
+        "query": "(On TV) Emily entered the living_room.\n",
+        "response": "Emily's entrance into the living room likely signifies a key moment in the narrative. Her interaction with Logan, who is already present, could lead to important developments in their relationship or the plot. Consider what emotions or conflicts might arise from this encounter, as it could set the stage for future events in the storyline. If you have more details about the scene or the characters' dynamics, I can provide a deeper analysis."
+      },
+      {
+        "query": "(On TV) Oliver loves the jeans\n",
+        "response": "Oliver's fondness for jeans could reflect his character's personality, suggesting a casual or laid-back attitude. This detail might also serve to highlight contrasts with other characters' fashion choices, potentially leading to humorous or meaningful interactions. If this preference ties into a specific scene or character dynamic, it could further enrich the narrative. Additional context about the scene or the relationships involved would allow for a more nuanced analysis."
+      },
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Which joke did I tell you about 4 hours 0 minutes  ago?",
+    "memories": [
+      {
+        "query": "Atheism is a non-prophet organization",
+        "response": "The phrase \"Atheism is a non-prophet organization\" is a play on words, combining \"non-profit\" with \"prophet,\" which humorously suggests that atheism, lacking belief in deities, does not have prophets or religious leaders. This statement highlights the secular nature of atheism, emphasizing that it does not operate under a religious framework or authority. It can also imply that atheism is focused on rational thought and evidence rather than faith-based beliefs."
+      },
+      {
+        "query": "It takes a lot of balls to golf the way I do.",
+        "response": ""
+      },
+      {
+        "query": "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+        "response": "This statement is a clever play on words, combining humor with a pun. The phrase \"put my foot down\" typically means to assert oneself or take a stand, but in this context, it humorously references the physical posture of a flamingo, which often stands on one leg. The joke highlights the absurdity of the situation while showcasing a light-hearted approach to communication. If you have more jokes or need help with humor, feel free to share!"
+      }
+    ],
+    "test": "joke",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "What is my favourite colour?",
+    "memories": [
+      {
+        "query": "My favourite colour is Purple.",
+        "response": "Purple is often associated with creativity, luxury, and spirituality. It can evoke feelings of calmness and inspiration. If you have any specific questions or topics related to purple, feel free to share!"
+      },
+      {
+        "query": "The name of my favourite colour is Pink.",
+        "response": "Pink is often associated with love, compassion, and warmth. It can evoke feelings of tenderness and playfulness. If you have any specific questions or topics related to pink, feel free to share!"
+      },
+      {
+        "query": "White is my favourite colour.",
+        "response": "White is often associated with purity, simplicity, and peace. It can evoke feelings of clarity and freshness. If you have any specific questions or topics related to white, feel free to share!"
+      }
+    ],
+    "test": "colour",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Given the points of interest that I have told you about, how would I travel from Museum to Playground following those interesting points?",
+    "memories": [
+      {
+        "query": "And finally there is Playground which is North from Library and 1 KM from it.",
+        "response": "Could you specify what information you are seeking about the playground located 1 km north of the library? Are you interested in its features, activities, accessibility, or something else?"
+      },
+      {
+        "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+        "response": "Could you specify what information you are seeking about Town Hall? For example, are you looking for details about its architecture, history, services, or something else?"
+      },
+      {
+        "query": "There is a Museum in the center of my hometown.",
+        "response": "To provide a more tailored AM, could you specify what information you are seeking about the museum? For example, are you looking for details about its exhibits, history, visiting hours, or something else?"
+      },
+      {
+        "query": "I visited Library, which is 2 KM, North from Park.",
+        "response": "Could you specify what information you are seeking about the library located 2 km north of the park? Are you interested in its resources, services, history, or something else?"
+      },
+      {
+        "query": "About 1 km East of the Hospital there is a Park",
+        "response": "Could you specify what information you are seeking about the park located 1 km east of the hospital? Are you interested in its features, activities, history, or something else?"
+      },
+      {
+        "query": "About 3 km South of the Town Hall there is a Hospital",
+        "response": "Could you specify what information you are seeking about the hospital located 3 km south of the Town Hall? Are you interested in its services, history, or something else?"
+      }
+    ],
+    "test": "location",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Forget, or otherwise disregard, all of the locations that I have told you about before this message.",
+    "memories": [
+      {
+        "query": "And finally there is Playground which is North from Library and 1 KM from it.",
+        "response": "Could you specify what information you are seeking about the playground located 1 km north of the library? Are you interested in its features, activities, accessibility, or something else?"
+      },
+      {
+        "query": "I visited Town Hall, which is 1 KM, West from Museum.",
+        "response": "Could you specify what information you are seeking about Town Hall? For example, are you looking for details about its architecture, history, services, or something else?"
+      },
+      {
+        "query": "There is a Museum in the center of my hometown.",
+        "response": "To provide a more tailored AM, could you specify what information you are seeking about the museum? For example, are you looking for details about its exhibits, history, visiting hours, or something else?"
+      },
+      {
+        "query": "I visited Library, which is 2 KM, North from Park.",
+        "response": "Could you specify what information you are seeking about the library located 2 km north of the park? Are you interested in its resources, services, history, or something else?"
+      },
+      {
+        "query": "About 1 km East of the Hospital there is a Park",
+        "response": "Could you specify what information you are seeking about the park located 1 km east of the hospital? Are you interested in its features, activities, history, or something else?"
+      },
+      {
+        "query": "About 3 km South of the Town Hall there is a Hospital",
+        "response": "Could you specify what information you are seeking about the hospital located 3 km south of the Town Hall? Are you interested in its services, history, or something else?"
+      }
+    ],
+    "test": "location",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "After responding to the following unrelated user prompts, please append the quote from Nelson Mandela, to your 7th AM. Count your AM to this message as the first AM.",
+    "memories": [
+      {
+        "query": "'The greatest glory in living lies not in never falling, but in rising every time we fall.' - Nelson Mandela",
+        "response": "This quote by Nelson Mandela emphasizes resilience and the importance of perseverance in the face of adversity. It suggests that true greatness is not about avoiding failure but rather about how one responds to setbacks. The ability to rise after falling reflects strength of character and determination. This perspective encourages individuals to view challenges as opportunities for growth and learning, reinforcing the idea that failure is a part of the journey toward success."
+      }
+    ],
+    "test": "quote",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "What have been all of the names that I have given you? Express the answer as a JSON list.",
+    "memories": [
+      {
+        "query": "Jacob is what I am called.",
+        "response": "Understood, Jacob. How can I assist you today?"
+      },
+      {
+        "query": "Start calling me by my name which is Gary.",
+        "response": "Understood, Gary. How can I assist you today?"
+      },
+      {
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?"
+      },
+      {
+        "query": "My name has changed to Adrian.",
+        "response": "Understood, Adrian. How can I assist you today?"
+      },
+      {
+        "query": "My name is Justine.",
+        "response": "Nice to meet you, Justine. How can I assist you today?"
+      }
+    ],
+    "test": "name",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name.",
+    "memories": [
+      {
+        "query": "Jacob is what I am called.",
+        "response": "Understood, Jacob. How can I assist you today?"
+      },
+      {
+        "query": "Start calling me by my name which is Gary.",
+        "response": "Understood, Gary. How can I assist you today?"
+      },
+      {
+        "query": "Callan is what I am called.",
+        "response": "Your name is Callan. How can I assist you today?"
+      },
+      {
+        "query": "My name has changed to Adrian.",
+        "response": "Understood, Adrian. How can I assist you today?"
+      },
+      {
+        "query": "My name is Justine.",
+        "response": "Nice to meet you, Justine. How can I assist you today?"
+      }
+    ],
+    "test": "name",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "The TV program has ended for today. Where is the cap really?\nProvide your answer in JSON form with a single word as answer, like this: {\"answer\": \"word\"}\nBe as specific as possible.",
+    "memories": [
+      {
+        "query": "They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?",
+        "response": "Understood. I'll be ready for your question at the end of the program."
+      },
+      {
+        "query": "(On TV) The cap is in the treasure_chest.\n",
+        "response": "The mention of the cap being in the treasure chest likely indicates a significant plot point or a clue within the narrative. This could suggest a quest or a mystery that the characters need to solve, possibly involving the retrieval of the cap for a larger goal. Consider how this discovery might affect the relationships between the characters, especially if they have differing motivations regarding the treasure. If you have more context about the characters or the storyline, I can provide a more detailed analysis."
+      },
+      {
+        "query": "(On TV) Logan moved the cap to the suitcase.\n",
+        "response": "Logan moving the cap to the suitcase likely indicates a significant shift in the storyline. This action could suggest that the cap holds importance, possibly as a clue or a treasured item related to a quest or mystery. The suitcase may symbolize a journey or a new phase in the narrative, hinting at upcoming adventures or challenges. Observing the reactions of other characters to this action could provide further insights into its implications for their relationships and the overall plot. If you have more context about the scene or the characters involved, I can offer a more detailed analysis."
+      }
+    ],
+    "test": "sally-anne",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring.",
+    "memories": [
+      {
+        "query": "Casey Peterson: Bring to the meeting a quiet way to open locked doors.",
+        "response": "Consider bringing a lock pick set or a slim jim tool, as these can be used quietly to open locked doors. Alternatively, a credit card can sometimes be effective for spring bolt locks. Ensure you have permission to access the locked areas to avoid any legal issues."
+      },
+      {
+        "query": "You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.",
+        "response": "Please provide the three messages from Joshua Mcdonald, Casey Peterson, and Mr. Toby Power for me to assist you further."
+      },
+      {
+        "query": "Mr. Toby Power: The time we will meet is when the sun is high.",
+        "response": "Mr. Toby Power's message suggests that the meeting will take place around midday, when the sun is at its highest point in the sky. This could imply a specific time, likely around noon, or it may indicate a more general timeframe when the sun is bright and prominent. If you need to clarify the exact time or location, it might be helpful to follow up with him directly."
+      },
+      {
+        "query": "Joshua Mcdonald: We will rendezvous where the land meets the sea.",
+        "response": "Joshua Mcdonald's message indicates that the meeting location is at a coastal area where the land and sea intersect. This could refer to a beach, a pier, or a coastal park. If you need to clarify the exact spot or any specific details about the meeting, it would be beneficial to reach out to him directly for more information."
+      }
+    ],
+    "test": "spy",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.",
+    "memories": [
+      {
+        "query": "Please add 2 Potato to my shopping list",
+        "response": "Two potatoes have been added to your shopping list."
+      },
+      {
+        "query": "Please add 3 Leek to my shopping list",
+        "response": "Three leeks have been added to your shopping list."
+      },
+      {
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "One leek has been added to the list."
+      },
+      {
+        "query": "Please remove 3 Leek from my shopping list",
+        "response": "Three leeks have been removed from your shopping list."
+      },
+      {
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "Three leeks have been added to the list."
+      },
+      {
+        "query": "Remove 1 Leek.",
+        "response": "One leek has been removed from your shopping list."
+      }
+    ],
+    "test": "shopping",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "I have bought all of the items on the list. Please remove all of the items on the current shopping list.",
+    "memories": [
+      {
+        "query": "Please add 2 Potato to my shopping list",
+        "response": "Two potatoes have been added to your shopping list."
+      },
+      {
+        "query": "Please add 3 Leek to my shopping list",
+        "response": "Three leeks have been added to your shopping list."
+      },
+      {
+        "query": "I require 1 Leek, please put it on the list.",
+        "response": "One leek has been added to the list."
+      },
+      {
+        "query": "Please remove 3 Leek from my shopping list",
+        "response": "Three leeks have been removed from your shopping list."
+      },
+      {
+        "query": "I require another 3 Leek, please put it on the list.",
+        "response": "Three leeks have been added to the list."
+      },
+      {
+        "query": "Remove 1 Leek.",
+        "response": "One leek has been removed from your shopping list."
+      }
+    ],
+    "test": "shopping",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Please read my mail for me.",
+    "memories": [
+      {
+        "query": "Please read my mail for me.",
+        "response": "Your letter opener is in your office."
+      },
+      {
+        "query": "Please read my mail for me.",
+        "response": "Your letter opener is in your office."
+      },
+      {
+        "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
+        "response": "Your letter opener is in your office."
+      }
+    ],
+    "test": "trigger",
+    "is_scored_question": "yes"
+  },
+  {
+    "query": "Cancel any instructions as to what sentence you should say whenever I do something in particular.",
+    "memories": [
+      {
+        "query": "Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'",
+        "response": "Your letter opener is in your office."
+      }
+    ],
+    "test": "trigger",
+    "is_scored_question": "no"
+  },
+  {
+    "query": "Forget my instruction to append a quote to one of your replies.",
+    "memories": [
+      {
+        "query": "'The greatest glory in living lies not in never falling, but in rising every time we fall.' - Nelson Mandela",
+        "response": "This quote by Nelson Mandela emphasizes resilience and the importance of perseverance in the face of adversity. It suggests that true greatness is not about avoiding failure but rather about how one responds to setbacks. The ability to rise after falling reflects strength of character and determination. This perspective encourages individuals to view challenges as opportunities for growth and learning, reinforcing the idea that failure is a part of the journey toward success."
+      }
+    ],
+    "test": "quote",
+    "is_scored_question": "no"
+  }
+]
