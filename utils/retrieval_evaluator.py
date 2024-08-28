@@ -19,7 +19,8 @@ import argparse
 
 class RetrievalEvaluator:
     def __init__(self):
-        self.project_root = Path(__file__).parent
+        # Update the project_root to point to the data directory
+        self.project_root = Path(__file__).parent.parent / "data" / "retrieval_evaluator"
         self.dev_bench_reference_data_path = self.project_root / "dev_bench_reference_data"
         self.comparison_data_path = self.project_root / "comparison_data"
         self.logs_path = self.project_root / "logs"
@@ -479,14 +480,14 @@ class RetrievalEvaluator:
         }
 
         try:
-            existing_data = self.load_json_file(self.comparison_data_path)
+            comparison_file = self.comparison_data_path / "comparison_data.json"
+            existing_data = self.load_json_file(comparison_file)
             existing_data.append(comparison_data)
 
-            self.comparison_data_path.parent.mkdir(exist_ok=True)
-            with open(self.comparison_data_path, 'w') as f:
+            with open(comparison_file, 'w') as f:
                 json.dump(existing_data, f, indent=2)
 
-            self.logger.info(f"Comparison data appended to {self.comparison_data_path}")
+            self.logger.info(f"Comparison data appended to {comparison_file}")
         except Exception as e:
             self.logger.error(f"Error capturing comparison data: {str(e)}")
 
