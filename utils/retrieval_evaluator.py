@@ -1,10 +1,6 @@
-# retrieval_evaluator.py
-
 import json
-import shutil
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 from pathlib import Path
 import pandas as pd
 from matplotlib.gridspec import GridSpec
@@ -16,33 +12,79 @@ from fuzzywuzzy import fuzz
 from collections import defaultdict
 from typing import List, Dict, Any, Union
 import argparse
+from datetime import datetime
+import shutil
+from goodai.ltm.mem.base import RetrievedMemory
+
+class FileManager:
+    def __init__(self, base_directory: Path):
+        self.base_directory = Path(base_directory)
+        self.ensure_directory_exists(self.base_directory)
+        self.comparison_data_file = self.base_directory / "comparison_data.json"
+
+    def ensure_directory_exists(self, path):
+        path.mkdir(parents=True, exist_ok=True)
+
+    def generate_filename(self, prefix="comparison_data"):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return f"{prefix}_{timestamp}.json"
+
+    def clear_comparison_data(self, output_dir: Path, timestamp: int):
+        if self.comparison_data_file.exists():
+            new_filename = f"old_comparison_data_{datetime.fromtimestamp(timestamp).strftime('%Y%m%d_%H%M%S')}.json"
+            new_file_path = output_dir / new_filename
+
+            shutil.move(str(self.comparison_data_file), str(new_file_path))
+
+            print(f"Previous comparison data moved to {new_file_path}")
+
+        with open(self.comparison_data_file, 'w') as f:
+            json.dump([], f)
+
+        print(f"Created new empty comparison data file at {self.comparison_data_file}")
+
+    def write_data(self, data):
+        try:
+            with open(self.comparison_data_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            print(f"Data written to {self.comparison_data_file}")
+        except PermissionError as e:
+            print(f"Permission error when writing to {self.comparison_data_file}. Error: {e}")
+            fallback_path = Path.home() / "comparison_data_fallback.json"
+            with open(fallback_path, 'w') as f:
+                json.dump(data, f, indent=2)
+            print(f"Data written to fallback location: {fallback_path}")
+
+    def read_data(self):
+        if not self.comparison_data_file.exists():
+            print(f"Comparison data file not found at {self.comparison_data_file}")
+            return []
+        with open(self.comparison_data_file, 'r') as f:
+            return json.load(f)
 
 class RetrievalEvaluator:
     def __init__(self):
-        # Update the project_root to point to the data directory
         self.project_root = Path(__file__).parent.parent / "data" / "retrieval_evaluator"
         self.dev_bench_reference_data_path = self.project_root / "dev_bench_reference_data"
         self.comparison_data_path = self.project_root / "comparison_data"
         self.logs_path = self.project_root / "logs"
         self.evaluation_outputs_path = self.project_root / "evaluation_outputs"
         self.logger = logging.getLogger("retrieval_evaluator")
-        self.results = []
-        self.summary = {}
-        self.enhanced_summary = {}
+        self.results: List[Dict[str, Any]] = []
+        self.summary: Dict[str, Any] = {}
+        self.enhanced_summary: Dict[str, Any] = {}
 
-        # Create necessary directories
-        self.project_root.mkdir(exist_ok=True)
-        self.dev_bench_reference_data_path.mkdir(exist_ok=True)
-        self.comparison_data_path.mkdir(exist_ok=True)
-        self.logs_path.mkdir(exist_ok=True)
-        self.evaluation_outputs_path.mkdir(exist_ok=True)
+        self.file_manager = FileManager(self.comparison_data_path)
 
-    def setup_logging(self, benchmark_version: str):
+        for path in [self.project_root, self.dev_bench_reference_data_path, self.comparison_data_path,
+                     self.logs_path, self.evaluation_outputs_path]:
+            self.file_manager.ensure_directory_exists(path)
+
+    def setup_logging(self, benchmark_version: str) -> None:
         log_file = self.logs_path / f'evaluation_{benchmark_version}.log'
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-        # Remove any existing handlers to avoid duplicate logging
         for handler in self.logger.handlers[:]:
             self.logger.removeHandler(handler)
 
@@ -52,12 +94,12 @@ class RetrievalEvaluator:
 
         self.logger.addHandler(file_handler)
 
-    def clear_comparison_data(self):
-        if self.comparison_data_path.exists():
-            os.remove(self.comparison_data_path)
-        self.logger.info(f"Cleared previous comparison data from {self.comparison_data_path}")
+    def clear_comparison_data(self) -> None:
+        self.file_manager.clear_comparison_data()
+        self.logger.info(f"Cleared previous comparison data and created new file at {self.file_manager.comparison_data_file}")
 
-    def load_json_file(self, file_path):
+
+    def load_json_file(self, file_path: Path) -> List[Dict[str, Any]]:
         try:
             with open(file_path, 'r') as file:
                 return json.load(file)
@@ -68,24 +110,24 @@ class RetrievalEvaluator:
             self.logger.error(f"Error decoding JSON from file: {file_path}")
             return []
 
-    def is_trivia_memory(self, memory):
+    def is_trivia_memory(self, memory: Dict[str, Any]) -> bool:
         return "Here are some trivia questions and answers for you to process." in memory.get('query', '')
 
-    def fuzzy_match(self, query1, query2, threshold=85):
+    def fuzzy_match(self, query1: str, query2: str, threshold: int = 85) -> bool:
         return fuzz.ratio(query1.lower(), query2.lower()) >= threshold
 
-    def evaluate_memories(self, reference_data, input_data):
-        results = []
-        total_true_relevant = 0
-        total_expected_relevant = 0
-        total_irrelevant = 0
-        total_trivia = 0
-        total_retrieved = 0
-        total_filtered = 0
+    def evaluate_memories(self, reference_data: List[Dict[str, Any]], input_data: List[Dict[str, Any]]) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+        results: list[Dict[str, Any]] = []
+        total_true_relevant: int = 0
+        total_expected_relevant: int = 0
+        total_irrelevant: int = 0
+        total_trivia: int = 0
+        total_retrieved: int = 0
+        total_filtered: int = 0
 
         input_dict = defaultdict(list)
         for entry in input_data:
-            input_dict[entry['query']].append(entry)
+            input_dict[self._get_query_key(entry['query'])].append(entry)
 
         for i, ref_entry in enumerate(reference_data, 1):
             self.logger.info(f"\nProcessing reference entry {i}:")
@@ -95,7 +137,7 @@ class RetrievalEvaluator:
 
             matched_input = None
             for query, entries in input_dict.items():
-                if self.fuzzy_match(ref_entry['query'], query):
+                if self.fuzzy_match(self._get_query_key(ref_entry['query']), query):
                     matched_input = entries[0]
                     break
 
@@ -150,7 +192,7 @@ class RetrievalEvaluator:
 
         return results, summary
 
-    def plot_original_results(self, results, summary, output_path):
+    def plot_original_results(self, results: List[Dict[str, Any]], summary: Dict[str, Any], output_path: Path) -> None:
         df = pd.DataFrame(results)
         df['Entry'] = range(1, len(df) + 1)
 
@@ -158,7 +200,7 @@ class RetrievalEvaluator:
         fig = plt.figure(figsize=(24, 16))
         gs = GridSpec(3, 2, height_ratios=[1, 0.5, 3], width_ratios=[1.2, 0.8])
 
-        colors = {'True_relevant': '#4CAF50', 'Irrelevant': '#FFC107', 'Trivia': '#9C27B0', 'Missing_Relevant': '#F44336'}
+        colors = {'true_relevant': '#4CAF50', 'irrelevant': '#FFC107', 'trivia': '#9C27B0', 'missing_relevant': '#F44336'}
 
         ax_summary = fig.add_subplot(gs[0, 0])
         summary_data = [
@@ -209,11 +251,11 @@ class RetrievalEvaluator:
 
         bottoms = np.zeros(len(df))
         for category in ['true_relevant', 'irrelevant', 'trivia']:
-            ax_breakdown.bar(df['Entry'], df[category], bottom=bottoms, color=colors[category.capitalize()], width=0.8, edgecolor='none')
+            ax_breakdown.bar(df['Entry'], df[category], bottom=bottoms, color=colors[category], width=0.8, edgecolor='none')
             bottoms += df[category]
 
         ax_breakdown.bar(df['Entry'], df['expected_relevant'] - df['true_relevant'],
-                        bottom=df['true_relevant'], color=colors['Missing_Relevant'], width=0.8, edgecolor='none')
+                        bottom=df['true_relevant'], color=colors['missing_relevant'], width=0.8, edgecolor='none')
 
         ax_breakdown.set_xlabel('Entry Number', fontsize=14)
         ax_breakdown.set_ylabel('Number of Memories', fontsize=14)
@@ -244,14 +286,14 @@ class RetrievalEvaluator:
         self.logger.info(f"Original plot saved as '{output_path}'")
         plt.close()
 
-    def plot_test_breakdown(self, results, output_path):
+    def plot_test_breakdown(self, results: List[Dict[str, Any]], output_path: Path) -> None:
         df = pd.DataFrame(results)
 
         plt.style.use('default')
         fig, axes = plt.subplots(5, 2, figsize=(24, 30))
         fig.suptitle('Test-by-Test Memory Breakdown', fontsize=20)
 
-        colors = {'True_relevant': '#4CAF50', 'Irrelevant': '#FFC107', 'Trivia': '#9C27B0', 'Missing_Relevant': '#F44336'}
+        colors = {'true_relevant': '#4CAF50', 'irrelevant': '#FFC107', 'trivia': '#9C27B0', 'missing_relevant': '#F44336'}
 
         axes = axes.flatten()
 
@@ -267,7 +309,7 @@ class RetrievalEvaluator:
             bottoms = np.zeros(len(test_df))
             for category in ['true_relevant', 'irrelevant', 'trivia']:
                 bars = ax.bar(test_df['Entry'], test_df[category], bottom=bottoms,
-                              color=colors[category.capitalize()], width=0.8, edgecolor='none')
+                            color=colors[category.lower()], width=0.8, edgecolor='none')
 
                 for bar, is_scored in zip(bars, test_df['is_scored_question']):
                     if is_scored == 'yes':
@@ -277,7 +319,7 @@ class RetrievalEvaluator:
                 bottoms += test_df[category]
 
             ax.bar(test_df['Entry'], test_df['expected_relevant'] - test_df['true_relevant'],
-                   bottom=test_df['true_relevant'], color=colors['Missing_Relevant'], width=0.8, edgecolor='none')
+                bottom=test_df['true_relevant'], color=colors['missing_relevant'], width=0.8, edgecolor='none')
 
             ax.set_title(f"{test_type} (n={len(test_df)})", fontsize=12)
             ax.set_xlabel('Entry Number', fontsize=10)
@@ -296,7 +338,7 @@ class RetrievalEvaluator:
             fig.delaxes(axes[j])
 
         legend_elements = [Patch(facecolor=color, edgecolor='none', label=label.replace('_', ' '))
-                           for label, color in colors.items()]
+                        for label, color in colors.items()]
         fig.legend(handles=legend_elements, loc='upper center', ncol=4, fontsize=10, bbox_to_anchor=(0.5, 0.98))
 
         plt.tight_layout()
@@ -305,8 +347,7 @@ class RetrievalEvaluator:
         print(f"Test breakdown plot saved as '{output_path}'")
         plt.close()
 
-
-    def plot_retrieved_vs_filtered(self, results, output_path):
+    def plot_retrieved_vs_filtered(self, results: List[Dict[str, Any]], output_path: Path) -> None:
         df = pd.DataFrame(results)
         df['Entry'] = range(1, len(df) + 1)
 
@@ -333,7 +374,7 @@ class RetrievalEvaluator:
         self.logger.info(f"Retrieved vs Filtered plot saved as '{output_path}'")
         plt.close()
 
-    def calculate_enhanced_summary(self, results):
+    def calculate_enhanced_summary(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         df = pd.DataFrame(results)
 
         test_summaries = df.groupby('test').agg({
@@ -387,7 +428,7 @@ class RetrievalEvaluator:
 
         return enhanced_summary
 
-    def print_enhanced_summary(self, enhanced_summary):
+    def print_enhanced_summary(self, enhanced_summary: Dict[str, Any]) -> None:
         print("\nEnhanced Summary:")
         print(f"Overall Recall Score: {enhanced_summary['overall_recall_score']:.2f}")
         print(f"Overall Irrelevant %: {enhanced_summary['overall_irrelevant_percent']:.2f}%")
@@ -415,7 +456,7 @@ class RetrievalEvaluator:
         print(f"Total Filtered Memories: {rf_summary['total_filtered']}")
         print(f"Overall Retrieval Efficiency: {rf_summary['overall_efficiency']:.2f}")
 
-    def write_results_to_file(self, results, summary, enhanced_summary, output_path):
+    def write_results_to_file(self, results: List[Dict[str, Any]], summary: Dict[str, float], enhanced_summary: Dict[str, Any], output_path: Path) -> None:
         with open(output_path, 'w') as f:
             f.write("Detailed Results:\n")
             for i, result in enumerate(results, 1):
@@ -471,7 +512,7 @@ class RetrievalEvaluator:
             f.write(f"t-statistic: {t_stat:.4f}\n")
             f.write(f"p-value: {p_value:.4f}\n")
 
-    def capture_comparison_data(self, query: str, retrieved_memories: List[Union[Dict[str, Any], Any]], filtered_memories: List[Union[Dict[str, Any], Any]]):
+    def capture_comparison_data(self, query: Union[str, List[str]], retrieved_memories: List[Union[Dict[str, Any], Any, RetrievedMemory]], filtered_memories: List[Union[Dict[str, Any], Any, RetrievedMemory]]) -> None:
         comparison_data = {
             "query": query,
             "retrieved_memories_count": len(retrieved_memories),
@@ -480,26 +521,36 @@ class RetrievalEvaluator:
         }
 
         try:
-            comparison_file = self.comparison_data_path / "comparison_data.json"
-            existing_data = self.load_json_file(comparison_file)
+            existing_data = self.file_manager.read_data()
             existing_data.append(comparison_data)
-
-            with open(comparison_file, 'w') as f:
-                json.dump(existing_data, f, indent=2)
-
-            self.logger.info(f"Comparison data appended to {comparison_file}")
+            self.file_manager.write_data(existing_data)
+            self.logger.info(f"Comparison data appended to {self.file_manager.comparison_data_file}")
         except Exception as e:
             self.logger.error(f"Error capturing comparison data: {str(e)}")
+            raise
 
-    def _format_memories(self, memories: List[Union[Dict[str, Any], Any]]) -> List[Dict[str, Any]]:
+    def _format_memories(self, memories: List[Union[Dict[str, Any], Any, RetrievedMemory]]) -> List[Dict[str, Any]]:
         formatted_memories = []
         for memory in memories:
             if isinstance(memory, dict):
-                # If it's already a dict, ensure timestamp is a string
                 formatted_memory = memory.copy()
                 formatted_memory['timestamp'] = str(formatted_memory.get('timestamp', ''))
+            elif isinstance(memory, RetrievedMemory):
+                formatted_memory = {
+                    "passage": memory.passage,
+                    "timestamp": str(memory.timestamp),
+                    "distance": memory.distance,
+                    "relevance": memory.relevance,
+                    "confidence": memory.confidence,
+                    "importance": memory.importance,
+                    "metadata": memory.metadata
+                }
+                if hasattr(memory.passage_info, 'to_dict'):
+                    formatted_memory["passage_info"] = memory.passage_info.to_dict()
+                else:
+                    formatted_memory["passage_info"] = str(memory.passage_info)
+                formatted_memory["textKeys"] = [str(key) for key in memory.textKeys]
             else:
-                # Assume it's a Memory object
                 formatted_memory = {
                     "id": getattr(memory, 'id', None),
                     "query": getattr(memory, 'query', ''),
@@ -509,17 +560,24 @@ class RetrievalEvaluator:
             formatted_memories.append(formatted_memory)
         return formatted_memories
 
-    def output(self, benchmark_version: str):
+    def _get_query_key(self, query: Union[str, List[str]]) -> str:
+        if isinstance(query, list):
+            return "\n".join(query)
+        return query
+
+    def output(self, benchmark_version: str) -> None:
         self.setup_logging(benchmark_version)
 
         reference_data_file = self.dev_bench_reference_data_path / f"comparison_data_reference_enhanced_{benchmark_version}.json"
-        comparison_data_file = self.comparison_data_path / "comparison_data.json"
 
         if not reference_data_file.exists():
             raise FileNotFoundError(f"Reference data file for benchmark version {benchmark_version} not found at {reference_data_file}")
 
         reference_data = self.load_json_file(reference_data_file)
-        input_data = self.load_json_file(comparison_data_file)
+        input_data = self.file_manager.read_data()
+
+        if not input_data:
+            raise FileNotFoundError("No comparison data found. Please run the benchmark first.")
 
         self.results, self.summary = self.evaluate_memories(reference_data, input_data)
         self.enhanced_summary = self.calculate_enhanced_summary(self.results)
@@ -528,7 +586,10 @@ class RetrievalEvaluator:
         recall_score = self.summary['recall_score']
 
         output_dir = self.evaluation_outputs_path / f"evaluation_{benchmark_version}_{timestamp}"
-        output_dir.mkdir(exist_ok=True)
+        self.file_manager.ensure_directory_exists(output_dir)
+
+        # Move the old comparison data to the output directory
+        self.file_manager.clear_comparison_data(output_dir, timestamp)
 
         original_plot_path = output_dir / f"comparison_data_{benchmark_version}_{recall_score:.2f}_original.png"
         self.plot_original_results(self.results, self.summary, original_plot_path)
