@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Iterator, List, Tuple, Callable
 from random import Random
+import Path
 
 import time_machine
 
@@ -107,25 +108,26 @@ class TestRunner:
         rnd_state[1] = tuple(rnd_state[1])
         self.random.setstate(tuple(rnd_state))
 
-    def forward_time(self, seconds: float):
-        if self.config.debug:
-            colour_print("green", f"Time jump by {seconds} seconds.")
-        target_date = datetime.now() + timedelta(seconds=seconds)
-        self.agent.forward_time(seconds)
+    def travel_to_dt(self, target_date: datetime):
         self.reset_time()
         self.traveller = time_machine.travel(target_date.astimezone(timezone.utc))
         self.traveller.start()
 
+    def forward_time(self, **kwargs):
+        t_jump = timedelta(**kwargs)
+        if self.config.debug:
+            colour_print("green", f"Time jump by {t_jump}")
+        target_date = datetime.now() + t_jump
+        assert target_date > datetime.now(), "Can only move forward in time. Going back is problematic."
+        self.travel_to_dt(target_date)
+
     def reset_time(self):
-        self.agent.reset_time()
         if self.traveller is not None:
             self.traveller.stop()
             self.traveller = None
 
-    def set_to_wait(self, example: TestExample, action: WaitAction, log_this: bool = True, now: datetime = None):
+    def set_to_wait(self, example: TestExample, action: WaitAction, log_this: bool = True):
         unique_id = example.unique_id
-        if log_this:
-            assert now is None, "Logging must take place with the actual agent's timestamp."
 
         # We convert the percentage to tokens
         if action.percentage_finished > 0.0:
@@ -158,13 +160,41 @@ class TestRunner:
             )
         self.wait_list[unique_id] = dict(
             tokens=self.total_token_count + token_wait,
-            time=(now or datetime.now()) + action.time,
+            time=datetime.now() + action.time,
         )
+
+    def update_reference_data(self):
+        reference_data_path = Path(self.config.run_name) / "reference_data.json"
+        with open(reference_data_path, 'r') as f:
+            reference_data = json.load(f)
+
+        for example in self.tests:
+            updated_data = example.dataset_generator.generate_reference_data(example)
+            for entry in updated_data["reference_data"]:
+                for existing_entry in reference_data:
+                    if existing_entry["query"] == entry["query"]:
+                        existing_entry.update(entry)
+
+        with open(reference_data_path, 'w') as f:
+            json.dump(reference_data, f, indent=2)
 
     def send_message(self, test_id: str, action: SendMessageAction) -> int:
         agent_reply = None if not action.is_filling else action.filler_response
         action.reply, action.sent_ts, action.reply_ts = self.agent.message_to_agent(action.message, agent_reply)
         self.debug_message(action.message, action.reply, action.sent_ts, action.reply_ts)
+
+        # Update reference data with actual timestamps
+        for example in self.tests:
+            if example.unique_id == test_id:
+                reference_data = example.dataset_generator.generate_reference_data(example)
+                for entry in reference_data["reference_data"]:
+                    if entry["query"] == action.message:
+                        entry["timestamp"] = int(action.sent_ts.timestamp())
+                        for memory in entry["memories"]:
+                            if memory["query"] == action.message:
+                                memory["response"] = action.reply
+                                memory["timestamp"] = action.reply_ts.strftime("%Y-%m-%d %H:%M:%S")
+
         self.master_log.add_send_message(
             test_id=test_id, message=action.message, timestamp=action.sent_ts, is_question=action.is_question,
         )
@@ -176,7 +206,7 @@ class TestRunner:
         reply_tokens = self.agent.token_len(action.reply)
         self.agent_token_count += reply_tokens
         self.total_token_count += message_tokens + reply_tokens
-        self.progress_dialog.notify_message(self.total_token_count, self.agent_benchmark_duration, self.agent.costs_usd)
+        self.progress_dialog.notify_message(self.total_token_count)
         return message_tokens + reply_tokens
 
     def get_blocked_test(self, waiting_on: str) -> Optional[str]:
@@ -189,6 +219,13 @@ class TestRunner:
         if len(waiting_tests) == 0:
             return
         return sorted(waiting_tests.keys(), key=lambda uid: waiting_tests[uid][waiting_on])[0]
+
+    def generate_reference_data(self):
+        all_reference_data = []
+        for example in self.tests:
+            reference_data = example.dataset_generator.generate_reference_data(example)
+            all_reference_data.extend(reference_data["reference_data"])
+        return all_reference_data
 
     def is_waiting(self, unique_id: str, remove: bool = False) -> bool:
         if unique_id not in self.wait_list:
@@ -298,7 +335,9 @@ class TestRunner:
                     assert isinstance(action, WaitAction)
                     assert action.tokens == evt.data["tokens"] or action.percentage_finished > 0.0
                     assert action.time == evt.data["time"]
-                    self.set_to_wait(test, action, log_this=False, now=evt.timestamp)
+                    self.travel_to_dt(evt.timestamp)
+                    self.set_to_wait(test, action, log_this=False)
+                    self.reset_time()
 
     def setup_iterator(self, test_group) -> dict[str, TestExample]:
         """Sets up the test dict and fast forwards any tests that are currently in progress"""
@@ -314,8 +353,7 @@ class TestRunner:
 
         # Check if the last event in the log is after the current time, then travel to that time if it is.
         if len(self.master_log.log) > 0 and datetime.now() < self.master_log.log[-1].timestamp:
-            wait_seconds = (self.master_log.log[-1].timestamp - datetime.now()).total_seconds()
-            self.forward_time(wait_seconds)
+            self.travel_to_dt(self.master_log.log[-1].timestamp)
 
         # Add a reset event to the log if it has indeed been reset
         if len(self.master_log.log) > 0:
@@ -415,6 +453,7 @@ class TestRunner:
             if example.finished:
                 finished += 1
                 result = self.in_progress_results[example.unique_id]
+                self.progress_dialog.notify_result(result)
 
                 if not skip:
                     if example.reset_message != "":
@@ -430,9 +469,9 @@ class TestRunner:
                     self.agent.save()
 
                 self.finished_results.append(result)
-                self.progress_dialog.notify_result(result)
                 print(result)
                 colour_print("green", f"{finished} of {len(self.tests)} tests finished.")
+                self.update_reference_data()
 
                 if self.config.isolated:
                     self.agent.reset()
@@ -474,9 +513,17 @@ class TestRunner:
         self.agent.save_path.mkdir(parents=True, exist_ok=True)
         self.load()
         self.set_cost_callback()
+
+        # Generate and save reference data
+        reference_data = self.generate_reference_data()
+        reference_data_path = Path(self.config.run_name) / "reference_data.json"
+        reference_data_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(reference_data_path, 'w') as f:
+            json.dump(reference_data, f, indent=2)
+
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
         self.tests.sort(key=lambda t: t.unique_id)
-        self.progress_dialog = ProgressDialog(self.tests, self.config.isolated)
+        self.progress_dialog = ProgressDialog(len(self.tests), self.config.isolated)
         self.run_tests()
         self.progress_dialog.close()
         self.save_runstats()

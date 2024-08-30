@@ -310,6 +310,11 @@ class DatasetInterface(ABC):
             self.random = Random(self.seed)
         return super().__getattribute__(item)
 
+
+    #! referrence data.
+    def generate_reference_data(self, example: TestExample) -> Dict[str, Any]:
+        raise NotImplementedError("This method should be implemented by subclasses")
+
     @property
     def data_path(self) -> Path:
         return DATA_DIR.joinpath(self.name)
@@ -336,7 +341,7 @@ class DatasetInterface(ABC):
         self, questions: List[str], responses: List[str], expected_answers: List[Any]
     ) -> Tuple[int, int, List[str]]:
         pass
-    
+
     def evaluation_fn(self) -> Callable[[List[str], List[str], List[Any]], Tuple[float, int, List[str]]]:
         def evaluator(questions: List[str], responses: List[str], expected_answers: List[Any]) -> Tuple[float, int, List[str]]:
             return normalize_scores(self.evaluate_correct, questions, responses, expected_answers)

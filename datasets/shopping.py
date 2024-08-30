@@ -1,10 +1,13 @@
 import logging
 from json import JSONDecodeError
+
+import pystache
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
+
 from goodai.helpers.json_helper import sanitize_and_parse_json
+
 from dataset_interfaces.interface import DatasetInterface, TestExample
-from utils.text import rouge_l
 
 ITEMS = [
     "Bread",
@@ -22,17 +25,17 @@ ITEMS = [
 ]
 
 STATEMENTS_ADD = [
-    "Please add {modifier}{number} {item} to my shopping list",
-    "I require {modifier}{number} {item}, please put it on the list.",
-    # "If I am not currently planning on getting {modifier}{number}, please plan it along with the others.",
-    "I want to buy {modifier}{number} {item}.",
+    "Please add {{modifier}}{{number}} {{item}} to my shopping list",
+    "I require {{modifier}}{{number}} {{item}}, please put it on the list.",
+    # "If I am not currently planning on getting {{item}}, please plan it along with the others.",
+    "I want to buy {{modifier}}{{number}} {{item}}.",
 ]
 
 STATEMENTS_REMOVE = [
-    # "I already have {number} {item}, remove it from the list.",
-    "Remove {number} {item}.",
-    "Please remove {number} {item} from my shopping list"
-    # "Please remove all occurrences of {item} from my shopping list.",
+    # "I already have {{item}}, remove it from the list.",
+    "Remove {{number}} {{item}}.",
+    "Please remove {{number}} {{item}} from my shopping list"
+    # "Please remove all occurrences of {{item}} from my shopping list.",
 ]
 
 NUMBER = [1, 2, 3]
@@ -40,9 +43,10 @@ NUMBER = [1, 2, 3]
 
 def match_plural(answer_name: str, expected_names: List[str]):
     for name in expected_names:
-        # The answer_name could be the one that is plural, which still gives a ROUGE-L score of 1.0
-        if rouge_l(name, answer_name) == 1.0:
+        # The answer_name could be the one that is plural
+        if name in answer_name:
             return True, name
+
     return False, ""
 
 
@@ -55,6 +59,7 @@ class ShoppingDataset(DatasetInterface):
     reset_message: str = "I have bought all of the items on the list. Please remove all of the items on the current shopping list."
 
     def generate_examples(self, num_examples):
+        renderer = pystache.Renderer()
         examples = []
         for _ in range(num_examples):
             counts = []
@@ -74,7 +79,9 @@ class ShoppingDataset(DatasetInterface):
                         cart.remove(item)
                     else:
                         counts[cart.index(item)] = current_number
-                    statement = self.random.choice(STATEMENTS_REMOVE).format(item=item, number=number)
+                    statement = renderer.render(
+                        self.random.choice(STATEMENTS_REMOVE), {"item": item, "number": str(number)}
+                    )
                 else:
                     # add
                     item = self.random.choice(ITEMS)
@@ -86,7 +93,10 @@ class ShoppingDataset(DatasetInterface):
                     else:
                         cart.append(item)
                         counts.append(number)
-                    statement = self.random.choice(STATEMENTS_ADD).format(item=item, modifier=modifier, number=number)
+                    statement = renderer.render(
+                        self.random.choice(STATEMENTS_ADD),
+                        {"item": item, "modifier": modifier, "number": str(number)},
+                    )
 
                 script.append(statement)
                 is_question.append(False)
@@ -131,9 +141,9 @@ class ShoppingDataset(DatasetInterface):
 
         expected_names = []
         expected_items = {}
-        for item_name, item_count in expected_answers:
-            expected_names.append(item_name)
-            expected_items[item_name] = item_count
+        for a in expected_answers:
+            expected_names.append(a[0])
+            expected_items[a[0]] = a[1]
 
         # Check response format
         try:
@@ -178,6 +188,31 @@ class ShoppingDataset(DatasetInterface):
 
         score = (score / 3) * max_score
         return score, max_score, ["\n".join(reasoning)]
+
+
+    def generate_reference_data(self, example: TestExample) -> Dict[str, Any]:
+        reference_data = []
+        relevant_memories = []
+
+        for i, (message, is_q) in enumerate(zip(example.script, example.is_question)):
+            entry = {
+                "query": message,
+                "memories": [mem for mem in relevant_memories],
+                "timestamp": "",
+                "test": self.name.lower(),
+                "is_scored_question": "yes" if is_q else "no"
+            }
+
+            relevant_memories.append({
+                "id": i,
+                "query": message,
+                "response": "",
+                "timestamp": ""
+            })
+
+            reference_data.append(entry)
+
+        return {"reference_data": reference_data}
 
 
 def main():
