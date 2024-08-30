@@ -1,0 +1,1007 @@
+Detailed Results:
+
+Entry 1:
+  query: I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you different kinds of information and I expect you to answer extremely briefly, only providing the AMs that you are required to provide. Otherwise, provide just short confirmations. Understood?
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: admin
+  is_scored_question: no
+  retrieved_memories_count: 0
+  filtered_memories_count: 0
+
+Entry 2:
+  query: My favourite colour is Purple.
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: colour
+  is_scored_question: no
+  retrieved_memories_count: 1
+  filtered_memories_count: 0
+
+Entry 3:
+  query: Atheism is a non-prophet organization
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: joke
+  is_scored_question: no
+  retrieved_memories_count: 2
+  filtered_memories_count: 0
+
+Entry 4:
+  query: There is a Museum in the center of my hometown.
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: location
+  is_scored_question: no
+  retrieved_memories_count: 3
+  filtered_memories_count: 0
+
+Entry 5:
+  query: Callan is what I am called.
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: name
+  is_scored_question: no
+  retrieved_memories_count: 0
+  filtered_memories_count: 0
+
+Entry 6:
+  query: 'The greatest glory in living lies not in never falling, but in rising every time we fall.' - Nelson Mandela
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: quote
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 0
+
+Entry 7:
+  query: When I talk to you as the waiter (e.g. 'Waiter: what will it be sir?'), then you will reply as if you were the customer at a restaurant. Give straight answers to the questions and avoid going off script. Understood?
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 1
+  trivia: 0
+  total_memories: 1
+  test: restaurant
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 8:
+  query: They are broadcasting a program on TV. I will keep you updated on what happens, and at the end, I will ask you a question about what happened on the show. Okay?
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 1
+  trivia: 0
+  total_memories: 1
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 9:
+  query: I require 1 Leek, please put it on the list.
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 1
+  trivia: 0
+  total_memories: 1
+  test: shopping
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 10:
+  query: You will be given three messages from different people Joshua Mcdonald, Casey Peterson, and Mr. Toby Power.
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 3
+  trivia: 0
+  total_memories: 3
+  test: spy
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 11:
+  query: Whenever I ask you to read my mail for me then say: 'Your letter opener is in your office'
+  true_relevant: 0
+  expected_relevant: 0
+  true_relevant_percent: 0
+  irrelevant: 1
+  trivia: 0
+  total_memories: 1
+  test: trigger
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 12:
+  query: (On TV) Logan is in the living_room.
+
+  true_relevant: 1
+  expected_relevant: 1
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 13:
+  query: I visited Town Hall, which is 1 KM, West from Museum.
+  true_relevant: 1
+  expected_relevant: 1
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: location
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 14:
+  query: I require another 3 Leek, please put it on the list.
+  true_relevant: 0
+  expected_relevant: 1
+  true_relevant_percent: 0.00
+  irrelevant: 1
+  trivia: 0
+  total_memories: 1
+  test: shopping
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 15:
+  query: My name is Justine.
+  true_relevant: 0
+  expected_relevant: 1
+  true_relevant_percent: 0.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: name
+  is_scored_question: no
+  retrieved_memories_count: 0
+  filtered_memories_count: 0
+
+Entry 16:
+  query: (On TV) Emily entered the living_room.
+
+  true_relevant: 2
+  expected_relevant: 2
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 17:
+  query: Waiter: Good day. Welcome to our restaurant. Here is the menu for you to look over:
+
+Appetizers:
+1. Classic Caesar Salad
+2. Crispy Calamari with Marinara Sauce
+3. Bruschetta with Fresh Tomato, Basil, and Balsamic Glaze
+4. Spinach and Artichoke Dip served with Tortilla Chips
+
+Soups and Salads:
+5. Garden Salad with Mixed Greens, Cucumbers, Tomatoes, and Balsamic Vinaigrette
+6. French Onion Soup with Gruyere Cheese Crouton
+7. Caprese Salad with Fresh Mozzarella, Tomatoes, Basil, and Balsamic Reduction
+
+Entrees:
+8. Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf
+9. Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti
+10. Filet Mignon with Red Wine Demi-Glace, Garlic Mashed Potatoes, and Steamed Asparagus
+11. Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice
+
+Pasta:
+12. Spaghetti Carbonara with Pancetta, Egg, and Parmesan Cheese
+13. Penne alla Vodka with Creamy Tomato Vodka Sauce
+14. Linguine with Clams in White Wine Garlic Sauce
+15. Vegetable Primavera with Seasonal Vegetables in a Light Tomato Sauce
+
+Sandwiches:
+16. Classic BLT with Crispy Bacon, Lettuce, Tomato, and Mayo on Toasted Sourdough
+17. Grilled Chicken Club with Avocado, Bacon, Lettuce, Tomato, and Herb Mayo on a Brioche Bun
+18. Turkey and Swiss Panini with Cranberry Aioli on Ciabatta Bread
+19. Portobello Mushroom Burger with Roasted Red Peppers, Arugula, and Pesto Mayo on a Whole Wheat Bun
+
+Vegan Options:
+20. Vegan Lentil Soup with Seasonal Vegetables
+21. Vegan Buddha Bowl with Quinoa, Roasted Chickpeas, Avocado, and Mixed Greens, drizzled with Tahini Dressing
+22. Vegan Mushroom and Spinach Risotto with Arborio Rice and Truffle Oil
+23. Vegan Beyond Burger with Lettuce, Tomato, Pickles, and Vegan Mayo on a Whole Wheat Bun, served with Sweet Potato Fries
+
+Halal Options:
+24. Halal Chicken Shawarma Plate with Grilled Chicken, Rice, Hummus, Salad, and Pita Bread
+25. Halal Lamb Kebabs with Grilled Vegetables, Basmati Rice, and Tzatziki Sauce
+26. Halal Beef Biryani with Fragrant Basmati Rice, Tender Beef, and Traditional Spices
+27. Halal Falafel Wrap with Hummus, Lettuce, Tomato, Pickled Turnips, and Tahini Sauce in a Warm Pita
+
+Desserts:
+28. New York Style Cheesecake with Strawberry Compote
+29. Warm Chocolate Lava Cake with Vanilla Ice Cream
+30. Tiramisu with Espresso Soaked Ladyfingers and Mascarpone Cream
+31. Fruit Tart with Seasonal Fresh Fruit and Pastry Cream
+
+Beverages:
+32. Soft Drinks (Coke, Diet Coke, Sprite, etc.)
+33. Iced Tea (Sweetened or Unsweetened)
+34. Lemonade
+35. Selection of Teas
+36. Beer (Domestic and Imported)
+37. Wine (Red, White, and Rosé by the Glass or Bottle)
+
+In the meantime, what would you like to drink?
+  true_relevant: 1
+  expected_relevant: 1
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: restaurant
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 18:
+  query: Mr. Toby Power: The time we will meet is when the sun is high.
+  true_relevant: 1
+  expected_relevant: 1
+  true_relevant_percent: 100.00
+  irrelevant: 1
+  trivia: 0
+  total_memories: 2
+  test: spy
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 19:
+  query: (On TV) Oliver entered the living_room.
+
+  true_relevant: 2
+  expected_relevant: 3
+  true_relevant_percent: 66.67
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 20:
+  query: The name of my favourite colour is Pink.
+  true_relevant: 1
+  expected_relevant: 1
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: colour
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 21:
+  query: My wife told me to stop impersonating a flamingo. I had to put my foot down.
+  true_relevant: 0
+  expected_relevant: 1
+  true_relevant_percent: 0.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: joke
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 0
+
+Entry 22:
+  query: About 3 km South of the Town Hall there is a Hospital
+  true_relevant: 1
+  expected_relevant: 2
+  true_relevant_percent: 50.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: location
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 23:
+  query: Please remove 3 Leek from my shopping list
+  true_relevant: 2
+  expected_relevant: 2
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: shopping
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 24:
+  query: Please read my mail for me.
+  true_relevant: 1
+  expected_relevant: 1
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: trigger
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 25:
+  query: Start calling me by my name which is Gary.
+  true_relevant: 0
+  expected_relevant: 2
+  true_relevant_percent: 0.00
+  irrelevant: 3
+  trivia: 0
+  total_memories: 3
+  test: name
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 26:
+  query: (On TV) The cap is in the treasure_chest.
+
+  true_relevant: 1
+  expected_relevant: 4
+  true_relevant_percent: 25.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 27:
+  query: Waiter: Here is your iced tea. What would you like to eat?
+  true_relevant: 2
+  expected_relevant: 2
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: restaurant
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 28:
+  query: Waiter: Excellent choice! Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf coming right up.
+  true_relevant: 3
+  expected_relevant: 3
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 3
+  test: restaurant
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 29:
+  query: About 1 km East of the Hospital there is a Park
+  true_relevant: 2
+  expected_relevant: 3
+  true_relevant_percent: 66.67
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: location
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 30:
+  query: (On TV) Emily exited the living_room.
+
+  true_relevant: 2
+  expected_relevant: 5
+  true_relevant_percent: 40.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 31:
+  query: Casey Peterson: Bring to the meeting a quiet way to open locked doors.
+  true_relevant: 2
+  expected_relevant: 2
+  true_relevant_percent: 100.00
+  irrelevant: 1
+  trivia: 0
+  total_memories: 3
+  test: spy
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 32:
+  query: Remove 1 Leek.
+  true_relevant: 3
+  expected_relevant: 3
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 3
+  test: shopping
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 33:
+  query: My name has changed to Adrian.
+  true_relevant: 1
+  expected_relevant: 3
+  true_relevant_percent: 33.33
+  irrelevant: 1
+  trivia: 0
+  total_memories: 2
+  test: name
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 34:
+  query: (On TV) Logan loves the broccoli
+
+  true_relevant: 1
+  expected_relevant: 6
+  true_relevant_percent: 16.67
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 35:
+  query: It takes a lot of balls to golf the way I do.
+  true_relevant: 0
+  expected_relevant: 2
+  true_relevant_percent: 0.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: joke
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 0
+
+Entry 36:
+  query: White is my favourite colour.
+  true_relevant: 2
+  expected_relevant: 2
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: colour
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 37:
+  query: I visited Library, which is 2 KM, North from Park.
+  true_relevant: 1
+  expected_relevant: 4
+  true_relevant_percent: 25.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: location
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 38:
+  query: Waiter: I am very sorry, but I have been informed in the kitchen that the Grilled Salmon with Lemon Herb Butter, served with Roasted Vegetables and Rice Pilaf is currently unavailable. Can I serve you something else instead?
+  true_relevant: 3
+  expected_relevant: 4
+  true_relevant_percent: 75.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 3
+  test: restaurant
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 39:
+  query: Waiter: Chicken Parmesan with Marinara Sauce and Melted Mozzarella, served with Spaghetti it is. Sorry again for the inconvenience.
+  true_relevant: 0
+  expected_relevant: 5
+  true_relevant_percent: 0.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: restaurant
+  is_scored_question: yes
+  retrieved_memories_count: 0
+  filtered_memories_count: 0
+
+Entry 40:
+  query: Please add 2 Potato to my shopping list
+  true_relevant: 3
+  expected_relevant: 4
+  true_relevant_percent: 75.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 3
+  test: shopping
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 41:
+  query: Please read my mail for me.
+  true_relevant: 1
+  expected_relevant: 2
+  true_relevant_percent: 50.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: trigger
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 42:
+  query: (On TV) Oliver loves the jeans
+
+  true_relevant: 1
+  expected_relevant: 7
+  true_relevant_percent: 14.29
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 43:
+  query: Joshua Mcdonald: We will rendezvous where the land meets the sea.
+  true_relevant: 3
+  expected_relevant: 3
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 3
+  test: spy
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 44:
+  query: Jacob is what I am called.
+  true_relevant: 0
+  expected_relevant: 4
+  true_relevant_percent: 0.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: name
+  is_scored_question: no
+  retrieved_memories_count: 0
+  filtered_memories_count: 0
+
+Entry 45:
+  query: (On TV) Oliver exited the living_room.
+
+  true_relevant: 3
+  expected_relevant: 8
+  true_relevant_percent: 37.50
+  irrelevant: 0
+  trivia: 0
+  total_memories: 3
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 46:
+  query: And finally there is Playground which is North from Library and 1 KM from it.
+  true_relevant: 2
+  expected_relevant: 5
+  true_relevant_percent: 40.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: location
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 47:
+  query: Please add 3 Leek to my shopping list
+  true_relevant: 5
+  expected_relevant: 5
+  true_relevant_percent: 100.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 5
+  test: shopping
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 5
+
+Entry 48:
+  query: Waiter: Here you are: Vegetarian Stir-Fry with Tofu, Mixed Vegetables, and Teriyaki Sauce over Steamed Rice. Enjoy the meal.
+  true_relevant: 3
+  expected_relevant: 6
+  true_relevant_percent: 50.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 3
+  test: restaurant
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 49:
+  query: Let's not pretend to be at a restaurant anymore. Please also forget everything about it.
+  true_relevant: 1
+  expected_relevant: 4
+  true_relevant_percent: 25.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: restaurant
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 50:
+  query: (On TV) Logan moved the cap to the suitcase.
+
+  true_relevant: 2
+  expected_relevant: 9
+  true_relevant_percent: 22.22
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: sally-anne
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 51:
+  query: Which joke did I tell you about 4 hours 0 minutes  ago?
+  true_relevant: 0
+  expected_relevant: 3
+  true_relevant_percent: 0.00
+  irrelevant: 1
+  trivia: 0
+  total_memories: 1
+  test: joke
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 52:
+  query: What is my favourite colour?
+  true_relevant: 2
+  expected_relevant: 3
+  true_relevant_percent: 66.67
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: colour
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 53:
+  query: Given the points of interest that I have told you about, how would I travel from Museum to Playground following those interesting points?
+  true_relevant: 4
+  expected_relevant: 6
+  true_relevant_percent: 66.67
+  irrelevant: 0
+  trivia: 0
+  total_memories: 4
+  test: location
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 4
+
+Entry 54:
+  query: Forget, or otherwise disregard, all of the locations that I have told you about before this message.
+  true_relevant: 0
+  expected_relevant: 6
+  true_relevant_percent: 0.00
+  irrelevant: 1
+  trivia: 0
+  total_memories: 1
+  test: location
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 55:
+  query: After responding to the following unrelated user prompts, please append the quote from Nelson Mandela, to your 7th AM. Count your AM to this message as the first AM.
+  true_relevant: 1
+  expected_relevant: 1
+  true_relevant_percent: 100.00
+  irrelevant: 2
+  trivia: 0
+  total_memories: 3
+  test: quote
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 56:
+  query: What have been all of the names that I have given you? Express the answer as a JSON list.
+  true_relevant: 0
+  expected_relevant: 5
+  true_relevant_percent: 0.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 0
+  test: name
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 0
+
+Entry 57:
+  query: Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name.
+  true_relevant: 1
+  expected_relevant: 5
+  true_relevant_percent: 20.00
+  irrelevant: 1
+  trivia: 0
+  total_memories: 2
+  test: name
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 58:
+  query: The TV program has ended for today. Where is the cap really?
+Provide your answer in JSON form with a single word as answer, like this: {"answer": "word"}
+Be as specific as possible.
+  true_relevant: 2
+  expected_relevant: 3
+  true_relevant_percent: 66.67
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: sally-anne
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 59:
+  query: Given the clandestine messages you have received, tell me as specifically as you can, when and where a meeting is going to happen and what you should bring.
+  true_relevant: 2
+  expected_relevant: 4
+  true_relevant_percent: 50.00
+  irrelevant: 2
+  trivia: 0
+  total_memories: 4
+  test: spy
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 4
+
+Entry 60:
+  query: What is on my current shopping list? Express the list of items as a JSON list of objects with `item` and `quantity` properties only. Consolidate items that are the same.
+  true_relevant: 2
+  expected_relevant: 6
+  true_relevant_percent: 33.33
+  irrelevant: 0
+  trivia: 0
+  total_memories: 2
+  test: shopping
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 61:
+  query: I have bought all of the items on the list. Please remove all of the items on the current shopping list.
+  true_relevant: 1
+  expected_relevant: 6
+  true_relevant_percent: 16.67
+  irrelevant: 1
+  trivia: 0
+  total_memories: 2
+  test: shopping
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 2
+
+Entry 62:
+  query: Please read my mail for me.
+  true_relevant: 1
+  expected_relevant: 2
+  true_relevant_percent: 50.00
+  irrelevant: 0
+  trivia: 0
+  total_memories: 1
+  test: trigger
+  is_scored_question: yes
+  retrieved_memories_count: 5
+  filtered_memories_count: 1
+
+Entry 63:
+  query: Cancel any instructions as to what sentence you should say whenever I do something in particular.
+  true_relevant: 0
+  expected_relevant: 1
+  true_relevant_percent: 0.00
+  irrelevant: 3
+  trivia: 0
+  total_memories: 3
+  test: trigger
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Entry 64:
+  query: Forget my instruction to append a quote to one of your replies.
+  true_relevant: 0
+  expected_relevant: 1
+  true_relevant_percent: 0.00
+  irrelevant: 3
+  trivia: 0
+  total_memories: 3
+  test: quote
+  is_scored_question: no
+  retrieved_memories_count: 5
+  filtered_memories_count: 3
+
+Metric Descriptions:
+recall_score: The proportion of expected relevant memories that were successfully retrieved.
+total_true_relevant_percent: The percentage of expected relevant memories that were retrieved, relative to the total expected.
+irrelevant_memories_percent: The percentage of filtered memories that were irrelevant to the query.
+total_trivia_memories_percent: The percentage of filtered memories that were identified as trivia.
+important_entries: The number of unique queries evaluated in this assessment.
+
+Summary:
+recall_score: 0.43
+total_true_relevant_percent: 42.94
+irrelevant_memories_percent: 26.92
+total_trivia_memories_percent: 0.00
+important_entries: 64.00
+total_retrieved: 286.00
+total_filtered: 104.00
+
+Enhanced Summary:
+Overall Recall Score: 0.43
+Overall Irrelevant %: 26.92%
+Overall Trivia %: 0.00%
+Scored Questions Recall: 0.45
+Total Entries: 64
+Total Scored Entries: 15
+Total Memories: 104
+Average Memories per Entry: 1.62
+
+Test-specific Summaries:
+
+admin:
+  Recall Score: nan
+  Irrelevant %: nan%
+  Trivia %: nan%
+  Scored Questions: 0
+
+colour:
+  Recall Score: 0.83
+  Irrelevant %: 0.00%
+  Trivia %: 0.00%
+  Scored Questions: 1
+
+joke:
+  Recall Score: 0.00
+  Irrelevant %: 100.00%
+  Trivia %: 0.00%
+  Scored Questions: 1
+
+location:
+  Recall Score: 0.41
+  Irrelevant %: 8.33%
+  Trivia %: 0.00%
+  Scored Questions: 1
+
+name:
+  Recall Score: 0.10
+  Irrelevant %: 71.43%
+  Trivia %: 0.00%
+  Scored Questions: 1
+
+quote:
+  Recall Score: 0.50
+  Irrelevant %: 83.33%
+  Trivia %: 0.00%
+  Scored Questions: 0
+
+restaurant:
+  Recall Score: 0.52
+  Irrelevant %: 7.14%
+  Trivia %: 0.00%
+  Scored Questions: 5
+
+sally-anne:
+  Recall Score: 0.35
+  Irrelevant %: 5.56%
+  Trivia %: 0.00%
+  Scored Questions: 1
+
+shopping:
+  Recall Score: 0.59
+  Irrelevant %: 15.79%
+  Trivia %: 0.00%
+  Scored Questions: 1
+
+spy:
+  Recall Score: 0.80
+  Irrelevant %: 46.67%
+  Trivia %: 0.00%
+  Scored Questions: 1
+
+trigger:
+  Recall Score: 0.50
+  Irrelevant %: 57.14%
+  Trivia %: 0.00%
+  Scored Questions: 3
+
+Retrieved vs Filtered Memories Summary:
+Mean Retrieved Memories: 4.47 (SD: 1.47)
+Mean Filtered Memories: 1.62 (SD: 1.19)
+Mean Retrieval Efficiency: 0.35 (SD: 0.23)
+Total Retrieved Memories: 286
+Total Filtered Memories: 104
+Overall Retrieval Efficiency: 0.36
+
+Paired t-test results (Retrieved vs Filtered):
+t-statistic: 16.8798
+p-value: 0.0000

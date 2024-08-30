@@ -1,8 +1,8 @@
 import json
 
 # Hardcoded file paths
-input_file_path = r'C:\Users\fkgde\Desktop\GoodAI\__FULLTIME\LTM-Benchmark\goodai-ltm-benchmark\MLP_LTM\retrieval_assessment\reference_data\comparison_data_reference_4-1.json'
-output_file_path = r'C:\Users\fkgde\Desktop\GoodAI\__FULLTIME\LTM-Benchmark\goodai-ltm-benchmark\MLP_LTM\retrieval_assessment\reference_data\comparison_data_reference_enhanced_4-1.json'
+input_file_path = r'C:\Users\fkgde\Desktop\GoodAI\__FULLTIME\LTM-Benchmark\goodai-ltm-benchmark\MLP_LTM\retrieval_assessment\reference_data\comparison_data_reference_2-2.json'
+output_file_path = r'C:\Users\fkgde\Desktop\GoodAI\__FULLTIME\LTM-Benchmark\goodai-ltm-benchmark\MLP_LTM\retrieval_assessment\reference_data\comparison_data_reference_enhanced_2-2.json'
 
 # Function to add "test" and "is_scored_question" fields
 def add_fields(data):

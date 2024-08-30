@@ -9,6 +9,18 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Patch
 from scipy import stats
 import time
+import logging
+from fuzzywuzzy import fuzz
+from collections import defaultdict
+
+def setup_logging(output_dir):
+    log_file = os.path.join(output_dir, 'evaluation.log')
+    logging.basicConfig(filename=log_file, level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    console = logging.StreamHandler()
+    console.setLevel(logging.WARNING)
+    logging.getLogger('').addHandler(console)
 
 def load_json_file(file_path):
     with open(file_path, 'r') as file:
@@ -16,6 +28,9 @@ def load_json_file(file_path):
 
 def is_trivia_memory(memory):
     return "Here are some trivia questions and answers for you to process." in memory.get('query', '')
+
+def fuzzy_match(query1, query2, threshold=85):
+    return fuzz.ratio(query1.lower(), query2.lower()) >= threshold
 
 def evaluate_memories(reference_data, input_data):
     results = []
@@ -26,20 +41,51 @@ def evaluate_memories(reference_data, input_data):
     total_retrieved = 0
     total_filtered = 0
 
-    for ref_entry, input_entry in zip(reference_data, input_data):
-        if ref_entry['query'] != input_entry['query']:
-            continue
+    # Create a dictionary of input data for efficient lookup
+    input_dict = defaultdict(list)
+    for entry in input_data:
+        input_dict[entry['query']].append(entry)
+
+    logging.info(f"Total reference entries: {len(reference_data)}")
+    logging.info(f"Total input entries: {len(input_data)}")
+
+    for i, ref_entry in enumerate(reference_data, 1):
+        logging.info(f"\nProcessing reference entry {i}:")
+        logging.info(f"Reference query: {ref_entry['query']}")
+        logging.info(f"Test type: {ref_entry['test']}")
+        logging.info(f"Is scored: {ref_entry['is_scored_question']}")
+
+        # Find matching input entry using fuzzy matching
+        matched_input = None
+        for query, entries in input_dict.items():
+            if fuzzy_match(ref_entry['query'], query):
+                matched_input = entries[0]  # Take the first matching entry
+                break
+
+        if matched_input is None:
+            logging.warning(f"No matching input entry found for query: {ref_entry['query']}. Using placeholder.")
+            matched_input = {'query': ref_entry['query'], 'memories': []}
 
         true_relevant_queries = set(m['query'] for m in ref_entry['memories'])
-        input_memories = [m['query'] for m in input_entry['memories']]
+        input_memories = [m['query'] for m in matched_input.get('memories', [])]
 
-        matched_relevant = sum(1 for query in input_memories if query in true_relevant_queries)
+        logging.info(f"Number of true relevant queries: {len(true_relevant_queries)}")
+        logging.info(f"Number of input memories: {len(input_memories)}")
+
+        matched_relevant = sum(1 for query in input_memories if any(fuzzy_match(query, true_query) for true_query in true_relevant_queries))
         expected_relevant = len(true_relevant_queries)
-        irrelevant = sum(1 for query in input_memories if query not in true_relevant_queries and not is_trivia_memory({'query': query}))
+        irrelevant = sum(1 for query in input_memories if not any(fuzzy_match(query, true_query) for true_query in true_relevant_queries) and not is_trivia_memory({'query': query}))
         trivia = sum(1 for query in input_memories if is_trivia_memory({'query': query}))
 
-        retrieved_count = input_entry.get('retrieved_memories_count', len(input_memories))
+        retrieved_count = matched_input.get('retrieved_memories_count', len(input_memories))
         filtered_count = len(input_memories)
+
+        logging.info(f"Matched relevant: {matched_relevant}")
+        logging.info(f"Expected relevant: {expected_relevant}")
+        logging.info(f"Irrelevant: {irrelevant}")
+        logging.info(f"Trivia: {trivia}")
+        logging.info(f"Retrieved count: {retrieved_count}")
+        logging.info(f"Filtered count: {filtered_count}")
 
         total_true_relevant += matched_relevant
         total_expected_relevant += expected_relevant
@@ -62,6 +108,14 @@ def evaluate_memories(reference_data, input_data):
             'filtered_memories_count': filtered_count
         })
 
+    logging.info(f"\nTotal results: {len(results)}")
+    logging.info(f"Total true relevant: {total_true_relevant}")
+    logging.info(f"Total expected relevant: {total_expected_relevant}")
+    logging.info(f"Total irrelevant: {total_irrelevant}")
+    logging.info(f"Total trivia: {total_trivia}")
+    logging.info(f"Total retrieved: {total_retrieved}")
+    logging.info(f"Total filtered: {total_filtered}")
+
     important_entries = len(results)
     recall_score = (total_true_relevant / total_expected_relevant) if total_expected_relevant > 0 else 0
 
@@ -74,6 +128,8 @@ def evaluate_memories(reference_data, input_data):
         'total_retrieved': total_retrieved,
         'total_filtered': total_filtered
     }
+
+    logging.info(f"\nSummary: {summary}")
 
     return results, summary
 
@@ -415,18 +471,29 @@ def create_output_directory(base_path, recall_score):
     return full_path, timestamp
 
 def main():
-    # Get the project root directory
     project_root = get_project_root()
-
-    # Construct file paths using os.path.join for OS-agnostic paths
     reference_data_path = os.path.join(project_root, "retrieval_assessment", "reference_data", "comparison_data_reference_enhanced_4-1.json")
-    input_data_path = os.path.join(project_root, "comparison_data", "comparison_data_prompt-02_7.3.json")
+    input_data_path = os.path.join(project_root, "comparison_data", "comparison_data.json")
 
-    # Load data
+    # Create output directory
+    base_output_path = os.path.join(project_root, "_retrieval_data_output")
+    timestamp = int(time.time())
+    output_dir = os.path.join(base_output_path, f"4-1_{timestamp}")
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Setup logging
+    setup_logging(output_dir)
+
     reference_data = load_json_file(reference_data_path)
     input_data = load_json_file(input_data_path)
 
     results, summary = evaluate_memories(reference_data, input_data)
+
+    logging.info(f"\nUnique test types in results: {set(r['test'] for r in results)}")
+    logging.info(f"Entries per test type:")
+    for test_type in set(r['test'] for r in results):
+        count = sum(1 for r in results if r['test'] == test_type)
+        logging.info(f"  {test_type}: {count}")
 
     # Update the base output path
     base_output_path = os.path.join(project_root, "_retrieval_data_output")
@@ -466,6 +533,7 @@ def main():
     print(f"Results written to: {results_path}")
 
     print(f"\nOutput directory: {output_dir}")
+    print(f"Log file: {os.path.join(output_dir, 'evaluation.log')}")
 
 if __name__ == "__main__":
     main()

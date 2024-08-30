@@ -11,9 +11,18 @@ from app.token_manager import TokenManager
 from app.filter_agent import FilterAgent
 from app.model_client import ModelClient
 from app.utils.cost_tracker import ReplyCostTracker
+import sys
+
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if root_dir not in sys.path:
+    sys.path.append(root_dir)
+
+from retrieval_evaluator.retrieval_evaluator import RetrievalEvaluator
 
 logger = get_logger("custom")
 chat_logger = get_logger("chat")
+
+evaluator = RetrievalEvaluator()
 
 class Agent:
     def __init__(self, memory_manager: MemoryManager):
@@ -79,11 +88,12 @@ class Agent:
                 "Here are some trivia questions and answers for you to process."
             ):
                 comparison_data = self._format_comparison_data(
-                    query, 
+                    query,
                     memory_objects,  # Pass the original memory_objects
                     filtered_memories
                 )
-                self._write_comparison_data(comparison_data)
+                # self._write_comparison_data(comparison_data)
+                evaluator.capture_comparison_data(query, relevant_memories, filtered_memories)
 
             response = await self._generate_response(query, filtered_memories)
 
@@ -134,7 +144,7 @@ class Agent:
         - Consider multiple perspectives and evaluate the reliability of the provided context.
         - Provide a clear, concise, and well-structured response.
         - If a specific format is required (e.g., list, steps, numerical answer), adhere to it.
-        - You are terse and pithy, not as a personality trait but to be more economical with your token usage, but do not let this impact your specificity. 
+        - You are terse and pithy, not as a personality trait but to be more economical with your token usage, but do not let this impact your specificity.
         - Avoid unnecessary affirmations or filler phrases at the beginning of your response.
 
         3. Memory Management:
@@ -178,31 +188,31 @@ class Agent:
             "memories": [self._format_memory(m) for m in filtered_memories]
         }
 
-    def _write_comparison_data(self, data: Dict):
-        os.makedirs("comparison_data", exist_ok=True)
-        file_name = "comparison_data/comparison_data.json"
+    # def _write_comparison_data(self, data: Dict):
+    #     os.makedirs("comparison_data", exist_ok=True)
+    #     file_name = "comparison_data/comparison_data.json"
 
-        try:
-            if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
-                with open(file_name, "r") as f:
-                    existing_data = json.load(f)
-            else:
-                existing_data = []
+    #     try:
+    #         if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
+    #             with open(file_name, "r") as f:
+    #                 existing_data = json.load(f)
+    #         else:
+    #             existing_data = []
 
-            data["timestamp"] = int(time.time())
-            existing_data.append(data)
+    #         data["timestamp"] = int(time.time())
+    #         existing_data.append(data)
 
-            with open(file_name, "w") as f:
-                json.dump(existing_data, f, indent=2)
+    #         with open(file_name, "w") as f:
+    #             json.dump(existing_data, f, indent=2)
 
-            logger.info(f"Comparison data appended to {file_name}")
-        except json.JSONDecodeError:
-            logger.warning(f"Error reading existing JSON data from {file_name}. Starting with empty list.")
-            existing_data = [data]
-            with open(file_name, "w") as f:
-                json.dump(existing_data, f, indent=2)
-        except Exception as e:
-            logger.error(f"Error writing comparison data: {str(e)}", exc_info=True)
+    #         logger.info(f"Comparison data appended to {file_name}")
+    #     except json.JSONDecodeError:
+    #         logger.warning(f"Error reading existing JSON data from {file_name}. Starting with empty list.")
+    #         existing_data = [data]
+    #         with open(file_name, "w") as f:
+    #             json.dump(existing_data, f, indent=2)
+    #     except Exception as e:
+    #         logger.error(f"Error writing comparison data: {str(e)}", exc_info=True)
 
     def _aggregate_costs(self) -> Dict:
         summarization_cost = self.summarization_agent.get_cost_info()
@@ -211,13 +221,13 @@ class Agent:
             "total_cost": self.cost_tracker.get_total_cost(),
             "cost_per_reply": self.cost_tracker.get_cost_per_reply()
         }
-        
+
         aggregated_costs = {
             "summarization": summarization_cost,
             "filter": filter_cost,
             "main": main_cost
         }
-        
+
         return aggregated_costs
 
     @staticmethod

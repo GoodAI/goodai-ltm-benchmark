@@ -94,7 +94,7 @@ class Config(BaseSettings):
     }
 
     RETRIEVAL: dict = {
-        'top_k': None,
+        'top_k': 5,
         'min_similarity': 0.68
     }
 
