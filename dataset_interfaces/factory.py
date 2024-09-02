@@ -1,10 +1,12 @@
 import os
 
 from dataset_interfaces.interface import TestExample, DatasetInterface
+from datasets.code_defs import CodeDefinitionsDataset
 from datasets.conficting_personal_information import ConflictingPersonalInformationDataset
 from datasets.delayed_recall import DelayedRecallDataset
 from datasets.how_to_think import HowToThinkDataset
 from datasets.instruction_recall import InstructionRecallDataset
+from datasets.lb_wiki import LongBenchWikiQADataset
 from datasets.prospective_memory import ProspectiveMemoryDataset
 from datasets.colours import ColourDataset
 from datasets.jokes import JokesDataset
@@ -42,6 +44,8 @@ DATASETS = {
     "trigger_response": TriggerResponseDataset,
     "restaurant": RestaurantDataset,
     "spy_meeting": SpyMeetingDataset,
+    "wiki_qa": LongBenchWikiQADataset,
+    "code_defs": CodeDefinitionsDataset
 }
 DATASETS_BY_NAME = {ds.name: ds for ds in DATASETS.values()}
 
