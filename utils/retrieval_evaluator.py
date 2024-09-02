@@ -535,21 +535,13 @@ class RetrievalEvaluator:
             if isinstance(memory, dict):
                 formatted_memory = memory.copy()
                 formatted_memory['timestamp'] = str(formatted_memory.get('timestamp', ''))
-            elif isinstance(memory, RetrievedMemory):
+            elif isinstance(memory, tuple):
                 formatted_memory = {
-                    "passage": memory.passage,
-                    "timestamp": str(memory.timestamp),
-                    "distance": memory.distance,
-                    "relevance": memory.relevance,
-                    "confidence": memory.confidence,
-                    "importance": memory.importance,
-                    "metadata": memory.metadata
+                    "id": None,
+                    "query": memory[0].content,
+                    "response": memory[1].content,
+                    "timestamp": memory[0].timestamp
                 }
-                if hasattr(memory.passage_info, 'to_dict'):
-                    formatted_memory["passage_info"] = memory.passage_info.to_dict()
-                else:
-                    formatted_memory["passage_info"] = str(memory.passage_info)
-                formatted_memory["textKeys"] = [str(key) for key in memory.textKeys]
             else:
                 formatted_memory = {
                     "id": getattr(memory, 'id', None),

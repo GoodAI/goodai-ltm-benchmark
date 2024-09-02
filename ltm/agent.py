@@ -18,6 +18,7 @@ from ltm.utils.config import Config
 from model_interfaces.base_ltm_agent import Message
 
 from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call, make_assistant_message
+from utils.retrieval_evaluator import RetrievalEvaluator
 from utils.text import td_format
 from utils.ui import colour_print
 
@@ -40,6 +41,7 @@ class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.conf
     run_name: str = ""
     num_tries: int = 5
     task_memory: list = field(default_factory=list)
+    retrieval_evaluator: RetrievalEvaluator = field(default_factory=RetrievalEvaluator)
 
     @property
     def save_name(self) -> str:
@@ -308,7 +310,7 @@ Reuse these keywords if appropriate: {keywords}"""
 
         return context
 
-    def llm_memory_filter(self, memories, queries, cost_cb):
+    def llm_memory_filter(self, memories, queries, user_message, cost_cb):
 
         situation_prompt = """You are a part of an agent which is undergoing an exchange of messages with a user or multiple users.
 Another part of the agent which is in direct contact with the user is currently searching for memories using the statements below in reaction to a message from the user.
@@ -403,6 +405,8 @@ Express your answer in this JSON:
         # for m in filtered_mems:
         #     colour_print("GREEN", m)
 
+        self.retrieval_evaluator.capture_comparison_data(user_message, interactions_to_filter, filtered_interactions)
+
         return filtered_interactions
 
     def get_relevant_memories(self, user_message, cost_cb):
@@ -459,7 +463,7 @@ Write JSON in the following format:
                 if r_mem.relevance > 0.6:
                     relevance_filtered_mems.append(r_mem)
 
-        llm_filtered_interactions = self.llm_memory_filter(relevance_filtered_mems, query_dict["queries"], cost_cb)
+        llm_filtered_interactions = self.llm_memory_filter(relevance_filtered_mems, query_dict["queries"], user_message, cost_cb)
 
         sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
         return sorted_interactions
