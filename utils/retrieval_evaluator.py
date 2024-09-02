@@ -16,6 +16,9 @@ from datetime import datetime
 import shutil
 from goodai.ltm.mem.base import RetrievedMemory
 
+from utils.constants import RETRIEVAL_REFERENCE_DIR
+
+
 class FileManager:
     def __init__(self, base_directory: Path):
         self.base_directory = Path(base_directory)
@@ -65,7 +68,7 @@ class FileManager:
 class RetrievalEvaluator:
     def __init__(self):
         self.project_root = Path(__file__).parent.parent / "data" / "retrieval_evaluator"
-        self.dev_bench_reference_data_path = self.project_root / "dev_bench_reference_data"
+        self.dev_bench_reference_data_path = RETRIEVAL_REFERENCE_DIR
         self.comparison_data_path = self.project_root / "comparison_data"
         self.logs_path = self.project_root / "logs"
         self.evaluation_outputs_path = self.project_root / "evaluation_outputs"
@@ -557,13 +560,13 @@ class RetrievalEvaluator:
             return "\n".join(query)
         return query
 
-    def output(self, benchmark_version: str) -> None:
-        self.setup_logging(benchmark_version)
+    def output(self, benchmark_name: str) -> None:
+        self.setup_logging(benchmark_name)
 
-        reference_data_file = self.dev_bench_reference_data_path / f"comparison_data_reference_enhanced_{benchmark_version}.json"
+        reference_data_file = self.dev_bench_reference_data_path.joinpath(benchmark_name, "reference_data.json")
 
         if not reference_data_file.exists():
-            raise FileNotFoundError(f"Reference data file for benchmark version {benchmark_version} not found at {reference_data_file}")
+            raise FileNotFoundError(f"Reference data file for benchmark version {benchmark_name} not found at {reference_data_file}")
 
         reference_data = self.load_json_file(reference_data_file)
         input_data = self.file_manager.read_data()
@@ -577,28 +580,28 @@ class RetrievalEvaluator:
         timestamp = int(time.time())
         recall_score = self.summary['recall_score']
 
-        output_dir = self.evaluation_outputs_path / f"evaluation_{benchmark_version}_{timestamp}"
+        output_dir = self.evaluation_outputs_path / f"evaluation_{benchmark_name}_{timestamp}"
         self.file_manager.ensure_directory_exists(output_dir)
 
         # Move the old comparison data to the output directory
         self.file_manager.clear_comparison_data(output_dir, timestamp)
 
-        original_plot_path = output_dir / f"comparison_data_{benchmark_version}_{recall_score:.2f}_original.png"
+        original_plot_path = output_dir / f"comparison_data_{benchmark_name}_{recall_score:.2f}_original.png"
         self.plot_original_results(self.results, self.summary, original_plot_path)
 
-        test_plot_path = output_dir / f"comparison_data_{benchmark_version}_{recall_score:.2f}_test_breakdown.png"
+        test_plot_path = output_dir / f"comparison_data_{benchmark_name}_{recall_score:.2f}_test_breakdown.png"
         self.plot_test_breakdown(self.results, test_plot_path)
 
-        rf_plot_path = output_dir / f"comparison_data_{benchmark_version}_{recall_score:.2f}_retrieved_filtered.png"
+        rf_plot_path = output_dir / f"comparison_data_{benchmark_name}_{recall_score:.2f}_retrieved_filtered.png"
         self.plot_retrieved_vs_filtered(self.results, rf_plot_path)
 
         self.print_enhanced_summary(self.enhanced_summary)
 
-        results_path = output_dir / f"results_{benchmark_version}_{recall_score:.2f}.txt"
+        results_path = output_dir / f"results_{benchmark_name}_{recall_score:.2f}.txt"
         self.write_results_to_file(self.results, self.summary, self.enhanced_summary, results_path)
 
         self.logger.info(f"\nEvaluation output directory: {output_dir}")
-        self.logger.info(f"Log file: {self.logs_path / f'evaluation_{benchmark_version}.log'}")
+        self.logger.info(f"Log file: {self.logs_path / f'evaluation_{benchmark_name}.log'}")
 
 def main():
     parser = argparse.ArgumentParser(description="Run RetrievalEvaluator for a specific benchmark version.")

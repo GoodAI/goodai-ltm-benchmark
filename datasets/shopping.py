@@ -183,31 +183,6 @@ class ShoppingDataset(DatasetInterface):
         return score, max_score, ["\n".join(reasoning)]
 
 
-    def generate_reference_data(self, example: TestExample) -> Dict[str, Any]:
-        reference_data = []
-        relevant_memories = []
-
-        for i, (message, is_q) in enumerate(zip(example.script, example.is_question)):
-            entry = {
-                "query": message,
-                "memories": [mem for mem in relevant_memories],
-                "timestamp": "",
-                "test": self.name.lower(),
-                "is_scored_question": "yes" if is_q else "no"
-            }
-
-            relevant_memories.append({
-                "id": i,
-                "query": message,
-                "response": "",
-                "timestamp": ""
-            })
-
-            reference_data.append(entry)
-
-        return {"reference_data": reference_data}
-
-
 def main():
     # Create a conversation for the agent using a name and phil
     items = ShoppingDataset()

@@ -7,12 +7,15 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import List, Callable, Tuple, Optional, Any, Iterator, Dict
-from runner.master_log import MasterLog
+
+from markdown_it.rules_block import reference
+
+from runner.master_log import MasterLog, LogEvent
 
 import tiktoken
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
-from utils.constants import DATA_DIR
+from utils.constants import DATA_DIR, EventType
 from utils.context import flatten_context, search_context
 from utils.llm import ask_llm, LLMContext, count_tokens_for_model
 from utils.files import make_testdef_path
@@ -235,6 +238,33 @@ class TestExample:
         ]
         self.waits.append(WaitCreator.create_wait())
 
+    def reference_data_from_log(self, event_log: list[LogEvent]) -> List[Dict[str, Any]]:
+        reference_data = []
+        relevant_memories = []
+        index = 0
+        for i, event in enumerate(event_log):
+
+            if event.type == EventType.SEND_MESSAGE:
+                entry = {
+                    "query": event.data["message"],
+                    "memories": [mem for mem in relevant_memories],
+                    "timestamp": event.timestamp.timestamp(),
+                    "test": self.dataset_generator.name.lower(),
+                    "is_scored_question": event.data["is_question"]
+                }
+
+                relevant_memories.append({
+                    "id": index,
+                    "query": event.data["message"],
+                    "response": event_log[i+1].data["message"],
+                    "timestamp": event.timestamp.timestamp()
+                })
+                index += 1
+
+                reference_data.append(entry)
+
+        return reference_data
+
 
 
 @dataclass
@@ -309,11 +339,6 @@ class DatasetInterface(ABC):
         if item == "generate_examples":
             self.random = Random(self.seed)
         return super().__getattribute__(item)
-
-
-    @abstractmethod
-    def generate_reference_data(self, example: TestExample) -> Dict[str, Any]:
-       pass
 
     @property
     def data_path(self) -> Path:

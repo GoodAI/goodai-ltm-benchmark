@@ -3,7 +3,6 @@ import math
 import webbrowser
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Optional, Iterator, List, Tuple, Callable
 from random import Random
 
@@ -21,7 +20,7 @@ from reporting.generate import generate_report
 from reporting.results import TestResult
 from runner.config import RunConfig
 from runner.master_log import MasterLog
-from utils.constants import EventType
+from utils.constants import EventType, RETRIEVAL_REFERENCE_DIR
 from utils.filling_task import filler_no_response_tokens_trivia
 from utils.ui import colour_print
 from utils.files import make_runstats_path, make_master_log_path
@@ -162,37 +161,11 @@ class TestRunner:
             time=(now or datetime.now()) + action.time,
         )
 
-    def update_reference_data(self):
-        reference_data_path = Path(self.config.run_name) / "reference_data.json"
-        with open(reference_data_path, 'r') as f:
-            reference_data = json.load(f)
-
-        for example in self.tests:
-            updated_data = example.dataset_generator.generate_reference_data(example)
-            for entry in updated_data["reference_data"]:
-                for existing_entry in reference_data:
-                    if existing_entry["query"] == entry["query"]:
-                        existing_entry.update(entry)
-
-        with open(reference_data_path, 'w') as f:
-            json.dump(reference_data, f, indent=2)
-
     def send_message(self, test_id: str, action: SendMessageAction) -> int:
         agent_reply = None if not action.is_filling else action.filler_response
         action.reply, action.sent_ts, action.reply_ts = self.agent.message_to_agent(action.message, agent_reply)
         self.debug_message(action.message, action.reply, action.sent_ts, action.reply_ts)
 
-        # Update reference data with actual timestamps
-        for example in self.tests:
-            if example.unique_id == test_id:
-                reference_data = example.dataset_generator.generate_reference_data(example)
-                for entry in reference_data["reference_data"]:
-                    if entry["query"] == action.message:
-                        entry["timestamp"] = int(action.sent_ts.timestamp())
-                        for memory in entry["memories"]:
-                            if memory["query"] == action.message:
-                                memory["response"] = action.reply
-                                memory["timestamp"] = action.reply_ts.strftime("%Y-%m-%d %H:%M:%S")
 
         self.master_log.add_send_message(
             test_id=test_id, message=action.message, timestamp=action.sent_ts, is_question=action.is_question,
@@ -218,13 +191,6 @@ class TestRunner:
         if len(waiting_tests) == 0:
             return
         return sorted(waiting_tests.keys(), key=lambda uid: waiting_tests[uid][waiting_on])[0]
-
-    def generate_reference_data(self):
-        all_reference_data = []
-        for example in self.tests:
-            reference_data = example.dataset_generator.generate_reference_data(example)
-            all_reference_data.extend(reference_data["reference_data"])
-        return all_reference_data
 
     def is_waiting(self, unique_id: str, remove: bool = False) -> bool:
         if unique_id not in self.wait_list:
@@ -469,7 +435,6 @@ class TestRunner:
                 self.progress_dialog.notify_result(result)
                 print(result)
                 colour_print("green", f"{finished} of {len(self.tests)} tests finished.")
-                self.update_reference_data()
 
                 if self.config.isolated:
                     self.agent.reset()
@@ -512,13 +477,6 @@ class TestRunner:
         self.load()
         self.set_cost_callback()
 
-        # Generate and save reference data
-        reference_data = self.generate_reference_data()
-        reference_data_path = Path(self.config.run_name) / "reference_data.json"
-        reference_data_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(reference_data_path, 'w') as f:
-            json.dump(reference_data, f, indent=2)
-
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
         self.tests.sort(key=lambda t: t.unique_id)
         self.progress_dialog = ProgressDialog(self.tests, self.config.isolated)
@@ -526,6 +484,21 @@ class TestRunner:
         self.progress_dialog.close()
         self.save_runstats()
         self.reset_time()
+
+        # Now create all the reference data using the master log
+        reference_data = []
+        for example in self.tests:
+            reference_data.extend(
+                example.reference_data_from_log(list(self.master_log.test_events(example.unique_id))))
+
+        reference_data_path = RETRIEVAL_REFERENCE_DIR.joinpath(self.config.run_name, "reference_data.json")
+        reference_data_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(reference_data_path, 'w') as f:
+            json.dump(reference_data, f, indent=2)
+
+        if self.agent.retrieval_evaluator:
+            self.agent.retrieval_evaluator.output(self.config.run_name)
+
         report_path = generate_report(self.finished_results)
         webbrowser.open_new_tab(report_path.as_uri())
 

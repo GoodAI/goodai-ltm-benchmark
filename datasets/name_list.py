@@ -1,10 +1,9 @@
 import logging
 from json import JSONDecodeError
-from datetime import datetime, timedelta
 
 from dataclasses import dataclass
 
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple
 
 from faker import Faker
 from goodai.helpers.json_helper import sanitize_and_parse_json
@@ -89,27 +88,3 @@ class NameListDataset(DatasetInterface):
             reasoning.append("Response not in correct format")
 
         return score, 1, reasoning
-
-    def generate_reference_data(self, example: TestExample) -> Dict[str, Any]:
-        reference_data = []
-        relevant_memories = []
-
-        for i, (message, is_q) in enumerate(zip(example.script, example.is_question)):
-            entry = {
-                "query": message,
-                "memories": [mem for mem in relevant_memories],
-                "timestamp": "",
-                "test": self.name.lower(),
-                "is_scored_question": "yes" if is_q else "no"
-            }
-
-            relevant_memories.append({
-                "id": i, #! Currently not a good implementation
-                "query": message,
-                "response": "",
-                "timestamp": ""
-            })
-
-            reference_data.append(entry)
-
-        return {"reference_data": reference_data}
