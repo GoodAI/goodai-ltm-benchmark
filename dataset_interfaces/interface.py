@@ -311,9 +311,9 @@ class DatasetInterface(ABC):
         return super().__getattribute__(item)
 
 
-    #! referrence data.
+    @abstractmethod
     def generate_reference_data(self, example: TestExample) -> Dict[str, Any]:
-        raise NotImplementedError("This method should be implemented by subclasses")
+       pass
 
     @property
     def data_path(self) -> Path:

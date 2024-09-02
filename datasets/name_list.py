@@ -6,19 +6,18 @@ from dataclasses import dataclass
 
 from typing import List, Tuple, Dict, Any
 
-import pystache
 from faker import Faker
 from goodai.helpers.json_helper import sanitize_and_parse_json
 
 from dataset_interfaces.interface import DatasetInterface, TestExample
 
 STATEMENTS = [
-    "My name is {{name}}.",
-    "Refer to me as {{name}}.",
-    "Start calling me by my name which is {{name}}.",
-    "{{name}} is my name.",
-    "{{name}} is what I am called.",
-    "My name has changed to {{name}}.",
+    "My name is {name}.",
+    "Refer to me as {name}.",
+    "Start calling me by my name which is {name}.",
+    "{name} is my name.",
+    "{name} is what I am called.",
+    "My name has changed to {name}.",
 ]
 
 
@@ -26,12 +25,12 @@ STATEMENTS = [
 class NameListDataset(DatasetInterface):
     name: str = "NameList"
     description: str = "Give the agent multiple names to call you in sequence. Then ask the agent what all of your names have been. The agent should respond with all of the names you have given it."
-    question: str = "What have been all of the names that I have given you? Express the answer as a JSON list."
+    question: str = "What have been all of the names that I have gone by? Express the answer as a JSON list."
     name_changes: int = 3
-    reset_message: str = "Forget, or otherwise disregard, all of the names I have given you before this message. You do not currrently know my name."
+    reset_message: str = "Forget, or otherwise disregard, all of the names I have gone by before this message. You do not currrently know my name."
 
     def generate_examples(self, num_examples):
-        renderer = pystache.Renderer()
+        Faker.seed(self.seed)
         faker = Faker(["en_US", "en_IE"])
         examples = []
         for _ in range(num_examples):
@@ -42,7 +41,7 @@ class NameListDataset(DatasetInterface):
 
             for change in range(self.name_changes):
                 name = faker.unique.first_name()
-                name_stmt = str(renderer.render(self.random.choice(STATEMENTS), {"name": name}))
+                name_stmt = self.random.choice(STATEMENTS).format(name=name)
                 answer_list.append(name)
                 script.append(name_stmt)
                 is_question.append(False)
