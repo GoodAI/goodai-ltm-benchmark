@@ -1,5 +1,5 @@
 import random
-import utils.math as m
+import utils.util_math as m
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from reporting.generate import get_sorted_scores

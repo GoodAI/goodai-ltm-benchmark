@@ -17,6 +17,7 @@ import shutil
 from goodai.ltm.mem.base import RetrievedMemory
 
 from utils.constants import RETRIEVAL_REFERENCE_DIR
+from utils.util_math import get_dimensions
 
 
 class FileManager:
@@ -177,7 +178,8 @@ class RetrievalEvaluator:
                 'test': ref_entry['test'],
                 'is_scored_question': ref_entry['is_scored_question'],
                 'retrieved_memories_count': retrieved_count,
-                'filtered_memories_count': filtered_count
+                'filtered_memories_count': filtered_count,
+                'timestamp': ref_entry['timestamp']
             })
 
         important_entries = len(results)
@@ -195,7 +197,11 @@ class RetrievalEvaluator:
 
         return results, summary
 
-    def plot_original_results(self, results: List[Dict[str, Any]], summary: Dict[str, Any], output_path: Path) -> None:
+    def plot_original_results(self, results: List[Dict[str, Any]], summary: Dict[str, Any], output_path: Path, benchmark_version: str) -> None:
+
+        # Sort by reference timestamp
+        results = sorted(results, key=lambda x: x["timestamp"])
+
         df = pd.DataFrame(results)
         df['Entry'] = range(1, len(df) + 1)
 
@@ -226,7 +232,7 @@ class RetrievalEvaluator:
 
         ax_summary.set_xlim(0, 100)
         ax_summary.set_xlabel('Percentage', fontsize=14)
-        ax_summary.set_title('Dev Bench 4-1 Summary Statistics', fontsize=18, loc="right")
+        ax_summary.set_title(f'`{benchmark_version}` Summary Statistics', fontsize=18, loc="right")
         ax_summary.set_yticks(range(len(summary_data)))
         ax_summary.set_yticklabels([x[0] for x in summary_data], fontsize=12)
 
@@ -260,14 +266,16 @@ class RetrievalEvaluator:
         ax_breakdown.bar(df['Entry'], df['expected_relevant'] - df['true_relevant'],
                         bottom=df['true_relevant'], color=colors['missing_relevant'], width=0.8, edgecolor='none')
 
-        ax_breakdown.set_xlabel('Entry Number', fontsize=14)
+        ax_breakdown.set_xlabel('Test message', fontsize=14)
         ax_breakdown.set_ylabel('Number of Memories', fontsize=14)
         ax_breakdown.set_title('Memory Breakdown by Entry', fontsize=18)
 
         for i, total in enumerate(df['total_memories']):
             ax_breakdown.text(i+1, total, str(total), ha='center', va='bottom', fontsize=8, color='black')
 
-        ax_breakdown.set_xticks(range(0, len(df)+1, 10))
+        x_tics_text = [x['test'] + (" *Q*" if x["is_scored_question"] else "") for x in results]
+        ax_breakdown.set_xticks(range(1, len(x_tics_text) + 1))
+        ax_breakdown.set_xticklabels(x_tics_text, minor=False, rotation=90)
         ax_breakdown.grid(axis='y', linestyle='--', alpha=0.7)
 
         x = df['Entry']
@@ -293,15 +301,19 @@ class RetrievalEvaluator:
         df = pd.DataFrame(results)
 
         plt.style.use('default')
-        fig, axes = plt.subplots(5, 2, figsize=(24, 30))
+
+        test_types = sorted(df['test'].unique())
+        test_types = [t for t in test_types if t != 'admin']
+        dims = get_dimensions(len(test_types))
+        rows = max(dims)
+        cols = min(dims)
+
+        fig, axes = plt.subplots(rows, cols, figsize=(24, 30))
         fig.suptitle('Test-by-Test Memory Breakdown', fontsize=20)
 
         colors = {'true_relevant': '#4CAF50', 'irrelevant': '#FFC107', 'trivia': '#9C27B0', 'missing_relevant': '#F44336'}
 
         axes = axes.flatten()
-
-        test_types = sorted(df['test'].unique())
-        test_types = [t for t in test_types if t != 'admin']
 
         for i, test_type in enumerate(test_types):
             ax = axes[i]
@@ -400,7 +412,7 @@ class RetrievalEvaluator:
         overall_trivia = df['trivia'].sum() / df['filtered_memories_count'].sum() * 100
 
         scored_questions = df[df['is_scored_question'] == 'yes']
-        scored_recall = scored_questions['true_relevant'].sum() / scored_questions['expected_relevant'].sum()
+        scored_recall = scored_questions['true_relevant'].sum() / max(scored_questions['expected_relevant'].sum(), 1)
 
         df['retrieval_efficiency'] = df['filtered_memories_count'] / df['retrieved_memories_count']
 
@@ -560,13 +572,13 @@ class RetrievalEvaluator:
             return "\n".join(query)
         return query
 
-    def output(self, benchmark_name: str) -> None:
-        self.setup_logging(benchmark_name)
+    def output(self, benchmark_version: str) -> None:
+        self.setup_logging(benchmark_version)
 
-        reference_data_file = self.dev_bench_reference_data_path.joinpath(benchmark_name, "reference_data.json")
+        reference_data_file = self.dev_bench_reference_data_path.joinpath(benchmark_version, "reference_data.json")
 
         if not reference_data_file.exists():
-            raise FileNotFoundError(f"Reference data file for benchmark version {benchmark_name} not found at {reference_data_file}")
+            raise FileNotFoundError(f"Reference data file for benchmark version {benchmark_version} not found at {reference_data_file}")
 
         reference_data = self.load_json_file(reference_data_file)
         input_data = self.file_manager.read_data()
@@ -580,36 +592,36 @@ class RetrievalEvaluator:
         timestamp = int(time.time())
         recall_score = self.summary['recall_score']
 
-        output_dir = self.evaluation_outputs_path / f"evaluation_{benchmark_name}_{timestamp}"
+        output_dir = self.evaluation_outputs_path / f"evaluation_{benchmark_version}_{timestamp}"
         self.file_manager.ensure_directory_exists(output_dir)
 
         # Move the old comparison data to the output directory
         self.file_manager.clear_comparison_data(output_dir, timestamp)
 
-        original_plot_path = output_dir / f"comparison_data_{benchmark_name}_{recall_score:.2f}_original.png"
-        self.plot_original_results(self.results, self.summary, original_plot_path)
+        original_plot_path = output_dir / f"comparison_data_{benchmark_version}_{recall_score:.2f}_original.png"
+        self.plot_original_results(self.results, self.summary, original_plot_path, benchmark_version)
 
-        test_plot_path = output_dir / f"comparison_data_{benchmark_name}_{recall_score:.2f}_test_breakdown.png"
+        test_plot_path = output_dir / f"comparison_data_{benchmark_version}_{recall_score:.2f}_test_breakdown.png"
         self.plot_test_breakdown(self.results, test_plot_path)
 
-        rf_plot_path = output_dir / f"comparison_data_{benchmark_name}_{recall_score:.2f}_retrieved_filtered.png"
+        rf_plot_path = output_dir / f"comparison_data_{benchmark_version}_{recall_score:.2f}_retrieved_filtered.png"
         self.plot_retrieved_vs_filtered(self.results, rf_plot_path)
 
         self.print_enhanced_summary(self.enhanced_summary)
 
-        results_path = output_dir / f"results_{benchmark_name}_{recall_score:.2f}.txt"
+        results_path = output_dir / f"results_{benchmark_version}_{recall_score:.2f}.txt"
         self.write_results_to_file(self.results, self.summary, self.enhanced_summary, results_path)
 
         self.logger.info(f"\nEvaluation output directory: {output_dir}")
-        self.logger.info(f"Log file: {self.logs_path / f'evaluation_{benchmark_name}.log'}")
+        self.logger.info(f"Log file: {self.logs_path / f'evaluation_{benchmark_version}.log'}")
 
 def main():
     parser = argparse.ArgumentParser(description="Run RetrievalEvaluator for a specific benchmark version.")
-    parser.add_argument("benchmark_version", choices=["4-1", "2-2"], help="Specify the benchmark version to run (4-1 or 2-2)")
+    parser.add_argument("reference_data", help="Specify which reference data to compare against.")
     args = parser.parse_args()
 
     evaluator = RetrievalEvaluator()
-    evaluator.output(args.benchmark_version)
+    evaluator.output(args.reference_data)
 
 if __name__ == "__main__":
     main()

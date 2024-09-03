@@ -249,7 +249,7 @@ class TestExample:
                     "query": event.data["message"],
                     "memories": [mem for mem in relevant_memories],
                     "timestamp": event.timestamp.timestamp(),
-                    "test": self.dataset_generator.name.lower(),
+                    "test": self.unique_id,
                     "is_scored_question": event.data["is_question"]
                 }
 
