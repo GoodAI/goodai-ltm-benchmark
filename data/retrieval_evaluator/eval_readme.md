@@ -21,11 +21,7 @@ Note: You don't need to specify the benchmark version at this stage.
 
 ## 3. Generating Output
 After your benchmark run is complete, generate the output for a specific benchmark version:
-   - For benchmark version 4-1
-   `evaluator.output("4-1")`
-
-   - For benchmark version 2-2
-   `evaluator.output("2-2")`
+   `evaluator.output("Dev Benchmark 1 32k - 2 Examples")`
 
 ## 4. Output Location
 The evaluation results will be saved in:

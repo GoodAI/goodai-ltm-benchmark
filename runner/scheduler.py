@@ -165,8 +165,6 @@ class TestRunner:
         agent_reply = None if not action.is_filling else action.filler_response
         action.reply, action.sent_ts, action.reply_ts = self.agent.message_to_agent(action.message, agent_reply)
         self.debug_message(action.message, action.reply, action.sent_ts, action.reply_ts)
-
-
         self.master_log.add_send_message(
             test_id=test_id, message=action.message, timestamp=action.sent_ts, is_question=action.is_question,
         )
@@ -476,7 +474,6 @@ class TestRunner:
         self.agent.save_path.mkdir(parents=True, exist_ok=True)
         self.load()
         self.set_cost_callback()
-
         colour_print("green", f"Number of tests to run: {len(self.tests)}.")
         self.tests.sort(key=lambda t: t.unique_id)
         self.progress_dialog = ProgressDialog(self.tests, self.config.isolated)
