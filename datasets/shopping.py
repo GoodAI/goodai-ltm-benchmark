@@ -1,8 +1,11 @@
 import logging
 from json import JSONDecodeError
+
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Dict
+
 from goodai.helpers.json_helper import sanitize_and_parse_json
+
 from dataset_interfaces.interface import DatasetInterface, TestExample
 from utils.text import rouge_l
 

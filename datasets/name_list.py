@@ -88,4 +88,3 @@ class NameListDataset(DatasetInterface):
             reasoning.append("Response not in correct format")
 
         return score, 1, reasoning
-

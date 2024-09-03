@@ -5,6 +5,7 @@ from typing import Tuple, Optional
 from dataclasses import dataclass
 from utils.constants import PERSISTENCE_DIR
 from utils.llm import count_tokens_for_model
+from utils.retrieval_evaluator import RetrievalEvaluator
 
 
 @dataclass
@@ -14,6 +15,7 @@ class ChatSession(ABC):
     is_local: bool = False
     max_message_size: int = 4096
     time_travel: bool = True
+    retrieval_evaluator: RetrievalEvaluator = None
 
     def message_to_agent(self, user_message: str, agent_response: Optional[str] = None) -> Tuple[str, datetime, datetime]:
         sent_ts = datetime.now()
