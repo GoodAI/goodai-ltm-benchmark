@@ -8,8 +8,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import List, Callable, Tuple, Optional, Any, Iterator, Dict
 
-from markdown_it.rules_block import reference
-
 from runner.master_log import MasterLog, LogEvent
 
 import tiktoken
