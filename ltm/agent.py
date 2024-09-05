@@ -61,7 +61,7 @@ class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
         self.defined_kws = []  # ? Set?
         self.session_id = self.new_session()
         assert self.init_timestamp is None
-        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     def count_tokens(self, *, text: str | list[str] = None, messages: LLMContext = None) -> int:
         return count_tokens_for_model(self.model, text=text, context=messages)
@@ -484,7 +484,7 @@ Write JSON in the following format:
     def reset(self):
         self.hybrid_memory.clear()
         self.new_session()
-        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     def state_as_text(self) -> str:
         state = dict(
