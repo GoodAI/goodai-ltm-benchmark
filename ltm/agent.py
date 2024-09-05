@@ -321,8 +321,8 @@ Reuse these keywords if appropriate: {keywords}"""
 
         return context
 
-    def llm_memory_filter(self, interactions_to_filter, interaction_keywords, queries, cost_cb):
-    def llm_memory_filter(self, memories: list[], queries: list[str]) -> list[tuple[Message, Message]]:
+
+    def llm_memory_filter(self, interactions_to_filter: list[Tuple[Message, Message]], interaction_keywords: list[list[str]], queries: list[str]) -> list[tuple[Message, Message]]:
 
         situation_prompt = """You are a part of an agent which is undergoing an exchange of messages with a user or multiple users.
 Another part of the agent which is in direct contact with the user is currently searching for memories using the statements below in reaction to a message from the user.
