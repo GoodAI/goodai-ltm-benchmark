@@ -16,7 +16,7 @@ from datetime import datetime
 import shutil
 from goodai.ltm.mem.base import RetrievedMemory
 
-from utils.constants import RETRIEVAL_REFERENCE_DIR
+from utils.constants import RETRIEVAL_REFERENCE_DIR, DATA_DIR
 from utils.util_math import get_dimensions
 
 
@@ -68,7 +68,7 @@ class FileManager:
 
 class RetrievalEvaluator:
     def __init__(self):
-        self.project_root = Path(__file__).parent.parent / "data" / "retrieval_evaluator"
+        self.project_root = DATA_DIR.join("retrieval_evaluator")
         self.dev_bench_reference_data_path = RETRIEVAL_REFERENCE_DIR
         self.comparison_data_path = self.project_root / "comparison_data"
         self.logs_path = self.project_root / "logs"
@@ -82,7 +82,7 @@ class RetrievalEvaluator:
 
         for path in [self.project_root, self.dev_bench_reference_data_path, self.comparison_data_path,
                      self.logs_path, self.evaluation_outputs_path]:
-            self.file_manager.ensure_directory_exists(path)
+            path.mkdir(parents=True, exist_ok=True)
 
     def setup_logging(self, benchmark_version: str) -> None:
         log_file = self.logs_path / f'evaluation_{benchmark_version}.log'

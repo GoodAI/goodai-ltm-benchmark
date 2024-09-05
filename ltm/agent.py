@@ -310,7 +310,7 @@ Reuse these keywords if appropriate: {keywords}"""
 
         return context
 
-    def llm_memory_filter(self, memories, queries, user_message, cost_cb):
+    def llm_memory_filter(self, interactions_to_filter, interaction_keywords, queries, cost_cb):
 
         situation_prompt = """You are a part of an agent which is undergoing an exchange of messages with a user or multiple users.
 Another part of the agent which is in direct contact with the user is currently searching for memories using the statements below in reaction to a message from the user.
@@ -348,7 +348,7 @@ Express your answer in this JSON:
 ]
 """
 
-        if len(memories) == 0:
+        if len(interactions_to_filter) == 0:
             return []
 
         splice_length = 10
@@ -360,9 +360,6 @@ Express your answer in this JSON:
         context = [make_user_message(situation_prompt.format(queries=queries_txt))]
         situation = self.ask_llm(context, cost_cb, label=f"situation-{self.llm_call_idx}")
         colour_print("MAGENTA", f"Filtering situation: {situation}")
-
-        # Map retrieved memory fac
-        interactions_to_filter, interaction_keywords = self.interactions_from_retrieved_memories(memories)
 
         num_splices = ceil(len(interactions_to_filter) / splice_length)
         # Iterate through the interactions_to_filter list and create the passage
@@ -404,8 +401,6 @@ Express your answer in this JSON:
         # print("Memories after LLM filtering")
         # for m in filtered_mems:
         #     colour_print("GREEN", m)
-
-        self.retrieval_evaluator.capture_comparison_data(user_message, interactions_to_filter, filtered_interactions)
 
         return filtered_interactions
 
@@ -463,9 +458,14 @@ Write JSON in the following format:
                 if r_mem.relevance > 0.6:
                     relevance_filtered_mems.append(r_mem)
 
-        llm_filtered_interactions = self.llm_memory_filter(relevance_filtered_mems, query_dict["queries"], user_message, cost_cb)
-
+        # Get the interactions from the memories, then filter those interactions
+        interactions_to_filter, keywords = self.interactions_from_retrieved_memories(relevance_filtered_mems)
+        llm_filtered_interactions = self.llm_memory_filter(interactions_to_filter, keywords, query_dict["queries"], cost_cb)
         sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
+
+        # Record the interactions retrieved and filtered
+        self.retrieval_evaluator.capture_comparison_data(user_message, interactions_to_filter, llm_filtered_interactions)
+
         return sorted_interactions
 
     def interactions_from_retrieved_memories(self, memory_chunks: List[RetrievedMemory]) -> Tuple[
