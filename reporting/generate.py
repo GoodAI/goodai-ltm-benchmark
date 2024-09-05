@@ -11,7 +11,7 @@ from utils.files import gather_result_files, gather_runstats_files, make_config_
 from utils.constants import REPORT_TEMPLATES_DIR, GOODAI_RED, GOODAI_GREEN, METRIC_NAMES, METRIC_ALT, \
     METRIC_UNITS, SPIDER_LABELS_OVERRIDE, REPORT_OUTPUT_DIR
 from utils.data import load_b64
-from utils.math import mean_std
+from utils.util_math import mean_std
 from utils.ui import display_float_or_int
 from datetime import datetime, timedelta
 from pathlib import Path

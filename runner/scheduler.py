@@ -20,7 +20,7 @@ from reporting.generate import generate_report
 from reporting.results import TestResult
 from runner.config import RunConfig
 from runner.master_log import MasterLog
-from utils.constants import EventType
+from utils.constants import EventType, RETRIEVAL_REFERENCE_DIR
 from utils.filling_task import filler_no_response_tokens_trivia
 from utils.ui import colour_print
 from utils.files import make_runstats_path, make_master_log_path
@@ -482,6 +482,21 @@ class TestRunner:
         self.progress_dialog.close()
         self.save_runstats()
         self.reset_time()
+
+        # Now create all the reference data using the master log
+        reference_data = []
+        for example in self.tests:
+            reference_data.extend(
+                example.reference_data_from_log(list(self.master_log.test_events(example.unique_id))))
+
+        reference_data_path = RETRIEVAL_REFERENCE_DIR.joinpath(self.config.run_name, "reference_data.json")
+        reference_data_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(reference_data_path, 'w') as f:
+            json.dump(reference_data, f, indent=2)
+
+        if self.agent.retrieval_evaluator:
+            self.agent.retrieval_evaluator.output(self.config.run_name)
+
         report_path = generate_report(self.finished_results)
         webbrowser.open_new_tab(report_path.as_uri())
 

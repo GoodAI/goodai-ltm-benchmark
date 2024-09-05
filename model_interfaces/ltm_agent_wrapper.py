@@ -20,6 +20,7 @@ class LTMAgentWrapper(ChatSession):
             run_name=self.run_name, model=self.model,
             max_prompt_size=self.max_prompt_size, max_completion_tokens=self.max_message_size,
         )
+        self.retrieval_evaluator = self.agent.retrieval_evaluator
 
     @property
     def name(self):

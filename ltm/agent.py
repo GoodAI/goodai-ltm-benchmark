@@ -16,9 +16,12 @@ from ltm.utils.config import Config
 from ltm.extended_thinking import message_notes_and_analysis
 from model_interfaces.base_ltm_agent import Message
 
+
+from utils.retrieval_evaluator import RetrievalEvaluator
 from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call, make_assistant_message, \
     LLMContext, count_tokens_for_model
 from utils.text import stamp_content
+
 from utils.ui import colour_print
 
 
@@ -42,6 +45,7 @@ class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
     run_name: str = ""
     num_tries: int = 5
     task_memory: list = field(default_factory=list)
+    retrieval_evaluator: RetrievalEvaluator = field(default_factory=RetrievalEvaluator)
     init_timestamp: str = None
     cost_cb: CostCallback = None
 
@@ -317,7 +321,8 @@ Reuse these keywords if appropriate: {keywords}"""
 
         return context
 
-    def llm_memory_filter(self, memories: list[RetrievedMemory], queries: list[str]) -> list[tuple[Message, Message]]:
+
+    def llm_memory_filter(self, interactions_to_filter: list[Tuple[Message, Message]], interaction_keywords: list[list[str]], queries: list[str]) -> list[tuple[Message, Message]]:
 
         situation_prompt = """You are a part of an agent which is undergoing an exchange of messages with a user or multiple users.
 Another part of the agent which is in direct contact with the user is currently searching for memories using the statements below in reaction to a message from the user.
@@ -355,7 +360,7 @@ Express your answer in this JSON:
 ]
 """
 
-        if len(memories) == 0:
+        if len(interactions_to_filter) == 0:
             return []
 
         splice_length = 10
@@ -367,9 +372,6 @@ Express your answer in this JSON:
         context = [make_user_message(situation_prompt.format(queries=queries_txt))]
         situation = self.ask_llm(context, label=f"situation-{self.llm_call_idx}")
         colour_print("MAGENTA", f"Filtering situation: {situation}")
-
-        # Map retrieved memory fac
-        interactions_to_filter, interaction_keywords = self.interactions_from_retrieved_memories(memories)
 
         num_splices = ceil(len(interactions_to_filter) / splice_length)
         # Iterate through the interactions_to_filter list and create the passage
@@ -464,9 +466,15 @@ Write JSON in the following format:
                 if r_mem.relevance > 0.6:
                     relevance_filtered_mems.append(r_mem)
 
-        llm_filtered_interactions = self.llm_memory_filter(relevance_filtered_mems, query_dict["queries"])
-
+        # Get the interactions from the memories, then filter those interactions
+        interactions_to_filter, keywords = self.interactions_from_retrieved_memories(relevance_filtered_mems)
+        llm_filtered_interactions = self.llm_memory_filter(interactions_to_filter, keywords, query_dict["queries"])
+        
         sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
+
+        # Record the interactions retrieved and filtered
+        self.retrieval_evaluator.capture_comparison_data(user_message, interactions_to_filter, llm_filtered_interactions)
+
         return sorted_interactions
 
     def interactions_from_retrieved_memories(
