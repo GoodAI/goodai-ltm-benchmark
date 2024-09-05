@@ -45,7 +45,8 @@ class LocationsDataset(DatasetInterface):
     )
     known_locations: int = 5
     reset_message: str = (
-        "Forget, or otherwise disregard, all of the locations that I have told you about before this message."
+        "Forget, or otherwise disregard, all of the points of interest from my home town that I have told you about "
+        "before this message."
     )
 
     def generate_examples(self, num_examples):

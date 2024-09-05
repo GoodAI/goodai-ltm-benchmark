@@ -1,5 +1,4 @@
 import logging
-import os.path
 import os
 import re
 import shutil
@@ -12,23 +11,13 @@ import yaml
 from pathlib import Path
 from dataset_interfaces.factory import DatasetFactory, DATASETS
 from dataset_interfaces.interface import TestExample
-from model_interfaces.length_bias_agent import LengthBiasAgent
 from model_interfaces.interface import ChatSession
 from model_interfaces.llm_interface import LLMChatSession, TimestampLLMChatSession
-from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
-from model_interfaces.cost_estimation import CostEstimationChatSession
-from model_interfaces.human import HumanChatSession
-from model_interfaces.huggingface_interface import HFChatSession
-from model_interfaces.gemini_interface import GeminiProInterface
-from model_interfaces.memorybank_interface import MemoryBankInterface #Memory Bank
-from model_interfaces.memgpt_interface import MemGPTInterface
-from model_interfaces.fifo import FifoAgentInterface
 from runner.config import RunConfig
 from runner.scheduler import TestRunner
 from utils.ui import ask_yesno, colour_print
 from utils.files import gather_testdef_files, gather_result_files, make_run_path, make_config_path, \
     gather_persistence_files
-from utils.llm import GPT_4_TURBO_BEST
 from utils.constants import MAIN_DIR, TESTS_DIR
 
 
@@ -38,27 +27,33 @@ def get_chat_session(name: str, max_prompt_size: Optional[int], run_name: str, i
     kwargs["is_local"] = is_local
 
     if name == "gemini":
+        from model_interfaces.gemini_interface import GeminiProInterface
         return GeminiProInterface(run_name=run_name)
     if (match := re.match(r"^fifo\((?P<file>.+)\)$", name)) is not None:
+        from model_interfaces.fifo import FifoAgentInterface
         return FifoAgentInterface(fifo_file=Path(match.groupdict()["file"]), **kwargs)
     if name.startswith("ltm_agent"):
+        from model_interfaces.ltm_agent_wrapper import LTMAgentWrapper
         match = re.match(r"^ltm_agent\((?P<model>.+)\)$", name)
         if match is None:
             raise ValueError(f"Unrecognized LTM Agent {repr(name)}.")
         return LTMAgentWrapper(model=match.groupdict()["model"], **kwargs)
-    if name == "length_bias":
-        return LengthBiasAgent(model=GPT_4_TURBO_BEST, **kwargs)
     if name.startswith("cost("):
+        from model_interfaces.cost_estimation import CostEstimationChatSession
         in_cost, out_cost = [float(p.strip()) / 1_000 for p in name.removeprefix("cost(").removesuffix(")").split(",")]
         return CostEstimationChatSession(cost_in_token=in_cost, cost_out_token=out_cost, **kwargs)
     if name == "human":
+        from model_interfaces.human import HumanChatSession
         return HumanChatSession(**kwargs)
     if name.startswith("huggingface/"):
+        from model_interfaces.huggingface_interface import HFChatSession
         kwargs.pop("is_local")
         return HFChatSession(model=name, **kwargs)
     if name == "memory_bank":
+        from model_interfaces.memorybank_interface import MemoryBankInterface
         return MemoryBankInterface(api_url="http://localhost:5000")
     if name.startswith("memgpt"):
+        from model_interfaces.memgpt_interface import MemGPTInterface
         match = re.match(r"^memgpt\((?P<model>.+)\)$", name)
         if match is None:
             raise ValueError(f"Unrecognized MemGPT Agent {repr(name)}.")

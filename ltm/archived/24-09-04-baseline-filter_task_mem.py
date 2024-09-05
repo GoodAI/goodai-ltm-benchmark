@@ -6,37 +6,36 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 import datetime
 from math import ceil
+import unicodedata
 from typing import Optional, Callable, Any, List, Tuple
 
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
 from goodai.ltm.mem.base import RetrievedMemory
+from litellm import token_counter
 
 from ltm.memory.hybrid_memory import HybridMemory
 from ltm.utils.config import Config
-from ltm.extended_thinking import message_notes_and_analysis
 from model_interfaces.base_ltm_agent import Message
 
-
-from utils.retrieval_evaluator import RetrievalEvaluator
-from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call, make_assistant_message, \
-    LLMContext, count_tokens_for_model
-from utils.text import stamp_content
-
+from utils.llm import make_system_message, make_user_message, ask_llm, log_llm_call, make_assistant_message
+from utils.text import td_format
 from utils.ui import colour_print
 
 
-CostCallback = Callable[[float], None]
+def init_timestamp_factory():
+    return datetime.datetime.now().strftime("%F %T")
 
 
 @dataclass
-class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
+class InsertedContextAgent:  # ? worth adding most of this to the ltm.utils.config?
     max_completion_tokens: Optional[int] = None
     hybrid_memory: HybridMemory = None
     max_prompt_size: int = 16384
     is_local: bool = True
     defined_kws: list = field(default_factory=list)  # ? Switch to use sets?
     llm_call_idx: int = 0
-    model: str = None
+    # model: str = "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+    model: str = "gpt-4o-mini",
     temperature: float = 0.01
     system_message: str = "You are a helpful AI assistant."
     debug_level: int = 1
@@ -45,32 +44,23 @@ class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
     run_name: str = ""
     num_tries: int = 5
     task_memory: list = field(default_factory=list)
-    retrieval_evaluator: RetrievalEvaluator = field(default_factory=RetrievalEvaluator)
-    init_timestamp: str = None
-    cost_cb: CostCallback = None
+    init_timestamp: str = field(default_factory=init_timestamp_factory)
 
     @property
     def save_name(self) -> str:
         sanitized_model = re.sub(r'[<>:"/\\|?*]', '_', self.model.replace('/', '-'))
-        return f"{sanitized_model}-{self.max_prompt_size}-{self.init_timestamp}"
-
-    @property
-    def max_input_tokens(self) -> int:
-        return int(0.9 * (self.max_prompt_size - self.max_completion_tokens))
+        sanitized_timestamp = re.sub(r'[<>:"/\\|?*]', '_', self.init_timestamp.replace(':', '_'))
+        return f"{sanitized_model}-{self.max_prompt_size}-{sanitized_timestamp}"
 
     def __post_init__(self):
-        assert self.model is not None
         self.hybrid_memory = HybridMemory(Config.DATABASE_URL, Config.SEMANTIC_MEMORY_CONFIG,
                                           max_retrieve_capacity=2000)
+        self.max_message_size = 1000  # ? Add to config?
         self.defined_kws = []  # ? Set?
         self.session_id = self.new_session()
-        assert self.init_timestamp is None
-        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-    def count_tokens(self, *, text: str | list[str] = None, messages: LLMContext = None) -> int:
-        return count_tokens_for_model(self.model, text=text, context=messages)
-
-    def save_interaction(self, user_message: str, response_message: str, keywords: list[str]):
+    def save_interaction(self, user_message, response_message, keywords):
         self.hybrid_memory.add_interaction(self.session_id, user_message, response_message, self.now.timestamp(),
                                            keywords)
 
@@ -82,8 +72,7 @@ class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
             self.hybrid_memory.semantic_memory.add_separator()
         return session_id
 
-    def reply(self, user_message: str, agent_response: str = None, cost_callback: CostCallback = None) -> str:
-        self.cost_cb = cost_callback
+    def reply(self, user_message: str, agent_response: Optional[str] = None, cost_callback: Callable = None) -> str:
         perform_task = """
 
 Here are some additional tasks which you are to perform right now:
@@ -92,50 +81,43 @@ Here are some additional tasks which you are to perform right now:
 These tasks contains two things: a trigger condition, and a payload.
 The trigger conditions have been met for all task. So they can be safely disregarded. Now all you need to do is perform the tasks described in the "payload" fields. 
 
-You should append the result of your task to your reply to the query above.
+You should append the result of your task to your reply to the query above
 
-Append the results of your tasks to your current response."""
+Append the results of your tasks to your current response.
+"""
 
+        colour_print("CYAN", f"DEALING WITH USER MESSAGE: {user_message}")
         self.now = datetime.datetime.now()
 
-        keywords = self.keywords_for_message(user_message)
+        keywords = self.keywords_for_message(user_message, cost_cb=cost_callback)
 
-        if agent_response is None:
-            memories = self.collect_memories(user_message, previous_interactions=0)
+        if not agent_response:
+            context = self.create_context(user_message, max_prompt_size=self.max_prompt_size, previous_interactions=0, cost_cb=cost_callback)
+
         else:
-            memories = []
+            context = [make_user_message(user_message)]
 
         # Update task memory
-        context = [make_system_message(self.system_message)] + memories + [
-            make_user_message(stamp_content(user_message, self.now, dt=self.now))
-        ]
-        self.add_task(deepcopy(context), user_message)
+        self.add_task(deepcopy(context), cost_callback, user_message)
 
         # Get any tasks that might be due now.
         extra_tasks = self.progress_and_get_extra_tasks(context)
-        if len(extra_tasks) == 0 and agent_response is not None:
-            response_text = agent_response
-        else:
-            task_appendix = ""
-            if len(extra_tasks) > 0:
-                task_appendix = perform_task.format(task=json.dumps(extra_tasks, indent=2))
-            extended_user_msg = user_message + task_appendix
-            reply_fn = lambda ctx, t: self.ask_llm(ctx, "reply", temperature=t)
-            response_text = message_notes_and_analysis(extended_user_msg, memories, self.now, reply_fn)
+        if len(extra_tasks) > 0:
+            context[-1]["content"] += perform_task.format(task=json.dumps(extra_tasks, indent=2))
 
+        response_text = self.ask_llm(context, cost_callback, label=f"reply-{self.llm_call_idx}")
         self.llm_call_idx += 1
 
         # Remove outdated tasks
         self.remove_completed_tasks()
 
         # Save interaction to memory
-        self.hybrid_memory.add_interaction(
-            self.session_id, user_message, response_text, self.now.timestamp(), keywords,
-        )
+        self.hybrid_memory.add_interaction(self.session_id, user_message, response_text, self.now.timestamp(),
+                                           keywords)
 
         return response_text
 
-    def progress_and_get_extra_tasks(self, context: LLMContext) -> list[dict[str, str]]:
+    def progress_and_get_extra_tasks(self, context):
 
         extra_tasks = []
 
@@ -147,7 +129,7 @@ Append the results of your tasks to your current response."""
 
         return extra_tasks
 
-    def add_task(self, context: LLMContext, user_message: str):  # given some trigger condition
+    def add_task(self, context, cost_callback, user_message): # given some trigger condition
         task_should_add = """Here is the current list of future tasks:
 {future_tasks}
 
@@ -185,7 +167,7 @@ Follow this format:
 }"""
 
         context.append(make_user_message(task_should_add.format(future_tasks=json.dumps(self.task_memory, indent=2), user_message=user_message)))
-        response_text = self.ask_llm(context, label=f"should_update-{self.llm_call_idx}")
+        response_text = self.ask_llm(context, cost_callback, label=f"should_update-{self.llm_call_idx}")
         colour_print("YELLOW", f"Should update: {response_text}")
 
         if "Should Update: No." in response_text:
@@ -198,7 +180,7 @@ Follow this format:
         context.append(make_user_message(new_task_def))
 
         try:
-            response = self.ask_llm(context, label=f"do_update-{self.llm_call_idx}")
+            response = self.ask_llm(context, cost_callback, label=f"do_update-{self.llm_call_idx}")
 
             new_task = sanitize_and_parse_json(response)
             self.process_new_task(new_task)
@@ -227,7 +209,7 @@ Follow this format:
         # Remove all tasks that have been triggered
         self.task_memory = [t for t in self.task_memory if not t["trigger_details"]["triggered"]]
 
-    def update_task(self, task: dict, context: LLMContext) -> bool:
+    def update_task(self, task, context):
 
         details = task["trigger_details"]
         cond = details["trigger_condition"]
@@ -249,7 +231,7 @@ Follow this format:
 
         return details["triggered"]
 
-    def keywords_for_message(self, user_message: str) -> list[str]:
+    def keywords_for_message(self, user_message, cost_cb):
 
         prompt = """Create two keywords to describe the topic of this message:
         "{user_message}".
@@ -262,7 +244,7 @@ Reuse these keywords if appropriate: {keywords}"""
         for _ in range(self.num_tries):
             try:
                 print("Keyword gen")
-                response = self.ask_llm(context, label=f"keyword-gen-{self.llm_call_idx}")
+                response = self.ask_llm(context, cost_cb, label=f"keyword-gen-{self.llm_call_idx}")
 
                 keywords = [k.lower() for k in sanitize_and_parse_json(response)]
                 break
@@ -282,47 +264,56 @@ Reuse these keywords if appropriate: {keywords}"""
         print(f"Interaction keywords: {keywords}")
         return keywords
 
-    def collect_memories(self, user_message: str, previous_interactions: int) -> LLMContext:
-        relevant_interactions = self.get_relevant_memories(user_message)
+    def create_context(self, user_message, max_prompt_size, previous_interactions, cost_cb):
+        context = [make_system_message(self.system_message), make_user_message(
+            f"{str(self.now)[:-7]} ({td_format(datetime.timedelta(seconds=1))}) " + user_message)]
+        relevant_interactions = self.get_relevant_memories(user_message, cost_cb)
 
-        if self.debug_level > 0:
-            for m in relevant_interactions:
-                if "trivia" in m[0].content:
-                    colour_print("YELLOW", f"<*** trivia ***>")
-                else:
-                    colour_print("YELLOW", m[0].content)
+        # Get interactions from the memories
+        for m in relevant_interactions:
+            if "trivia" in m[0].content:
+                colour_print("YELLOW", f"<*** trivia ***>")
+            else:
+                colour_print("YELLOW", f"{m[0].content}")
 
         # Add the previous messages
         recent_messages = self.hybrid_memory.get_recent_messages(self.session_id, limit=previous_interactions)
         relevant_interactions.extend([(Message(**msg.__dict__), Message(**msg.__dict__)) for msg in recent_messages])
 
         # Add in memories up to the max prompt size
-        context = []
+        current_size = token_counter(self.model, messages=context)
         shown_mems = 0
-        target_size = self.max_input_tokens
+        target_size = max_prompt_size - self.max_message_size
 
         for interaction in reversed(relevant_interactions):
             user_interaction, assistant_interaction = interaction
-            new_context = [
-                make_user_message(stamp_content(user_interaction.content, self.now, ts=user_interaction.timestamp)),
-                assistant_interaction.as_llm_dict(),
-            ] + context
-            future_size = self.count_tokens(messages=new_context)
+            future_size = token_counter(self.model, messages=context + [user_interaction.as_llm_dict(),
+                                                                        assistant_interaction.as_llm_dict()])
 
             # If this message is going to be too big, then skip it
+            if shown_mems >= 100:
+                break
+
             if future_size > target_size:
                 continue
 
             # Add the interaction and count the tokens
-            context = new_context
+            context.insert(1, assistant_interaction.as_llm_dict())
+
+            ts = datetime.datetime.fromtimestamp(user_interaction.timestamp)
+            et_descriptor = f"{str(ts)[:-7]} ({td_format(self.now - ts)}) "
+            context.insert(1, user_interaction.as_llm_dict())
+            context[1]["content"] = et_descriptor + context[1]["content"]
+
             shown_mems += 1
-            if shown_mems >= 100:
-                break
+
+            current_size = future_size
+
+        print(f"current context size: {current_size}")
 
         return context
 
-    def llm_memory_filter(self, interactions_to_filter, interaction_keywords, queries, cost_cb):
-    def llm_memory_filter(self, memories: list[], queries: list[str]) -> list[tuple[Message, Message]]:
+    def llm_memory_filter(self, memories, queries, cost_cb):
 
         situation_prompt = """You are a part of an agent which is undergoing an exchange of messages with a user or multiple users.
 Another part of the agent which is in direct contact with the user is currently searching for memories using the statements below in reaction to a message from the user.
@@ -360,7 +351,7 @@ Express your answer in this JSON:
 ]
 """
 
-        if len(interactions_to_filter) == 0:
+        if len(memories) == 0:
             return []
 
         splice_length = 10
@@ -370,8 +361,11 @@ Express your answer in this JSON:
         # Get the situation
         queries_txt = "- " + "\n- ".join(queries)
         context = [make_user_message(situation_prompt.format(queries=queries_txt))]
-        situation = self.ask_llm(context, label=f"situation-{self.llm_call_idx}")
+        situation = self.ask_llm(context, cost_cb, label=f"situation-{self.llm_call_idx}")
         colour_print("MAGENTA", f"Filtering situation: {situation}")
+
+        # Map retrieved memory fac
+        interactions_to_filter, interaction_keywords = self.interactions_from_retrieved_memories(memories)
 
         num_splices = ceil(len(interactions_to_filter) / splice_length)
         # Iterate through the interactions_to_filter list and create the passage
@@ -396,7 +390,7 @@ Express your answer in this JSON:
             for _ in range(self.num_tries):
                 try:
                     print("Attempting filter")
-                    result = self.ask_llm(context, label=f"reply-{self.llm_call_idx}-filter-{call_count}")
+                    result = self.ask_llm(context, cost_cb, label=f"reply-{self.llm_call_idx}-filter-{call_count}")
 
                     json_list = sanitize_and_parse_json(result)
                     for selected_object in json_list:
@@ -410,9 +404,13 @@ Express your answer in this JSON:
                     print(e)
                     continue
 
+        # print("Memories after LLM filtering")
+        # for m in filtered_mems:
+        #     colour_print("GREEN", m)
+
         return filtered_interactions
 
-    def get_relevant_memories(self, user_message: str) -> list[tuple[Message, Message]]:
+    def get_relevant_memories(self, user_message, cost_cb):
         prompt = """Message from user: "{user_message}"
 
 Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
@@ -437,7 +435,7 @@ Write JSON in the following format:
 
         for _ in range(self.num_tries):
             print("generating queries")
-            response = self.ask_llm(context, label=f"query-gen-{self.llm_call_idx}")
+            response = self.ask_llm(context, cost_cb, label=f"query-gen-{self.llm_call_idx}")
 
             try:
                 query_dict = sanitize_and_parse_json(response)
@@ -466,20 +464,13 @@ Write JSON in the following format:
                 if r_mem.relevance > 0.6:
                     relevance_filtered_mems.append(r_mem)
 
-        # Get the interactions from the memories, then filter those interactions
-        interactions_to_filter, keywords = self.interactions_from_retrieved_memories(relevance_filtered_mems)
-        llm_filtered_interactions = self.llm_memory_filter(interactions_to_filter, keywords, query_dict["queries"])
-        
+        llm_filtered_interactions = self.llm_memory_filter(relevance_filtered_mems, query_dict["queries"], cost_cb)
+
         sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
-
-        # Record the interactions retrieved and filtered
-        self.retrieval_evaluator.capture_comparison_data(user_message, interactions_to_filter, llm_filtered_interactions)
-
         return sorted_interactions
 
-    def interactions_from_retrieved_memories(
-        self, memory_chunks: List[RetrievedMemory],
-    ) -> Tuple[List[Tuple[Message, Message]], List[List[str]]]:
+    def interactions_from_retrieved_memories(self, memory_chunks: List[RetrievedMemory]) -> Tuple[
+        List[Tuple[Message, Message]], List[List[str]]]:
         interactions = []
         keywords = []
         for m in memory_chunks:
@@ -492,7 +483,7 @@ Write JSON in the following format:
     def reset(self):
         self.hybrid_memory.clear()
         self.new_session()
-        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.init_timestamp = init_timestamp_factory()
 
     def state_as_text(self) -> str:
         state = dict(
@@ -506,7 +497,7 @@ Write JSON in the following format:
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
-    def from_state_text(self, state_text: str):
+    def from_state_text(self, state_text: str, prompt_callback: Callable[[str, str, list[dict], str], Any] = None):
         state = json.loads(state_text, cls=SimpleJSONDecoder)
         self.max_prompt_size = state["max_prompt_size"]
         self.max_completion_tokens = state["max_completion_tokens"]
@@ -516,11 +507,10 @@ Write JSON in the following format:
         self.llm_call_idx = state["llm_call_idx"]
         self.init_timestamp = state["init_timestamp"]
 
-    def ask_llm(self, context: LLMContext, label: str = None, **kwargs) -> str:
-        """kwargs accepts any kw param that the function ask_llm can take"""
-        model = kwargs.pop("model", self.model)
-        temperature = kwargs.pop("temperature", self.temperature)
+    def ask_llm(self, context, cost_cb, label, model_override=None):
+        model = model_override or self.model
         response = ask_llm(context, model=model, max_overall_tokens=self.max_prompt_size,
-                           cost_callback=self.cost_cb, temperature=temperature)
+                           cost_callback=cost_cb, temperature=self.temperature)
+
         log_llm_call(self.run_name, self.save_name, self.debug_level, label=label)
         return response
