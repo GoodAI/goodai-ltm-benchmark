@@ -26,7 +26,7 @@ class NameListDataset(DatasetInterface):
     description: str = "Give the agent multiple names to call you in sequence. Then ask the agent what all of your names have been. The agent should respond with all of the names you have given it."
     question: str = "What have been all of the names that I have gone by? Express the answer as a JSON list."
     name_changes: int = 3
-    reset_message: str = "Forget, or otherwise disregard, all of the names I have gone by before this message. You do not currrently know my name."
+    reset_message: str = "Forget, or otherwise disregard, all of the names I have gone by before this message. You do not currently know my name."
 
     def generate_examples(self, num_examples):
         Faker.seed(self.seed)

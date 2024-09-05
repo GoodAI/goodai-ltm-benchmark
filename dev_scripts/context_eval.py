@@ -28,7 +28,7 @@ def extract_info(ctx_dump: str) -> tuple[dict, LLMContext]:
         if line in ["--- SYSTEM", "--- USER", "--- ASSISTANT", "--- Response:"]:
             if "role" in vars():
                 context.append({"role": role, "content": "\n".join(msg_lines)})
-            role = line.removesuffix("--- ").lower()
+            role = line.removeprefix("--- ").lower()
             msg_lines = list()
             if line == "--- Response:":
                 break

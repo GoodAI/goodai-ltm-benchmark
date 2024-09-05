@@ -362,8 +362,9 @@ class TestRunner:
         if len(self.master_log.log) == 0 and not self.config.isolated:
             self.send_message("", SendMessageAction(message=(
                 "I am going to subject you to a Long-Term Memory benchmark. In the following, I will be giving you "
-                "different kinds of information and I expect you to answer extremely briefly, only providing the "
-                "responses that you are required to provide. Otherwise, provide just short confirmations. Understood?"
+                "different kinds of information and I expect you to answer extremely briefly and not asking any "
+                "questions, only providing the responses that you are required to provide. Otherwise, provide just "
+                "short confirmations. Understood?"
             )))
 
         for example in self.iter_tests(self.tests):
