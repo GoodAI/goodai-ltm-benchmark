@@ -196,7 +196,7 @@ def log_llm_call(run_name: str, agent_name: str, debug_level: int, label: str = 
     # Write content of LLM call to file
     context = _llm_debug_params.pop("messages")
     response_text = _llm_debug_params.pop("response")
-    save_name = datetime.now().strftime("%Y-%m-%d_%H_%M_%S_%f")
+    save_name = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
     if label is not None:
         save_name += ' - ' + label
     save_path = save_dir.joinpath(f"{save_name}.txt")

@@ -25,10 +25,6 @@ from utils.ui import colour_print
 CostCallback = Callable[[float], None]
 
 
-def init_timestamp_factory():
-    return datetime.datetime.now().strftime("%F %T")
-
-
 @dataclass
 class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
     max_completion_tokens: Optional[int] = None
@@ -46,14 +42,13 @@ class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
     run_name: str = ""
     num_tries: int = 5
     task_memory: list = field(default_factory=list)
-    init_timestamp: str = field(default_factory=init_timestamp_factory)
+    init_timestamp: str = None
     cost_cb: CostCallback = None
 
     @property
     def save_name(self) -> str:
         sanitized_model = re.sub(r'[<>:"/\\|?*]', '_', self.model.replace('/', '-'))
-        sanitized_timestamp = re.sub(r'[<>:"/\\|?*]', '_', self.init_timestamp.replace(':', '_'))
-        return f"{sanitized_model}-{self.max_prompt_size}-{sanitized_timestamp}"
+        return f"{sanitized_model}-{self.max_prompt_size}-{self.init_timestamp}"
 
     @property
     def max_input_tokens(self) -> int:
@@ -63,10 +58,10 @@ class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
         assert self.model is not None
         self.hybrid_memory = HybridMemory(Config.DATABASE_URL, Config.SEMANTIC_MEMORY_CONFIG,
                                           max_retrieve_capacity=2000)
-        self.max_message_size = 1000  # ? Add to config?
         self.defined_kws = []  # ? Set?
         self.session_id = self.new_session()
-        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        assert self.init_timestamp is None
+        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
     def count_tokens(self, *, text: str | list[str] = None, messages: LLMContext = None) -> int:
         return count_tokens_for_model(self.model, text=text, context=messages)
@@ -114,15 +109,15 @@ Append the results of your tasks to your current response."""
 
         # Get any tasks that might be due now.
         extra_tasks = self.progress_and_get_extra_tasks(context)
-        if len(extra_tasks) > 0 or agent_response is None:
+        if len(extra_tasks) == 0 and agent_response is not None:
+            response_text = agent_response
+        else:
             task_appendix = ""
             if len(extra_tasks) > 0:
                 task_appendix = perform_task.format(task=json.dumps(extra_tasks, indent=2))
             extended_user_msg = user_message + task_appendix
             reply_fn = lambda ctx, t: self.ask_llm(ctx, "reply", temperature=t)
             response_text = message_notes_and_analysis(extended_user_msg, memories, self.now, reply_fn)
-        else:
-            response_text = agent_response
 
         self.llm_call_idx += 1
 
@@ -285,6 +280,13 @@ Reuse these keywords if appropriate: {keywords}"""
 
     def collect_memories(self, user_message: str, previous_interactions: int) -> LLMContext:
         relevant_interactions = self.get_relevant_memories(user_message)
+
+        if self.debug_level > 0:
+            for m in relevant_interactions:
+                if "trivia" in m[0].content:
+                    colour_print("YELLOW", f"<*** trivia ***>")
+                else:
+                    colour_print("YELLOW", m[0].content)
 
         # Add the previous messages
         recent_messages = self.hybrid_memory.get_recent_messages(self.session_id, limit=previous_interactions)
@@ -482,7 +484,7 @@ Write JSON in the following format:
     def reset(self):
         self.hybrid_memory.clear()
         self.new_session()
-        self.init_timestamp = init_timestamp_factory()
+        self.init_timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
     def state_as_text(self) -> str:
         state = dict(
