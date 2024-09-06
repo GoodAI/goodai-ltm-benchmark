@@ -3,7 +3,7 @@ from typing import Optional
 from pathlib import Path
 import litellm
 
-from ltm.agent_think import LTMReflexionAgent
+from ltm.agent import LTMAgent
 from utils.llm import count_tokens_for_model
 litellm.modify_params = True  # To allow it adjusting the prompt for Claude LLMs
 from model_interfaces.interface import ChatSession
@@ -16,7 +16,7 @@ class LTMAgentWrapper(ChatSession):
     max_message_size: int = 1024
 
     def __post_init__(self):
-        self.agent = LTMReflexionAgent(
+        self.agent = LTMAgent(
             run_name=self.run_name, model=self.model,
             max_prompt_size=self.max_prompt_size, max_completion_tokens=self.max_message_size,
         )
