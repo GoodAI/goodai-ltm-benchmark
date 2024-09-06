@@ -66,9 +66,10 @@ class FileManager:
         with open(self.comparison_data_file, 'r') as f:
             return json.load(f)
 
+
 class RetrievalEvaluator:
     def __init__(self):
-        self.project_root = DATA_DIR.join("retrieval_evaluator")
+        self.project_root = DATA_DIR / "retrieval_evaluator"
         self.dev_bench_reference_data_path = RETRIEVAL_REFERENCE_DIR
         self.comparison_data_path = self.project_root / "comparison_data"
         self.logs_path = self.project_root / "logs"
