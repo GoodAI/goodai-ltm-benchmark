@@ -49,13 +49,13 @@ class FileManager:
 
     def write_data(self, data):
         try:
-            with open(self.comparison_data_file, 'w') as f:
+            with open(self.comparison_data_file, 'w', encoding="utf-8", errors="ignore") as f:
                 json.dump(data, f, indent=2)
             print(f"Data written to {self.comparison_data_file}")
         except PermissionError as e:
             print(f"Permission error when writing to {self.comparison_data_file}. Error: {e}")
             fallback_path = Path.home() / "comparison_data_fallback.json"
-            with open(fallback_path, 'w') as f:
+            with open(fallback_path, 'w',  encoding="utf-8", errors="ignore") as f:
                 json.dump(data, f, indent=2)
             print(f"Data written to fallback location: {fallback_path}")
 
@@ -63,12 +63,12 @@ class FileManager:
         if not self.comparison_data_file.exists():
             print(f"Comparison data file not found at {self.comparison_data_file}")
             return []
-        with open(self.comparison_data_file, 'r') as f:
+        with open(self.comparison_data_file, 'r',  encoding="utf-8", errors="ignore") as f:
             return json.load(f)
 
 class RetrievalEvaluator:
     def __init__(self):
-        self.project_root = DATA_DIR.join("retrieval_evaluator")
+        self.project_root = DATA_DIR.joinpath("retrieval_evaluator")
         self.dev_bench_reference_data_path = RETRIEVAL_REFERENCE_DIR
         self.comparison_data_path = self.project_root / "comparison_data"
         self.logs_path = self.project_root / "logs"

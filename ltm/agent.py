@@ -120,7 +120,7 @@ Append the results of your tasks to your current response."""
             if len(extra_tasks) > 0:
                 task_appendix = perform_task.format(task=json.dumps(extra_tasks, indent=2))
             extended_user_msg = user_message + task_appendix
-            reply_fn = lambda ctx, t: self.ask_llm(ctx, "reply", temperature=t)
+            reply_fn = lambda ctx, t: self.ask_llm(ctx, f"reply-{self.llm_call_idx}", temperature=t)
             response_text = message_notes_and_analysis(extended_user_msg, memories, self.now, reply_fn)
 
         self.llm_call_idx += 1

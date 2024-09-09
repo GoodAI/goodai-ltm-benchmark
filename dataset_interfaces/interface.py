@@ -64,7 +64,7 @@ class SendMessageAction(TestAction):
     sent_ts: Optional[datetime] = None
     is_question: bool = False
     is_filling: bool = False
-    filler_response: str = None
+    filler_response: str = ""
 
 
 @dataclass
@@ -116,6 +116,7 @@ class TestExample:
     waits: List[dict] = field(default_factory=list)
     random: Random = None  # Seeded random generator
     start_token: int = 0
+    script_is_filler: bool = False
 
     @property
     def dataset_name(self) -> str:
@@ -158,9 +159,9 @@ class TestExample:
         scripts = [self.script, self.waits, self.is_question]
         for msg, wait, is_q in zip(*scripts):
             if self.uses_callback and is_q:
-                yield SendAndRegisterAction(msg, is_question=is_q)
+                yield SendAndRegisterAction(msg, is_question=is_q, is_filling=self.script_is_filler)
             else:
-                yield SendMessageAction(msg, is_question=is_q)
+                yield SendMessageAction(msg, is_question=is_q, is_filling=self.script_is_filler)
             if len(wait) > 0:
                 yield WaitAction(**wait)
         if self.is_temporal and len(self.is_question) == len(self.script) + 1:

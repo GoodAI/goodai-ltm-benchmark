@@ -17,7 +17,7 @@ class LongBenchWikiQADataset(DatasetInterface):
 
     def generate_examples(self, num_examples):
 
-        with open("data/2wikimqa_e.jsonl", "r") as fd:
+        with open("data/2wikimqa_e.jsonl", "r", encoding="utf-8", errors="ignore") as fd:
             data_lines = self.random.sample(fd.readlines(), k=num_examples)
 
         examples = []
@@ -49,6 +49,7 @@ class LongBenchWikiQADataset(DatasetInterface):
                 script=script,
                 expected_responses=json_struct["answers"],
                 is_question=is_question,
+                script_is_filler=True,
             ))
 
         return examples

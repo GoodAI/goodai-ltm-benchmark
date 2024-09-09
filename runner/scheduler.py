@@ -162,7 +162,7 @@ class TestRunner:
         )
 
     def send_message(self, test_id: str, action: SendMessageAction) -> int:
-        agent_reply = None if not action.is_filling else action.filler_response
+        agent_reply = None if not (action.is_filling and not action.is_question) else action.filler_response
         action.reply, action.sent_ts, action.reply_ts = self.agent.message_to_agent(action.message, agent_reply)
         self.debug_message(action.message, action.reply, action.sent_ts, action.reply_ts)
         self.master_log.add_send_message(
@@ -491,7 +491,7 @@ class TestRunner:
 
         reference_data_path = RETRIEVAL_REFERENCE_DIR.joinpath(self.config.run_name, "reference_data.json")
         reference_data_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(reference_data_path, 'w') as f:
+        with open(reference_data_path, 'w',  encoding="utf-8", errors="ignore") as f:
             json.dump(reference_data, f, indent=2)
 
         if self.agent.retrieval_evaluator:

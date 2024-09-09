@@ -233,7 +233,7 @@ class CodeDefinitionsDataset(DatasetInterface):
             is_question = [False]
 
             for func_pair in functions_in_example:
-                script.append(func_pair[0])
+                script.append(f"Here is a function:\n ```python\n{func_pair[0]}\n```\nDon't comment on the function, I already know what it does.")
                 is_question.append(False)
 
             question_str = "Please recall for me, the exact code for the function that {operation}."
