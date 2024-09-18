@@ -44,8 +44,9 @@ class LTMAgentWrapper(ChatSession):
         with open(self.state_path, "w") as fd:
             fd.write(self.agent.state_as_text())
 
-    def load(self):
-        with open(self.state_path, "r") as fd:
+    def load(self, from_file: Path = None):
+        from_file = from_file or self.state_path
+        with open(from_file, "r") as fd:
             self.agent.from_state_text(fd.read())
 
     def token_len(self, text: str) -> int:
