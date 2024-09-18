@@ -67,6 +67,7 @@ class HybridMemory:
                 print(f"Error in previous state: {state['error']}")
                 return
             self.semantic_memory.set_state(state["semantic_memory"])
+            self.db_manager.clear_all()
             self.db_manager.import_data(state["database"])
         except Exception as e:
             print(f"Error setting state: {e}")

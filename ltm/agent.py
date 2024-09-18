@@ -2,11 +2,12 @@ import json
 import re
 import time
 import uuid
+from random import Random
 from copy import deepcopy
 from dataclasses import dataclass, field
 import datetime
 from math import ceil
-from typing import Optional, Callable, Any, List, Tuple
+from typing import Optional, Callable, List, Tuple
 
 from goodai.helpers.json_helper import sanitize_and_parse_json, SimpleJSONEncoder, SimpleJSONDecoder
 from goodai.ltm.mem.base import RetrievedMemory
@@ -26,6 +27,35 @@ from utils.ui import colour_print
 
 
 CostCallback = Callable[[float], None]
+
+perform_task_template = """
+
+Here are some additional tasks which you are to perform right now:
+{task}
+
+These tasks contains two things: a trigger condition, and a payload.
+The trigger conditions have been met for all task. So they can be safely disregarded. Now all you need to do is perform the tasks described in the "payload" fields. 
+
+You should append the result of your task to your reply to the query above.
+
+Append the results of your tasks to your current response."""
+
+query_generation_template = """Message from user: "{user_message}"
+
+Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
+conversation history that may be relevant to a reply to the user.
+The search queries you produce should be compact reformulations of the user question/statement,
+taking context into account. The purpose of the queries is accurate information retrieval. 
+Search is purely semantic. 
+Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
+Use up to three of these keywords to help narrow the search:
+{keywords}
+The current time is: {time}. 
+Write JSON in the following format:
+{{
+    "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
+    "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
+}}"""
 
 
 @dataclass
@@ -82,20 +112,35 @@ class LTMAgent:  # ? worth adding most of this to the ltm.utils.config?
             self.hybrid_memory.semantic_memory.add_separator()
         return session_id
 
+    def reply_1(self, user_message: str, agent_response: str = None, cost_callback: CostCallback = None) -> str:
+        self.cost_cb = cost_callback
+        self.now = datetime.datetime.now()
+
+        memories = self.collect_memories_1(user_message, 0) if agent_response is None else []
+        context = [make_system_message(self.system_message)] + memories + [
+            make_user_message(stamp_content(user_message, self.now, dt=self.now))
+        ]
+        self.add_task(deepcopy(context), user_message)
+
+        # Get any tasks that might be due now.
+        extra_tasks = self.progress_and_get_extra_tasks(context)
+        response_text = str(agent_response)
+        if len(extra_tasks) > 0 or agent_response is None:
+            task_appendix = ""
+            if len(extra_tasks) > 0:
+                task_appendix = perform_task_template.format(task=json.dumps(extra_tasks, indent=2))
+            extended_user_msg = user_message + task_appendix
+            reply_fn = lambda ctx, t: self.ask_llm(ctx, "reply", temperature=t)
+            response_text = message_notes_and_analysis(extended_user_msg, memories, self.now, reply_fn)
+
+        self.remove_completed_tasks()
+        self.hybrid_memory.add_interaction(self.session_id, user_message, response_text, self.now.timestamp(),
+                                           self.keywords_for_message(user_message))
+        self.llm_call_idx += 1
+        return response_text
+
     def reply(self, user_message: str, agent_response: str = None, cost_callback: CostCallback = None) -> str:
         self.cost_cb = cost_callback
-        perform_task = """
-
-Here are some additional tasks which you are to perform right now:
-{task}
-
-These tasks contains two things: a trigger condition, and a payload.
-The trigger conditions have been met for all task. So they can be safely disregarded. Now all you need to do is perform the tasks described in the "payload" fields. 
-
-You should append the result of your task to your reply to the query above.
-
-Append the results of your tasks to your current response."""
-
         self.now = datetime.datetime.now()
 
         keywords = self.keywords_for_message(user_message)
@@ -104,6 +149,7 @@ Append the results of your tasks to your current response."""
             memories = self.collect_memories(user_message, previous_interactions=0)
         else:
             memories = []
+        colour_print("lightblue", f"collect_memories: {len(memories)}")
 
         # Update task memory
         context = [make_system_message(self.system_message)] + memories + [
@@ -118,7 +164,7 @@ Append the results of your tasks to your current response."""
         else:
             task_appendix = ""
             if len(extra_tasks) > 0:
-                task_appendix = perform_task.format(task=json.dumps(extra_tasks, indent=2))
+                task_appendix = perform_task_template.format(task=json.dumps(extra_tasks, indent=2))
             extended_user_msg = user_message + task_appendix
             reply_fn = lambda ctx, t: self.ask_llm(ctx, "reply", temperature=t)
             response_text = message_notes_and_analysis(extended_user_msg, memories, self.now, reply_fn)
@@ -194,6 +240,7 @@ Follow this format:
             return
 
         # Produce a new one
+        # TODO: could add just "Should Update: Yes." and avoid potential issues while saving tokens.
         context.append(make_assistant_message(response_text))
         context.append(make_user_message(new_task_def))
 
@@ -282,8 +329,46 @@ Reuse these keywords if appropriate: {keywords}"""
         print(f"Interaction keywords: {keywords}")
         return keywords
 
+    def collect_memories_1(self, user_message: str, previous_interactions: int) -> LLMContext:
+        relevant_interactions = self.get_relevant_memories_1(user_message)
+        timestamps_selected = set(interaction[0].timestamp for interaction in relevant_interactions)
+
+        # Add previous interactions
+        recent_messages = self.hybrid_memory.get_recent_messages(self.session_id, 2 * previous_interactions)
+        recent_messages.sort(key=lambda m: (m.timestamp, 0 if m.role == "user" else 1))
+        for user_msg, agent_msg in zip(recent_messages[0::2], recent_messages[1::2]):
+            if user_msg.timestamp not in timestamps_selected:
+                timestamps_selected.add(user_msg.timestamp)
+                relevant_interactions.append((user_msg, agent_msg))
+
+        # Add in memories up to the max prompt size
+        context = []
+        shown_mems = 0
+        target_size = self.max_input_tokens
+
+        for interaction in reversed(relevant_interactions):
+            user_interaction, assistant_interaction = interaction
+            new_context = [
+                make_user_message(stamp_content(user_interaction.content, self.now, ts=user_interaction.timestamp)),
+                assistant_interaction.as_llm_dict(),
+            ] + context
+            future_size = self.count_tokens(messages=new_context)
+
+            # If this message is going to be too big, then skip it
+            if future_size > target_size:
+                continue
+
+            # Add the interaction and count the tokens
+            context = new_context
+            shown_mems += 1
+            if shown_mems == 100:
+                break
+
+        return context
+
     def collect_memories(self, user_message: str, previous_interactions: int) -> LLMContext:
         relevant_interactions = self.get_relevant_memories(user_message)
+        colour_print("lightblue", f"get_relevant_memories: {len(relevant_interactions)}")
 
         if self.debug_level > 0:
             for m in relevant_interactions:
@@ -413,25 +498,10 @@ Express your answer in this JSON:
         return filtered_interactions
 
     def get_relevant_memories(self, user_message: str) -> list[tuple[Message, Message]]:
-        prompt = """Message from user: "{user_message}"
-
-Given the above user question/statement, your task is to provide semantic queries and keywords for searching an archived 
-conversation history that may be relevant to a reply to the user.
-The search queries you produce should be compact reformulations of the user question/statement,
-taking context into account. The purpose of the queries is accurate information retrieval. 
-Search is purely semantic. 
-Create a general query and a specific query. Pay attention to the situation and topic of the conversation including any characters or specifically named persons.
-Use up to three of these keywords to help narrow the search:
-{keywords}
-The current time is: {time}. 
-Write JSON in the following format:
-{{
-    "queries": array, // An array of strings: 2 descriptive search phrases, one general and one specific
-    "keywords": array // An array of strings: 1 to 3 keywords that can be used to narrow the category of memories that are interesting. 
-}}"""
         # Now create the context for generating the queries
-        context = [
-            make_user_message(prompt.format(user_message=user_message, time=self.now, keywords=self.defined_kws))]
+        context = [make_user_message(query_generation_template.format(
+            user_message=user_message, time=self.now, keywords=self.defined_kws,
+        ))]
         all_retrieved_memories = []
         query_keywords = []
 
@@ -453,6 +523,7 @@ Write JSON in the following format:
             except Exception as e:
                 print(f"Query generation failed: {e}")
                 continue
+        colour_print("lightblue", f"all_retrieved_memories: {len(all_retrieved_memories)}")
 
         all_keywords = query_keywords
         relevance_filtered_mems = [x for x in all_retrieved_memories if x.relevance > 0.6] + self.hybrid_memory.retrieve_from_keywords(all_keywords)  # ? Add relevance score to the config?
@@ -465,11 +536,63 @@ Write JSON in the following format:
             for r_mem in self.hybrid_memory.semantic_memory.retrieve(mem.passage, k=5):
                 if r_mem.relevance > 0.6:
                     relevance_filtered_mems.append(r_mem)
+        colour_print("lightblue", f"relevance_filtered_mems: {len(relevance_filtered_mems)}")
 
         # Get the interactions from the memories, then filter those interactions
         interactions_to_filter, keywords = self.interactions_from_retrieved_memories(relevance_filtered_mems)
         llm_filtered_interactions = self.llm_memory_filter(interactions_to_filter, keywords, query_dict["queries"])
         
+        sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
+
+        # Record the interactions retrieved and filtered
+        self.retrieval_evaluator.capture_comparison_data(user_message, interactions_to_filter, llm_filtered_interactions)
+
+        return sorted_interactions
+
+    def get_relevant_memories_1(self, user_message: str) -> list[tuple[Message, Message]]:
+        # Now create the context for generating the queries
+        context = [make_user_message(query_generation_template.format(
+            user_message=user_message, time=self.now, keywords=self.defined_kws,
+        ))]
+        all_retrieved_memories = []
+        query_keywords = []
+
+        for _ in range(self.num_tries):
+            print("generating queries")
+            response = self.ask_llm(context, label=f"query-gen-{self.llm_call_idx}")
+
+            try:
+                query_dict = sanitize_and_parse_json(response)
+                query_keywords = [k.lower() for k in query_dict["keywords"]]
+                print(f"Query keywords: {query_keywords}")
+
+                all_retrieved_memories = []
+                for q in query_dict["queries"] + [user_message]:
+                    print(f"Querying with: {q}")
+                    all_retrieved_memories.extend(self.hybrid_memory.semantic_memory.retrieve(q, k=100))
+                break
+            except Exception as e:
+                print(f"Query generation failed: {e}")
+                continue
+
+        all_keywords = query_keywords
+        relevance_filtered_mems = [
+            x for x in all_retrieved_memories if x.distance < 0.78
+        ] + self.hybrid_memory.retrieve_from_keywords(all_keywords)  # ? Add relevance score to the config?
+
+        # Spreading activation
+        if num_mems := len(relevance_filtered_mems) > 0:
+            spreading_mems = Random(self.llm_call_idx).sample(relevance_filtered_mems, min(10, num_mems))
+            print(f"Performing spreading activations with {len(spreading_mems)} memories.")
+            for mem in spreading_mems:
+                for r_mem in self.hybrid_memory.semantic_memory.retrieve(mem.passage, k=5):
+                    if r_mem.relevance > 0.6:
+                        relevance_filtered_mems.append(r_mem)
+
+        # Get the interactions from the memories, then filter those interactions
+        interactions_to_filter, keywords = self.interactions_from_retrieved_memories(relevance_filtered_mems)
+        llm_filtered_interactions = self.llm_memory_filter(interactions_to_filter, keywords, query_dict["queries"])
+
         sorted_interactions = sorted(llm_filtered_interactions, key=lambda x: x[0].timestamp)
 
         # Record the interactions retrieved and filtered
@@ -503,6 +626,7 @@ Write JSON in the following format:
             defined_kws=self.defined_kws,
             llm_call_idx=self.llm_call_idx,
             init_timestamp=self.init_timestamp,
+            session_id=self.session_id,
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
@@ -515,6 +639,7 @@ Write JSON in the following format:
         self.defined_kws = state["defined_kws"]
         self.llm_call_idx = state["llm_call_idx"]
         self.init_timestamp = state["init_timestamp"]
+        self.session_id = state["session_id"]
 
     def ask_llm(self, context: LLMContext, label: str = None, **kwargs) -> str:
         """kwargs accepts any kw param that the function ask_llm can take"""
