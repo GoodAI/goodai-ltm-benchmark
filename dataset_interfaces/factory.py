@@ -7,6 +7,7 @@ from datasets.delayed_recall import DelayedRecallDataset
 from datasets.how_to_think import HowToThinkDataset
 from datasets.instruction_recall import InstructionRecallDataset
 from datasets.lb_wiki import LongBenchWikiQADataset
+from datasets.movies import MoviesDataset
 from datasets.prospective_memory import ProspectiveMemoryDataset
 from datasets.colours import ColourDataset
 from datasets.jokes import JokesDataset
@@ -45,7 +46,8 @@ DATASETS = {
     "restaurant": RestaurantDataset,
     "spy_meeting": SpyMeetingDataset,
     "wiki_qa": LongBenchWikiQADataset,
-    "code_defs": CodeDefinitionsDataset
+    "code_defs": CodeDefinitionsDataset,
+    "movies": MoviesDataset,
 }
 DATASETS_BY_NAME = {ds.name: ds for ds in DATASETS.values()}
 

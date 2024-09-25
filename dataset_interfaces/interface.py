@@ -184,6 +184,7 @@ class TestExample:
             can_be_interleaved=self.can_be_interleaved,
             is_temporal=self.is_temporal,
             uses_callback=self.uses_callback,
+            script_is_filler=self.script_is_filler,
         )
 
     def save(self, run_name: str, exist_ok: bool = False):
