@@ -503,6 +503,7 @@ Write JSON in the following format:
             defined_kws=self.defined_kws,
             llm_call_idx=self.llm_call_idx,
             init_timestamp=self.init_timestamp,
+            session_id=self.session_id,
         )
         return json.dumps(state, cls=SimpleJSONEncoder)
 
@@ -515,6 +516,7 @@ Write JSON in the following format:
         self.defined_kws = state["defined_kws"]
         self.llm_call_idx = state["llm_call_idx"]
         self.init_timestamp = state["init_timestamp"]
+        self.session_id = state["session_id"]
 
     def ask_llm(self, context: LLMContext, label: str = None, **kwargs) -> str:
         """kwargs accepts any kw param that the function ask_llm can take"""
