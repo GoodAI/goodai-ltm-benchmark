@@ -114,7 +114,11 @@ def main():
         llm_name = name.removeprefix("LTM ")
         if name not in skip_in_plot and llm_name not in llm_names:
             llm_names.append(llm_name)
-    assert len(llm_names) <= len(CUSTOM_COLORS), llm_names
+    assert len(llm_names) <= len(CUSTOM_COLORS), (
+        f"There are more LLM names than colours to pick from. The palette has "
+        f"{len(CUSTOM_COLORS)} colours and there are {len(llm_names)} LLM names: "
+        f"{llm_names}."
+    )
     llm_colors = {name: color for name, color in zip(llm_names, CUSTOM_COLORS)}
     x_ticks_pos = list()
     x_ticks_labels = list()
