@@ -1,12 +1,13 @@
 import random
 import utils.util_math as m
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from reporting.generate import get_sorted_scores
 from utils.ui import colour_print
 
 
-CUSTOM_COLORS = ["#ff9999", "#66b3ff", "#99ff99", "#ffcc99", "#76d7c4", "#ffb3e6", "#c4e17f", "#c2c2f0"]
+CUSTOM_COLORS = mpl.colormaps["Set3"].colors
 
 # Agent names may vary over time, so link them here with their corresponding short labels.
 # The order is important, and will be kept the same in the figure / table.
@@ -22,14 +23,20 @@ aliases = {
     "LLMChatSession - gpt-4-turbo-2024-04-09 - 128000": "GPT-4 turbo",
     "LLMChatSession - gpt-4o - 128000": "GPT-4o",
     "LLMChatSession - gpt-4o-2024-05-13 - 128000": "GPT-4o",
+    "LLMChatSession - gpt-4o-mini - 128000": "GPT-4o-mini",
     "LLMChatSession - claude-3-opus - 200000": "Claude 3 Opus",
     "GeminiProInterface": "Gemini 1.5 Pro",
     "LTMAgentWrapper - claude-3-opus-20240229 - 16384 - QG_JSON_USER_INFO": "LTM Claude 3 Opus",
     "LTMAgentWrapper - claude-3-opus - 16384 - QG_JSON_USER_INFO": "LTM Claude 3 Opus",
     "LTMAgentWrapper - gpt-4-turbo-2024-04-09 - 16384 - QG_JSON_USER_INFO": "LTM GPT-4 turbo",
     "LTMAgentWrapper - gpt-4-turbo - 16384 - QG_JSON_USER_INFO": "LTM GPT-4 turbo",
+    "LTMAgentWrapper - gpt-4o-mini - 16384 - QG_JSON_USER_INFO": "LTM GPT-4o-mini",
     "LTMAgentWrapper - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000 - QG_JSON_USER_INFO": "LTM Llama 3 70B",
+    "MemGPTInterface - gpt-4o-mini - 16384": "MemGPT",
+    "MemoryBankInterface": "MemoryBank"
 }
+
+skip_in_plot = {"Mixtral 8x7B", "Mixtral 8x22B", "Llama 3 70B", "GPT-3.5 turbo"}
 
 context_lengths = {
     "Mixtral 8x7B": 32_000,
@@ -38,11 +45,15 @@ context_lengths = {
     "GPT-3.5 turbo": 16_384,
     "GPT-4 turbo": 128_000,
     "GPT-4o": 128_000,
+    "GPT-4o-mini": 128_000,
     "Claude 3 Opus": 200_000,
     "Gemini 1.5 Pro": 1_000_000,
     "LTM Claude 3 Opus": 16_384,
     "LTM GPT-4 turbo": 16_384,
+    "LTM GPT-4o-mini": 16_384,
     "LTM Llama 3 70B": 8_000,
+    "MemGPT": "16384 - 40000",
+    "MemoryBank": "16384 - 60000"
 }
 
 
@@ -53,13 +64,13 @@ def main():
     actual_means = dict()
     results = dict()
     for bench_label in ["Isolated", "2k", "32k", "120k", "200k", "500k"]:
-        run_prefix = {
-            "Isolated": "Benchmark 3 - 32k (isolated)",
-            "2k": "Benchmark 3 - 1k",
-        }.get(bench_label, f"Benchmark 3 - {bench_label}")
+        run_name_template = {
+            "Isolated": "Benchmark 3 - 32k{} (isolated)",
+            "2k": "Benchmark 3 - 1k{}",
+        }.get(bench_label, f"Benchmark 3 - {bench_label}{{}}")
         for run_suffix in ["", " #2"]:
             agents_loaded = set()
-            run_name = run_prefix + run_suffix
+            run_name = run_name_template.format(run_suffix)
             print(run_name)
             for agent_name, agent_alias in aliases.items():
                 scores = get_sorted_scores(run_name, agent_name)
@@ -100,24 +111,34 @@ def main():
 
     llm_names = list()
     for name in aliases.values():
-        if not name.startswith("LTM") and name not in llm_names:
-            llm_names.append(name)
-    assert len(llm_names) == len(CUSTOM_COLORS), llm_names
+        llm_name = name.removeprefix("LTM ")
+        if name not in skip_in_plot and llm_name not in llm_names:
+            llm_names.append(llm_name)
+    assert len(llm_names) <= len(CUSTOM_COLORS), (
+        f"There are more LLM names than colours to pick from. The palette has "
+        f"{len(CUSTOM_COLORS)} colours and there are {len(llm_names)} LLM names: "
+        f"{llm_names}."
+    )
     llm_colors = {name: color for name, color in zip(llm_names, CUSTOM_COLORS)}
     x_ticks_pos = list()
     x_ticks_labels = list()
     current_pos = 0
-    for bench_label, bench_results in results.items():
+    for bench_idx, (bench_label, bench_results) in enumerate(results.items()):
+        if bench_idx > 0:
+            plt.axvline(x=current_pos, ymin=0, ymax=1, color="black")
         print(bench_label)
         first_pos = current_pos + 1
         for agent_alias, agent_results in bench_results.items():
+            if agent_alias in skip_in_plot:
+                continue
             std = m.std(agent_results)
             print(" ", agent_alias, f"| std: {std:.1f}")
             current_pos += 1
             data.append(agent_results)
             colors.append(llm_colors[agent_alias.removeprefix("LTM ")])
-            hatches.append(agent_alias.startswith("LTM"))
+            hatches.append(agent_alias.startswith("LTM") or agent_alias in ["MemGPT", "MemoryBank"])
             positions.append(current_pos)
+
         x_ticks_pos.append(first_pos + 0.5 * (current_pos - first_pos))
         x_ticks_labels.append(bench_label)
         current_pos += 1
@@ -126,11 +147,13 @@ def main():
         patch.set_facecolor(color)
         if hatch:
             patch.set_hatch("//")
+    for patch, color in zip(bplot["fliers"], colors):
+        patch.set(markerfacecolor=color, markeredgecolor=color, alpha=0.2)
 
     # Manual legend
     plt.legend(handles=[
         Patch(color=llm_colors[name], label=name) for name in llm_names
-    ] + [
+    ] + [Patch(facecolor="white", edgecolor="white", label="")] + [
         Patch(facecolor="white", edgecolor="black", label="Only LLM"),
         Patch(facecolor="white", edgecolor="black", hatch="//", label="LLM + LTM"),
     ], bbox_to_anchor=(1, 0, 0.5, 1), loc="center left")
@@ -181,6 +204,7 @@ def main():
         pyperclip.copy(latex_table)
         colour_print("green", "Copied to clipboard. Use ctrl-v to paste it.")
     except ImportError:
+        colour_print("red", "Couldn't import pyperclip. The table was not copied to the clipboard.")
         pass
 
 
