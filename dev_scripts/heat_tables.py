@@ -23,11 +23,15 @@ TO_RETRIEVE = {
         "LLMChatSession - gpt-3.5-turbo - 16384",
         "LLMChatSession - gpt-4-turbo-2024-04-09 - 128000",
         "LLMChatSession - gpt-4o - 128000",
+        "LLMChatSession - gpt-4o-mini - 128000",
         "LLMChatSession - claude-3-opus - 200000",
         "GeminiProInterface",
         "LTMAgentWrapper - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000 - QG_JSON_USER_INFO",
         "LTMAgentWrapper - gpt-4-turbo - 16384 - QG_JSON_USER_INFO",
+        "LTMAgentWrapper - gpt-4o-mini - 16384 - QG_JSON_USER_INFO",
         "LTMAgentWrapper - claude-3-opus - 16384 - QG_JSON_USER_INFO",
+        "MemGPTInterface - gpt-4o-mini - 16384",
+        "MemoryBankInterface",
     ] for span in RUN_NAMES
 }
 ALIASES = {
@@ -37,25 +41,38 @@ ALIASES = {
     "LLMChatSession - gpt-3.5-turbo - 16384": "GPT-3.5 turbo",
     "LLMChatSession - gpt-4-turbo-2024-04-09 - 128000": "GPT-4 turbo",
     "LLMChatSession - gpt-4o - 128000": "GPT-4o",
+    "LLMChatSession - gpt-4o-mini - 128000": "GPT-4o-mini",
     "LLMChatSession - claude-3-opus - 200000": "Claude 3 Opus",
     "GeminiProInterface": "Gemini 1.5 Pro",
     "LTMAgentWrapper - together_ai-meta-llama-Llama-3-70b-chat-hf - 8000 - QG_JSON_USER_INFO": "LTM (Llama 3 70B)",
     "LTMAgentWrapper - gpt-4-turbo - 16384 - QG_JSON_USER_INFO": "LTM (GPT-4 turbo)",
+    "LTMAgentWrapper - gpt-4o-mini - 16384 - QG_JSON_USER_INFO": "LTM (GPT-4o-mini)",
     "LTMAgentWrapper - claude-3-opus - 16384 - QG_JSON_USER_INFO": "LTM (Claude 3 Opus)",
+    "MemGPTInterface - gpt-4o-mini - 16384": "MemGPT (GPT-4o-mini)",
+    "MemoryBankInterface": "MemoryBank (GPT-4o-mini)",
 }
 
 
-# Exceptions
-def set_alt_name(idx: int, mem_spans: list[str], alt_name: str):
-    ALIASES[alt_name] = ALIASES[TO_RETRIEVE["Benchmark 3 - 1k"][idx]]
+# Naming exceptions
+def set_alt_name(old_name: str, alt_name: str, mem_spans: list[str]):
+    ALIASES[alt_name] = ALIASES[old_name]
     for span in mem_spans:
-        TO_RETRIEVE[f"Benchmark 3 - {span}"][idx] = alt_name
+        name_list = TO_RETRIEVE[f"Benchmark 3 - {span}"]
+        name_list[name_list.index(old_name)] = alt_name
 
 
-set_alt_name(0, ["1k", "32k"], "LLMChatSession - together_ai-mistralai-Mixtral-8x7B-Instruct-v0.1 - 32000")
-set_alt_name(4, ["120k", "200k"], "LLMChatSession - gpt-4-turbo - 128000")
-set_alt_name(10, ["120k", "200k", "500k"], "LTMAgentWrapper - claude-3-opus-20240229 - 16384 - QG_JSON_USER_INFO")
-set_alt_name(9, ["200k", "500k"], "LTMAgentWrapper - gpt-4-turbo-2024-04-09 - 16384 - QG_JSON_USER_INFO")
+set_alt_name("LLMChatSession - together_ai-mistralai-Mixtral-8x7B-Instruct-v0.1 - 32768",
+             "LLMChatSession - together_ai-mistralai-Mixtral-8x7B-Instruct-v0.1 - 32000",
+             ["1k", "32k"])
+set_alt_name("LLMChatSession - gpt-4-turbo-2024-04-09 - 128000",
+             "LLMChatSession - gpt-4-turbo - 128000",
+             ["120k", "200k"])
+set_alt_name("LTMAgentWrapper - claude-3-opus - 16384 - QG_JSON_USER_INFO",
+             "LTMAgentWrapper - claude-3-opus-20240229 - 16384 - QG_JSON_USER_INFO",
+             ["120k", "200k", "500k"])
+set_alt_name("LTMAgentWrapper - gpt-4-turbo - 16384 - QG_JSON_USER_INFO",
+             "LTMAgentWrapper - gpt-4-turbo-2024-04-09 - 16384 - QG_JSON_USER_INFO",
+             ["200k", "500k"])
 
 
 def get_color(score: float) -> tuple:
@@ -66,12 +83,16 @@ def main():
 
     for run_name in RUN_NAMES:
         print("Showing:", run_name)
-        num_repetitions = 0
+        num_repetitions = None
         rows = list()
         colours = list()
+        num_expected_tasks = 10 if run_name == "Benchmark 3 - 1k" else 11
         for agent_name in TO_RETRIEVE[run_name]:
             result_paths = gather_result_files(run_name=run_name, agent_name=agent_name)
-            assert len(result_paths) > 10, f"Num results: {len(result_paths)}; Run name: {repr(run_name)}; Agent: {agent_name}"
+            num_results = len(result_paths)
+            assert num_results >= num_expected_tasks and num_results % num_expected_tasks == 0, (
+                f"Unexpected number of results: {num_results=}; {run_name=}; {agent_name=}\n{'\n'.join(result_paths)}"
+            )
             results = defaultdict(lambda: dict())
             for p in result_paths:
                 r = TestResult.from_file(p)
@@ -79,7 +100,12 @@ def main():
             row = list()
             row_col = list()
             for dataset_name in sorted(results.keys()):
-                num_repetitions = len(results[dataset_name])
+                if num_repetitions is None:
+                    num_repetitions = len(results[dataset_name])
+                assert len(results[dataset_name]) == num_repetitions,(
+                    f"Found an inconsistent number of repetitions: {num_repetitions} vs {len(results[dataset_name])} in "
+                    f"{run_name=}, {agent_name=}, {dataset_name=}."
+                )
                 for result_id in sorted(results[dataset_name].keys()):
                     r = results[dataset_name][result_id]
                     row.append(f"{r.score:.1f}")
